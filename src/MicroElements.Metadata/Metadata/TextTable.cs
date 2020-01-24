@@ -119,21 +119,60 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents table in terms of properties and containers.
     /// </summary>
-    public class Table
+    public class Table : ITable
     {
         /// <summary>
         /// Gets the table info.
         /// </summary>
-        public IPropertyContainer Info { get; set; }
+        public IPropertyContainer Info { get; }
 
         /// <summary>
         /// Gets the table column list.
         /// </summary>
-        public IProperty[] Columns { get; set; }
+        public IProperty[] Columns { get; }
 
         /// <summary>
         /// Gets the table rows.
         /// </summary>
-        public IPropertyContainer[] Rows { get; set; }
+        public IPropertyContainer[] Rows { get; }
+
+        public Table(IPropertyContainer info, IProperty[] columns, IPropertyContainer[] rows)
+        {
+            Info = info;
+            Columns = columns;
+            Rows = rows;
+        }
+    }
+
+    public class TableBuilder
+    {
+        public PropertyList Info { get; } = new PropertyList();
+
+        public List<IProperty> Columns { get; } = new List<IProperty>();
+
+        public List<IPropertyContainer> Rows { get; } = new List<IPropertyContainer>();
+
+        public TableBuilder WithInfo<T>(string propertyName, T value)
+        {
+            Info.SetValue(new Property<T>(propertyName), value);
+            return this;
+        }
+
+        public TableBuilder WithColumns(params IProperty[] columns)
+        {
+            Columns.AddRange(columns);
+            return this;
+        }
+
+        public TableBuilder AddRow(IPropertyContainer row)
+        {
+            Rows.Add(row);
+            return this;
+        }
+
+        public ITable Build()
+        {
+            return new Table(Info, Columns.ToArray(), Rows.ToArray());
+        }
     }
 }

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represent property renderer.

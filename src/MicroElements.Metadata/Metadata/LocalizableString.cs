@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Text that can be translated to many languages.

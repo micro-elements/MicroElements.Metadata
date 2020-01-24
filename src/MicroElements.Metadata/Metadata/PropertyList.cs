@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// List of properties and values.

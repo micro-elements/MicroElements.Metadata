@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     public static class ParserProviderExtensions
     {

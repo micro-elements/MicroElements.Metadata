@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MicroElements.MetadataModel\MicroElements.MetadataModel.csproj" />
+    <ProjectReference Include="..\..\src\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>
 
 </Project>

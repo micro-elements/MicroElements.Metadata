@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents metadata for property.

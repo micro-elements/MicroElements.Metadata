@@ -4,7 +4,7 @@
 using System;
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Text value parser.

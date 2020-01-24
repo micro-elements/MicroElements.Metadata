@@ -3,7 +3,7 @@
 
 using MicroElements.Functional;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Strong typed property and value.

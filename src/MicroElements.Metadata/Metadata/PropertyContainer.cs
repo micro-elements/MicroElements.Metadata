@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Base class for <see cref="IPropertyContainer"/> objects.

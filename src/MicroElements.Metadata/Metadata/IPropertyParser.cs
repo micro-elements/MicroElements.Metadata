@@ -5,7 +5,7 @@ using System;
 using MicroElements.Functional;
 using static MicroElements.Functional.Prelude;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represent parser for property.

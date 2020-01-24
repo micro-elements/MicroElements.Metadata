@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace MicroElements.MetadataModel
+namespace MicroElements.Metadata
 {
     /// <summary>
     /// Provides property parsers.

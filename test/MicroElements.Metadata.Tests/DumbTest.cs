@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace MicroElements.MetadataModel.Tests
+namespace MicroElements.Metadata.Tests
 {
     public class DumbTest
     {

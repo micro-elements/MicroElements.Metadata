@@ -1,17 +1,16 @@
 <Project>
   <Import Project="version.props" />
   <PropertyGroup>
-    <Product>MicroElements.MetadataModel</Product>
+    <Product>MicroElements.Metadata</Product>
     <Copyright>2020</Copyright>
     <Authors>micro-elements</Authors>
-    <Description></Description>
+    <Description>Metadata model, parsing and reporting.</Description>
 
-    <PackageTags></PackageTags>
+    <PackageTags>metadata;parsing;parse;reporting;report;etl</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/micro-elements/MicroElements.MetadataModel.git</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.MetadataModel.git/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Metadata.git</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Metadata/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/micro-elements/MicroElements.MetadataModel.git</RepositoryUrl>
-    <PackageIconUrl></PackageIconUrl>
+    <RepositoryUrl>https://github.com/micro-elements/MicroElements.Metadata.git</RepositoryUrl>
   </PropertyGroup>
 </Project>

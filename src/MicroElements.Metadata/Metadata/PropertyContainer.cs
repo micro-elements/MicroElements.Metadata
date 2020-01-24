@@ -33,7 +33,7 @@ namespace MicroElements.Metadata
 
         public void SetValueIfNotSet<T>(IProperty<T> property, T value)
         {
-            if (!PropertyList.HasProperty(property))
+            if (!PropertyList.ContainsPropertyByCodeOrAlias(property))
                 PropertyList.SetValue(property, value);
         }
 

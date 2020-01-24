@@ -4,43 +4,51 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
-    internal static class PropertyContainerExtensions
+    /// <summary>
+    /// Extensions for <see cref="IPropertyContainer"/>.
+    /// </summary>
+    public static class PropertyContainerExtensions
     {
-        public static bool HasValue<T>(this IPropertyContainer propertyContainer, IProperty<T> property)
+        /// <summary>
+        /// Returns true if <paramref name="propertyContainer"/> has property.
+        /// Also searches in parent sources.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to search.</param>
+        /// <param name="searchInParent">Search property in parent source if not found in container.</param>
+        /// <returns>True if property exists in container.</returns>
+        public static bool HasValue<T>(this IPropertyContainer propertyContainer, IProperty<T> property, bool searchInParent = true)
         {
-            if (propertyContainer.Properties.HasProperty(property))
+            if (propertyContainer.Properties.ContainsPropertyByCodeOrAlias(property.Code))
                 return true;
 
-            if (propertyContainer.ParentSource.Properties.Count > 0 && propertyContainer.ParentSource.HasValue<T>(property))
+            if (searchInParent && propertyContainer.ParentSource.Properties.Count > 0 && propertyContainer.ParentSource.HasValue<T>(property, true))
                 return true;
 
             return false;
         }
 
-        public static bool HasProperty<T>(this IReadOnlyList<IPropertyValue> propertyValues, IProperty<T> property)
-        {
-            return propertyValues.Any(propertyValue => IsMatchesByCode(propertyValue, property.Code));
-        }
-
-        private static bool IsMatchesByCode(IPropertyValue propertyValue, string code)
-        {
-            return code.Equals(propertyValue.PropertyUntyped.Code, StringComparison.OrdinalIgnoreCase) ||
-                   code.Equals(propertyValue.PropertyUntyped.Alias, StringComparison.OrdinalIgnoreCase);
-        }
-
         /// <summary>
-        /// Returns the first element of the sequence that satisfies a condition or None if no such element is found.
-        /// It's like FirstOrDefault but returns Option.
+        /// Returns true if <paramref name="propertyList"/> contains property by name or alias.
         /// </summary>
-        /// <typeparam name="T">The type of the elements of <paramref name="source" />.</typeparam>
-        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
-        /// <param name="predicate">A function to test each element for a condition.</param>
-        /// <returns>First element that satisfies <paramref name="predicate"/> or None.</returns>
-        public static Option<T> FirstOrNone<T>(this IEnumerable<T> source, Func<T, bool> predicate) =>
-            source.FirstOrDefault(predicate);
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyList">Property list.</param>
+        /// <param name="propertyName">Property name to search.</param>
+        /// <returns>True if property found in list.</returns>
+        public static bool ContainsPropertyByCodeOrAlias(this IReadOnlyList<IPropertyValue> propertyList, string propertyName)
+            => propertyList.Any(propertyValue => IsMatchesByCodeOrAlias(propertyValue, propertyName));
+
+        private static bool IsMatchesByCodeOrAlias(this IPropertyValue propertyValue, string propertyName)
+        {
+            return propertyValue.PropertyUntyped.Code.EqualsIgnoreCase(propertyName) ||
+                   propertyValue.PropertyUntyped.Alias.EqualsIgnoreCase(propertyName);
+        }
+
+        private static bool EqualsIgnoreCase(this string value, string other) =>
+            value?.Equals(other, StringComparison.OrdinalIgnoreCase) ?? other == null;
     }
 }

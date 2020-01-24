@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
+using MicroElements.Utils;
 
 namespace MicroElements.Metadata
 {
@@ -55,16 +56,16 @@ namespace MicroElements.Metadata
         public T GetValue<T>(IProperty<T> property)
         {
             // Если свойство в списке свойств, - вернем значение.
-            if (HasProperty(_propertyValues, property))
+            if (_propertyValues.ContainsPropertyByCodeOrAlias(property))
             {
                 return _propertyValues
-                    .FirstOrNone(propertyValue => IsMatchesByCode(propertyValue, property.Code))
+                    .FirstOrNone(propertyValue => propertyValue.IsMatchesByCodeOrAlias(property))
                     .Map(value => (IPropertyValue<T>)value)
                     .MatchUnsafe(GetPropertyValue, property.DefaultValue);
             }
 
             // Поищем у родителя.
-            if (HasProperty(_parentPropertySource.Properties, property))
+            if (_parentPropertySource.Properties.ContainsPropertyByCodeOrAlias(property))
             {
                 return _parentPropertySource.GetValue(property);
             }
@@ -77,17 +78,6 @@ namespace MicroElements.Metadata
 
             // Вернем значение по умолчанию.
             return property.DefaultValue();
-        }
-
-        private bool HasProperty<T>(IReadOnlyList<IPropertyValue> propertyValues, IProperty<T> property)
-        {
-            return propertyValues.Any(propertyValue => IsMatchesByCode(propertyValue, property.Code));
-        }
-
-        private bool IsMatchesByCode(IPropertyValue propertyValue, string code)
-        {
-            return code.Equals(propertyValue.PropertyUntyped.Code, StringComparison.OrdinalIgnoreCase) ||
-                   code.Equals(propertyValue.PropertyUntyped.Alias, StringComparison.OrdinalIgnoreCase);
         }
 
         private T GetPropertyValue<T>(IPropertyValue<T> propertyValue)

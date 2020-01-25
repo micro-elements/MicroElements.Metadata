@@ -14,13 +14,13 @@ namespace MicroElements.Metadata
         public IReadOnlyList<IPropertyValue> Metadata { get; } = new PropertyList();
 
         /// <inheritdoc />
+        public IProperty<T> Property { get; set; }
+
+        /// <inheritdoc />
         public Type PropertyType => typeof(T);
 
         /// <inheritdoc />
         public string TargetName { get; set; }
-
-        /// <inheritdoc />
-        public IProperty<T> Property { get; set; }
 
         /// <summary>
         /// Gets format function.

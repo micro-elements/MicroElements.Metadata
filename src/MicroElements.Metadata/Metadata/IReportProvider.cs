@@ -26,16 +26,13 @@ namespace MicroElements.Metadata
     /// </summary>
     public class ReportProvider : IReportProvider
     {
+        private readonly List<IPropertyRenderer> _renderers = new List<IPropertyRenderer>();
+
         /// <inheritdoc />
         public string ReportName { get; }
 
         /// <inheritdoc />
-        IReadOnlyList<IPropertyRenderer> IReportProvider.Renderers => Renderers;
-
-        /// <summary>
-        /// Gets property renderers.
-        /// </summary>
-        protected List<IPropertyRenderer> Renderers { get; } = new List<IPropertyRenderer>();
+        public IReadOnlyList<IPropertyRenderer> Renderers => _renderers;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReportProvider"/> class.
@@ -56,7 +53,7 @@ namespace MicroElements.Metadata
         protected PropertyRenderer<T> Add<T>(IProperty<T> property, string targetName = null)
         {
             var renderer = new PropertyRenderer<T>(property, targetName);
-            Renderers.Add(renderer);
+            _renderers.Add(renderer);
             return renderer;
         }
     }

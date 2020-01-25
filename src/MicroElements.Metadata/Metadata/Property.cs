@@ -15,11 +15,11 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Initializes a new instance of the <see cref="Property{T}"/> class.
         /// </summary>
-        /// <param name="code">Property code.</param>
-        public Property(string code)
+        /// <param name="name">Property code.</param>
+        public Property(string name)
         {
-            Name = code;
-            Description = new LocalizableString(code);
+            Name = name;
+            Description = new LocalizableString(name);
         }
 
         /// <inheritdoc />

@@ -14,7 +14,7 @@ namespace MicroElements.Metadata
     public interface IProperty : IMetadataProvider
     {
         /// <summary>
-        /// Unique property code.
+        /// Unique property name.
         /// </summary>
         string Name { get; }
 

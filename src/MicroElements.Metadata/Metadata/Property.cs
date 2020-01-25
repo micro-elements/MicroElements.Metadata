@@ -23,6 +23,9 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
+        public IReadOnlyList<IPropertyValue> Metadata { get; } = new PropertyList();
+
+        /// <inheritdoc />
         public string Name { get; }
 
         /// <inheritdoc />
@@ -75,5 +78,7 @@ namespace MicroElements.Metadata
             Calculate = evaluate;
             return this;
         }
+
+        
     }
 }

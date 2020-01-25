@@ -15,7 +15,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets properties with values.
         /// </summary>
-        IReadOnlyList<IPropertyValue> Metadata => Cache.GetInstanceMetadata(this);
+        IReadOnlyList<IPropertyValue> Metadata { get; }
     }
 
     public static class Cache
@@ -51,7 +51,8 @@ namespace MicroElements.Metadata
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            IPropertyValue propertyValue = metadataProvider.Metadata?.GetPropertyByNameOrAlias(metadataName);
+            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            IPropertyValue propertyValue = metadata.GetPropertyByNameOrAlias(metadataName);
             if (propertyValue != null)
                 return (TMetadata)propertyValue?.ValueUntyped;
 
@@ -78,10 +79,12 @@ namespace MicroElements.Metadata
         /// <returns>The same renderer.</returns>
         public static TMetadataProvider SetMetadata<TMetadataProvider, TData>(this TMetadataProvider metadataProvider, string name, TData data) where TMetadataProvider : IMetadataProvider
         {
-            if (metadataProvider.Metadata is IMutablePropertyContainer metadata)
+            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
-                metadata.SetValue(new Property<TData>(name), data);
+                mutablePropertyContainer.SetValue(new Property<TData>(name), data);
             }
+
             return metadataProvider;
         }
     }

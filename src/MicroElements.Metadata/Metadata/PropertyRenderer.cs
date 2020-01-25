@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MicroElements.Metadata
@@ -9,6 +10,9 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Property type.</typeparam>
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
+        /// <inheritdoc />
+        public IReadOnlyList<IPropertyValue> Metadata { get; } = new PropertyList();
+
         /// <inheritdoc />
         public Type PropertyType => typeof(T);
 

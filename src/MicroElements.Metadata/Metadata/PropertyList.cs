@@ -17,7 +17,7 @@ namespace MicroElements.Metadata
     public class PropertyList : IReadOnlyList<IPropertyValue>, IPropertyContainer, IMutablePropertyContainer
     {
         private readonly List<IPropertyValue> _propertyValues = new List<IPropertyValue>();
-        private readonly IPropertyContainer _parentPropertySource = EmptyPropertyContainer.Instance;
+        private readonly IPropertyContainer _parentPropertySource = PropertyContainer.Empty;
 
         public PropertyList(IEnumerable<IPropertyValue> values = null)
         {
@@ -96,6 +96,7 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property.</param>
         /// <param name="value">Value to store.</param>
+        /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
         public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value)
         {
             var newPropertyValue = new PropertyValue<T>(property, value, ValueSource.Defined);

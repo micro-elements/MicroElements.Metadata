@@ -3,11 +3,6 @@ using System.Collections.Generic;
 
 namespace MicroElements.Metadata
 {
-    public partial class PropertyContainer
-    {
-        public static readonly IPropertyContainer Empty = EmptyPropertyContainer.Instance;
-    }
-
     /// <summary>
     /// Empty property container singleton.
     /// </summary>

@@ -57,8 +57,9 @@ namespace MicroElements.Metadata
 
         public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, string propertyName)
         {
-            return propertyValue.PropertyUntyped.Name.EqualsIgnoreCase(propertyName) ||
-                   propertyValue.PropertyUntyped.Alias.EqualsIgnoreCase(propertyName);
+            return propertyName != null
+                   && (propertyValue.PropertyUntyped.Name.EqualsIgnoreCase(propertyName)
+                       || propertyValue.PropertyUntyped.Alias.EqualsIgnoreCase(propertyName));
         }
 
         private static bool EqualsIgnoreCase(this string value, string other) =>

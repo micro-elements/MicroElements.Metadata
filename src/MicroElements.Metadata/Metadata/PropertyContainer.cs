@@ -8,10 +8,19 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Base class for <see cref="IPropertyContainer"/> objects.
     /// </summary>
-    public abstract partial class PropertyContainer : IPropertyContainer
+    public abstract class PropertyContainer : IPropertyContainer
     {
+        /// <summary>
+        /// Gets an empty property container.
+        /// </summary>
+        public static IPropertyContainer Empty => EmptyPropertyContainer.Instance;
+
         protected PropertyList PropertyList { get; private set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyContainer"/> class.
+        /// </summary>
+        /// <param name="values">Property values.</param>
         protected PropertyContainer(IEnumerable<IPropertyValue> values = null)
         {
             PropertyList = new PropertyList(values);

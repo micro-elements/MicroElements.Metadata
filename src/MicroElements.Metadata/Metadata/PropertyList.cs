@@ -14,7 +14,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// List of properties and values.
     /// </summary>
-    public class PropertyList : IReadOnlyList<IPropertyValue>, IPropertyContainer
+    public class PropertyList : IReadOnlyList<IPropertyValue>, IPropertyContainer, IMutablePropertyContainer
     {
         private readonly List<IPropertyValue> _propertyValues = new List<IPropertyValue>();
         private readonly IPropertyContainer _parentPropertySource = EmptyPropertyContainer.Instance;
@@ -56,16 +56,16 @@ namespace MicroElements.Metadata
         public T GetValue<T>(IProperty<T> property)
         {
             // Если свойство в списке свойств, - вернем значение.
-            if (_propertyValues.ContainsPropertyByCodeOrAlias(property))
+            if (_propertyValues.ContainsPropertyByNameOrAlias(property))
             {
                 return _propertyValues
-                    .FirstOrNone(propertyValue => propertyValue.IsMatchesByCodeOrAlias(property))
+                    .FirstOrNone(propertyValue => propertyValue.IsMatchesByNameOrAlias(property))
                     .Map(value => (IPropertyValue<T>)value)
                     .MatchUnsafe(GetPropertyValue, property.DefaultValue);
             }
 
             // Поищем у родителя.
-            if (_parentPropertySource.Properties.ContainsPropertyByCodeOrAlias(property))
+            if (_parentPropertySource.Properties.ContainsPropertyByNameOrAlias(property))
             {
                 return _parentPropertySource.GetValue(property);
             }

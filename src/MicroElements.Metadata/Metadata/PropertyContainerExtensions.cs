@@ -37,24 +37,27 @@ namespace MicroElements.Metadata
         /// <param name="propertyList">Property list.</param>
         /// <param name="propertyName">Property name to search.</param>
         /// <returns>True if property found in list.</returns>
-        public static bool ContainsPropertyByCodeOrAlias(this IEnumerable<IPropertyValue> propertyList, string propertyName)
-            => propertyList.Any(propertyValue => IsMatchesByCodeOrAlias(propertyValue, propertyName));
+        public static bool ContainsPropertyByNameOrAlias(this IEnumerable<IPropertyValue> propertyList, string propertyName)
+            => propertyList.Any(propertyValue => IsMatchesByNameOrAlias(propertyValue, propertyName));
 
-        public static bool ContainsPropertyByCodeOrAlias(this IEnumerable<IPropertyValue> propertyList, IProperty property)
-            => propertyList.Any(propertyValue => IsMatchesByCodeOrAlias(propertyValue, property));
+        public static IPropertyValue GetPropertyByNameOrAlias(this IEnumerable<IPropertyValue> propertyList, string propertyName)
+            => propertyList.FirstOrDefault(propertyValue => IsMatchesByNameOrAlias(propertyValue, propertyName));
+
+        public static bool ContainsPropertyByNameOrAlias(this IEnumerable<IPropertyValue> propertyList, IProperty property)
+            => propertyList.Any(propertyValue => IsMatchesByNameOrAlias(propertyValue, property));
 
         public static bool ContainsProperty(this IEnumerable<IPropertyValue> propertyList, IProperty property)
             => propertyList.Any(propertyValue => propertyValue.PropertyUntyped == property);
 
-        public static bool IsMatchesByCodeOrAlias(this IPropertyValue propertyValue, IProperty property)
+        public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, IProperty property)
         {
-            return propertyValue.IsMatchesByCodeOrAlias(property.Code) ||
-                   propertyValue.IsMatchesByCodeOrAlias(property.Alias);
+            return propertyValue.IsMatchesByNameOrAlias(property.Name) ||
+                   propertyValue.IsMatchesByNameOrAlias(property.Alias);
         }
 
-        public static bool IsMatchesByCodeOrAlias(this IPropertyValue propertyValue, string propertyName)
+        public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, string propertyName)
         {
-            return propertyValue.PropertyUntyped.Code.EqualsIgnoreCase(propertyName) ||
+            return propertyValue.PropertyUntyped.Name.EqualsIgnoreCase(propertyName) ||
                    propertyValue.PropertyUntyped.Alias.EqualsIgnoreCase(propertyName);
         }
 

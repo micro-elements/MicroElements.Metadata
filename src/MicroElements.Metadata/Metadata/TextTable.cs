@@ -164,6 +164,12 @@ namespace MicroElements.Metadata
             return this;
         }
 
+        public TableBuilder WithRows(params IPropertyContainer[] rows)
+        {
+            Rows.AddRange(rows);
+            return this;
+        }
+
         public TableBuilder AddRow(IPropertyContainer row)
         {
             Rows.Add(row);

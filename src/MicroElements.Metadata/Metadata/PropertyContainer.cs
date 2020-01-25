@@ -8,7 +8,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Base class for <see cref="IPropertyContainer"/> objects.
     /// </summary>
-    public abstract class PropertyContainer : IPropertyContainer
+    public abstract partial class PropertyContainer : IPropertyContainer
     {
         protected PropertyList PropertyList { get; private set; }
 
@@ -33,7 +33,7 @@ namespace MicroElements.Metadata
 
         public void SetValueIfNotSet<T>(IProperty<T> property, T value)
         {
-            if (!PropertyList.ContainsPropertyByCodeOrAlias(property.Code))
+            if (!PropertyList.ContainsPropertyByNameOrAlias(property.Name))
                 PropertyList.SetValue(property, value);
         }
 

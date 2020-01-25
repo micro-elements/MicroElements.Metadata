@@ -11,12 +11,12 @@ namespace MicroElements.Metadata
     /// Represents metadata for property.
     /// Every object consist of many properties and we should map properties from different sources to one common model.
     /// </summary>
-    public interface IProperty
+    public interface IProperty : IMetadataProvider
     {
         /// <summary>
         /// Unique property code.
         /// </summary>
-        string Code { get; }
+        string Name { get; }
 
         /// <summary>
         /// Property value type.

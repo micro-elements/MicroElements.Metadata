@@ -18,12 +18,12 @@ namespace MicroElements.Metadata
         /// <param name="code">Property code.</param>
         public Property(string code)
         {
-            Code = code;
+            Name = code;
             Description = new LocalizableString(code);
         }
 
         /// <inheritdoc />
-        public string Code { get; }
+        public string Name { get; }
 
         /// <inheritdoc />
         public Type Type { get; } = typeof(T);
@@ -44,7 +44,7 @@ namespace MicroElements.Metadata
         public Func<IPropertyContainer, T> Calculate { get; private set; }
 
         /// <inheritdoc />
-        public override string ToString() => Code;
+        public override string ToString() => Name;
 
         public Property<T> WithDescription(string description, Language language)
         {

@@ -17,6 +17,9 @@ namespace MicroElements.Metadata
         public IProperty<T> Property { get; set; }
 
         /// <inheritdoc />
+        public IProperty PropertyUntyped => Property;
+
+        /// <inheritdoc />
         public Type PropertyType => typeof(T);
 
         /// <inheritdoc />

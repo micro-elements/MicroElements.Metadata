@@ -11,6 +11,11 @@ namespace MicroElements.Metadata
     public interface IPropertyRenderer : IMetadataProvider
     {
         /// <summary>
+        /// Gets property to render.
+        /// </summary>
+        IProperty PropertyUntyped { get; }
+
+        /// <summary>
         /// Gets property type.
         /// </summary>
         Type PropertyType { get; }

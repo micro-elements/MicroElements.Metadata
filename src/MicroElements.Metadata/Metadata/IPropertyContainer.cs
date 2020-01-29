@@ -36,8 +36,18 @@ namespace MicroElements.Metadata
         object GetValueUntyped(IProperty property);
     }
 
+    /// <summary>
+    /// Property container that can mutate it state.
+    /// </summary>
     public interface IMutablePropertyContainer
     {
+        /// <summary>
+        /// Sets value for property.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property.</param>
+        /// <param name="value">Value to store.</param>
+        /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
         IPropertyValue<T> SetValue<T>(IProperty<T> property, T value);
     }
 }

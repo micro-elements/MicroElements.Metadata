@@ -38,16 +38,23 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public object GetValueUntyped(IProperty property) => PropertyList.GetValueUntyped(property);
 
-        public void SetValue<T>(IProperty<T> property, T value) => PropertyList.SetValue(property, value);
+        /// <inheritdoc />
+        public override string ToString() => PropertyList.ToString();
+
+        /// <summary>
+        /// Sets value for property.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property.</param>
+        /// <param name="value">Value to store.</param>
+        /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value) => PropertyList.SetValue(property, value);
 
         public void SetValueIfNotSet<T>(IProperty<T> property, T value)
         {
             if (!PropertyList.ContainsPropertyByNameOrAlias(property.Name))
                 PropertyList.SetValue(property, value);
         }
-
-        /// <inheritdoc />
-        public override string ToString() => PropertyList.ToString();
 
         public void SetParentSource(IPropertyContainer propertyContainer)
         {

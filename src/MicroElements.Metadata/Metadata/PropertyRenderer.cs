@@ -14,7 +14,7 @@ namespace MicroElements.Metadata
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
         /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Metadata { get; } = new PropertyList();
+        public IReadOnlyList<IPropertyValue> Metadata { get; } = new MutablePropertyContainer();
 
         /// <inheritdoc />
         public IProperty<T> Property { get; set; }

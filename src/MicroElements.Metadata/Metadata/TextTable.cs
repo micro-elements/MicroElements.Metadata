@@ -149,7 +149,7 @@ namespace MicroElements.Metadata
 
     public class TableBuilder
     {
-        public PropertyList Info { get; } = new PropertyList();
+        public MutablePropertyContainer Info { get; } = new MutablePropertyContainer();
 
         public List<IProperty> Columns { get; } = new List<IProperty>();
 

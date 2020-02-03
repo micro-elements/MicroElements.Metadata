@@ -23,7 +23,9 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Metadata { get; } = new PropertyList();
+        public IReadOnlyList<IPropertyValue> Metadata => Metadata2.Value;
+
+        public Lazy<IPropertyContainer> Metadata2 { get; } = new Lazy<IPropertyContainer>(() => new MutablePropertyContainer());
 
         /// <inheritdoc />
         public string Name { get; }

@@ -20,13 +20,13 @@ namespace MicroElements.Metadata
 
     public static class Cache
     {
-        internal static readonly ConditionalWeakTable<object, PropertyList> Metadata = new ConditionalWeakTable<object, PropertyList>();
+        internal static readonly ConditionalWeakTable<object, IPropertyContainer> Metadata = new ConditionalWeakTable<object, IPropertyContainer>();
 
-        public static PropertyList GetInstanceMetadata(this object instance)
+        public static IPropertyContainer GetInstanceMetadata(this object instance)
         {
-            if (!Metadata.TryGetValue(instance, out PropertyList propertyList))
+            if (!Metadata.TryGetValue(instance, out IPropertyContainer propertyList))
             {
-                propertyList = new PropertyList();
+                propertyList = new MutablePropertyContainer();
                 Metadata.Add(instance, propertyList);
             }
 

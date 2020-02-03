@@ -1,64 +1,56 @@
-﻿// Copyright (c) MicroElements. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Base class for <see cref="IPropertyContainer"/> objects.
+    /// ReadOnly property container.
     /// </summary>
-    public abstract class PropertyContainer : IPropertyContainer
+    public class PropertyContainer : IPropertyContainer
     {
-        /// <summary>
-        /// Gets an empty property container.
-        /// </summary>
-        public static IPropertyContainer Empty => EmptyPropertyContainer.Instance;
-
-        protected PropertyList PropertyList { get; private set; }
+        private readonly MutablePropertyContainer _propertyContainer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainer"/> class.
         /// </summary>
         /// <param name="values">Property values.</param>
-        protected PropertyContainer(IEnumerable<IPropertyValue> values = null)
+        /// <param name="parentPropertySource">Parent property source.</param>
+        public PropertyContainer(IEnumerable<IPropertyValue> values = null, IPropertyContainer parentPropertySource = null)
         {
-            PropertyList = new PropertyList(values);
+            _propertyContainer = new MutablePropertyContainer(values, parentPropertySource);
         }
 
         /// <inheritdoc />
-        public IPropertyContainer ParentSource => PropertyList.ParentSource;
+        public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.GetEnumerator();
 
         /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Properties => PropertyList;
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_propertyContainer).GetEnumerator();
 
         /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property) => PropertyList.GetValue(property);
+        public int Count => _propertyContainer.Count;
 
         /// <inheritdoc />
-        public object GetValueUntyped(IProperty property) => PropertyList.GetValueUntyped(property);
+        public IPropertyValue this[int index] => _propertyContainer[index];
 
         /// <inheritdoc />
-        public override string ToString() => PropertyList.ToString();
+        public IPropertyContainer ParentSource => _propertyContainer.ParentSource;
 
-        /// <summary>
-        /// Sets value for property.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Property.</param>
-        /// <param name="value">Value to store.</param>
-        /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value) => PropertyList.SetValue(property, value);
+        /// <inheritdoc />
+        public IReadOnlyList<IPropertyValue> Properties => _propertyContainer.Properties;
 
-        public void SetValueIfNotSet<T>(IProperty<T> property, T value)
-        {
-            if (!PropertyList.ContainsPropertyByNameOrAlias(property.Name))
-                PropertyList.SetValue(property, value);
-        }
+        /// <inheritdoc />
+        public IPropertyValue<T> GetPropertyValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
+            => _propertyContainer.GetPropertyValue(property, propertySearch);
 
-        public void SetParentSource(IPropertyContainer propertyContainer)
-        {
-            PropertyList = PropertyList.SetParentPropertySource(propertyContainer);
-        }
+        /// <inheritdoc />
+        public IPropertyValue GetPropertyValueUntyped(IProperty property, PropertySearch propertySearch = PropertySearch.Default)
+            => _propertyContainer.GetPropertyValueUntyped(property, propertySearch);
+
+        /// <inheritdoc />
+        public T GetValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
+            => _propertyContainer.GetValue(property, propertySearch);
+
+        /// <inheritdoc />
+        public object GetValueUntyped(IProperty property) => _propertyContainer.GetValueUntyped(property);
     }
 }

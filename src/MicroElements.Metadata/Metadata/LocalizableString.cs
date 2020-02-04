@@ -120,32 +120,4 @@ namespace MicroElements.Metadata
         /// <returns><see cref="LocalString"/> with specified language.</returns>
         public static LocalString Lang(this string text, Language language) => new LocalString(text, language);
     }
-
-    public static class StringFormatter
-    {
-        public static string FormatValue(this object value)
-        {
-            if (value == null)
-                return "null";
-
-            //if (value is LocalDate localDate)
-            //    return localDate.ToString("uuuu-MM-dd", null);
-
-            return value.ToString();
-        }
-
-        public static string FormatList<T>(this IEnumerable<T> list)
-        {
-            return string.Join(", ", list.Select(value => FormatValue(value)));
-        }
-    }
-
-    //public class DateTimeOffsetConverter : JsonConverter<DateTimeOffset>
-    //{
-    //    public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-    //        DateTimeOffset.ParseExact(reader.GetString(), "MM/dd/yyyy", CultureInfo.InvariantCulture);
-
-    //    public override void Write(Utf8JsonWriter writer, DateTimeOffset dateTimeValue, JsonSerializerOptions options) =>
-    //        writer.WriteStringValue(dateTimeValue.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture));
-    //}
 }

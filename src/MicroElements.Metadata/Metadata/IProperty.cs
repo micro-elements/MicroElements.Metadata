@@ -55,26 +55,4 @@ namespace MicroElements.Metadata
         /// </summary>
         Func<IPropertyContainer, T> Calculate { get; }
     }
-
-    public static class PropertyExtensions
-    {
-        public static Option<IPropertyValue> GetDefaultValueUntyped(this IProperty property) =>
-            GenericGetDefaultValue(property.Type)(property);
-
-        public static readonly Func<Type, Func<IProperty, Option<IPropertyValue>>> GenericGetDefaultValue =
-            CodeCompiler.CreateCompiledFunc<IProperty, Option<IPropertyValue>>(GetDefaultValue<CodeCompiler.GenericType>);
-
-        public static Option<IPropertyValue> GetDefaultValue<T>(this IProperty property) =>
-            GetDefaultValue((IProperty<T>)property).Map(value => (IPropertyValue)value);
-
-        public static Option<IPropertyValue<T>> GetDefaultValue<T>(this IProperty<T> property)
-        {
-            if (property.DefaultValue != null)
-            {
-                var defaultValue = property.DefaultValue();
-                return new PropertyValue<T>(property, defaultValue, ValueSource.DefaultValue);
-            }
-            return Prelude.None;
-        }
-    }
 }

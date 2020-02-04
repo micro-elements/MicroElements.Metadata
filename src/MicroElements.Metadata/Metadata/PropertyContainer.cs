@@ -29,6 +29,15 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
+        public override string ToString()
+        {
+            if (ReferenceEquals(this, Empty))
+                return "Empty";
+
+            return _propertyContainer.ToString();
+        }
+
+        /// <inheritdoc />
         public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.GetEnumerator();
 
         /// <inheritdoc />

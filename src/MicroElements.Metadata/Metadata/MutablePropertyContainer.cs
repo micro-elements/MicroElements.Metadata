@@ -85,7 +85,8 @@ namespace MicroElements.Metadata
                 return propertyValue;
 
             // Поиск у родителя.
-            propertyValue = ParentSource.Properties.GetProperty(property, propertySearch);
+            if (propertySearch.HasFlag(PropertySearch.SearchInParent))
+                propertyValue = ParentSource.Properties.GetProperty(property, propertySearch);
             if (propertyValue != null)
                 return propertyValue;
 

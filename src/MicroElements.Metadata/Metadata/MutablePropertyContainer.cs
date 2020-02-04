@@ -22,7 +22,7 @@ namespace MicroElements.Metadata
         /// <param name="parentPropertySource">Parent property source.</param>
         public MutablePropertyContainer(IEnumerable<IPropertyValue> values = null, IPropertyContainer parentPropertySource = null)
         {
-            ParentSource = parentPropertySource ?? EmptyPropertyContainer.Instance;
+            ParentSource = parentPropertySource ?? PropertyContainer.Empty;
             if (values != null)
                 _propertyValues.AddRange(values);
         }
@@ -39,65 +39,17 @@ namespace MicroElements.Metadata
         public IReadOnlyList<IPropertyValue> Properties => _propertyValues;
 
         /// <inheritdoc />
-        public object GetValueUntyped(IProperty property)
+        public object GetValueUntyped(IProperty property, bool searchInParent = true)
         {
             Type propertyType = property.Type;
             MethodInfo getValue = GetType().GetMethod(nameof(GetValue));
             MethodInfo getValueTyped = getValue.MakeGenericMethod(propertyType);
-            return getValueTyped.Invoke(this, new object[] { property });
+            return getValueTyped.Invoke(this, new object[] { property, searchInParent });
         }
 
         /// <inheritdoc />
-        public IPropertyValue<T> GetPropertyValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
-        {
-            IPropertyValue<T> propertyValue;
-
-            // Поиск среди своих свойств.
-            propertyValue = _propertyValues.GetProperty(property, propertySearch) as IPropertyValue<T>;
-            if (propertyValue != null)
-                return propertyValue;
-
-            // Поиск у родителя.
-            if (propertySearch.HasFlag(PropertySearch.SearchInParent))
-                propertyValue = ParentSource.Properties.GetProperty(property, propertySearch) as IPropertyValue<T>;
-            if (propertyValue != null)
-                return propertyValue;
-
-            // Свойство не в списке свойств, но может его можно вычислить.
-            if (property.Calculate != null)
-            {
-                var calculatedValue = property.Calculate(this);
-                return new PropertyValue<T>(property, calculatedValue, ValueSource.Calculated);
-            }
-
-            // Вернем значение по умолчанию.
-            return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
-        }
-
-        /// <inheritdoc />
-        public IPropertyValue GetPropertyValueUntyped(IProperty property, PropertySearch propertySearch = PropertySearch.Default)
-        {
-            IPropertyValue propertyValue;
-
-            // Поиск среди своих свойств.
-            propertyValue = _propertyValues.GetProperty(property, propertySearch);
-            if (propertyValue != null)
-                return propertyValue;
-
-            // Поиск у родителя.
-            if (propertySearch.HasFlag(PropertySearch.SearchInParent))
-                propertyValue = ParentSource.Properties.GetProperty(property, propertySearch);
-            if (propertyValue != null)
-                return propertyValue;
-
-            return null;
-        }
-
-        /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
-        {
-            return GetPropertyValue(property, propertySearch).Value;
-        }
+        public T GetValue<T>(IProperty<T> property, bool searchInParent = true) =>
+            this.GetPropertyValue(property, searchInParent, calculateValue: true).Value;
 
         #endregion
 
@@ -117,13 +69,15 @@ namespace MicroElements.Metadata
 
         #endregion
 
+        #region Mutability
+
         /// <summary>
         /// Sets parent property container.
         /// </summary>
         /// <param name="parentPropertySource">Parent property container.</param>
         public void SetParentPropertySource(IPropertyContainer parentPropertySource)
         {
-            ParentSource = parentPropertySource ?? EmptyPropertyContainer.Instance;
+            ParentSource = parentPropertySource ?? PropertyContainer.Empty;
         }
 
         /// <summary>
@@ -153,6 +107,8 @@ namespace MicroElements.Metadata
 
             return newPropertyValue;
         }
+
+        #endregion
     }
 
     /// <summary>

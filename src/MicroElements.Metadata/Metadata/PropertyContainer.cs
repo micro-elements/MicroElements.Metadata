@@ -8,7 +8,15 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyContainer : IPropertyContainer
     {
-        private readonly MutablePropertyContainer _propertyContainer;
+        /// <summary>
+        /// Empty property container singleton instance.
+        /// </summary>
+        public static readonly IPropertyContainer Empty = new PropertyContainer();
+
+        /// <summary>
+        /// Real data holder.
+        /// </summary>
+        private readonly IPropertyContainer _propertyContainer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainer"/> class.
@@ -39,18 +47,9 @@ namespace MicroElements.Metadata
         public IReadOnlyList<IPropertyValue> Properties => _propertyContainer.Properties;
 
         /// <inheritdoc />
-        public IPropertyValue<T> GetPropertyValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
-            => _propertyContainer.GetPropertyValue(property, propertySearch);
+        public T GetValue<T>(IProperty<T> property, bool searchInParent = true) => _propertyContainer.GetValue(property, searchInParent);
 
         /// <inheritdoc />
-        public IPropertyValue GetPropertyValueUntyped(IProperty property, PropertySearch propertySearch = PropertySearch.Default)
-            => _propertyContainer.GetPropertyValueUntyped(property, propertySearch);
-
-        /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property, PropertySearch propertySearch = PropertySearch.Default)
-            => _propertyContainer.GetValue(property, propertySearch);
-
-        /// <inheritdoc />
-        public object GetValueUntyped(IProperty property) => _propertyContainer.GetValueUntyped(property);
+        public object GetValueUntyped(IProperty property, bool searchInParent = true) => _propertyContainer.GetValueUntyped(property, searchInParent);
     }
 }

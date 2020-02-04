@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -13,64 +13,169 @@ namespace MicroElements.Metadata
     public static class PropertyContainerExtensions
     {
         /// <summary>
+        /// Gets property and value by search conditions.
+        /// </summary>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="search">Search conditions.</param>
+        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, Search search)
+        {
+            search.Condition.AssertArgumentNotNull(nameof(search.Condition));
+
+            // Ищем в своих свойствах.
+            IPropertyValue propertyValue = propertyContainer.FirstOrDefault(search.Condition);
+            if (propertyValue != null)
+                return propertyValue;
+
+            // Ищем у родителя
+            if (search.SearchInParent && propertyContainer.ParentSource != null)
+            {
+                propertyValue = propertyContainer.ParentSource.GetPropertyValueUntyped(search);
+                if (propertyValue != null)
+                    return propertyValue;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets property and value by search conditions.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="search">Search conditions.</param>
+        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        public static IPropertyValue<T> GetPropertyValue<T>(this IPropertyContainer propertyContainer, Search search) =>
+            (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(search);
+
+        /// <summary>
+        /// Gets property and value by property.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to search.</param>
+        /// <param name="searchInParent">Search in parent.</param>
+        /// <param name="calculateValue">Calculate value if value was not found.</param>
+        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        public static IPropertyValue<T> GetPropertyValue<T>(
+            this IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            bool searchInParent = true,
+            bool calculateValue = true)
+        {
+            IPropertyValue<T> propertyValue = (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(property, searchInParent);
+
+            if (propertyValue.HasValue())
+                return propertyValue;
+
+            // Свойство не в списке свойств, но может его можно вычислить.
+            if (calculateValue && property.Calculate != null)
+            {
+                var calculatedValue = property.Calculate(propertyContainer);
+                return new PropertyValue<T>(property, calculatedValue, ValueSource.Calculated);
+            }
+
+            // Вернем значение по умолчанию.
+            return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
+        }
+
+        /// <summary>
+        /// Gets property and value by property.
+        /// </summary>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to search.</param>
+        /// <param name="searchInParent">Search in parent.</param>
+        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, IProperty property, bool searchInParent = true) =>
+            propertyContainer.GetPropertyValueUntyped(Search.ByProperty(property).SearchInParent(searchInParent));
+
+        /// <summary>
         /// Returns true if <paramref name="propertyContainer"/> has property.
         /// Also searches in parent sources.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
-        /// <param name="search">Search conditions.</param>
+        /// <param name="searchInParent">Search in parent.</param>
         /// <returns>True if property exists in container.</returns>
-        public static bool HasValue(this IPropertyContainer propertyContainer, IProperty property, PropertySearch search = PropertySearch.Default)
-        {
-            return propertyContainer.GetPropertyValueUntyped(property, search) != null;
-        }
+        public static bool HasValue(this IPropertyContainer propertyContainer, IProperty property, bool searchInParent = true) =>
+            propertyContainer.GetPropertyValueUntyped(property, searchInParent).HasValue();
 
-        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value, PropertySearch search = PropertySearch.Equals)
+        /// <summary>
+        /// Sets property value if property is not set.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
         {
-            var propertyValue = propertyContainer.GetPropertyValue(property, search);
-            if (propertyValue == null)
+            var propertyValue = propertyContainer.GetPropertyValueUntyped(property, searchInParent: false);
+            if (propertyValue == null || !propertyValue.HasValue())
                 propertyContainer.SetValue(property, value);
         }
+    }
 
-        public static IPropertyValue GetPropertyByNameOrAlias(this IEnumerable<IPropertyValue> propertyList, string propertyName)
-            => propertyList.FirstOrDefault(propertyValue => IsMatchesByNameOrAlias(propertyValue, propertyName));
+    /// <summary>
+    /// Search options.
+    /// </summary>
+    public readonly struct Search
+    {
+        public Func<IPropertyValue, bool> Condition { get; }
 
-        public static IPropertyValue GetProperty(this IReadOnlyList<IPropertyValue> propertyList, IProperty property, PropertySearch propertySearch = PropertySearch.All)
+        public bool SearchInParent { get; }
+
+        public Search(Func<IPropertyValue, bool> condition)
         {
-            IPropertyValue result = null;
-            if (propertySearch.HasFlag(PropertySearch.Equals))
-                result = propertyList.FirstOrDefault(propertyValue => propertyValue.PropertyUntyped == property);
-            if (result == null && propertySearch.HasFlag(PropertySearch.ByName))
-                result = propertyList.FirstOrDefault(propertyValue => propertyValue.PropertyUntyped.Name.IsOneOf(property.Name, property.Alias, propertySearch));
-            if (result == null && propertySearch.HasFlag(PropertySearch.ByAlias))
-                result = propertyList.FirstOrDefault(propertyValue => propertyValue.PropertyUntyped.Alias.IsOneOf(property.Name, property.Alias, propertySearch));
-            return result;
+            Condition = condition.AssertArgumentNotNull(nameof(condition));
+            SearchInParent = true;
         }
 
-        public static bool ContainsProperty(this IEnumerable<IPropertyValue> propertyList, IProperty property)
-            => propertyList.Any(propertyValue => propertyValue.PropertyUntyped == property);
-
-        public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, string propertyName)
+        public Search(
+            Search searchOptions,
+            Func<IPropertyValue, bool> condition = null,
+            bool? searchInParent = null)
         {
-            return propertyName != null
-                   && (propertyValue.PropertyUntyped.Name.EqualsIgnoreCase(propertyName)
-                       || propertyValue.PropertyUntyped.Alias.EqualsIgnoreCase(propertyName));
+            Condition = condition ?? searchOptions.Condition;
+            SearchInParent = searchInParent ?? searchOptions.SearchInParent;
         }
 
-        private static bool EqualsIgnoreCase(this string value, string other) =>
-            value?.Equals(other, StringComparison.OrdinalIgnoreCase) ?? other == null;
-
-        private static bool IsOneOf(this string value, string other1, string other2, PropertySearch search)
+        public static Search ByProperty(IProperty property)
         {
-            static StringComparison ComparisonByFlag(PropertySearch propertySearch) =>
-                propertySearch.HasFlag(PropertySearch.IgnoreCase)
-                    ? StringComparison.OrdinalIgnoreCase
-                    : StringComparison.Ordinal;
+            return new Search(default, condition: value => value.PropertyUntyped == property);
+        }
 
-            if (value == null)
-                return other1 == null || other2 == null;
+        public static Search ByNameOrAlias(string name, bool ignoreCase = false)
+        {
+            return new Search(default, condition: propertyValue => propertyValue.IsMatchesByNameOrAlias(name, ignoreCase));
+        }
+    }
 
-            return value.Equals(other1, ComparisonByFlag(search)) || value.Equals(other2, ComparisonByFlag(search));
+    public static class SearchBuilder
+    {
+        public static Search ByProperty(this Search search, IProperty property)
+        {
+            return new Search(search, condition: value => value.PropertyUntyped == property);
+        }
+
+        public static Search SearchInParent(this Search search, bool searchInParent = true)
+        {
+            return new Search(search, searchInParent: searchInParent);
+        }
+
+        public static Search ByNameOrAlias(this Search search, string name, bool ignoreCase = false)
+        {
+            return new Search(search, condition: propertyValue => propertyValue.IsMatchesByNameOrAlias(name, ignoreCase));
+        }
+
+        public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, string propertyName, bool ignoreCase = false)
+        {
+            StringComparison stringComparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+            if (propertyName == null)
+                return false;
+
+            return propertyValue.PropertyUntyped.Name.Equals(propertyName, stringComparison)
+                   || propertyValue.PropertyUntyped.Alias.Equals(propertyName, stringComparison);
         }
     }
 }

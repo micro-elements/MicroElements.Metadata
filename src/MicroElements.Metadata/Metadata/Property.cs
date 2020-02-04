@@ -23,11 +23,6 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Metadata => Metadata2.Value;
-
-        public Lazy<IPropertyContainer> Metadata2 { get; } = new Lazy<IPropertyContainer>(() => new MutablePropertyContainer());
-
-        /// <inheritdoc />
         public string Name { get; }
 
         /// <inheritdoc />
@@ -80,7 +75,5 @@ namespace MicroElements.Metadata
             Calculate = evaluate;
             return this;
         }
-
-        
     }
 }

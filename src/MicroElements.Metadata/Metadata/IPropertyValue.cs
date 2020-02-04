@@ -1,8 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.Functional;
-
 namespace MicroElements.Metadata
 {
     /// <summary>
@@ -43,6 +41,9 @@ namespace MicroElements.Metadata
         T Value { get; }
     }
 
+    /// <summary>
+    /// PropertyValue extensions.
+    /// </summary>
     public static class PropertyValueExtensions
     {
         /// <summary>
@@ -51,6 +52,24 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyValue">PropertyValue instance.</param>
         /// <returns>true if property has value.</returns>
-        public static bool HasValue<T>(this IPropertyValue<T> propertyValue) => !propertyValue.Value.IsDefault() || propertyValue.Source != ValueSource.NotDefined;
+        public static bool HasValue<T>(this IPropertyValue<T> propertyValue)
+        {
+            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
+                return false;
+            // return !propertyValue.Value.IsDefault() || propertyValue.Source != ValueSource.NotDefined;
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if property has value. (Not calculated value but set).
+        /// </summary>
+        /// <param name="propertyValue">PropertyValue instance.</param>
+        /// <returns>true if property has value.</returns>
+        public static bool HasValue(this IPropertyValue propertyValue)
+        {
+            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
+                return false;
+            return true;
+        }
     }
 }

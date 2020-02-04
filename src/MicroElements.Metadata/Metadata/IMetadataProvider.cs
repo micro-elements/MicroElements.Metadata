@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MicroElements.Functional;
 
@@ -13,21 +12,40 @@ namespace MicroElements.Metadata
     public interface IMetadataProvider
     {
         /// <summary>
-        /// Gets properties with values.
+        /// Gets metadata for current instance.
+        /// Private for visibility in debug and invisibility for serializers.
         /// </summary>
-        IReadOnlyList<IPropertyValue> Metadata { get; }
+        private IPropertyContainer Metadata => this.GetInstanceMetadata();
+
+        /// <summary>
+        /// Gets metadata for current instance.
+        /// </summary>
+        /// <returns>Metadata for current instance.</returns>
+        public IPropertyContainer GetMetadata() => Metadata;
     }
 
-    public static class Cache
+    /// <summary>
+    /// Global metadata cache.
+    /// Uses <see cref="ConditionalWeakTable{TKey,TValue}"/> to store metadata for objects.
+    /// </summary>
+    public static class MetadataGlobalCache
     {
-        internal static readonly ConditionalWeakTable<object, IPropertyContainer> Metadata = new ConditionalWeakTable<object, IPropertyContainer>();
+        private static readonly ConditionalWeakTable<object, IPropertyContainer> MetadataCache = new ConditionalWeakTable<object, IPropertyContainer>();
 
+        /// <summary>
+        /// Gets metadata for <paramref name="instance"/>.
+        /// </summary>
+        /// <param name="instance">Source.</param>
+        /// <returns>Metadata for instance.</returns>
         public static IPropertyContainer GetInstanceMetadata(this object instance)
         {
-            if (!Metadata.TryGetValue(instance, out IPropertyContainer propertyList))
+            if (instance == null)
+                return PropertyContainer.Empty;
+
+            if (!MetadataCache.TryGetValue(instance, out IPropertyContainer propertyList))
             {
                 propertyList = new MutablePropertyContainer();
-                Metadata.Add(instance, propertyList);
+                MetadataCache.Add(instance, propertyList);
             }
 
             return propertyList;
@@ -51,38 +69,46 @@ namespace MicroElements.Metadata
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
-            IPropertyValue propertyValue = metadata.GetPropertyByNameOrAlias(metadataName);
+            var metadata = metadataProvider.GetMetadata() ?? metadataProvider.GetInstanceMetadata();
+
+            var propertyValue = metadata.GetPropertyValue<TMetadata>(Search.ByNameOrAlias(metadataName, ignoreCase: true));
             if (propertyValue != null)
-                return (TMetadata)propertyValue?.ValueUntyped;
+                return propertyValue.Value;
 
             return default;
         }
 
         /// <summary>
-        /// Sets metadata for item.
+        /// Sets metadata for item and returns the same metadataProvider for chaining.
         /// </summary>
-        /// <typeparam name="TData">Metadata type.</typeparam>
-        /// <param name="data">Metadata.</param>
-        /// <returns>The same renderer.</returns>
-        public static TMetadataProvider SetMetadata<TMetadataProvider, TData>(this TMetadataProvider metadataProvider, TData data) where TMetadataProvider : IMetadataProvider
+        /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Target metadata provider.</param>
+        /// <param name="data">Metadata to set.</param>
+        /// <returns>The same metadataProvider.</returns>
+        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(this TMetadataProvider metadataProvider, TMetadata data)
+            where TMetadataProvider : IMetadataProvider
         {
-            return metadataProvider.SetMetadata(typeof(TData).FullName, data);
+            return metadataProvider.SetMetadata(typeof(TMetadata).FullName, data);
         }
 
         /// <summary>
-        /// Sets metadata for item.
+        /// Sets metadata for item and returns the same metadataProvider for chaining.
         /// </summary>
-        /// <typeparam name="TData">Metadata type.</typeparam>
-        /// <param name="name">Metadata name.</param>
-        /// <param name="data">Metadata.</param>
-        /// <returns>The same renderer.</returns>
-        public static TMetadataProvider SetMetadata<TMetadataProvider, TData>(this TMetadataProvider metadataProvider, string name, TData data) where TMetadataProvider : IMetadataProvider
+        /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Target metadata provider.</param>
+        /// <param name="metadataName">Metadata name.</param>
+        /// <param name="data">Metadata to set.</param>
+        /// <returns>The same metadataProvider.</returns>
+        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(this TMetadataProvider metadataProvider, string metadataName, TMetadata data)
+            where TMetadataProvider : IMetadataProvider
         {
-            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            metadataName ??= typeof(TMetadata).FullName;
+            var metadata = metadataProvider.GetMetadata() ?? metadataProvider.GetInstanceMetadata();
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
-                mutablePropertyContainer.SetValue(new Property<TData>(name), data);
+                mutablePropertyContainer.SetValue(new Property<TMetadata>(metadataName), data);
             }
 
             return metadataProvider;

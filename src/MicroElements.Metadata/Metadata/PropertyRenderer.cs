@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 
 namespace MicroElements.Metadata
@@ -13,9 +12,6 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Property type.</typeparam>
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
-        /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Metadata { get; } = new MutablePropertyContainer();
-
         /// <inheritdoc />
         public IProperty<T> Property { get; set; }
 

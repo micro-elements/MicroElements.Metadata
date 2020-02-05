@@ -174,8 +174,8 @@ namespace MicroElements.Metadata
             if (propertyName == null)
                 return false;
 
-            return propertyValue.PropertyUntyped.Name.Equals(propertyName, stringComparison)
-                   || propertyValue.PropertyUntyped.Alias.Equals(propertyName, stringComparison);
+            return propertyName.Equals(propertyValue.PropertyUntyped.Name, stringComparison)
+                   || propertyName.Equals(propertyValue.PropertyUntyped.Alias, stringComparison);
         }
     }
 }

@@ -13,15 +13,8 @@ namespace MicroElements.Metadata
     {
         /// <summary>
         /// Gets metadata for current instance.
-        /// Private for visibility in debug and invisibility for serializers.
         /// </summary>
-        private IPropertyContainer Metadata => this.GetInstanceMetadata();
-
-        /// <summary>
-        /// Gets metadata for current instance.
-        /// </summary>
-        /// <returns>Metadata for current instance.</returns>
-        public IPropertyContainer GetMetadata() => Metadata;
+        IPropertyContainer Metadata => this.GetInstanceMetadata();
     }
 
     /// <summary>
@@ -69,7 +62,7 @@ namespace MicroElements.Metadata
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetMetadata() ?? metadataProvider.GetInstanceMetadata();
+            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
 
             var propertyValue = metadata.GetPropertyValue<TMetadata>(Search.ByNameOrAlias(metadataName, ignoreCase: true));
             if (propertyValue != null)
@@ -105,7 +98,7 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
         {
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetMetadata() ?? metadataProvider.GetInstanceMetadata();
+            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
                 mutablePropertyContainer.SetValue(new Property<TMetadata>(metadataName), data);

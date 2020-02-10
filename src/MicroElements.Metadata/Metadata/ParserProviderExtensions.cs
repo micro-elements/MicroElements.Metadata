@@ -24,8 +24,8 @@ namespace MicroElements.Metadata
             return propertyValues;
         }
 
-        public static Option<IPropertyValue> ParseUntyped(IPropertyParser propertyParser, string textValue) =>
-            GenericParse(propertyParser.PropertyType)(propertyParser, textValue);
+        public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue) =>
+            GenericParse(propertyParser.TargetType)(propertyParser, textValue);
 
         public static readonly Func<Type, Func<IPropertyParser, string, Option<IPropertyValue>>> GenericParse =
             CodeCompiler.CreateCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(Parse<CodeCompiler.GenericType>);

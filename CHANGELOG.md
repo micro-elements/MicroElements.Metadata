@@ -1,4 +1,5 @@
 # 0.2.x
+- Added PropertyMapper
 - Added initial table impl
 - IMetadataProvider changed
 - PropertyList removed in favor of PropertyContainer

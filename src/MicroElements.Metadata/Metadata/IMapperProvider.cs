@@ -6,13 +6,13 @@ using System.Collections.Generic;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Provides property parsers.
+    /// Provides property mappers.
     /// </summary>
-    public interface IParserProvider
+    public interface IMapperProvider
     {
         /// <summary>
-        /// Gets property parsers.
+        /// Gets property mappers.
         /// </summary>
-        IEnumerable<IPropertyParser> Parsers { get; }
+        IEnumerable<IPropertyMapper> Mappers { get; }
     }
 }

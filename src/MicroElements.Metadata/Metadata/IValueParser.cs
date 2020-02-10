@@ -19,6 +19,10 @@ namespace MicroElements.Metadata
         Option<object> ParseUntyped(string source);
     }
 
+    /// <summary>
+    /// Typed value parser.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
     public interface IValueParser<T> : IValueParser
     {
         /// <summary>
@@ -29,6 +33,10 @@ namespace MicroElements.Metadata
         Option<T> Parse(string source);
     }
 
+    /// <summary>
+    /// Value parser base class.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
     public abstract class ValueParserBase<T> : IValueParser<T>
     {
         /// <inheritdoc />
@@ -41,11 +49,18 @@ namespace MicroElements.Metadata
         }
     }
 
+    /// <summary>
+    /// Value parser implementation with external func.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
     public class ValueParser<T> : ValueParserBase<T>
     {
-        private Func<string, T> _parseFunc;
+        private readonly Func<string, T> _parseFunc;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValueParser{T}"/> class.
+        /// </summary>
+        /// <param name="parseFunc">Func to parse string to value.</param>
         public ValueParser(Func<string, T> parseFunc)
         {
             _parseFunc = parseFunc;

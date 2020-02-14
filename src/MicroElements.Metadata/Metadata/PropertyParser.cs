@@ -39,6 +39,9 @@ namespace MicroElements.Metadata
             TargetProperty = targetProperty;
         }
 
+        /// <inheritdoc />
+        public override string ToString() => $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
+
         /// <summary>
         /// Sets <see cref="TargetProperty"/> and returns this.
         /// </summary>

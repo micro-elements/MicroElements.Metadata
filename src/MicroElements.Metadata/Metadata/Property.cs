@@ -151,10 +151,11 @@ namespace MicroElements.Metadata
         /// <returns>The same property for builder chaining.</returns>
         public static IProperty WithAlias(this IProperty property, string alias)
         {
-            static IProperty WithAlias<T>(IProperty property, string alias) => ((Property<T>)property).WithAlias(alias);
             var func = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, WithAlias<CodeCompiler.GenericType>);
             return func(property, alias);
         }
+
+        private static IProperty WithAlias<T>(IProperty property, string alias) => ((Property<T>)property).WithAlias(alias);
 
         /// <summary>
         /// Sets alias and returns the same property for builder chaining.
@@ -166,10 +167,11 @@ namespace MicroElements.Metadata
         /// <returns>The same property for builder chaining.</returns>
         public static IProperty WithDescription(this IProperty property, string description, Language language = Language.Undefined)
         {
-            static IProperty WithDescription<T>(IProperty property, string description, Language language) => ((Property<T>)property).WithDescription(description, language);
             var func = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, WithDescription<CodeCompiler.GenericType>);
             return func(property, description, language);
         }
+
+        static IProperty WithDescription<T>(IProperty property, string description, Language language) => ((Property<T>)property).WithDescription(description, language);
 
         /// <summary>
         /// Sets metadata and returns the same property for builder chaining.

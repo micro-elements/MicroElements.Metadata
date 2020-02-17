@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
@@ -24,11 +23,11 @@ namespace MicroElements.Metadata
             return propertyValues;
         }
 
-        public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue) =>
-            GenericParse(propertyParser.TargetType)(propertyParser, textValue);
-
-        public static readonly Func<Type, Func<IPropertyParser, string, Option<IPropertyValue>>> GenericParse =
-            CodeCompiler.CreateCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(Parse<CodeCompiler.GenericType>);
+        public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue)
+        {
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(propertyParser.TargetType, Parse<CodeCompiler.GenericType>);
+            return func(propertyParser, textValue);
+        }
 
         public static Option<IPropertyValue> Parse<T>(IPropertyParser propertyParserUntyped, string textValue)
         {

@@ -8,8 +8,6 @@ Provides metadata model, parsing and reporting.
 [![MyGetVersion](https://img.shields.io/myget/micro-elements/v/MicroElements.Metadata.svg)](https://www.myget.org/feed/micro-elements/package/nuget/MicroElements.Metadata)
 
 [![Travis](https://img.shields.io/travis/micro-elements/MicroElements.Metadata/master.svg?logo=travis)](https://travis-ci.org/micro-elements/MicroElements.Metadata)
-[![AppVeyor](https://img.shields.io/appveyor/ci/micro-elements/microelements-Metadata.svg?logo=appveyor)](https://ci.appveyor.com/project/micro-elements/microelements-Metadata)
-[![Coverage Status](https://img.shields.io/coveralls/micro-elements/MicroElements.Metadata.svg)](https://coveralls.io/r/micro-elements/MicroElements.Metadata)
 
 [![Gitter](https://img.shields.io/gitter/room/micro-elements/MicroElements.Metadata.svg)](https://gitter.im/micro-elements/MicroElements.Metadata)
 

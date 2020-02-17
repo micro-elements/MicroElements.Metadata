@@ -1,3 +1,8 @@
+# 0.3.0
+- Many methods for untyped work
+- Builders for properties
+- Dynamic wrapper
+
 # 0.2.x
 - Added PropertyMapper
 - Added initial table impl

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -73,5 +74,27 @@ namespace MicroElements.Metadata
         /// Value is default value for property.
         /// </summary>
         DefaultValue,
+    }
+
+    /// <summary>
+    /// PropertyValue extensions.
+    /// </summary>
+    public static class PropertyValue
+    {
+        public static IPropertyValue Create(IProperty property, object value, ValueSource? valueSource = null)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            value.AssertArgumentNotNull(nameof(value));
+
+            Type propertyType = property.Type;
+            Type valueType = value.GetType();
+            if (valueType != propertyType)
+                throw new InvalidOperationException($"Value type {valueType} should be the same as property type {propertyType}.");
+
+            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
+            ValueSource source = valueSource ?? ValueSource.Defined;
+            IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
+            return propertyValue;
+        }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
 
@@ -48,8 +47,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="text">Text.</param>
         /// <returns><see cref="LocalizableString"/> to support chaining.</returns>
-        public LocalizableString Add(LocalString text) =>
-            new LocalizableString(_texts.Append(text).ToArray());
+        public LocalizableString Add(LocalString text) => new LocalizableString(_texts.Append(text).ToArray());
 
         /// <inheritdoc />
         public override string ToString() => Texts.FormatList();
@@ -60,6 +58,11 @@ namespace MicroElements.Metadata
     /// </summary>
     public enum Language
     {
+        /// <summary>
+        /// Language is undefined.
+        /// </summary>
+        Undefined,
+
         /// <summary>
         /// English.
         /// </summary>

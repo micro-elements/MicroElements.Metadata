@@ -47,11 +47,11 @@ namespace MicroElements.Metadata
 
     public static class PropertyParserExtensions
     {
-        public static Option<IPropertyValue> GetDefaultValueUntyped(this IPropertyParser propertyParser) =>
-            GetDefaultValueFunc(propertyParser.TargetType).Invoke(propertyParser);
-
-        public static readonly Func<Type, Func<IPropertyParser, Option<IPropertyValue>>> GetDefaultValueFunc =
-            CodeCompiler.CreateCompiledFunc<IPropertyParser, Option<IPropertyValue>>(GetDefaultValue<CodeCompiler.GenericType>);
+        public static Option<IPropertyValue> GetDefaultValueUntyped(this IPropertyParser propertyParser)
+        {
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, Option<IPropertyValue>>(propertyParser.TargetType, GetDefaultValue<CodeCompiler.GenericType>);
+            return func(propertyParser);
+        }
 
         public static Option<IPropertyValue> GetDefaultValue<T>(this IPropertyParser propertyParserUntyped)
         {

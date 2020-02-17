@@ -10,7 +10,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Extensions for <see cref="IPropertyContainer"/>.
     /// </summary>
-    public static class PropertyContainerExtensions
+    public static partial class PropertyContainerExtensions
     {
         /// <summary>
         /// Gets property and value by search conditions.
@@ -36,6 +36,20 @@ namespace MicroElements.Metadata
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Gets property and value by search conditions.
+        /// </summary>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="propertyName">Search conditions.</param>
+        /// <param name="searchInParent">Search in parent.</param>
+        /// <returns>value or null.</returns>
+        public static object GetValueUntyped(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
+        {
+            return propertyContainer
+                .GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent(searchInParent))
+                ?.ValueUntyped;
         }
 
         /// <summary>

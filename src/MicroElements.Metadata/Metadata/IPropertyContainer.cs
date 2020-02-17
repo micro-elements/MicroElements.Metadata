@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 
 namespace MicroElements.Metadata
@@ -58,5 +57,22 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
         IPropertyValue<T> SetValue<T>(IProperty<T> property, T value);
+
+        /// <summary>
+        /// Sets property value.
+        /// </summary>
+        /// <param name="propertyValue">Property and value.</param>
+        void SetValue(IPropertyValue propertyValue);
+
+        /// <summary>
+        /// Adds new property value.
+        /// </summary>
+        /// <param name="propertyValue">Property and value.</param>
+        void Add(IPropertyValue propertyValue);
+
+        /// <summary>
+        /// Clears all property and values.
+        /// </summary>
+        void Clear();
     }
 }

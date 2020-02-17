@@ -35,7 +35,20 @@ namespace MicroElements.Metadata.Tests
         public void PropertyContainer()
         {
             var propertyContainer = new MutablePropertyContainer();
-            //TODO propertyContainer.SetValue()
+            var propertyValueA = propertyContainer.SetValue("PropertyA", "ValueA");
+            var propertyValueB = propertyContainer.SetValue(new Property<int>("PropertyB"), 42);
+
+            propertyValueA.Should().NotBeNull();
+            propertyValueB.Should().NotBeNull();
+
+            propertyContainer.GetValue(propertyValueA.Property).Should().Be("ValueA");
+            propertyContainer.GetValueUntyped("PropertyA").Should().Be("ValueA");
+
+            dynamic dynamicContainer = propertyContainer.AsDynamic();
+            object valueB = dynamicContainer.PropertyB;
+            valueB.Should().Be(42);
+
+            //TODO: override, parent
         }
 
         [Fact]

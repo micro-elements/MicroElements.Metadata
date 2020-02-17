@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -46,13 +45,13 @@ namespace MicroElements.Metadata
         Func<T> DefaultValue { get; }
 
         /// <summary>
-        /// Gets examples list.
-        /// </summary>
-        IReadOnlyList<T> Examples { get; }
-
-        /// <summary>
         /// Gets Calculate func for calculated properties.
         /// </summary>
         Func<IPropertyContainer, T> Calculate { get; }
+
+        /// <summary>
+        /// Gets examples list.
+        /// </summary>
+        IReadOnlyList<T> Examples { get; }
     }
 }

@@ -54,4 +54,22 @@ namespace MicroElements.Metadata
         /// </summary>
         IReadOnlyList<T> Examples { get; }
     }
+
+    /// <summary>
+    /// Property extensions.
+    /// </summary>
+    public static class PropertyExtensions
+    {
+        /// <summary>
+        /// Gets property name and possible aliases.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <returns>Property name aliases.</returns>
+        public static IEnumerable<string> GetNameAndAliases(this IProperty property)
+        {
+            yield return property.Name;
+            if (property.Alias != null)
+                yield return property.Alias;
+        }
+    }
 }

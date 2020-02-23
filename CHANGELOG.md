@@ -1,6 +1,9 @@
+# 0.3.2
+- GetDynamicMemberNames implemented for DynamicContainer
+
 # 0.3.1
 - Default value for GetMetadata
-- Options for AsDynamic and DynamocContainer
+- Options for AsDynamic and DynamicContainer
 
 # 0.3.0
 - Many methods for untyped work

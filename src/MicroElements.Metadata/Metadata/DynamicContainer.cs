@@ -1,4 +1,6 @@
-﻿using System.Dynamic;
+﻿using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 
 namespace MicroElements.Metadata
 {
@@ -22,6 +24,12 @@ namespace MicroElements.Metadata
             _propertyContainer = propertyContainer;
             _ignoreCase = ignoreCase;
             _searchInParent = searchInParent;
+        }
+
+        /// <inheritdoc />
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            return _propertyContainer.Properties.SelectMany(propertyValue => propertyValue.PropertyUntyped.GetNameAndAliases());
         }
 
         /// <inheritdoc />

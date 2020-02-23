@@ -1,3 +1,7 @@
+# 0.3.1
+- Default value for GetMetadata
+- Options for AsDynamic and DynamocContainer
+
 # 0.3.0
 - Many methods for untyped work
 - Builders for properties

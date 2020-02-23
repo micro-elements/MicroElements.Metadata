@@ -158,6 +158,12 @@ namespace MicroElements.Metadata
             return new Search(default, condition: value => value.PropertyUntyped == property);
         }
 
+        /// <summary>
+        /// Compare by name.
+        /// </summary>
+        /// <param name="name">Name to search.</param>
+        /// <param name="ignoreCase">Use ignore case comparison.</param>
+        /// <returns>Search options.</returns>
         public static Search ByNameOrAlias(string name, bool ignoreCase = false)
         {
             return new Search(default, condition: propertyValue => propertyValue.IsMatchesByNameOrAlias(name, ignoreCase));

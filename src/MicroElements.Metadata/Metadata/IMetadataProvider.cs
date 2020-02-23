@@ -56,8 +56,9 @@ namespace MicroElements.Metadata
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Metadata provider.</param>
         /// <param name="metadataName">Optional metadata name.</param>
+        /// <param name="defaultValue">Default value to return if not metadata found.</param>
         /// <returns>Metadata or default value if not found.</returns>
-        public static TMetadata GetMetadata<TMetadata>(this IMetadataProvider metadataProvider, string metadataName = null)
+        public static TMetadata GetMetadata<TMetadata>(this IMetadataProvider metadataProvider, string metadataName = null, TMetadata defaultValue = default)
         {
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
@@ -68,7 +69,7 @@ namespace MicroElements.Metadata
             if (propertyValue != null)
                 return propertyValue.Value;
 
-            return default;
+            return defaultValue;
         }
 
         /// <summary>

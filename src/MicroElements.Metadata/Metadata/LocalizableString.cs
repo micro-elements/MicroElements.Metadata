@@ -180,5 +180,13 @@ namespace MicroElements.Metadata
         /// <param name="language">Language.</param>
         /// <returns><see cref="LocalString"/> with specified language.</returns>
         public static LocalString Lang(this string text, Language language) => new LocalString(text, language);
+
+        /// <summary>
+        /// Creates <see cref="LocalString"/> with specified language.
+        /// </summary>
+        /// <param name="text">Text.</param>
+        /// <param name="language">Language.</param>
+        /// <returns><see cref="LocalString"/> with specified language.</returns>
+        public static LocalString WithLang(this string text, Language language) => new LocalString(text, language);
     }
 }

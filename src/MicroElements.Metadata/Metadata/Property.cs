@@ -53,7 +53,7 @@ namespace MicroElements.Metadata
         /// <returns>The same property for builder chaining.</returns>
         public Property<T> WithDescription(string description, Language language = Language.Undefined)
         {
-            Description = Description.Add(description.Lang(language));
+            Description = (Description ?? new LocalizableString()).Add(description.Lang(language));
             return this;
         }
 

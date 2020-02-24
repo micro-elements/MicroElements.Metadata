@@ -29,6 +29,17 @@ namespace MicroElements.Metadata.Tests
             // Instance properties does not include Metadata from IMetadataProvider
             var clientProperties = client.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             clientProperties.Should().HaveCount(2);
+
+            client
+                .ConfigureMetadata<Client, SomeMutableMetadata>(m => m.Source = "FromConfigure")
+                .ConfigureMetadata<Client, SomeMutableMetadata>(m => m.Timestamp = DateTime.Today);
+
+            var mutableMetadata = client.GetMetadata<SomeMutableMetadata>();
+            mutableMetadata.Source.Should().Be("FromConfigure");
+            mutableMetadata.Timestamp.Should().Be(DateTime.Today);
+
+            client.ConfigureMetadata<SomeMutableMetadata>(m => m.Source = "Overriden");
+            client.GetMetadata<SomeMutableMetadata>().Source.Should().Be("Overriden");
         }
 
         [Fact]
@@ -75,6 +86,12 @@ namespace MicroElements.Metadata.Tests
         {
             Source = source;
         }
+    }
+
+    public class SomeMutableMetadata
+    {
+        public string Source { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 
     public class Client : IMetadataProvider

@@ -1,3 +1,7 @@
+# 0.4.0
+- Added ConfigureMetadata extension for IMetadataPrivider
+- Added AddRange extension for IMutablePropertyContainer
+
 # 0.3.3
 - Now returns null for DynamicContainer is property was not found
 

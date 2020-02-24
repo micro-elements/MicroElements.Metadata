@@ -48,6 +48,9 @@ namespace MicroElements.Metadata.Tests
             object valueB = dynamicContainer.PropertyB;
             valueB.Should().Be(42);
 
+            object notFoundProperty = dynamicContainer.NotFoundProperty;
+            notFoundProperty.Should().BeNull();
+
             //TODO: override, parent
         }
 

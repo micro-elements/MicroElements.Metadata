@@ -1,3 +1,6 @@
+# 0.3.3
+- Now returns null for DynamicContainer is property was not found
+
 # 0.3.2
 - GetDynamicMemberNames implemented for DynamicContainer
 

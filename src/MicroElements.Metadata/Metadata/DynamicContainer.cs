@@ -35,7 +35,6 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            result = null;
             var propertyValue = _propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(binder.Name, _ignoreCase).SearchInParent(_searchInParent));
             if (propertyValue != null)
             {
@@ -43,7 +42,9 @@ namespace MicroElements.Metadata
                 return true;
             }
 
-            return false;
+            // returns null if property was not found.
+            result = null;
+            return true;
         }
     }
 

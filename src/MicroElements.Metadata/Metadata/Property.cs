@@ -19,7 +19,6 @@ namespace MicroElements.Metadata
         public Property(string name)
         {
             Name = name;
-            Description = new LocalizableString(name);
         }
 
         /// <inheritdoc />

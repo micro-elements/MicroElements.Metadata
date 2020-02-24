@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using MicroElements.Functional;
 
@@ -11,6 +12,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Text that can be translated to many languages.
     /// </summary>
+    [ImmutableObject(true)]
     public class LocalizableString
     {
         private readonly LocalString[] _texts;
@@ -18,7 +20,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets text (first text assumes as main).
         /// </summary>
-        public LocalString Text => _texts[0];
+        public LocalString Text => _texts.Length > 0 ? _texts[0] : LocalString.Empty;
 
         /// <summary>
         /// Gets text and text translations.
@@ -33,7 +35,7 @@ namespace MicroElements.Metadata
         {
             if (texts == null || texts.Length == 0)
                 throw new ArgumentException("Should contain at least one text.", nameof(texts));
-            _texts = texts;
+            _texts = texts ?? Array.Empty<LocalString>();
         }
 
         /// <summary>
@@ -46,8 +48,25 @@ namespace MicroElements.Metadata
         /// Adds another Text translation.
         /// </summary>
         /// <param name="text">Text.</param>
-        /// <returns><see cref="LocalizableString"/> to support chaining.</returns>
+        /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
         public LocalizableString Add(LocalString text) => new LocalizableString(_texts.Append(text).ToArray());
+
+        /// <summary>
+        /// Adds another Text translation.
+        /// Replaces if text with the same language already exists.
+        /// </summary>
+        /// <param name="text">Text with language to add.</param>
+        /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
+        public LocalizableString AddOrReplace(LocalString text) =>
+            new LocalizableString(_texts.Where(s => s.Language != text.Language).Append(text).ToArray());
+
+        /// <summary>
+        /// Gets text for specified language.
+        /// </summary>
+        /// <param name="language">Language to get.</param>
+        /// <returns><see cref="LocalString"/> or <see cref="LocalString.Empty"/>.</returns>
+        public LocalString Get(Language language) =>
+            _texts.FirstOrNone(s => s.Language == language).GetValueOrDefault(LocalString.Empty);
 
         /// <inheritdoc />
         public override string ToString() => Texts.FormatList();
@@ -77,8 +96,13 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Localized text with language.
     /// </summary>
-    public readonly struct LocalString
+    public readonly struct LocalString : IEquatable<LocalString>
     {
+        /// <summary>
+        /// Represents the empty LocalString.
+        /// </summary>
+        public static readonly LocalString Empty = new LocalString(string.Empty, Language.Undefined);
+
         /// <summary>
         /// Text.
         /// </summary>
@@ -106,8 +130,42 @@ namespace MicroElements.Metadata
         /// <param name="value">text.</param>
         public static implicit operator LocalString(string value) => new LocalString(value);
 
+        /// <summary>
+        /// Implicitly converts to string.
+        /// </summary>
+        /// <param name="localString">Source <see cref="LocalString"/>.</param>
+        public static implicit operator string(LocalString localString) => localString.Text;
+
         /// <inheritdoc />
         public override string ToString() => $"{Language}: {Text}";
+
+        /// <inheritdoc />
+        public bool Equals(LocalString other)
+        {
+            return Text == other.Text && Language == other.Language;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            return obj is LocalString other && Equals(other);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Text, (int) Language);
+        }
+
+        public static bool operator ==(LocalString left, LocalString right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(LocalString left, LocalString right)
+        {
+            return !left.Equals(right);
+        }
     }
 
     /// <summary>

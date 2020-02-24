@@ -33,8 +33,6 @@ namespace MicroElements.Metadata
         /// <param name="texts">Text and text translations.</param>
         public LocalizableString(params LocalString[] texts)
         {
-            if (texts == null || texts.Length == 0)
-                throw new ArgumentException("Should contain at least one text.", nameof(texts));
             _texts = texts ?? Array.Empty<LocalString>();
         }
 

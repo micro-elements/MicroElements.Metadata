@@ -47,7 +47,16 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="text">Text.</param>
         /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
-        public LocalizableString Add(LocalString text) => new LocalizableString(_texts.Append(text).ToArray());
+        public LocalizableString Add(LocalString text)
+        {
+            if (_texts.Length == 0)
+            {
+                return new LocalizableString(text);
+            }
+
+            LocalString[] texts = _texts.Append(text).ToArray();
+            return new LocalizableString(texts);
+        }
 
         /// <summary>
         /// Adds another Text translation.
@@ -55,8 +64,16 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="text">Text with language to add.</param>
         /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
-        public LocalizableString AddOrReplace(LocalString text) =>
-            new LocalizableString(_texts.Where(s => s.Language != text.Language).Append(text).ToArray());
+        public LocalizableString AddOrReplace(LocalString text)
+        {
+            if (_texts.Length == 0)
+            {
+                return new LocalizableString(text);
+            }
+
+            LocalString[] texts = _texts.Where(s => s.Language != text.Language).Append(text).ToArray();
+            return new LocalizableString(texts);
+        }
 
         /// <summary>
         /// Gets text for specified language.

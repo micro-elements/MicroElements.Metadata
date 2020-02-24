@@ -1,3 +1,6 @@
+# 0.5.0
+- IPropertySet, IPropertyContainerMapper
+
 # 0.4.0
 - Added ConfigureMetadata extension for IMetadataPrivider
 - Added AddRange extension for IMutablePropertyContainer

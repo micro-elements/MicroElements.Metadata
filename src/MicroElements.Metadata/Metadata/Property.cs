@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -53,7 +54,8 @@ namespace MicroElements.Metadata
         /// <returns>The same property for builder chaining.</returns>
         public Property<T> WithDescription(string description, Language language = Language.Undefined)
         {
-            Description = (Description ?? new LocalizableString()).Add(description.Lang(language));
+            description.AssertArgumentNotNull(nameof(description));
+            Description = (Description ?? new LocalizableString()).AddOrReplace(description.Lang(language));
             return this;
         }
 

@@ -56,9 +56,9 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValue(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
+        public static IMutablePropertyContainer WithValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
         {
-            propertyContainer.SetValue(property, value);
+            propertyContainer.SetValueUntyped(property, value);
             return propertyContainer;
         }
 
@@ -111,10 +111,10 @@ namespace MicroElements.Metadata
                     throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} but value has type {valueType}");
                 }
 
-                return propertyContainer.SetValue(existingProperty, value);
+                return propertyContainer.SetValueUntyped(existingProperty, value);
             }
 
-            return propertyContainer.SetValue(Property.Create(valueType, propertyName), value);
+            return propertyContainer.SetValueUntyped(Property.Create(valueType, propertyName), value);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValue(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
+        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
         {
             IPropertyValue propertyValue = PropertyValue.Create(property, value);
             propertyContainer.SetValue(propertyValue);

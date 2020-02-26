@@ -1,5 +1,8 @@
 CHANGELOG
 
+# 0.7.0
+- SetValueUntyped and WithValueUntyped extensions instead of WithValue and SetValue to reduce type errors
+
 # 0.6.1
 - Added PropertySetEnumerable and PropertySetBase
 

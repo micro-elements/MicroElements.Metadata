@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using MicroElements.Functional;
 
@@ -45,6 +46,15 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public override string ToString() => Name;
+
+        /// <inheritdoc />
+        public IEnumerator<IProperty> GetEnumerator()
+        {
+            yield return this;
+        }
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
         /// Sets description and returns the same property for builder chaining.

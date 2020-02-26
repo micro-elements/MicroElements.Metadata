@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,14 +14,14 @@ namespace MicroElements.Metadata
     /// Text that can be translated to many languages.
     /// </summary>
     [ImmutableObject(true)]
-    public class LocalizableString
+    public class LocalizableString : IEnumerable<LocalString>
     {
-        private readonly LocalString[] _texts;
+        private readonly List<LocalString> _texts = new List<LocalString>();
 
         /// <summary>
         /// Gets text (first text assumes as main).
         /// </summary>
-        public LocalString Text => _texts.Length > 0 ? _texts[0] : LocalString.Empty;
+        public LocalString Text => _texts.Count > 0 ? _texts[0] : LocalString.Empty;
 
         /// <summary>
         /// Gets text and text translations.
@@ -33,14 +34,25 @@ namespace MicroElements.Metadata
         /// <param name="texts">Text and text translations.</param>
         public LocalizableString(params LocalString[] texts)
         {
-            _texts = texts ?? Array.Empty<LocalString>();
+            if (texts != null && texts.Length > 0)
+                _texts.AddRange(texts);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalizableString"/> class.
+        /// </summary>
+        /// <param name="texts">Text and text translations.</param>
+        public LocalizableString(IEnumerable<LocalString> texts)
+        {
+            if (texts != null)
+                _texts.AddRange(texts);
         }
 
         /// <summary>
         /// Implicitly converts from string.
         /// </summary>
         /// <param name="text">text.</param>
-        public static implicit operator LocalizableString(string text) => new LocalizableString(text);
+        public static implicit operator LocalizableString(string text) => new LocalizableString(new LocalString(text));
 
         /// <summary>
         /// Adds another Text translation.
@@ -49,12 +61,12 @@ namespace MicroElements.Metadata
         /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
         public LocalizableString Add(LocalString text)
         {
-            if (_texts.Length == 0)
+            if (_texts.Count == 0)
             {
                 return new LocalizableString(text);
             }
 
-            LocalString[] texts = _texts.Append(text).ToArray();
+            var texts = _texts.Append(text);
             return new LocalizableString(texts);
         }
 
@@ -66,12 +78,12 @@ namespace MicroElements.Metadata
         /// <returns>New <see cref="LocalizableString"/> to support chaining.</returns>
         public LocalizableString AddOrReplace(LocalString text)
         {
-            if (_texts.Length == 0)
+            if (_texts.Count == 0)
             {
                 return new LocalizableString(text);
             }
 
-            LocalString[] texts = _texts.Where(s => s.Language != text.Language).Append(text).ToArray();
+            var texts = _texts.Where(localString => localString.Language != text.Language).Append(text);
             return new LocalizableString(texts);
         }
 
@@ -85,6 +97,12 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public override string ToString() => Texts.FormatList();
+
+        /// <inheritdoc />
+        public IEnumerator<LocalString> GetEnumerator() => _texts.GetEnumerator();
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>

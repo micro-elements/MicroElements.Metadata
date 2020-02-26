@@ -1,3 +1,8 @@
+
+# 0.6.0
+- IProperty, IPropertySet implements IEnumerable
+- LocalizableString implements IEnumerable
+
 # 0.5.0
 - IPropertySet, IPropertyContainerMapper
 

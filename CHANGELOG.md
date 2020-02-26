@@ -1,3 +1,7 @@
+CHANGELOG
+
+# 0.6.1
+- Added PropertySetEnumerable and PropertySetBase
 
 # 0.6.0
 - IProperty, IPropertySet implements IEnumerable

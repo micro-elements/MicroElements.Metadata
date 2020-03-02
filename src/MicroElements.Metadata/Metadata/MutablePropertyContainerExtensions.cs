@@ -27,10 +27,11 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
+        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value, ValueSource valueSource = default)
         {
-            propertyContainer.SetValue(property, value);
+            propertyContainer.SetValue(property, value, valueSource);
             return propertyContainer;
         }
 
@@ -42,10 +43,11 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="propertyName">Property name.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value)
+        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
         {
-            propertyContainer.SetValue(propertyName, value);
+            propertyContainer.SetValue(propertyName, value, valueSource);
             return propertyContainer;
         }
 
@@ -55,10 +57,11 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
+        public static IMutablePropertyContainer WithValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value, ValueSource valueSource = default)
         {
-            propertyContainer.SetValueUntyped(property, value);
+            propertyContainer.SetValueUntyped(property, value, valueSource);
             return propertyContainer;
         }
 
@@ -70,8 +73,9 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="propertyName">Property name.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value)
+        public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
         {
             Type valueType = typeof(T);
             IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent());
@@ -84,10 +88,10 @@ namespace MicroElements.Metadata
                     throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} but value has type {valueType}");
                 }
 
-                return propertyContainer.SetValue((IProperty<T>)existingProperty, value);
+                return propertyContainer.SetValue((IProperty<T>)existingProperty, value, valueSource);
             }
 
-            return propertyContainer.SetValue(new Property<T>(propertyName), value);
+            return propertyContainer.SetValue(new Property<T>(propertyName), value, valueSource);
         }
 
         /// <summary>
@@ -97,8 +101,9 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="propertyName">Property name.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValue(this IMutablePropertyContainer propertyContainer, string propertyName, object value)
+        public static IPropertyValue SetValue(this IMutablePropertyContainer propertyContainer, string propertyName, object value, ValueSource valueSource = default)
         {
             Type valueType = value.GetType();
             IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent());
@@ -111,10 +116,10 @@ namespace MicroElements.Metadata
                     throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} but value has type {valueType}");
                 }
 
-                return propertyContainer.SetValueUntyped(existingProperty, value);
+                return propertyContainer.SetValueUntyped(existingProperty, value, valueSource);
             }
 
-            return propertyContainer.SetValueUntyped(Property.Create(valueType, propertyName), value);
+            return propertyContainer.SetValueUntyped(Property.Create(valueType, propertyName), value, valueSource);
         }
 
         /// <summary>
@@ -123,10 +128,11 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">PropertyContainer to change.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value)
+        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value, ValueSource valueSource = default)
         {
-            IPropertyValue propertyValue = PropertyValue.Create(property, value);
+            IPropertyValue propertyValue = PropertyValue.Create(property, value, valueSource);
             propertyContainer.SetValue(propertyValue);
             return propertyValue;
         }

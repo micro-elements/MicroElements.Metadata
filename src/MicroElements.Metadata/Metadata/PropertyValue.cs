@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -33,11 +34,11 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="value">Value for property.</param>
         /// <param name="source">The source for value.</param>
-        public PropertyValue(IProperty<T> property, T value, ValueSource source = ValueSource.Defined)
+        public PropertyValue(IProperty<T> property, T value, ValueSource source = null)
         {
             Property = property.AssertArgumentNotNull(nameof(property));
             Value = value;
-            Source = source;
+            Source = source ?? ValueSource.Defined;
         }
 
         /// <summary>
@@ -51,29 +52,49 @@ namespace MicroElements.Metadata
     }
 
     /// <summary>
-    /// Value source.
+    /// Represents value source.
     /// </summary>
-    public enum ValueSource
+    public sealed class ValueSource : ValueObject
     {
         /// <summary>
         /// Value is not set.
         /// </summary>
-        NotDefined,
+        public static readonly ValueSource NotDefined = new ValueSource("NotDefined");
 
         /// <summary>
         /// Value is defined.
         /// </summary>
-        Defined,
+        public static readonly ValueSource Defined = new ValueSource("Defined");
 
         /// <summary>
         /// Value was calculated.
         /// </summary>
-        Calculated,
+        public static readonly ValueSource Calculated = new ValueSource("Calculated");
 
         /// <summary>
         /// Value is default value for property.
         /// </summary>
-        DefaultValue,
+        public static readonly ValueSource DefaultValue = new ValueSource("DefaultValue");
+
+        /// <summary>
+        /// Gets the source name.
+        /// </summary>
+        public string SourceName { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValueSource"/> class.
+        /// </summary>
+        /// <param name="sourceName">The source name.</param>
+        public ValueSource(string sourceName)
+        {
+            SourceName = sourceName.AssertArgumentNotNull(nameof(sourceName));
+        }
+
+        /// <inheritdoc />
+        public override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return SourceName;
+        }
     }
 
     /// <summary>
@@ -81,7 +102,14 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class PropertyValue
     {
-        public static IPropertyValue Create(IProperty property, object value, ValueSource? valueSource = null)
+        /// <summary>
+        /// Creates new instance if <see cref="IPropertyValue"/>.
+        /// </summary>
+        /// <param name="property">Property.</param>
+        /// <param name="value">Value for property.</param>
+        /// <param name="valueSource">Value source.</param>
+        /// <returns>Created property value.</returns>
+        public static IPropertyValue Create(IProperty property, object value, ValueSource valueSource = default)
         {
             property.AssertArgumentNotNull(nameof(property));
             value.AssertArgumentNotNull(nameof(value));

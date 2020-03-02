@@ -1,4 +1,6 @@
 CHANGELOG
+# 0.8.0
+- ValueSource converted to class instead of enum to extend on client side.
 
 # 0.7.0
 - SetValueUntyped and WithValueUntyped extensions instead of WithValue and SetValue to reduce type errors

@@ -55,8 +55,9 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property.</param>
         /// <param name="value">Value to store.</param>
+        /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        IPropertyValue<T> SetValue<T>(IProperty<T> property, T value);
+        IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource valueSource = default);
 
         /// <summary>
         /// Sets property value.

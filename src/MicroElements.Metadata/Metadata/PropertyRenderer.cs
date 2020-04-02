@@ -99,7 +99,7 @@ namespace MicroElements.Metadata
 
         private string DoDefaultFormatting(T value, string textFormat = null)
         {
-            if (textFormat != null && value is IFormattable formattable)
+            if (value is IFormattable formattable)
             {
                 return formattable.ToString(textFormat, CultureInfo.InvariantCulture);
             }

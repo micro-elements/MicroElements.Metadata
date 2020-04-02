@@ -1,4 +1,7 @@
 CHANGELOG
+# 0.8.1
+- PropertyRenderer by default renders in Invariant culture.
+
 # 0.8.0
 - ValueSource converted to class instead of enum to extend on client side.
 

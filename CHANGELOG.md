@@ -1,4 +1,7 @@
-CHANGELOG
+# 0.9.0
+- ExcelReportBuilder
+- CsvReportBuilder
+
 # 0.8.1
 - PropertyRenderer by default renders in Invariant culture.
 

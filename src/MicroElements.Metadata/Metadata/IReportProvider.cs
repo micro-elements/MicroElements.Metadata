@@ -8,7 +8,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Provides property renderers.
     /// </summary>
-    public interface IReportProvider
+    public interface IReportProvider : IMetadataProvider
     {
         /// <summary>
         /// Gets report name.

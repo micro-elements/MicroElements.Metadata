@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -30,7 +31,10 @@ namespace MicroElements.Reporting.Excel
         private readonly SpreadsheetDocument _document;
         private readonly WorkbookPart _workbookPart;
         private uint _lastSheetId = 1;
-        private IExcelMetadata _defaultExcelMeta = new ExcelMetadata { DataType = CellValues.String };
+
+        private IExcelDocumentMetadata _documentMetadata = ExcelMetadata.Default.ExcelDocumentMetadata;
+        private IExcelSheetMetadata _defaultSheetMetadata = ExcelMetadata.Default.ExcelSheetMetadata;
+        private IExcelColumnMetadata _defaultColumnMetadata = ExcelMetadata.Default.ExcelColumnMetadata;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelReportBuilder"/> class.
@@ -58,13 +62,49 @@ namespace MicroElements.Reporting.Excel
         }
 
         /// <summary>
-        /// Sets default excel metadata.
+        /// Creates new empty excel document and builder.
         /// </summary>
-        /// <param name="defaultExcelMeta">Default excel metadata.</param>
+        /// <param name="targetStream">Output stream.</param>
         /// <returns>Builder instance.</returns>
-        public ExcelReportBuilder WithDefaultExcelMetadata(IExcelMetadata defaultExcelMeta)
+        public static ExcelReportBuilder Create(Stream targetStream)
         {
-            _defaultExcelMeta = defaultExcelMeta.AssertArgumentNotNull(nameof(defaultExcelMeta));
+            targetStream.AssertArgumentNotNull(nameof(targetStream));
+
+            SpreadsheetDocument document = SpreadsheetDocument.Create(targetStream, SpreadsheetDocumentType.Workbook);
+            var builder = new ExcelReportBuilder(document);
+            return builder;
+        }
+
+        /// <summary>
+        /// Sets excel document metadata.
+        /// </summary>
+        /// <param name="documentMetadata">Default excel document metadata.</param>
+        /// <returns>Builder instance.</returns>
+        public ExcelReportBuilder WithDocumentMetadata(IExcelDocumentMetadata documentMetadata)
+        {
+            _documentMetadata = documentMetadata.AssertArgumentNotNull(nameof(documentMetadata));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets default sheet metadata.
+        /// </summary>
+        /// <param name="sheetMetadata">Default sheet metadata.</param>
+        /// <returns>Builder instance.</returns>
+        public ExcelReportBuilder WithDefaultSheetMetadata(IExcelSheetMetadata sheetMetadata)
+        {
+            _defaultSheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets default column metadata.
+        /// </summary>
+        /// <param name="columnMetadata">Default column metadata.</param>
+        /// <returns>Builder instance.</returns>
+        public ExcelReportBuilder WithDefaultColumnMetadata(IExcelColumnMetadata columnMetadata)
+        {
+            _defaultColumnMetadata = columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
             return this;
         }
 
@@ -116,21 +156,36 @@ namespace MicroElements.Reporting.Excel
 
         private void AddReportSheet(WorkbookPart workbookPart, IReportProvider reportProvider, IEnumerable<IPropertyContainer> items)
         {
-            var sheetData = AddSheet(workbookPart, reportProvider.ReportName, _lastSheetId++, reportProvider);
+            var documentMetadata = reportProvider.GetMetadata<IExcelDocumentMetadata>() ?? _documentMetadata;
+            var sheetMetadata = reportProvider.GetMetadata<IExcelSheetMetadata>() ?? _defaultSheetMetadata;
+            var documentContext = new DocumentContext(documentMetadata);
+            var sheetContext = new SheetContext(documentContext, sheetMetadata);
 
-            var headerCells = reportProvider.Renderers.Select(renderer => ConstructCell(renderer.TargetName, CellValues.String));
+            var columns = reportProvider.Renderers
+                .Select(renderer => new ColumnContext(sheetContext, renderer.GetMetadata<IExcelColumnMetadata>() ?? _defaultColumnMetadata, renderer))
+                .ToList();
+
+            var sheetData = AddSheet(workbookPart, reportProvider.ReportName, _lastSheetId++, sheetContext, columns);
+
+            // HEADER ROW
+            var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.String));
             sheetData.AppendChild(new Row(headerCells));
 
+            // DATA ROWS
             foreach (var item in items.NotNull())
             {
-                var valueCells = reportProvider.Renderers.Select(renderer => ConstructCell(renderer, item));
+                var valueCells = columns.Select(renderer => ConstructCell(renderer, item));
                 sheetData.AppendChild(new Row(valueCells));
             }
         }
 
-        private SheetData AddSheet(WorkbookPart workbookPart, string name, uint sheetId, IReportProvider reportProvider)
+        private SheetData AddSheet(
+            WorkbookPart workbookPart,
+            string name,
+            uint sheetId,
+            SheetContext sheetContext,
+            IReadOnlyList<ColumnContext> columns)
         {
-            bool freezeTopRow = true;
             bool createColumns = true;
 
             // Add a WorksheetPart to the WorkbookPart.
@@ -143,9 +198,14 @@ namespace MicroElements.Reporting.Excel
 
             if (createColumns)
             {
-                Columns columns = CreateColumns(reportProvider);
-                workSheet.InsertAt(columns, 0);
+                Columns columnsElement = CreateColumns(columns);
+                workSheet.InsertAt(columnsElement, 0);
             }
+
+            bool freezeTopRow = ExcelMetadata.GetDefinedValue(
+                sheetContext.SheetMetadata.FreezeTopRow,
+                sheetContext.DocumentMetadata.FreezeTopRow,
+                defaultValue: true);
 
             if (freezeTopRow)
             {
@@ -182,26 +242,25 @@ namespace MicroElements.Reporting.Excel
             return sheetData;
         }
 
-        private Columns CreateColumns(IReportProvider reportProvider)
+        private Columns CreateColumns(IReadOnlyList<ColumnContext> columns)
         {
-            Columns columns = new Columns();
-            for (int index = 0; index < reportProvider.Renderers.Count; index++)
+            Columns columnsElement = new Columns();
+            for (int index = 0; index < columns.Count; index++)
             {
-                var propertyRenderer = reportProvider.Renderers[index];
+                var columnContext = columns[index];
                 uint colNumber = (uint)(index + 1);
-                int columnWidth = 14;
-                var excelMeta = propertyRenderer.GetMetadata<IExcelMetadata>() ?? _defaultExcelMeta;
-                CellValues dataType = excelMeta.DataType;
-                if (dataType == CellValues.Number)
-                {
-                    columnWidth = 9;
-                }
+
+                int columnWidth = ExcelMetadata.GetDefinedValue(
+                    columnContext.ColumnMetadata.ColumnWidth,
+                    columnContext.SheetMetadata.ColumnWidth,
+                    columnContext.DocumentMetadata.ColumnWidth,
+                    defaultValue: 14);
 
                 Column column = new Column { Min = colNumber, Max = colNumber, Width = columnWidth, CustomWidth = true };
-                columns.Append(column);
+                columnsElement.Append(column);
             }
 
-            return columns;
+            return columnsElement;
         }
 
         private Cell ConstructCell(string value, CellValues dataType)
@@ -213,12 +272,19 @@ namespace MicroElements.Reporting.Excel
             };
         }
 
-        private Cell ConstructCell(IPropertyRenderer propertyRenderer, IPropertyContainer source)
+        private Cell ConstructCell(ColumnContext columnContext, IPropertyContainer source)
         {
+            var propertyRenderer = columnContext.PropertyRenderer;
             string textValue = propertyRenderer.Render(source);
 
-            var excelMeta = propertyRenderer.GetMetadata<IExcelMetadata>() ?? _defaultExcelMeta;
-            CellValues dataType = excelMeta.DataType;
+            var cellMetadata = propertyRenderer.GetMetadata<IExcelCellMetadata>();
+
+            CellValues dataType = ExcelMetadata.GetDefinedValue(
+                cellMetadata?.DataType,
+                columnContext.ColumnMetadata.DataType,
+                columnContext.SheetMetadata.DataType,
+                columnContext.DocumentMetadata.DataType,
+                defaultValue: CellValues.String);
 
             Cell cell = new Cell
             {

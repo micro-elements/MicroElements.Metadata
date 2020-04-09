@@ -1,6 +1,16 @@
+# 0.9.2
+- EnumerableReportProvider
+- Property Map methods to convert property to property of other type with func
+- Property WithName extension method 
+
+# 0.9.1
+- IReportProvider is now IMetadataProvider
+- ExcelMetadata hierarchy
+
 # 0.9.0
-- ExcelReportBuilder
 - CsvReportBuilder
+- ExcelReportBuilder
+- ExcelMetadata for document, sheet, column, cell
 
 # 0.8.1
 - PropertyRenderer by default renders in Invariant culture.

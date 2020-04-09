@@ -23,6 +23,24 @@ namespace MicroElements.Metadata
             Name = name;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Property{T}"/> class.
+        /// Constructor for copying.
+        /// </summary>
+        internal Property(
+            string name,
+            LocalizableString description,
+            string alias,
+            IReadOnlyList<T> examples,
+            Func<IPropertyContainer, T> calculate)
+        {
+            Name = name;
+            Description = description;
+            Alias = alias;
+            Examples = examples;
+            Calculate = calculate;
+        }
+
         /// <inheritdoc />
         public string Name { get; }
 
@@ -216,6 +234,19 @@ namespace MicroElements.Metadata
             }
 
             return property;
+        }
+
+        /// <summary>
+        /// Creates new property that copies old property except name.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="name">Source name.</param>
+        /// <returns>Property with new name.</returns>
+        public static IProperty<T> WithName<T>(this IProperty<T> property, string name)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            return new Property<T>(name.AssertArgumentNotNull(nameof(name)), property.Description, property.Alias, property.Examples, property.Calculate);
         }
     }
 }

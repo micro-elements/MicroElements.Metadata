@@ -71,5 +71,97 @@ namespace MicroElements.Metadata
             if (property.Alias != null)
                 yield return property.Alias;
         }
+
+        /// <summary>
+        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Map func can receive null values.
+        /// </summary>
+        /// <typeparam name="A">Source type.</typeparam>
+        /// <typeparam name="B">Result type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
+        /// <returns>New property of type <typeparamref name="B"/>.</returns>
+        public static IProperty<B> Map<A, B>(this IProperty<A> property, Func<A, B> map)
+            where A : class
+            where B : class
+        {
+            B ConvertValue(IPropertyContainer container)
+            {
+                A valueA = container.GetValue(property);
+                return map(valueA);
+            }
+
+            return new Property<B>(property.Name).SetCalculate(ConvertValue);
+        }
+
+        /// <summary>
+        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Map func receive value only not null values.
+        /// </summary>
+        /// <typeparam name="A">Source type.</typeparam>
+        /// <typeparam name="B">Result type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
+        /// <returns>New property of type <typeparamref name="B"/>.</returns>
+        public static IProperty<B> MapNotNull<A, B>(this IProperty<A> property, Func<A, B> map)
+            where A : class
+            where B : class
+        {
+            B ConvertNotNullValue(IPropertyContainer container)
+            {
+                A valueA = container.GetValue(property);
+                if (valueA != null)
+                    return map(valueA);
+                return default;
+            }
+
+            return new Property<B>(property.Name).SetCalculate(ConvertNotNullValue);
+        }
+
+        /// <summary>
+        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Map func can receive null values.
+        /// </summary>
+        /// <typeparam name="A">Source type.</typeparam>
+        /// <typeparam name="B">Result type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="A?"/> to type <typeparamref name="B?"/>.</param>
+        /// <returns>New property of type <typeparamref name="B?"/>.</returns>
+        public static IProperty<B?> Map<A, B>(this IProperty<A?> property, Func<A?, B?> map)
+            where A : struct
+            where B : struct
+        {
+            B? ConvertValue(IPropertyContainer container)
+            {
+                A? valueA = container.GetValue(property);
+                return map(valueA);
+            }
+
+            return new Property<B?>(property.Name).SetCalculate(ConvertValue);
+        }
+
+        /// <summary>
+        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Map func receive value only not null values.
+        /// </summary>
+        /// <typeparam name="A">Source type.</typeparam>
+        /// <typeparam name="B">Result type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
+        /// <returns>New property of type <typeparamref name="B?"/>.</returns>
+        public static IProperty<B?> MapNotNull<A, B>(this IProperty<A?> property, Func<A, B> map)
+            where A : struct
+            where B : struct
+        {
+            B? ConvertNotNullValue(IPropertyContainer container)
+            {
+                A? valueA = container.GetValue(property);
+                if (valueA.HasValue)
+                    return map(valueA.Value);
+                return default;
+            }
+
+            return new Property<B?>(property.Name).SetCalculate(ConvertNotNullValue);
+        }
     }
 }

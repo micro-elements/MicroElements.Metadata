@@ -1,3 +1,6 @@
+# 0.9.3
+- Property methods with prefixes Set, SetUntyped, With unified
+
 # 0.9.2
 - EnumerableReportProvider
 - Property Map methods to convert property to property of other type with func

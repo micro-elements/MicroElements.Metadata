@@ -80,7 +80,7 @@ namespace MicroElements.Metadata
         /// <param name="description">Property description.</param>
         /// <param name="language">Description language.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public Property<T> WithDescription(string description, Language language = Language.Undefined)
+        public Property<T> SetDescription(string description, Language language = Language.Undefined)
         {
             description.AssertArgumentNotNull(nameof(description));
             Description = (Description ?? new LocalizableString()).AddOrReplace(description.Lang(language));
@@ -92,7 +92,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="alias">Property alias.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public Property<T> WithAlias(string alias)
+        public Property<T> SetAlias(string alias)
         {
             Alias = alias;
             return this;
@@ -103,7 +103,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="defaultValue">Func to get property default value.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public Property<T> WithDefaultValue(Func<T> defaultValue)
+        public Property<T> SetDefaultValue(Func<T> defaultValue)
         {
             DefaultValue = defaultValue;
             return this;
@@ -114,7 +114,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="constDefaultValue">Property default value.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public Property<T> WithDefaultValue(T constDefaultValue)
+        public Property<T> SetDefaultValue(T constDefaultValue)
         {
             DefaultValue = () => constDefaultValue;
             return this;
@@ -125,7 +125,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="examples">Property example values.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public Property<T> WithExamples(params T[] examples)
+        public Property<T> SetExamples(params T[] examples)
         {
             Examples = examples;
             return this;
@@ -178,13 +178,13 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to change.</param>
         /// <param name="alias">Property alias.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public static IProperty WithAlias(this IProperty property, string alias)
+        public static IProperty SetAliasUntyped(this IProperty property, string alias)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, WithAlias<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, SetAliasUntyped<CodeCompiler.GenericType>);
             return func(property, alias);
         }
 
-        private static IProperty WithAlias<T>(IProperty property, string alias) => ((Property<T>)property).WithAlias(alias);
+        private static IProperty SetAliasUntyped<T>(IProperty property, string alias) => ((Property<T>)property).SetAlias(alias);
 
         /// <summary>
         /// Sets alias and returns the same property for builder chaining.
@@ -194,59 +194,103 @@ namespace MicroElements.Metadata
         /// <param name="description">Property description.</param>
         /// <param name="language">Description language.</param>
         /// <returns>The same property for builder chaining.</returns>
-        public static IProperty WithDescription(this IProperty property, string description, Language language = Language.Undefined)
+        public static IProperty SetDescriptionUntyped(this IProperty property, string description, Language language = Language.Undefined)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, WithDescription<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, SetDescriptionUntyped<CodeCompiler.GenericType>);
             return func(property, description, language);
         }
 
-        static IProperty WithDescription<T>(IProperty property, string description, Language language) => ((Property<T>)property).WithDescription(description, language);
+        private static IProperty SetDescriptionUntyped<T>(IProperty property, string description, Language language) => ((Property<T>)property).SetDescription(description, language);
 
         /// <summary>
-        /// Sets metadata and returns the same property for builder chaining.
-        /// </summary>
-        /// <typeparam name="T">Metadata type.</typeparam>
-        /// <param name="property">Property to change.</param>
-        /// <param name="metadataProperty">Metadata property.</param>
-        /// <param name="metadataValue">Metadata value.</param>
-        /// <returns>The same property for builder chaining.</returns>
-        public static IProperty WithMetadata<T>(this IProperty property, IProperty<T> metadataProperty, T metadataValue)
-        {
-            if (property.Metadata is IMutablePropertyContainer mutablePropertyContainer)
-            {
-                mutablePropertyContainer.SetValue(metadataProperty, metadataValue);
-            }
-
-            return property;
-        }
-
-        /// <summary>
-        /// Configures metadata and returns the same property for builder chaining.
-        /// </summary>
-        /// <param name="property">Property to change.</param>
-        /// <param name="configureMetadata">Configure metadata action.</param>
-        /// <returns>The same property for builder chaining.</returns>
-        public static IProperty ConfigureMetadata(this IProperty property, Action<IMutablePropertyContainer> configureMetadata)
-        {
-            if (property.Metadata is IMutablePropertyContainer mutablePropertyContainer)
-            {
-                configureMetadata?.Invoke(mutablePropertyContainer);
-            }
-
-            return property;
-        }
-
-        /// <summary>
-        /// Creates new property that copies old property except name.
+        /// Creates property copy with new name.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <param name="name">Source name.</param>
+        /// <param name="name">New name.</param>
         /// <returns>Property with new name.</returns>
         public static IProperty<T> WithName<T>(this IProperty<T> property, string name)
         {
             property.AssertArgumentNotNull(nameof(property));
-            return new Property<T>(name.AssertArgumentNotNull(nameof(name)), property.Description, property.Alias, property.Examples, property.Calculate);
+            name.AssertArgumentNotNull(nameof(name));
+
+            return new Property<T>(name, property.Description, property.Alias, property.Examples, property.Calculate);
+        }
+
+        /// <summary>
+        /// Creates property copy with new alias.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="alias">New alias.</param>
+        /// <returns>Property with new alias.</returns>
+        public static IProperty<T> WithAlias<T>(this IProperty<T> property, string alias)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            alias.AssertArgumentNotNull(nameof(alias));
+
+            return new Property<T>(property.Name, property.Description, alias, property.Examples, property.Calculate);
+        }
+
+        /// <summary>
+        /// Creates property copy with new alias.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="description">New description.</param>
+        /// <param name="language">Description language.</param>
+        /// <returns>Property with new description.</returns>
+        public static Property<T> WithDescription<T>(this IProperty<T> property, string description, Language language = Language.Undefined)
+        {
+            description.AssertArgumentNotNull(nameof(description));
+
+            var newDescription = new LocalizableString(description.Lang(language));
+            return new Property<T>(property.Name, newDescription, property.Alias, property.Examples, property.Calculate);
+        }
+
+        /// <summary>
+        /// Creates property copy with new default value.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="constDefaultValue">New default value.</param>
+        /// <returns>Property with new default value.</returns>
+        public static IProperty<T> WithDefaultValue<T>(this IProperty<T> property, T constDefaultValue)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculate)
+                .SetDefaultValue(constDefaultValue);
+        }
+
+        /// <summary>
+        /// Creates property copy with new default value.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="defaultValue">New default value func.</param>
+        /// <returns>Property with new default value func.</returns>
+        public static IProperty<T> WithDefaultValue<T>(this IProperty<T> property, Func<T> defaultValue)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculate)
+                .SetDefaultValue(defaultValue);
+        }
+
+        /// <summary>
+        /// Creates new property that copies old property and sets calculate func.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="calculate">Calculate property value func.</param>
+        /// <returns>Property with new calculate func.</returns>
+        public static IProperty<T> WithCalculate<T>(this IProperty<T> property, Func<IPropertyContainer, T> calculate)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            calculate.AssertArgumentNotNull(nameof(calculate));
+
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, calculate);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
@@ -11,146 +10,152 @@ namespace MicroElements.Reporting.Excel
     /// <summary>
     /// Marker interface for excel metadata.
     /// </summary>
-    public interface IExcelMetadata { }
-
-    /// <summary>
-    /// Excel Document customizations.
-    /// </summary>
-    public interface IExcelDocumentMetadata : IHasDataType, IHasFreezeTopRow, IHasColumnWidth
+    public interface IExcelMetadata : IPropertyContainer
     {
-    }
-
-    /// <summary>
-    /// Excel Sheet customizations.
-    /// </summary>
-    public interface IExcelSheetMetadata : IHasDataType, IHasFreezeTopRow, IHasColumnWidth
-    {
-    }
-
-    /// <summary>
-    /// Excel Column customizations.
-    /// </summary>
-    public interface IExcelColumnMetadata : IHasDataType, IHasColumnWidth
-    {
-    }
-
-    /// <summary>
-    /// Excel Cell customizations.
-    /// </summary>
-    public interface IExcelCellMetadata : IHasDataType
-    {
-    }
-
-    /// <summary>
-    /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell. 
-    /// </summary>
-    public interface IHasDataType : IExcelMetadata
-    {
-        /// <summary>
-        /// Excel data type.
-        /// </summary>
-        CellValues? DataType { get; }
-    }
-
-    public interface IHasFreezeTopRow : IExcelMetadata
-    {
-        /// <summary>
-        /// Freeze top row.
-        /// </summary>
-        bool? FreezeTopRow { get; }
-    }
-
-    public interface IHasColumnWidth : IExcelMetadata
-    {
-        /// <summary>
-        /// Gets column width.
-        /// </summary>
-        int? ColumnWidth { get; }
     }
 
     public static class ExcelMetadata
     {
-        public static class Default
-        {
-            public static IExcelDocumentMetadata ExcelDocumentMetadata = new ExcelDocumentMetadata
-            {
-                DataType = CellValues.String,
-                FreezeTopRow = true,
-                ColumnWidth = 14,
-            };
-            public static IExcelSheetMetadata ExcelSheetMetadata = new ExcelSheetMetadata { };
-            public static IExcelColumnMetadata ExcelColumnMetadata = new ExcelColumnMetadata { };
-            public static IExcelCellMetadata ExcelCellMetadata = new ExcelCellMetadata { };
-        }
+        /// <summary>
+        /// Excel data type.
+        /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
+        /// </summary>
+        public static readonly IProperty<CellValues> DataType = new Property<CellValues>("DataType").SetDefaultValue(CellValues.String);
+
+        /// <summary>
+        /// Column width.
+        /// </summary>
+        public static readonly IProperty<int> ColumnWidth = new Property<int>("ColumnWidth").SetDefaultValue(14);
+
+        /// <summary>
+        /// Freeze top row.
+        /// </summary>
+        public static readonly IProperty<bool> FreezeTopRow = new Property<bool>("FreezeTopRow").SetDefaultValue(true);
+
+        /// <summary>
+        /// Transpose sheet.
+        /// </summary>
+        public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose");
 
         public static T GetDefinedValue<T>(
-            T? data1,
-            T? data2,
-            T? data3 = null,
-            T? data4 = null,
+            IProperty<T> property,
+            IPropertyContainer data1,
+            IPropertyContainer data2 = null,
+            IPropertyContainer data3 = null,
+            IPropertyContainer data4 = null,
             T defaultValue = default)
-            where T : struct
         {
+            IPropertyValue<T> propertyValue = null;
+
             if (data1 != null)
-                return data1.Value;
+            {
+                propertyValue = data1.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                if (propertyValue.HasValue())
+                    return propertyValue.Value;
+            }
 
             if (data2 != null)
-                return data2.Value;
+            {
+                propertyValue = data2.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                if (propertyValue.HasValue())
+                    return propertyValue.Value;
+            }
 
             if (data3 != null)
-                return data3.Value;
+            {
+                propertyValue = data3.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                if (propertyValue.HasValue())
+                    return propertyValue.Value;
+            }
 
             if (data4 != null)
-                return data4.Value;
+            {
+                propertyValue = data4.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                if (propertyValue.HasValue())
+                    return propertyValue.Value;
+            }
 
             return defaultValue;
         }
     }
 
-    public class ExcelDocumentMetadata : IExcelDocumentMetadata
+    /// <summary>
+    /// Excel Document customizations.
+    /// </summary>
+    public class ExcelDocumentMetadata : MutablePropertyContainer, IExcelMetadata
     {
-        /// <inheritdoc />
-        public CellValues? DataType { get; set; }
+        /// <summary>
+        /// Excel data type.
+        /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
+        /// </summary>
+        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
-        /// <inheritdoc />
-        public bool? FreezeTopRow { get; set; }
+        /// <summary>
+        /// Column width.
+        /// </summary>
+        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
 
-        /// <inheritdoc />
-        public int? ColumnWidth { get; set; }
+        /// <summary>
+        /// Freeze top row.
+        /// </summary>
+        public static IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
     }
 
-    public class ExcelSheetMetadata : IExcelSheetMetadata
+    /// <summary>
+    /// Excel Sheet customizations.
+    /// </summary>
+    public class ExcelSheetMetadata : MutablePropertyContainer, IExcelMetadata
     {
-        /// <inheritdoc />
-        public CellValues? DataType { get; set; }
+        /// <summary>
+        /// Excel data type.
+        /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
+        /// </summary>
+        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
-        /// <inheritdoc />
-        public bool? FreezeTopRow { get; set; }
+        /// <summary>
+        /// Column width.
+        /// </summary>
+        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
 
-        /// <inheritdoc />
-        public int? ColumnWidth { get; set; }
+        /// <summary>
+        /// Freeze top row.
+        /// </summary>
+        public static IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
     }
 
-    public class ExcelColumnMetadata : IExcelColumnMetadata
+    /// <summary>
+    /// Excel Column customizations.
+    /// </summary>
+    public class ExcelColumnMetadata : MutablePropertyContainer, IExcelMetadata
     {
-        /// <inheritdoc />
-        public CellValues? DataType { get; set; }
+        /// <summary>
+        /// Excel data type.
+        /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
+        /// </summary>
+        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
-        /// <inheritdoc />
-        public int? ColumnWidth { get; set; }
+        /// <summary>
+        /// Column width.
+        /// </summary>
+        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
     }
 
-    public class ExcelCellMetadata : IExcelCellMetadata
+    /// <summary>
+    /// Excel Cell customizations.
+    /// </summary>
+    public class ExcelCellMetadata : MutablePropertyContainer, IExcelMetadata
     {
-        /// <inheritdoc />
-        public CellValues? DataType { get; set; }
+        /// <summary>
+        /// Excel data type.
+        /// </summary>
+        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
     }
 
     public class DocumentContext
     {
-        public IExcelDocumentMetadata DocumentMetadata { get; }
+        public IExcelMetadata DocumentMetadata { get; }
 
-        public DocumentContext(IExcelDocumentMetadata documentMetadata)
+        public DocumentContext(IExcelMetadata documentMetadata)
         {
             DocumentMetadata = documentMetadata.AssertArgumentNotNull(nameof(documentMetadata));
         }
@@ -160,11 +165,11 @@ namespace MicroElements.Reporting.Excel
     {
         public DocumentContext DocumentContext { get; }
 
-        public IExcelDocumentMetadata DocumentMetadata => DocumentContext.DocumentMetadata;
+        public IExcelMetadata DocumentMetadata => DocumentContext.DocumentMetadata;
 
-        public IExcelSheetMetadata SheetMetadata { get; }
+        public IExcelMetadata SheetMetadata { get; }
 
-        public SheetContext(DocumentContext documentContext, IExcelSheetMetadata sheetMetadata)
+        public SheetContext(DocumentContext documentContext, IExcelMetadata sheetMetadata)
         {
             DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
             SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
@@ -175,15 +180,15 @@ namespace MicroElements.Reporting.Excel
     {
         public SheetContext SheetContext { get; }
 
-        public IExcelDocumentMetadata DocumentMetadata => SheetContext.DocumentMetadata;
+        public IExcelMetadata DocumentMetadata => SheetContext.DocumentMetadata;
 
-        public IExcelSheetMetadata SheetMetadata => SheetContext.SheetMetadata;
+        public IExcelMetadata SheetMetadata => SheetContext.SheetMetadata;
 
-        public IExcelColumnMetadata ColumnMetadata { get; }
+        public IExcelMetadata ColumnMetadata { get; }
 
         public IPropertyRenderer PropertyRenderer { get; }
 
-        public ColumnContext(SheetContext sheetContext, IExcelColumnMetadata columnMetadata, IPropertyRenderer propertyRenderer)
+        public ColumnContext(SheetContext sheetContext, IExcelMetadata columnMetadata, IPropertyRenderer propertyRenderer)
         {
             SheetContext = sheetContext.AssertArgumentNotNull(nameof(sheetContext));
             ColumnMetadata = columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
@@ -195,15 +200,15 @@ namespace MicroElements.Reporting.Excel
     {
         public ColumnContext ColumnContext { get; }
 
-        public IExcelDocumentMetadata DocumentMetadata => ColumnContext.DocumentMetadata;
+        public IExcelMetadata DocumentMetadata => ColumnContext.DocumentMetadata;
 
-        public IExcelSheetMetadata SheetMetadata => ColumnContext.SheetMetadata;
+        public IExcelMetadata SheetMetadata => ColumnContext.SheetMetadata;
 
-        public IExcelColumnMetadata ColumnMetadata => ColumnContext.ColumnMetadata;
+        public IExcelMetadata ColumnMetadata => ColumnContext.ColumnMetadata;
 
-        public IExcelCellMetadata CellMetadata { get; }
+        public IExcelMetadata CellMetadata { get; }
 
-        public CellContext(ColumnContext columnContext, IExcelCellMetadata cellMetadata)
+        public CellContext(ColumnContext columnContext, IExcelMetadata cellMetadata)
         {
             ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
             CellMetadata = cellMetadata.AssertArgumentNotNull(nameof(cellMetadata));

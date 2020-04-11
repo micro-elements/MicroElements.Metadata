@@ -82,8 +82,6 @@ namespace MicroElements.Metadata
         /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
         /// <returns>New property of type <typeparamref name="B"/>.</returns>
         public static IProperty<B> Map<A, B>(this IProperty<A> property, Func<A, B> map)
-            where A : class
-            where B : class
         {
             B ConvertValue(IPropertyContainer container)
             {

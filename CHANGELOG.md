@@ -1,5 +1,11 @@
+# 0.9.4
+- Property Map now can be used for classes and structs
+- GetPropertyValue method added new argument: useDefaultValue. So it can return null now
+- ExcelMetadata moved to property model for easy extend
+- Excel generator: added Transpose for Sheets
+
 # 0.9.3
-- Property methods with prefixes Set, SetUntyped, With unified
+- Unified Property methods with prefixes Set, SetUntyped, With
 
 # 0.9.2
 - EnumerableReportProvider

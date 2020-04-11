@@ -70,12 +70,14 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to search.</param>
         /// <param name="searchInParent">Search in parent.</param>
         /// <param name="calculateValue">Calculate value if value was not found.</param>
+        /// <param name="useDefaultValue">Use default value from property.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
         public static IPropertyValue<T> GetPropertyValue<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
             bool searchInParent = true,
-            bool calculateValue = true)
+            bool calculateValue = true,
+            bool useDefaultValue = true)
         {
             IPropertyValue<T> propertyValue = (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(property, searchInParent);
 
@@ -90,7 +92,10 @@ namespace MicroElements.Metadata
             }
 
             // Вернем значение по умолчанию.
-            return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
+            if (useDefaultValue)
+                return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
+
+            return default;
         }
 
         /// <summary>

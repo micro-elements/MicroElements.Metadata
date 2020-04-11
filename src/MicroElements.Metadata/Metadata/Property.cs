@@ -27,6 +27,11 @@ namespace MicroElements.Metadata
         /// Initializes a new instance of the <see cref="Property{T}"/> class.
         /// Constructor for copying.
         /// </summary>
+        /// <param name="name">Name.</param>
+        /// <param name="description">Description.</param>
+        /// <param name="alias">Alias.</param>
+        /// <param name="examples">Examples.</param>
+        /// <param name="calculate">Calculate func.</param>
         internal Property(
             string name,
             LocalizableString description,

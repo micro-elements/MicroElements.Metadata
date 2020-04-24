@@ -1,4 +1,4 @@
-# 0.10.0
+# 0.11.0
 - ExcelReportBuilder customize for document, sheet, column, cell
 
 # 0.9.4

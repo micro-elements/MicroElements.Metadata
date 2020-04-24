@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
@@ -119,7 +120,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Document customization function.
         /// </summary>
-        public static readonly IProperty<Action<SpreadsheetDocument>> CustomizeDocument = new Property<Action<SpreadsheetDocument>>("CustomizeDocument");
+        public static readonly IProperty<Action<DocumentContext>> CustomizeDocument = new Property<Action<DocumentContext>>("CustomizeDocument");
     }
 
     /// <summary>
@@ -146,7 +147,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Sheet customization function.
         /// </summary>
-        public static readonly IProperty<Action<WorksheetPart>> CustomizeSheet = new Property<Action<WorksheetPart>>("CustomizeSheet");
+        public static readonly IProperty<Action<SheetContext>> CustomizeSheet = new Property<Action<SheetContext>>("CustomizeSheet");
     }
 
     /// <summary>
@@ -168,7 +169,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Sheet customization function.
         /// </summary>
-        public static readonly IProperty<Action<Column>> CustomizeColumn = new Property<Action<Column>>("CustomizeColumn");
+        public static readonly IProperty<Action<ColumnContext>> CustomizeColumn = new Property<Action<ColumnContext>>("CustomizeColumn");
     }
 
     /// <summary>
@@ -189,10 +190,13 @@ namespace MicroElements.Reporting.Excel
 
     public class DocumentContext
     {
+        public SpreadsheetDocument Document { get; }
+
         public IExcelMetadata DocumentMetadata { get; }
 
-        public DocumentContext(IExcelMetadata documentMetadata)
+        public DocumentContext(SpreadsheetDocument document, IExcelMetadata documentMetadata)
         {
+            Document = document;
             DocumentMetadata = documentMetadata.AssertArgumentNotNull(nameof(documentMetadata));
         }
     }
@@ -205,10 +209,26 @@ namespace MicroElements.Reporting.Excel
 
         public IExcelMetadata SheetMetadata { get; }
 
-        public SheetContext(DocumentContext documentContext, IExcelMetadata sheetMetadata)
+        public IReportProvider ReportProvider { get; }
+
+        public bool IsTransposed => ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, SheetMetadata, defaultValue: false);
+
+        public bool IsNotTransposed => !IsTransposed;
+
+        public IReadOnlyList<ColumnContext> Columns { get; internal set; }
+
+        public SheetData SheetData { get; set; }
+
+        public Sheet Sheet { get; set; }
+
+        public SheetContext(
+            DocumentContext documentContext,
+            IExcelMetadata sheetMetadata,
+            IReportProvider reportProvider)
         {
             DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
             SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
+            ReportProvider = reportProvider.AssertArgumentNotNull(nameof(reportProvider));
         }
     }
 
@@ -223,6 +243,8 @@ namespace MicroElements.Reporting.Excel
         public IExcelMetadata ColumnMetadata { get; }
 
         public IPropertyRenderer PropertyRenderer { get; }
+
+        public Column Column { get; set; }
 
         public ColumnContext(SheetContext sheetContext, IExcelMetadata columnMetadata, IPropertyRenderer propertyRenderer)
         {

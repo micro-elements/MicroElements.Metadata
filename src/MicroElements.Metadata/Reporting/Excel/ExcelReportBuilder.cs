@@ -29,7 +29,6 @@ namespace MicroElements.Reporting.Excel
     public class ExcelReportBuilder
     {
         private readonly SpreadsheetDocument _document;
-        private readonly WorkbookPart _workbookPart;
         private uint _lastSheetId = 1;
 
         private ExcelDocumentMetadata _documentMetadata = new ExcelDocumentMetadata();
@@ -43,8 +42,7 @@ namespace MicroElements.Reporting.Excel
         public ExcelReportBuilder(SpreadsheetDocument document)
         {
             _document = document.AssertArgumentNotNull(nameof(document));
-            _workbookPart = document.AddWorkbookPart();
-            InitDocument(_document, _workbookPart);
+            InitDocument(_document);
         }
 
         /// <summary>
@@ -114,7 +112,7 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder Save()
         {
-            _workbookPart.Workbook.Save();
+            _document.WorkbookPart.Workbook.Save();
             return this;
         }
 
@@ -123,7 +121,7 @@ namespace MicroElements.Reporting.Excel
         /// </summary>
         public void SaveAndClose()
         {
-            _workbookPart.Workbook.Save();
+            _document.WorkbookPart.Workbook.Save();
             _document.Close();
         }
 
@@ -135,23 +133,31 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder AddReportSheet(IReportProvider reportProvider, IEnumerable<IPropertyContainer> reportRows)
         {
-            AddReportSheet(_workbookPart, reportProvider, reportRows);
+            AddReportSheet(_document.WorkbookPart, reportProvider, reportRows);
             return this;
         }
 
         /// <summary>
         /// Default document initialization.
         /// </summary>
-        private static void InitDocument(SpreadsheetDocument document, WorkbookPart workbookPart)
+        private void InitDocument(SpreadsheetDocument document)
         {
-            workbookPart.Workbook = new Workbook();
+            if (_document.WorkbookPart == null)
+            {
+                _document.AddWorkbookPart();
+                _document.WorkbookPart.Workbook = new Workbook();
 
-            // Add Stylesheet.
-            var workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
-            workbookStylesPart.Stylesheet = GetStylesheet();
+                // Add Stylesheet.
+                var workbookStylesPart = _document.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+                workbookStylesPart.Stylesheet = GetStylesheet();
 
-            // Add Sheets to the Workbook.
-            document.WorkbookPart.Workbook.AppendChild(new Sheets());
+                // Add Sheets to the Workbook.
+                document.WorkbookPart.Workbook.AppendChild(new Sheets());
+            }
+
+            // External customization
+            var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.CustomizeDocument);
+            customizeFunc?.Invoke(document);
         }
 
         private void AddReportSheet(WorkbookPart workbookPart, IReportProvider reportProvider, IEnumerable<IPropertyContainer> items)
@@ -161,7 +167,7 @@ namespace MicroElements.Reporting.Excel
             var documentContext = new DocumentContext(documentMetadata);
             var sheetContext = new SheetContext(documentContext, sheetMetadata);
 
-            bool isTransposed = ExcelMetadata.GetDefinedValue(ExcelMetadata.Transpose, sheetMetadata, defaultValue: false);
+            bool isTransposed = ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, sheetMetadata, defaultValue: false);
             bool isNotTransposed = !isTransposed;
 
             var columns = reportProvider.Renderers
@@ -238,7 +244,7 @@ namespace MicroElements.Reporting.Excel
                 workSheet.InsertAt(columnsElement, 0);
             }
 
-            bool freezeTopRow = ExcelMetadata.GetDefinedValue(
+            bool freezeTopRow = ExcelMetadata.GetFirstDefinedValue(
                 ExcelMetadata.FreezeTopRow,
                 sheetContext.SheetMetadata,
                 sheetContext.DocumentMetadata,
@@ -268,6 +274,10 @@ namespace MicroElements.Reporting.Excel
                 sheetView.Append(selection);
             }
 
+            // External customization
+            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.CustomizeSheet);
+            customizeFunc?.Invoke(worksheetPart);
+
             // Append a new worksheet and associate it with the workbook.
             Sheet sheet = new Sheet
             {
@@ -275,6 +285,7 @@ namespace MicroElements.Reporting.Excel
                 SheetId = sheetId,
                 Name = name,
             };
+
             workbookPart.Workbook.Sheets.Append(sheet);
             return sheetData;
         }
@@ -287,7 +298,7 @@ namespace MicroElements.Reporting.Excel
                 var columnContext = columns[index];
                 uint colNumber = (uint)(index + 1);
 
-                int columnWidth = ExcelMetadata.GetDefinedValue(
+                int columnWidth = ExcelMetadata.GetFirstDefinedValue(
                     ExcelMetadata.ColumnWidth,
                     columnContext.ColumnMetadata,
                     columnContext.SheetMetadata,
@@ -295,6 +306,11 @@ namespace MicroElements.Reporting.Excel
                     defaultValue: 14);
 
                 Column column = new Column { Min = colNumber, Max = colNumber, Width = columnWidth, CustomWidth = true };
+
+                // External customization
+                var customizeFunc = columnContext.ColumnMetadata?.GetValue(ExcelColumnMetadata.CustomizeColumn);
+                customizeFunc?.Invoke(column);
+
                 columnsElement.Append(column);
             }
 
@@ -317,7 +333,7 @@ namespace MicroElements.Reporting.Excel
 
             var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
 
-            CellValues dataType = ExcelMetadata.GetDefinedValue(
+            CellValues dataType = ExcelMetadata.GetFirstDefinedValue(
                 ExcelMetadata.DataType,
                 cellMetadata,
                 columnContext.ColumnMetadata,
@@ -325,11 +341,7 @@ namespace MicroElements.Reporting.Excel
                 columnContext.DocumentMetadata,
                 defaultValue: CellValues.String);
 
-            Cell cell = new Cell
-            {
-                CellValue = new CellValue(textValue),
-                DataType = new EnumValue<CellValues>(dataType),
-            };
+            Cell cell = ConstructCell(textValue, dataType);
             if (dataType == CellValues.Date)
             {
                 cell.StyleIndex = 1;
@@ -339,6 +351,10 @@ namespace MicroElements.Reporting.Excel
                     cell.StyleIndex = 2;
                 }
             }
+
+            // External customization
+            var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.CustomizeCell);
+            customizeFunc?.Invoke(cell);
 
             return cell;
         }

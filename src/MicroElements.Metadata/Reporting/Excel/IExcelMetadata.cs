@@ -1,6 +1,8 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
@@ -14,6 +16,9 @@ namespace MicroElements.Reporting.Excel
     {
     }
 
+    /// <summary>
+    /// Contains excel customization properties and helper methods.
+    /// </summary>
     public static class ExcelMetadata
     {
         /// <summary>
@@ -37,40 +42,51 @@ namespace MicroElements.Reporting.Excel
         /// </summary>
         public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose");
 
-        public static T GetDefinedValue<T>(
+        /// <summary>
+        /// Gets property value from the first source where value is defined.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property to search.</param>
+        /// <param name="source1">Source 1.</param>
+        /// <param name="source2">Source 2.</param>
+        /// <param name="source3">Source 3.</param>
+        /// <param name="source4">Source 4.</param>
+        /// <param name="defaultValue">Default value if all sources does not contain property value.</param>
+        /// <returns>Property value or default value.</returns>
+        public static T GetFirstDefinedValue<T>(
             IProperty<T> property,
-            IPropertyContainer data1,
-            IPropertyContainer data2 = null,
-            IPropertyContainer data3 = null,
-            IPropertyContainer data4 = null,
+            IPropertyContainer source1 = null,
+            IPropertyContainer source2 = null,
+            IPropertyContainer source3 = null,
+            IPropertyContainer source4 = null,
             T defaultValue = default)
         {
-            IPropertyValue<T> propertyValue = null;
+            IPropertyValue<T> propertyValue;
 
-            if (data1 != null)
+            if (source1 != null)
             {
-                propertyValue = data1.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source1.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
-            if (data2 != null)
+            if (source2 != null)
             {
-                propertyValue = data2.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source2.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
-            if (data3 != null)
+            if (source3 != null)
             {
-                propertyValue = data3.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source3.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
-            if (data4 != null)
+            if (source4 != null)
             {
-                propertyValue = data4.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source4.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
@@ -88,17 +104,22 @@ namespace MicroElements.Reporting.Excel
         /// Excel data type.
         /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
         /// </summary>
-        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
+        public static readonly IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
         /// <summary>
         /// Column width.
         /// </summary>
-        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
+        public static readonly IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
 
         /// <summary>
         /// Freeze top row.
         /// </summary>
-        public static IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
+        public static readonly IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
+
+        /// <summary>
+        /// Document customization function.
+        /// </summary>
+        public static readonly IProperty<Action<SpreadsheetDocument>> CustomizeDocument = new Property<Action<SpreadsheetDocument>>("CustomizeDocument");
     }
 
     /// <summary>
@@ -110,17 +131,22 @@ namespace MicroElements.Reporting.Excel
         /// Excel data type.
         /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
         /// </summary>
-        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
+        public static readonly IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
         /// <summary>
         /// Column width.
         /// </summary>
-        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
+        public static readonly IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
 
         /// <summary>
         /// Freeze top row.
         /// </summary>
-        public static IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
+        public static readonly IProperty<bool> FreezeTopRow = ExcelMetadata.FreezeTopRow;
+
+        /// <summary>
+        /// Sheet customization function.
+        /// </summary>
+        public static readonly IProperty<Action<WorksheetPart>> CustomizeSheet = new Property<Action<WorksheetPart>>("CustomizeSheet");
     }
 
     /// <summary>
@@ -132,12 +158,17 @@ namespace MicroElements.Reporting.Excel
         /// Excel data type.
         /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
         /// </summary>
-        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
+        public static readonly IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
         /// <summary>
         /// Column width.
         /// </summary>
-        public static IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
+        public static readonly IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
+
+        /// <summary>
+        /// Sheet customization function.
+        /// </summary>
+        public static readonly IProperty<Action<Column>> CustomizeColumn = new Property<Action<Column>>("CustomizeColumn");
     }
 
     /// <summary>
@@ -148,7 +179,12 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Excel data type.
         /// </summary>
-        public static IProperty<CellValues> DataType = ExcelMetadata.DataType;
+        public static readonly IProperty<CellValues> DataType = ExcelMetadata.DataType;
+
+        /// <summary>
+        /// Cell customization function.
+        /// </summary>
+        public static readonly IProperty<Action<Cell>> CustomizeCell = new Property<Action<Cell>>("CustomizeCell");
     }
 
     public class DocumentContext

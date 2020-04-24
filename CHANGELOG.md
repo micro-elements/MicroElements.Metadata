@@ -1,3 +1,6 @@
+# 0.10.0
+- ExcelReportBuilder customize for document, sheet, column, cell
+
 # 0.9.4
 - Property Map now can be used for classes and structs
 - GetPropertyValue method added new argument: useDefaultValue. So it can return null now

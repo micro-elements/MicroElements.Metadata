@@ -361,7 +361,7 @@ namespace MicroElements.Reporting.Excel
             {
                 cell.StyleIndex = 1;
 
-                book isLocalTime = propertyRenderer.PropertyType == typeof(LocalTime) || propertyRenderer.PropertyType == typeof(LocalTime?);
+                var isLocalTime = propertyRenderer.PropertyType == typeof(LocalTime) || propertyRenderer.PropertyType == typeof(LocalTime?);
                 if (isLocalTime)
                 {
                     cell.StyleIndex = 2;

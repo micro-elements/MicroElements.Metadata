@@ -1,3 +1,7 @@
+# 0.12.0
+- ExcelReportBuilder sheet customizization after adding data
+- FreezeTopRow moved to extension methods
+
 # 0.11.0
 - ExcelReportBuilder customize for document, sheet, column, cell
 

@@ -162,21 +162,27 @@ namespace MicroElements.Reporting.Excel
         public ExcelReportBuilder AddReportSheet(IReportProvider reportProvider, IEnumerable<IPropertyContainer> reportRows)
         {
             var sheetMetadata = reportProvider.GetMetadata<ExcelSheetMetadata>() ?? _defaultSheetMetadata;
-            var sheetContext = new SheetContext(_documentContext, sheetMetadata, reportProvider);
 
-            var sheetData = AddSheet(sheetContext);
+            // Add a WorksheetPart to the WorkbookPart.
+            WorkbookPart workbookPart = _documentContext.Document.WorkbookPart;
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportProvider);
 
-            AddSheetData(sheetContext, sheetData, reportRows);
+            AddSheet(sheetContext);
+
+            AddSheetData(sheetContext, reportRows);
+
+            // External customization
+            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.CustomizeSheet);
+            customizeFunc?.Invoke(sheetContext);
 
             return this;
         }
 
-        private SheetData AddSheet(SheetContext sheetContext)
+        private void AddSheet(SheetContext sheetContext)
         {
-            WorkbookPart workbookPart = sheetContext.DocumentContext.Document.WorkbookPart;
-
-            // Add a WorksheetPart to the WorkbookPart.
-            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            WorkbookPart workbookPart = sheetContext.DocumentContext.WorkbookPart;
+            WorksheetPart worksheetPart = sheetContext.WorksheetPart;
 
             SheetData sheetData = new SheetData();
 
@@ -209,26 +215,7 @@ namespace MicroElements.Reporting.Excel
 
             if (freezeTopRow)
             {
-                SheetViews sheetViews = new SheetViews();
-                workSheet.SheetViews = sheetViews;
-
-                SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
-                sheetViews.AppendChild(sheetView);
-
-                Selection selection = new Selection { Pane = PaneValues.BottomLeft };
-
-                // the freeze pane
-                Pane pane = new Pane
-                {
-                    VerticalSplit = 1D,
-                    TopLeftCell = "A2",
-                    ActivePane = PaneValues.BottomLeft,
-                    State = PaneStateValues.Frozen,
-                };
-
-                // Selection selection = new Selection() { Pane = PaneValues.BottomLeft };
-                sheetView.Append(pane);
-                sheetView.Append(selection);
+                workSheet.FreezeTopRow(rowNum: 1);
             }
 
             // Append a new worksheet and associate it with the workbook.
@@ -242,19 +229,14 @@ namespace MicroElements.Reporting.Excel
             sheetContext.SheetData = sheetData;
             sheetContext.Sheet = sheet;
 
-            // External customization
-            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.CustomizeSheet);
-            customizeFunc?.Invoke(sheetContext);
-
             workbookPart.Workbook.Sheets.Append(sheetContext.Sheet);
-            return sheetContext.SheetData;
         }
 
         private void AddSheetData(
             SheetContext sheetContext,
-            SheetData sheetData,
             IEnumerable<IPropertyContainer> items)
         {
+            SheetData sheetData = sheetContext.SheetData;
             var columns = sheetContext.Columns;
 
             if (sheetContext.IsNotTransposed)
@@ -488,5 +470,45 @@ namespace MicroElements.Reporting.Excel
 
             return StyleSheet;
         }
+    }
+
+    public static class ExcelExtensions
+    {
+        public static SheetViews GetOrCreateSheetViews(this Worksheet workSheet)
+        {
+            if (workSheet.SheetViews == null)
+            {
+                workSheet.SheetViews = new SheetViews();
+            }
+
+            return workSheet.SheetViews;
+        }
+
+        public static Worksheet FreezeTopRow(this Worksheet workSheet, int rowNum = 1)
+        {
+            SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
+
+            SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
+            sheetViews.AppendChild(sheetView);
+
+            Selection selection = new Selection { Pane = PaneValues.BottomLeft };
+
+            // the freeze pane
+            int rowNumWithData = rowNum + 1;
+            Pane pane = new Pane
+            {
+                VerticalSplit = 1,
+                TopLeftCell = $"A{rowNumWithData}",
+                ActivePane = PaneValues.BottomLeft,
+                State = PaneStateValues.Frozen,
+            };
+
+            // Selection selection = new Selection() { Pane = PaneValues.BottomLeft };
+            sheetView.Append(pane);
+            sheetView.Append(selection);
+
+            return workSheet;
+        }
+
     }
 }

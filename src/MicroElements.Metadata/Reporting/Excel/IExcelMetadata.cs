@@ -192,6 +192,8 @@ namespace MicroElements.Reporting.Excel
     {
         public SpreadsheetDocument Document { get; }
 
+        public WorkbookPart WorkbookPart => Document.WorkbookPart;
+
         public IExcelMetadata DocumentMetadata { get; }
 
         public DocumentContext(SpreadsheetDocument document, IExcelMetadata documentMetadata)
@@ -204,6 +206,8 @@ namespace MicroElements.Reporting.Excel
     public class SheetContext
     {
         public DocumentContext DocumentContext { get; }
+
+        public WorksheetPart WorksheetPart { get; }
 
         public IExcelMetadata DocumentMetadata => DocumentContext.DocumentMetadata;
 
@@ -223,12 +227,14 @@ namespace MicroElements.Reporting.Excel
 
         public SheetContext(
             DocumentContext documentContext,
+            WorksheetPart worksheetPart,
             IExcelMetadata sheetMetadata,
             IReportProvider reportProvider)
         {
             DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
             SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
             ReportProvider = reportProvider.AssertArgumentNotNull(nameof(reportProvider));
+            WorksheetPart = worksheetPart.AssertArgumentNotNull(nameof(worksheetPart));
         }
     }
 

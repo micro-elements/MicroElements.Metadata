@@ -15,7 +15,6 @@ using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
 using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
 using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
 using Font = DocumentFormat.OpenXml.Spreadsheet.Font;
-using Fonts = DocumentFormat.OpenXml.Spreadsheet.Fonts;
 using FontSize = DocumentFormat.OpenXml.Spreadsheet.FontSize;
 using LeftBorder = DocumentFormat.OpenXml.Spreadsheet.LeftBorder;
 using RightBorder = DocumentFormat.OpenXml.Spreadsheet.RightBorder;
@@ -28,11 +27,9 @@ namespace MicroElements.Reporting.Excel
     /// </summary>
     public class ExcelReportBuilder
     {
-        private readonly SpreadsheetDocument _document;
-        private readonly DocumentContext _documentContext;
-        private uint _lastSheetId = 1;
-
         private readonly ExcelDocumentMetadata _documentMetadata;
+        private readonly DocumentContext _documentContext;
+
         private ExcelSheetMetadata _defaultSheetMetadata = new ExcelSheetMetadata();
         private ExcelColumnMetadata _defaultColumnMetadata = new ExcelColumnMetadata();
 
@@ -43,10 +40,8 @@ namespace MicroElements.Reporting.Excel
         /// <param name="documentMetadata">Default excel document metadata.</param>
         public ExcelReportBuilder(SpreadsheetDocument document, ExcelDocumentMetadata documentMetadata)
         {
-            _document = document.AssertArgumentNotNull(nameof(document));
             _documentMetadata = documentMetadata ?? new ExcelDocumentMetadata();
-
-            _documentContext = InitDocument(_document);
+            _documentContext = InitDocument(document.AssertArgumentNotNull(nameof(document)));
         }
 
         /// <summary>
@@ -107,7 +102,7 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder Save()
         {
-            _document.WorkbookPart.Workbook.Save();
+            _documentContext.WorkbookPart.Workbook.Save();
             return this;
         }
 
@@ -116,8 +111,8 @@ namespace MicroElements.Reporting.Excel
         /// </summary>
         public void SaveAndClose()
         {
-            _document.WorkbookPart.Workbook.Save();
-            _document.Close();
+            _documentContext.WorkbookPart.Workbook.Save();
+            _documentContext.Document.Close();
         }
 
         /// <summary>
@@ -125,20 +120,17 @@ namespace MicroElements.Reporting.Excel
         /// </summary>
         private DocumentContext InitDocument(SpreadsheetDocument document)
         {
-            if (_document.WorkbookPart == null)
+            if (document.WorkbookPart == null)
             {
-                _document.AddWorkbookPart();
-                _document.WorkbookPart.Workbook = new Workbook();
-
-                // Add Stylesheet.
-                var workbookStylesPart = _document.WorkbookPart.GetOrCreateWorkbookStylesPart();
-                workbookStylesPart.Stylesheet = GetStylesheet();
-
-                // Add Sheets to the Workbook.
+                document.AddWorkbookPart();
+                document.WorkbookPart.Workbook = new Workbook();
                 document.WorkbookPart.Workbook.AppendChild(new Sheets());
             }
 
-            var documentContext = new DocumentContext(_document, _documentMetadata);
+            var documentContext = new DocumentContext(document, _documentMetadata);
+
+            // Init Stylesheet.
+            InitStylesheet(documentContext);
 
             // External customization
             var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.CustomizeDocument);
@@ -213,17 +205,18 @@ namespace MicroElements.Reporting.Excel
             }
 
             // Append a new worksheet and associate it with the workbook.
+            uint sheetCount = (uint)workbookPart.Workbook.Sheets.ChildElements.Count;
             Sheet sheet = new Sheet
             {
                 Id = workbookPart.GetIdOfPart(worksheetPart),
-                SheetId = _lastSheetId++,
+                SheetId = sheetCount + 1,
                 Name = sheetContext.ReportProvider.ReportName,
             };
 
             sheetContext.SheetData = sheetData;
             sheetContext.Sheet = sheet;
 
-            workbookPart.Workbook.Sheets.Append(sheetContext.Sheet);
+            workbookPart.Workbook.Sheets.Append(sheet);
         }
 
         private void AddSheetData(
@@ -335,12 +328,12 @@ namespace MicroElements.Reporting.Excel
             Cell cell = ConstructCell(textValue, dataType);
             if (dataType == CellValues.Date)
             {
-                cell.StyleIndex = 1;
+                cell.StyleIndex = _documentContext.GetCellFormatIndex("Date");
 
                 var isLocalTime = propertyRenderer.PropertyType == typeof(LocalTime) || propertyRenderer.PropertyType == typeof(LocalTime?);
                 if (isLocalTime)
                 {
-                    cell.StyleIndex = 2;
+                    cell.StyleIndex = _documentContext.GetCellFormatIndex("Time");
                 }
             }
 
@@ -351,168 +344,101 @@ namespace MicroElements.Reporting.Excel
             return cell;
         }
 
-        private static Stylesheet GetStylesheet()
+        private void InitStylesheet(DocumentContext document)
         {
-            var StyleSheet = new Stylesheet();
+            // Create "fonts".
+            document.AddFont(
+                new Font
+                {
+                    FontName = new FontName() {Val = "Calibri"},
+                    FontSize = new FontSize() {Val = 11},
+                    FontFamilyNumbering = new FontFamilyNumbering() {Val = 2},
+                }, "Default");
 
-            // Create "fonts" node.
-            var Fonts = new Fonts();
-            Fonts.Append(new Font()
-            {
-                FontName = new FontName() { Val = "Calibri" },
-                FontSize = new FontSize() { Val = 11 },
-                FontFamilyNumbering = new FontFamilyNumbering() { Val = 2 },
-            });
+            // Create "fills".
+            document.AddFill(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.None } }, "DefaultFill");
+            document.AddFill(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.Gray125 } }, "Gray125");
 
-            Fonts.Count = (uint)Fonts.ChildElements.Count;
-
-            // Create "fills" node.
-            var Fills = new Fills();
-            Fills.Append(new Fill()
-            {
-                PatternFill = new PatternFill() { PatternType = PatternValues.None }
-            });
-            Fills.Append(new Fill()
-            {
-                PatternFill = new PatternFill() { PatternType = PatternValues.Gray125 }
-            });
-
-            Fills.Count = (uint)Fills.ChildElements.Count;
-
-            // Create "borders" node.
-            var Borders = new Borders();
-            Borders.Append(new Border()
-            {
-                LeftBorder = new LeftBorder(),
-                RightBorder = new RightBorder(),
-                TopBorder = new TopBorder(),
-                BottomBorder = new BottomBorder(),
-                DiagonalBorder = new DiagonalBorder()
-            });
-
-            Borders.Count = (uint)Borders.ChildElements.Count;
+            // Create "borders".
+            document.AddBorder(
+                new Border
+                {
+                    LeftBorder = new LeftBorder(),
+                    RightBorder = new RightBorder(),
+                    TopBorder = new TopBorder(),
+                    BottomBorder = new BottomBorder(),
+                    DiagonalBorder = new DiagonalBorder(),
+                }, "Default");
 
             // Create "cellStyleXfs" node.
-            var CellStyleFormats = new CellStyleFormats();
-            CellStyleFormats.Append(new CellFormat()
-            {
-                NumberFormatId = 0,
-                FontId = 0,
-                FillId = 0,
-                BorderId = 0
-            });
-
-            CellStyleFormats.Count = (uint)CellStyleFormats.ChildElements.Count;
+            document.AddCellStyleFormat(
+                new CellFormat()
+                {
+                    NumberFormatId = 0,
+                    FontId = 0,
+                    FillId = 0,
+                    BorderId = 0,
+                }, "Default");
 
             // Create "cellXfs" node.
-            var CellFormats = new CellFormats();
 
             //https://github.com/closedxml/closedxml/wiki/NumberFormatId-Lookup-Table
 
             // A default style that works for everything but DateTime
-            CellFormats.Append(new CellFormat()
-            {
-                BorderId = 0,
-                FillId = 0,
-                FontId = 0,
-                NumberFormatId = 0,//General
-                FormatId = 0,
-                ApplyNumberFormat = true
-            });
+            document.AddCellFormat(
+                new CellFormat
+                {
+                    BorderId = 0,
+                    FillId = 0,
+                    FontId = 0,
+                    NumberFormatId = 0,
+                    FormatId = 0,
+                    ApplyNumberFormat = true,
+                }, "General");
+
+            document.AddCellFormat(
+                new CellFormat
+                {
+                    BorderId = 0,
+                    FillId = 0,
+                    FontId = 0,
+                    NumberFormatId = 22,
+                    FormatId = 0,
+                    ApplyNumberFormat = true,
+                }, "DateTime");
 
             // A style that works for DateTime (just the date)
-            CellFormats.Append(new CellFormat()
-            {
-                BorderId = 0,
-                FillId = 0,
-                FontId = 0,
-                NumberFormatId = 14, // or 22 to include the time
-                FormatId = 0,
-                ApplyNumberFormat = true
-            });
+            document.AddCellFormat(
+                new CellFormat
+                {
+                    BorderId = 0,
+                    FillId = 0,
+                    FontId = 0,
+                    NumberFormatId = 14, // or 22 to include the time
+                    FormatId = 0,
+                    ApplyNumberFormat = true,
+                }, "Date");
 
             // A style that works for Time
-            CellFormats.Append(new CellFormat()
-            {
-                BorderId = 0,
-                FillId = 0,
-                FontId = 0,
-                NumberFormatId = 21, // H:mm:ss
-                FormatId = 0,
-                ApplyNumberFormat = true
-            });
+            document.AddCellFormat(
+                new CellFormat
+                {
+                    BorderId = 0,
+                    FillId = 0,
+                    FontId = 0,
+                    NumberFormatId = 21, // H:mm:ss
+                    FormatId = 0,
+                    ApplyNumberFormat = true,
+                }, "Time");
 
-            CellFormats.Count = (uint)CellFormats.ChildElements.Count;
-
-            // Create "cellStyles" node.
-            var CellStyles = new CellStyles();
-            CellStyles.Append(new CellStyle()
-            {
-                Name = "Normal",
-                FormatId = 0,
-                BuiltinId = 0
-            });
-            CellStyles.Count = (uint)CellStyles.ChildElements.Count;
-
-            // Append all nodes in order.
-            StyleSheet.Append(Fonts);
-            StyleSheet.Append(Fills);
-            StyleSheet.Append(Borders);
-            StyleSheet.Append(CellStyleFormats);
-            StyleSheet.Append(CellFormats);
-            StyleSheet.Append(CellStyles);
-
-            return StyleSheet;
-        }
-    }
-
-    public static class ExcelExtensions
-    {
-        public static SheetViews GetOrCreateSheetViews(this Worksheet workSheet)
-        {
-            if (workSheet.SheetViews == null)
-            {
-                workSheet.SheetViews = new SheetViews();
-            }
-
-            return workSheet.SheetViews;
-        }
-
-        public static Worksheet FreezeTopRow(this Worksheet workSheet, int rowNum = 1)
-        {
-            SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
-
-            SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
-            sheetViews.AppendChild(sheetView);
-
-            Selection selection = new Selection { Pane = PaneValues.BottomLeft };
-
-            // the freeze pane
-            int rowNumWithData = rowNum + 1;
-            Pane pane = new Pane
-            {
-                VerticalSplit = 1,
-                TopLeftCell = $"A{rowNumWithData}",
-                ActivePane = PaneValues.BottomLeft,
-                State = PaneStateValues.Frozen,
-            };
-
-            // Selection selection = new Selection() { Pane = PaneValues.BottomLeft };
-            sheetView.Append(pane);
-            sheetView.Append(selection);
-
-            return workSheet;
-        }
-
-        public static WorkbookStylesPart GetOrCreateWorkbookStylesPart(this WorkbookPart workbookPart)
-        {
-            if (workbookPart.WorkbookStylesPart == null)
-            {
-                var workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
-                return workbookStylesPart;
-            }
-
-            return workbookPart.WorkbookStylesPart;
+            // Create "cellStyles".
+            document.AddCellStyle(
+                new CellStyle
+                {
+                    Name = "Normal",
+                    FormatId = 0,
+                    BuiltinId = 0,
+                }, "Default");
         }
     }
 }

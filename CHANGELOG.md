@@ -1,3 +1,6 @@
+# 0.14.0
+- Extensions for easy excel styling
+
 # 0.13.0
 - Document customization fixed (was not applyed)
 

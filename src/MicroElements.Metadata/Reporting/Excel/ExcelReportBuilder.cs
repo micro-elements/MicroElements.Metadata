@@ -32,7 +32,7 @@ namespace MicroElements.Reporting.Excel
         private readonly DocumentContext _documentContext;
         private uint _lastSheetId = 1;
 
-        private ExcelDocumentMetadata _documentMetadata = new ExcelDocumentMetadata();
+        private readonly ExcelDocumentMetadata _documentMetadata;
         private ExcelSheetMetadata _defaultSheetMetadata = new ExcelSheetMetadata();
         private ExcelColumnMetadata _defaultColumnMetadata = new ExcelColumnMetadata();
 
@@ -40,9 +40,12 @@ namespace MicroElements.Reporting.Excel
         /// Initializes a new instance of the <see cref="ExcelReportBuilder"/> class.
         /// </summary>
         /// <param name="document">Excel document.</param>
-        public ExcelReportBuilder(SpreadsheetDocument document)
+        /// <param name="documentMetadata">Default excel document metadata.</param>
+        public ExcelReportBuilder(SpreadsheetDocument document, ExcelDocumentMetadata documentMetadata)
         {
             _document = document.AssertArgumentNotNull(nameof(document));
+            _documentMetadata = documentMetadata ?? new ExcelDocumentMetadata();
+
             _documentContext = InitDocument(_document);
         }
 
@@ -50,13 +53,14 @@ namespace MicroElements.Reporting.Excel
         /// Creates new empty excel document and builder.
         /// </summary>
         /// <param name="outFilePath">Output file name.</param>
+        /// <param name="documentMetadata">Default excel document metadata.</param>
         /// <returns>Builder instance.</returns>
-        public static ExcelReportBuilder Create(string outFilePath)
+        public static ExcelReportBuilder Create(string outFilePath, ExcelDocumentMetadata documentMetadata = null)
         {
             outFilePath.AssertArgumentNotNull(nameof(outFilePath));
 
             SpreadsheetDocument document = SpreadsheetDocument.Create(outFilePath, SpreadsheetDocumentType.Workbook);
-            var builder = new ExcelReportBuilder(document);
+            var builder = new ExcelReportBuilder(document, documentMetadata);
             return builder;
         }
 
@@ -64,25 +68,15 @@ namespace MicroElements.Reporting.Excel
         /// Creates new empty excel document and builder.
         /// </summary>
         /// <param name="targetStream">Output stream.</param>
+        /// <param name="documentMetadata">Default excel document metadata.</param>
         /// <returns>Builder instance.</returns>
-        public static ExcelReportBuilder Create(Stream targetStream)
+        public static ExcelReportBuilder Create(Stream targetStream, ExcelDocumentMetadata documentMetadata = null)
         {
             targetStream.AssertArgumentNotNull(nameof(targetStream));
 
             SpreadsheetDocument document = SpreadsheetDocument.Create(targetStream, SpreadsheetDocumentType.Workbook);
-            var builder = new ExcelReportBuilder(document);
+            var builder = new ExcelReportBuilder(document, documentMetadata);
             return builder;
-        }
-
-        /// <summary>
-        /// Sets excel document metadata.
-        /// </summary>
-        /// <param name="documentMetadata">Default excel document metadata.</param>
-        /// <returns>Builder instance.</returns>
-        public ExcelReportBuilder WithDocumentMetadata(ExcelDocumentMetadata documentMetadata)
-        {
-            _documentMetadata = documentMetadata.AssertArgumentNotNull(nameof(documentMetadata));
-            return this;
         }
 
         /// <summary>
@@ -137,7 +131,7 @@ namespace MicroElements.Reporting.Excel
                 _document.WorkbookPart.Workbook = new Workbook();
 
                 // Add Stylesheet.
-                var workbookStylesPart = _document.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+                var workbookStylesPart = _document.WorkbookPart.GetOrCreateWorkbookStylesPart();
                 workbookStylesPart.Stylesheet = GetStylesheet();
 
                 // Add Sheets to the Workbook.
@@ -510,5 +504,15 @@ namespace MicroElements.Reporting.Excel
             return workSheet;
         }
 
+        public static WorkbookStylesPart GetOrCreateWorkbookStylesPart(this WorkbookPart workbookPart)
+        {
+            if (workbookPart.WorkbookStylesPart == null)
+            {
+                var workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
+                return workbookStylesPart;
+            }
+
+            return workbookPart.WorkbookStylesPart;
+        }
     }
 }

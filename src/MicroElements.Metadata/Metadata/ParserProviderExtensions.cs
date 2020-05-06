@@ -7,12 +7,21 @@ using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
+    /// <summary>
+    /// Extension methods for <see cref="IParserProvider"/>.
+    /// </summary>
     public static class ParserProviderExtensions
     {
-        public static IReadOnlyList<IPropertyValue> ParseProperties(this IParserProvider parserProvider, IReadOnlyDictionary<string, string> row, IValueParser defaultValueParser)
+        /// <summary>
+        /// Parses dictionary to <see cref="IPropertyValue"/> list.
+        /// </summary>
+        /// <param name="parserProvider"><see cref="IParserProvider"/>.</param>
+        /// <param name="sourceRow">Source data.</param>
+        /// <returns><see cref="IPropertyValue"/> list.</returns>
+        public static IReadOnlyList<IPropertyValue> ParseProperties(this IParserProvider parserProvider, IReadOnlyDictionary<string, string> sourceRow)
         {
             Option<IPropertyValue> ParseRowOrGetDefault(IPropertyParser propertyParser) =>
-                row.GetValueAsOption(propertyParser.SourceName)
+                sourceRow.GetValueAsOption(propertyParser.SourceName)
                     .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
 
             var propertyValues = parserProvider.Parsers

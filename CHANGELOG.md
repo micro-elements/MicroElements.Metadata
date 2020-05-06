@@ -1,3 +1,7 @@
+# 1.0.0
+- ExcelReader added
+- Validation added
+
 # 0.14.0
 - Extensions for easy excel styling
 

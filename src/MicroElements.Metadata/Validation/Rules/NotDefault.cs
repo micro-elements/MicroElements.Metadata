@@ -1,0 +1,53 @@
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using MicroElements.Functional;
+using MicroElements.Metadata;
+
+namespace MicroElements.Validation.Rules
+{
+    /// <summary>
+    /// Checks that property value is not default.
+    /// </summary>
+    /// <typeparam name="T">Property type.</typeparam>
+    public class NotDefault<T> : BasePropertyRule<T>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NotDefault{T}"/> class.
+        /// </summary>
+        /// <param name="property">Property to check.</param>
+        public NotDefault(IProperty<T> property)
+            : base(property)
+        {
+        }
+
+        /// <inheritdoc />
+        protected override bool IsValid(T value, IPropertyContainer propertyContainer)
+        {
+            return !value.IsDefault();
+        }
+
+        /// <inheritdoc />
+        protected override Message GetMessage(T value, IPropertyContainer propertyContainer)
+        {
+            return new Message("Property '{propertyName}' should not have default value '{value}'", severity: MessageSeverity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Builder extensions.
+    /// </summary>
+    public static partial class ValidationRule
+    {
+        /// <summary>
+        /// Checks that property value is not default.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property to check.</param>
+        /// <returns><see cref="NotDefault{T}"/> validation rule.</returns>
+        public static NotDefault<T> NotDefault<T>(this IProperty<T> property)
+        {
+            return new NotDefault<T>(property);
+        }
+    }
+}

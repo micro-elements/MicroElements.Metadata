@@ -29,22 +29,28 @@ namespace MicroElements.Reporting.Excel
         {
             SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
 
-            SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
+            SheetView sheetView = new SheetView
+            {
+                TabSelected = true,
+                WorkbookViewId = (UInt32Value)0U,
+            };
+
             sheetViews.AppendChild(sheetView);
 
-            Selection selection = new Selection { Pane = PaneValues.BottomLeft };
-
             // the freeze pane
-            int rowNumWithData = rowNum + 1;
             Pane pane = new Pane
             {
-                VerticalSplit = rowNumWithData-1,
-                TopLeftCell = $"A{rowNumWithData}",
+                VerticalSplit = rowNum,
+                TopLeftCell = $"A{rowNum + 1}",
                 ActivePane = PaneValues.BottomLeft,
                 State = PaneStateValues.Frozen,
             };
 
-            // Selection selection = new Selection() { Pane = PaneValues.BottomLeft };
+            Selection selection = new Selection
+            {
+                Pane = PaneValues.BottomLeft,
+            };
+
             sheetView.Append(pane);
             sheetView.Append(selection);
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 
@@ -62,32 +63,84 @@ namespace MicroElements.Validation
 
         /// <summary>
         /// Validates <paramref name="propertyContainer"/> against validation rules from <paramref name="validationRules"/>.
-        /// Returns <see cref="Validation.ValidationResult"/> that holds initial data and validation messages.
+        /// Returns <see cref="ValidationResult{T}"/> that holds initial data and validation messages.
         /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
         /// <param name="propertyContainer"><see cref="IPropertyContainer"/> to validate.</param>
         /// <param name="validationRules">Validation rules to check.</param>
         /// <returns>Validation result that holds initial data and validation messages.</returns>
-        public static ValidationResult ValidationResult(this IPropertyContainer propertyContainer, IEnumerable<IValidationRule> validationRules)
+        public static ValidationResult<T> ToValidationResult<T>(this T propertyContainer, IEnumerable<IValidationRule> validationRules)
+            where T : IPropertyContainer
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             validationRules.AssertArgumentNotNull(nameof(validationRules));
 
-            return new ValidationResult(propertyContainer, propertyContainer.Validate(validationRules));
+            return new ValidationResult<T>(propertyContainer, propertyContainer.Validate(validationRules));
         }
 
         /// <summary>
         /// Validates <paramref name="propertyContainer"/> against validation rules from <paramref name="validator"/>.
-        /// Returns <see cref="Validation.ValidationResult"/> that holds initial data and validation messages.
+        /// Returns <see cref="ValidationResult{T}"/> that holds initial data and validation messages.
         /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
         /// <param name="propertyContainer"><see cref="IPropertyContainer"/> to validate.</param>
         /// <param name="validator">Validator that provides validation rules to check..</param>
         /// <returns>Validation result that holds initial data and validation messages.</returns>
-        public static ValidationResult ValidationResult(this IPropertyContainer propertyContainer, IValidator validator)
+        public static ValidationResult<T> ToValidationResult<T>(this T propertyContainer, IValidator validator)
+            where T : IPropertyContainer
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             validator.AssertArgumentNotNull(nameof(validator));
 
-            return new ValidationResult(propertyContainer, propertyContainer.Validate(validator));
+            return new ValidationResult<T>(propertyContainer, propertyContainer.Validate(validator));
+        }
+
+        /// <summary>
+        /// Validates all items with <paramref name="validator"/> and returns all validation messages.
+        /// </summary>
+        /// <param name="items">Items to validate.</param>
+        /// <param name="validator">Validator.</param>
+        /// <returns>All validation messages.</returns>
+        public static IEnumerable<Message> ValidateAll(this IEnumerable<IPropertyContainer> items, IValidator validator)
+        {
+            items.AssertArgumentNotNull(nameof(items));
+            validator.AssertArgumentNotNull(nameof(validator));
+
+            return items.SelectMany(row => row.Validate(validator));
+        }
+
+        /// <summary>
+        /// Validates all items against validation rules from <paramref name="validationRules"/>.
+        /// </summary>
+        /// <typeparam name="TPropertyContainer">Container type.</typeparam>
+        /// <param name="items">Items to validate.</param>
+        /// <param name="validationRules">Validation rules to check.</param>
+        /// <returns>Validation results.</returns>
+        public static IEnumerable<ValidationResult<TPropertyContainer>> ToValidationResults<TPropertyContainer>(
+            this IEnumerable<TPropertyContainer> items, IEnumerable<IValidationRule> validationRules)
+            where TPropertyContainer : IPropertyContainer
+        {
+            items.AssertArgumentNotNull(nameof(items));
+            validationRules.AssertArgumentNotNull(nameof(validationRules));
+
+            return items.Select(row => row.ToValidationResult(validationRules));
+        }
+
+        /// <summary>
+        /// Validates all items with <paramref name="validator"/> and returns all validation results.
+        /// </summary>
+        /// <typeparam name="TPropertyContainer">Container type.</typeparam>
+        /// <param name="items">Items to validate.</param>
+        /// <param name="validator">Validator.</param>
+        /// <returns>Validation results.</returns>
+        public static IEnumerable<ValidationResult<TPropertyContainer>> ToValidationResults<TPropertyContainer>(
+            this IEnumerable<TPropertyContainer> items, IValidator validator)
+            where TPropertyContainer : IPropertyContainer
+        {
+            items.AssertArgumentNotNull(nameof(items));
+            validator.AssertArgumentNotNull(nameof(validator));
+
+            return items.Select(row => row.ToValidationResult(validator));
         }
     }
 }

@@ -1,3 +1,8 @@
+# 1.1.0
+- ValidationResult became generic
+- ValidationResult.IsValid moved to extension methods
+- ToValidationResult and ToValidationResults extensions
+
 # 1.0.0
 - ExcelReader added
 - Validation added

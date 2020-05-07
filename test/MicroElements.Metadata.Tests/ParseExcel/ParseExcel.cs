@@ -183,12 +183,12 @@ namespace MicroElements.Metadata.Tests.ParseExcel
             var validatedRows = document
                 .GetSheet("Sheet1")
                 .GetRowsAs<FxSheetRow>(new FxSheetParserProvider())
-                .Select(row => row.ValidationResult(GetRules()))
+                .Select(row => row.ToValidationResult(GetRules()))
                 .ToList();
 
-            validatedRows[3].IsValid.Should().BeTrue();
+            validatedRows[3].IsValid().Should().BeTrue();
 
-            validatedRows[4].IsValid.Should().BeFalse();
+            validatedRows[4].IsValid().Should().BeFalse();
             validatedRows[4].ValidationMessages.First().FormattedMessage.Should().Be("Property Text should not be null");
             validatedRows[4].ValidationMessages.First().Severity.Should().Be(MessageSeverity.Warning);
         }

@@ -20,16 +20,20 @@ namespace MicroElements.Metadata
         /// <returns><see cref="IPropertyValue"/> list.</returns>
         public static IReadOnlyList<IPropertyValue> ParseProperties(this IParserProvider parserProvider, IReadOnlyDictionary<string, string> sourceRow)
         {
-            Option<IPropertyValue> ParseRowOrGetDefault(IPropertyParser propertyParser) =>
-                sourceRow.GetValueAsOption(propertyParser.SourceName)
-                    .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
-
-            var propertyValues = parserProvider.Parsers
-                .Select(ParseRowOrGetDefault)
+            var propertyValues = parserProvider
+                .GetParsers()
+                .Select(parser => ParseRowOrGetDefault(parser, sourceRow))
                 .SelectMany(propertyValue => propertyValue)
                 .ToList();
 
             return propertyValues;
+        }
+
+        private static Option<IPropertyValue> ParseRowOrGetDefault(IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
+        {
+            return sourceRow
+                .GetValueAsOption(propertyParser.SourceName)
+                .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
         }
 
         public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue)

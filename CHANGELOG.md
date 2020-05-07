@@ -1,3 +1,8 @@
+# 1.3.0
+- IParserProvider: convert Parsers property to GetParsers method to be more functional
+- Added PropertyParser extensions to create property parsers in fluent parser providers
+- Added CachedParserProvider and Cached extension
+
 # 1.2.0
 - ValidationResult became readonly struct
 - Added CachedValidator and Cached extension

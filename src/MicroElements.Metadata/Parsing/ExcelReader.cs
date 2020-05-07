@@ -205,7 +205,7 @@ namespace MicroElements.Parsing
                 if (cell != null)
                 {
                     // Set propertyParser for cell according column name
-                    var propertyParser = parserProvider.Parsers.FirstOrDefault(parser => parser.SourceName == header.Data.Name);
+                    var propertyParser = parserProvider.GetParsers().FirstOrDefault(parser => parser.SourceName == header.Data.Name);
                     if (propertyParser != null)
                     {
                         cell.SetMetadata(propertyParser);
@@ -317,12 +317,13 @@ namespace MicroElements.Parsing
             return new DateTime(1899, 12, 31).AddDays(serialDate);
         }
 
-        public static T[] GetRowsAs<T>(this ExcelElement<Sheet> sheet, IParserProvider parserProvider) where T : PropertyContainer
+        public static T[] GetRowsAs<T>(this ExcelElement<Sheet> sheet, IParserProvider parserProvider)
+            where T : PropertyContainer
         {
             return sheet
                 .GetRows()
                 .AsDictionaryList(parserProvider)
-                .Select(dict => parserProvider.ParseProperties(dict))
+                .Select(parserProvider.ParseProperties)
                 .Select(list => (T)Activator.CreateInstance(typeof(T), list))
                 .ToArray();
         }

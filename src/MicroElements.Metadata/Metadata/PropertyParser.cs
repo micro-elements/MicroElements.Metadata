@@ -2,66 +2,63 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Generic property parser.
+    /// Methods for building <see cref="IPropertyParser"/>.
     /// </summary>
-    /// <typeparam name="T">Property type.</typeparam>
-    public class PropertyParser<T> : IPropertyParser<T>
+    public static class PropertyParser
     {
-        /// <inheritdoc />
-        public Type TargetType => typeof(T);
-
-        /// <inheritdoc />
-        public string SourceName { get; private set; }
-
-        /// <inheritdoc />
-        public IValueParser<T> ValueParser { get; private set; }
-
-        /// <inheritdoc />
-        public IProperty<T> TargetProperty { get; private set; }
-
-        /// <inheritdoc />
-        public Func<T> DefaultValue { get; private set; }
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
+        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and <paramref name="valueParser"/>.
         /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
         /// <param name="sourceName">Source name.</param>
         /// <param name="valueParser">Value parser.</param>
-        /// <param name="targetProperty">Target property.</param>
-        public PropertyParser(string sourceName, IValueParser<T> valueParser, IProperty<T> targetProperty)
+        /// <returns><see cref="PropertyParser{T}"/>.</returns>
+        public static PropertyParser<T> Source<T>(string sourceName, IValueParser<T> valueParser)
         {
-            SourceName = sourceName ?? "UNDEFINED";
-            ValueParser = valueParser;
-            TargetProperty = targetProperty;
-        }
-
-        /// <inheritdoc />
-        public override string ToString() => $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
-
-        /// <summary>
-        /// Sets <see cref="TargetProperty"/> and returns this.
-        /// </summary>
-        /// <param name="targetProperty">Target property.</param>
-        /// <returns>The same instance.</returns>
-        public PropertyParser<T> Target(IProperty<T> targetProperty)
-        {
-            TargetProperty = targetProperty;
-            return this;
+            PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, valueParser, null);
+            return propertyParser;
         }
 
         /// <summary>
-        /// Sets default value and returns this.
+        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
         /// </summary>
-        /// <param name="defaultValue">Default value.</param>
-        /// <returns>The same instance.</returns>
-        public PropertyParser<T> SetDefaultValue(T defaultValue)
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="sourceName">Source name.</param>
+        /// <param name="parseFunc">Parse value function.</param>
+        /// <returns><see cref="PropertyParser{T}"/>.</returns>
+        public static PropertyParser<T> Source<T>(string sourceName, Func<string, T> parseFunc)
         {
-            DefaultValue = () => defaultValue;
-            return this;
+            PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
+            return propertyParser;
+        }
+
+        /// <summary>
+        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="sourceName">Source name.</param>
+        /// <param name="parseFunc">Parse value function.</param>
+        /// <returns><see cref="PropertyParser{T}"/>.</returns>
+        public static PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
+        {
+            PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
+            return propertyParser;
+        }
+
+        /// <summary>
+        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> .
+        /// </summary>
+        /// <param name="sourceName">Source name.</param>
+        /// <returns><see cref="PropertyParser{T}"/> of string.</returns>
+        public static PropertyParser<string> Source(string sourceName)
+        {
+            PropertyParser<string> propertyParser = new PropertyParser<string>(sourceName, StringParser.Instance, null);
+            return propertyParser;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace MicroElements.Metadata
         private readonly List<IPropertyParser> _parsers = new List<IPropertyParser>();
 
         /// <inheritdoc />
-        public IEnumerable<IPropertyParser> Parsers => _parsers;
+        public IEnumerable<IPropertyParser> GetParsers() => _parsers;
 
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and <paramref name="valueParser"/>.

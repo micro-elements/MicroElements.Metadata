@@ -13,6 +13,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property parsers.
         /// </summary>
-        IEnumerable<IPropertyParser> Parsers { get; }
+        /// <returns>Enumerable of <see cref="IPropertyParser"/>.</returns>
+        IEnumerable<IPropertyParser> GetParsers();
     }
 }

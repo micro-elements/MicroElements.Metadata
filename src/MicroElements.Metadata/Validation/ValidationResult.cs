@@ -12,7 +12,7 @@ namespace MicroElements.Validation
     /// Validation result is a wrapper for data that was validated and its validation errors (if any).
     /// </summary>
     /// <typeparam name="T">Data type.</typeparam>
-    public class ValidationResult<T>
+    public readonly struct ValidationResult<T>
     {
         /// <summary>
         /// Gets data that was validated.
@@ -25,7 +25,7 @@ namespace MicroElements.Validation
         public IReadOnlyCollection<Message> ValidationMessages { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValidationResult{T}"/> class.
+        /// Initializes a new instance of the <see cref="ValidationResult{T}"/> struct.
         /// </summary>
         /// <param name="data">Data that was validated.</param>
         /// <param name="validationMessages">Validation messages.</param>

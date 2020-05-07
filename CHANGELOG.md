@@ -1,3 +1,7 @@
+# 1.2.0
+- ValidationResult became readonly struct
+- Added CachedValidator and Cached extension
+
 # 1.1.0
 - ValidationResult became generic
 - ValidationResult.IsValid moved to extension methods

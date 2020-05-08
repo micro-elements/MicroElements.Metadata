@@ -18,12 +18,21 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, Search search)
+        public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, SearchCondition search)
         {
-            search.Condition.AssertArgumentNotNull(nameof(search.Condition));
-
             // Ищем в своих свойствах.
-            IPropertyValue propertyValue = propertyContainer.FirstOrDefault(search.Condition);
+            IPropertyValue propertyValue;
+            if (search.Property != null)
+            {
+                // Search By Property
+                propertyValue = propertyContainer.FirstOrDefault(pv => pv.PropertyUntyped == search.Property);
+            }
+            else
+            {
+                // Search By Name or Alias
+                propertyValue = propertyContainer.FirstOrDefault(pv => pv.IsMatchesByNameOrAlias(search.Name, search.IgnoreCase));
+            }
+
             if (propertyValue != null)
                 return propertyValue;
 
@@ -31,11 +40,12 @@ namespace MicroElements.Metadata
             if (search.SearchInParent && propertyContainer.ParentSource != null)
             {
                 propertyValue = propertyContainer.ParentSource.GetPropertyValueUntyped(search);
+
                 if (propertyValue != null)
                     return propertyValue;
             }
 
-            return null;
+            return search.ReturnNotDefined ? PropertyValue.Create(search.Property ?? new Property<string>(search.Name), null, ValueSource.NotDefined) : null;
         }
 
         /// <summary>
@@ -48,7 +58,7 @@ namespace MicroElements.Metadata
         public static object GetValueUntyped(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
         {
             return propertyContainer
-                .GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent(searchInParent))
+                .GetPropertyValueUntyped(new SearchCondition(propertyName, ignoreCase: true, searchInParent: searchInParent, returnNotDefined: false))
                 ?.ValueUntyped;
         }
 
@@ -59,7 +69,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue<T> GetPropertyValue<T>(this IPropertyContainer propertyContainer, Search search) =>
+        public static IPropertyValue<T> GetPropertyValue<T>(this IPropertyContainer propertyContainer, SearchCondition search) =>
             (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(search);
 
         /// <summary>
@@ -71,15 +81,18 @@ namespace MicroElements.Metadata
         /// <param name="searchInParent">Search in parent.</param>
         /// <param name="calculateValue">Calculate value if value was not found.</param>
         /// <param name="useDefaultValue">Use default value from property.</param>
+        /// <param name="returnNotDefined">Return not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
         public static IPropertyValue<T> GetPropertyValue<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
             bool searchInParent = true,
             bool calculateValue = true,
-            bool useDefaultValue = true)
+            bool useDefaultValue = true,
+            bool returnNotDefined = true)
         {
-            IPropertyValue<T> propertyValue = (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(property, searchInParent);
+            IPropertyValue<T> propertyValue = (IPropertyValue<T>)propertyContainer.GetPropertyValueUntyped(
+                new SearchCondition(property, searchInParent: searchInParent, returnNotDefined: false));
 
             if (propertyValue.HasValue())
                 return propertyValue;
@@ -95,7 +108,7 @@ namespace MicroElements.Metadata
             if (useDefaultValue)
                 return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
 
-            return default;
+            return returnNotDefined ? new PropertyValue<T>(property, default, ValueSource.NotDefined) : null;
         }
 
         /// <summary>
@@ -106,7 +119,7 @@ namespace MicroElements.Metadata
         /// <param name="searchInParent">Search in parent.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
         public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, IProperty property, bool searchInParent = true) =>
-            propertyContainer.GetPropertyValueUntyped(Search.ByProperty(property).SearchInParent(searchInParent));
+            propertyContainer.GetPropertyValueUntyped(new SearchCondition(property, searchInParent: searchInParent, returnNotDefined: true));
 
         /// <summary>
         /// Returns true if <paramref name="propertyContainer"/> has property.
@@ -129,7 +142,7 @@ namespace MicroElements.Metadata
         public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
         {
             var propertyValue = propertyContainer.GetPropertyValueUntyped(property, searchInParent: false);
-            if (propertyValue == null || !propertyValue.HasValue())
+            if (propertyValue.IsNullOrNotDefined())
                 propertyContainer.SetValue(property, value);
         }
     }
@@ -137,61 +150,75 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Search options.
     /// </summary>
-    public readonly struct Search
+    public readonly struct SearchCondition
     {
-        public Func<IPropertyValue, bool> Condition { get; }
+        /// <summary>
+        /// Property to search.
+        /// </summary>
+        public readonly IProperty Property;
 
-        public bool SearchInParent { get; }
+        /// <summary>
+        /// Search by name and alias.
+        /// </summary>
+        public readonly string Name;
 
-        public Search(Func<IPropertyValue, bool> condition)
+        /// <summary>
+        /// Name search ignore case.
+        /// </summary>
+        public readonly bool IgnoreCase;
+
+        /// <summary>
+        /// >Do search in parent.
+        /// </summary>
+        public readonly bool SearchInParent;
+
+        /// <summary>
+        /// Return not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found.
+        /// </summary>
+        public readonly bool ReturnNotDefined;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchCondition"/> struct.
+        /// </summary>
+        /// <param name="property">Search by property.</param>
+        /// <param name="searchInParent">Do search in parent.</param>
+        /// <param name="returnNotDefined">Return not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found.</param>
+        public SearchCondition(IProperty property, bool searchInParent, bool returnNotDefined = true)
         {
-            Condition = condition.AssertArgumentNotNull(nameof(condition));
-            SearchInParent = true;
-        }
+            Property = property.AssertArgumentNotNull(nameof(property));
 
-        public Search(
-            Search searchOptions,
-            Func<IPropertyValue, bool> condition = null,
-            bool? searchInParent = null)
-        {
-            Condition = condition ?? searchOptions.Condition;
-            SearchInParent = searchInParent ?? searchOptions.SearchInParent;
-        }
+            Name = null;
+            IgnoreCase = false;
 
-        public static Search ByProperty(IProperty property)
-        {
-            return new Search(default, condition: value => value.PropertyUntyped == property);
+            SearchInParent = searchInParent;
+            ReturnNotDefined = returnNotDefined;
         }
 
         /// <summary>
-        /// Compare by name.
+        /// Initializes a new instance of the <see cref="SearchCondition"/> struct.
+        /// Search by name.
         /// </summary>
-        /// <param name="name">Name to search.</param>
-        /// <param name="ignoreCase">Use ignore case comparison.</param>
-        /// <returns>Search options.</returns>
-        public static Search ByNameOrAlias(string name, bool ignoreCase = false)
+        /// <param name="name">Search by name.</param>
+        /// <param name="ignoreCase">Comparison.</param>
+        /// <param name="searchInParent">Do search in parent.</param>
+        /// <param name="returnNotDefined">Return not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found.</param>
+        public SearchCondition(string name, bool ignoreCase, bool searchInParent, bool returnNotDefined = true)
         {
-            return new Search(default, condition: propertyValue => propertyValue.IsMatchesByNameOrAlias(name, ignoreCase));
+            Property = null;
+
+            Name = name;
+            IgnoreCase = ignoreCase;
+
+            SearchInParent = searchInParent;
+            ReturnNotDefined = returnNotDefined;
         }
     }
 
-    public static class SearchBuilder
+    /// <summary>
+    /// Extension methods for search.
+    /// </summary>
+    public static class SearchExtensions
     {
-        public static Search ByProperty(this Search search, IProperty property)
-        {
-            return new Search(search, condition: value => value.PropertyUntyped == property);
-        }
-
-        public static Search SearchInParent(this Search search, bool searchInParent = true)
-        {
-            return new Search(search, searchInParent: searchInParent);
-        }
-
-        public static Search ByNameOrAlias(this Search search, string name, bool ignoreCase = false)
-        {
-            return new Search(search, condition: propertyValue => propertyValue.IsMatchesByNameOrAlias(name, ignoreCase));
-        }
-
         public static bool IsMatchesByNameOrAlias(this IPropertyValue propertyValue, string propertyName, bool ignoreCase = false)
         {
             StringComparison stringComparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

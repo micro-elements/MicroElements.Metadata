@@ -67,11 +67,29 @@ namespace MicroElements.Metadata.Tests.ParseExcel
             }
         }
 
+        //TODO: Example and test
+        public class LazyParserProvider : IParserProvider
+        {
+            public IEnumerable<IPropertyParser> CommonParsers()
+            {
+                yield return PropertyParser.Source("Text").Target(FxSheetMeta.Text);
+            }
+
+            /// <inheritdoc />
+            public IEnumerable<IPropertyParser> GetParsers()
+            {
+                foreach (var propertyParser in CommonParsers())
+                    yield return propertyParser;
+
+                yield return PropertyParser.Source("Text").Target(FxSheetMeta.Text);
+            }
+        }
+
         public class EnumerableValidatorSample : IValidator
         {
             public IEnumerable<IValidationRule> GetRules()
             {
-                yield return FxSheetMeta.Integer.NotNull().AsWarning();
+                yield return FxSheetMeta.Integer.Exists().And().NotDefault().And().ShouldBe(i => i > 5);
                 yield return FxSheetMeta.Date.ShouldBe(date => date > LocalDate.MinIsoValue);
             }
         }

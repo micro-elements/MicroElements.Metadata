@@ -8,21 +8,22 @@ using MicroElements.Metadata;
 namespace MicroElements.Validation.Rules
 {
     /// <summary>
-    /// Checks that property value exists and has not null value.
+    /// Checks that target property is exists.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class Required<T> : IValidationRule<T>
+    public class Exists<T> : IValidationRule<T>
     {
-        /// <inheritdoc />
+        /// <inheritdoc/>
         public IProperty<T> Property { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Required{T}"/> class.
+        /// Initializes a new instance of the <see cref="Exists{T}"/> class.
         /// </summary>
         /// <param name="property">Property to check.</param>
-        public Required(IProperty<T> property)
+        public Exists(IProperty<T> property)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            Property = property;
+            this.SetDefaultMessageFormat("Property {propertyName} is not exists but marked as required");
         }
 
         /// <inheritdoc />
@@ -30,10 +31,8 @@ namespace MicroElements.Validation.Rules
         {
             IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, useDefaultValue: false);
 
-            if (propertyValue == null)
-                yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "Property {propertyName} is marked as required but is not exists");
-            else if (propertyValue.Value.IsNull())
-                yield return this.GetConfiguredMessage(propertyValue, propertyContainer, "Property {propertyName} is marked as required but has null value");
+            if (propertyValue.IsNullOrNotDefined())
+                yield return this.GetConfiguredMessage(propertyValue, propertyContainer);
         }
     }
 
@@ -43,14 +42,14 @@ namespace MicroElements.Validation.Rules
     public static partial class ValidationRule
     {
         /// <summary>
-        /// Checks that property value exists.
+        /// Checks that target property is exists.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to check.</param>
-        /// <returns><see cref="Required{T}"/> validation rule.</returns>
-        public static Required<T> Required<T>(this IProperty<T> property)
+        /// <returns><see cref="Exists{T}"/> validation rule.</returns>
+        public static Exists<T> Exists<T>(this IProperty<T> property)
         {
-            return new Required<T>(property);
+            return new Exists<T>(property);
         }
     }
 }

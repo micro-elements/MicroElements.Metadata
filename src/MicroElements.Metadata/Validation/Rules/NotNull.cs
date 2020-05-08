@@ -17,7 +17,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="property">Property to check.</param>
         public NotNull(IProperty<T> property)
-            : base(property)
+            : base(property, "Property {propertyName} should not be null")
         {
         }
 
@@ -25,12 +25,6 @@ namespace MicroElements.Validation.Rules
         protected override bool IsValid(T value, IPropertyContainer propertyContainer)
         {
             return !value.IsNull();
-        }
-
-        /// <inheritdoc />
-        protected override Message GetMessage(T value, IPropertyContainer propertyContainer)
-        {
-            return new Message("Property {propertyName} should not be null", severity: MessageSeverity.Error);
         }
     }
 
@@ -44,10 +38,25 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to check.</param>
-        /// <returns><see cref="NotNull{T}"/> validation rule.</returns>
+        /// <returns>NotNull validation rule.</returns>
         public static NotNull<T> NotNull<T>(this IProperty<T> property)
+            where T : class
         {
             return new NotNull<T>(property);
+        }
+
+        /// <summary>
+        /// Checks that property value is not null.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>
+        /// <param name="linker">Rule linker.</param>
+        /// <returns>Combined validation rule.</returns>
+        public static TValidationRule NotNull<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker)
+            where TValidationRule : IValidationRule<T>
+            where T : class
+        {
+            return linker.CombineWith(new NotNull<T>(linker.FirstRule.Property));
         }
     }
 }

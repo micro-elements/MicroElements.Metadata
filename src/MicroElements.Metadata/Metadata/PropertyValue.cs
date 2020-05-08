@@ -112,12 +112,14 @@ namespace MicroElements.Metadata
         public static IPropertyValue Create(IProperty property, object value, ValueSource valueSource = default)
         {
             property.AssertArgumentNotNull(nameof(property));
-            value.AssertArgumentNotNull(nameof(value));
 
             Type propertyType = property.Type;
-            Type valueType = value.GetType();
-            if (valueType != propertyType)
-                throw new InvalidOperationException($"Value type {valueType} should be the same as property type {propertyType}.");
+
+            if (value != null && value.GetType() != propertyType)
+                throw new InvalidOperationException($"Value type {value.GetType()} should be the same as property type {propertyType}.");
+
+            if (value == null && property.Type.IsValueType)
+                throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
 
             Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
             ValueSource source = valueSource ?? ValueSource.Defined;

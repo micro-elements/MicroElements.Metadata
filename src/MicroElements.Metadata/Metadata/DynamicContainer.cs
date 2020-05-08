@@ -35,7 +35,8 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            var propertyValue = _propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(binder.Name, _ignoreCase).SearchInParent(_searchInParent));
+            var propertyValue = _propertyContainer.GetPropertyValueUntyped(
+                new SearchCondition(binder.Name, ignoreCase: _ignoreCase, searchInParent: _searchInParent, returnNotDefined: false));
             if (propertyValue != null)
             {
                 result = propertyValue.ValueUntyped;
@@ -48,6 +49,9 @@ namespace MicroElements.Metadata
         }
     }
 
+    /// <summary>
+    /// Extensions methods for <see cref="IPropertyContainer"/>.
+    /// </summary>
     public static partial class PropertyContainerExtensions
     {
         /// <summary>

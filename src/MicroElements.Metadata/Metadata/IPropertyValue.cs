@@ -49,27 +49,21 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Returns true if property has value. (Not calculated value but set).
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyValue">PropertyValue instance.</param>
-        /// <returns>true if property has value.</returns>
-        public static bool HasValue<T>(this IPropertyValue<T> propertyValue)
-        {
-            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
-                return false;
-            // return !propertyValue.Value.IsDefault() || propertyValue.Source != ValueSource.NotDefined;
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if property has value. (Not calculated value but set).
-        /// </summary>
         /// <param name="propertyValue">PropertyValue instance.</param>
         /// <returns>true if property has value.</returns>
         public static bool HasValue(this IPropertyValue propertyValue)
         {
-            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
-                return false;
-            return true;
+            return !IsNullOrNotDefined(propertyValue);
+        }
+
+        /// <summary>
+        /// PropertyValue is null or in <see cref="ValueSource.NotDefined"/> state.
+        /// </summary>
+        /// <param name="propertyValue">PropertyValue instance.</param>
+        /// <returns>true if PropertyValue is null or in <see cref="ValueSource.NotDefined"/> state.</returns>
+        public static bool IsNullOrNotDefined(this IPropertyValue propertyValue)
+        {
+            return propertyValue == null || propertyValue.Source == ValueSource.NotDefined;
         }
     }
 }

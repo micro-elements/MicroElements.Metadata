@@ -78,7 +78,8 @@ namespace MicroElements.Metadata
         public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
         {
             Type valueType = typeof(T);
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent());
+            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(
+                new SearchCondition(propertyName, ignoreCase: true, searchInParent: false, returnNotDefined: false));
 
             if (propertyValue != null)
             {
@@ -105,21 +106,29 @@ namespace MicroElements.Metadata
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
         public static IPropertyValue SetValue(this IMutablePropertyContainer propertyContainer, string propertyName, object value, ValueSource valueSource = default)
         {
-            Type valueType = value.GetType();
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search.ByNameOrAlias(propertyName).SearchInParent());
+            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(
+                new SearchCondition(propertyName, ignoreCase: false, searchInParent: true, returnNotDefined: false));
 
             if (propertyValue != null)
             {
                 IProperty existingProperty = propertyValue.PropertyUntyped;
-                if (existingProperty.Type != valueType)
+
+                if (value != null && value.GetType() != existingProperty.Type)
                 {
-                    throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} but value has type {valueType}");
+                    throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} but value has type {value.GetType()}");
+                }
+
+                if (value == null && existingProperty.Type.IsValueType)
+                {
+                    throw new ArgumentException($"Existing property {existingProperty.Name} has type {existingProperty.Type} and null value is not allowed");
                 }
 
                 return propertyContainer.SetValueUntyped(existingProperty, value, valueSource);
             }
 
-            return propertyContainer.SetValueUntyped(Property.Create(valueType, propertyName), value, valueSource);
+            Type propertyTypeByValue = value?.GetType() ?? typeof(string);
+            IProperty newProperty = Property.Create(propertyTypeByValue, propertyName);
+            return propertyContainer.SetValueUntyped(newProperty, value, valueSource);
         }
 
         /// <summary>

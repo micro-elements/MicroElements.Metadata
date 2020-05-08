@@ -17,7 +17,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="property">Property to check.</param>
         public NotDefault(IProperty<T> property)
-            : base(property)
+            : base(property, "Property '{propertyName}' should not have default value '{value}'")
         {
         }
 
@@ -25,12 +25,6 @@ namespace MicroElements.Validation.Rules
         protected override bool IsValid(T value, IPropertyContainer propertyContainer)
         {
             return !value.IsDefault();
-        }
-
-        /// <inheritdoc />
-        protected override Message GetMessage(T value, IPropertyContainer propertyContainer)
-        {
-            return new Message("Property '{propertyName}' should not have default value '{value}'", severity: MessageSeverity.Error);
         }
     }
 
@@ -48,6 +42,19 @@ namespace MicroElements.Validation.Rules
         public static NotDefault<T> NotDefault<T>(this IProperty<T> property)
         {
             return new NotDefault<T>(property);
+        }
+
+        /// <summary>
+        /// Checks that property value is not default.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>
+        /// <param name="linker">Rule linker.</param>
+        /// <returns>Combined validation rule.</returns>
+        public static TValidationRule NotDefault<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker)
+            where TValidationRule : IValidationRule<T>
+        {
+            return linker.CombineWith(linker.FirstRule.Property.NotDefault());
         }
     }
 }

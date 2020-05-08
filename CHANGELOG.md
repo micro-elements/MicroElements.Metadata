@@ -1,3 +1,12 @@
+# 2.0.0-beta.1
+- Property search allows to know whether property exists, not exists or exists with undefined value
+- New validation rules: Exists, Required
+- IValidationRule now implements IMetadataProvider
+- Added generic IValidationRule<T> for holding typed property
+- Rich rule building with combine support
+- IConfigurableValidationRule removed
+- Validation message customization moved to ValidationMessageOptions and linked to IValidationRule as metadata
+
 # 1.3.0
 - IParserProvider: convert Parsers property to GetParsers method to be more functional
 - Added PropertyParser extensions to create property parsers in fluent parser providers

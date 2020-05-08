@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules
@@ -21,7 +20,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         /// <param name="isValid">Function that checks value is valid.</param>
         public ShouldBe(IProperty<T> property, Func<T, bool> isValid)
-            : base(property)
+            : base(property, "Property {propertyName} should match condition")
         {
             _isValid = isValid;
         }
@@ -30,12 +29,6 @@ namespace MicroElements.Validation.Rules
         protected override bool IsValid(T value, IPropertyContainer propertyContainer)
         {
             return _isValid(value);
-        }
-
-        /// <inheritdoc />
-        protected override Message GetMessage(T value, IPropertyContainer propertyContainer)
-        {
-            return new Message("Property {propertyName} should match condition");
         }
     }
 
@@ -54,6 +47,20 @@ namespace MicroElements.Validation.Rules
         public static ShouldBe<T> ShouldBe<T>(this IProperty<T> property, Func<T, bool> isValid)
         {
             return new ShouldBe<T>(property, isValid);
+        }
+
+        /// <summary>
+        /// Checks that property value matches some condition.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>
+        /// <param name="linker">Rule linker.</param>
+        /// <param name="isValid">Function that checks value is valid.</param>
+        /// <returns>Combined validation rule.</returns>
+        public static TValidationRule ShouldBe<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, Func<T, bool> isValid)
+            where TValidationRule : IValidationRule<T>
+        {
+            return linker.CombineWith(linker.FirstRule.Property.ShouldBe(isValid));
         }
     }
 }

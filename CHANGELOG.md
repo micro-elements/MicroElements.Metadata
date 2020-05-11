@@ -1,3 +1,8 @@
+# 2.0.0-beta.2
+- Property search redesigned and unified
+- Search API became more consistent and customizable
+- PropertyContainer and MutablePropertyContainer can accept custom SearchOptions
+
 # 2.0.0-beta.1
 - Property search allows to know whether property exists, not exists or exists with undefined value
 - New validation rules: Exists, Required

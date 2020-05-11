@@ -56,6 +56,9 @@ namespace MicroElements.Metadata.Tests
             propertyContainer.GetValueUntyped("PropertyA").Should().Be("ValueA");
 
             dynamic dynamicContainer = propertyContainer.AsDynamic();
+            object valueA = dynamicContainer.PropertyA;
+            valueA.Should().Be("ValueA");
+
             object valueB = dynamicContainer.PropertyB;
             valueB.Should().Be(42);
 

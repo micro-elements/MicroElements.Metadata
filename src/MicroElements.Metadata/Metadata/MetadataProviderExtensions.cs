@@ -52,8 +52,11 @@ namespace MicroElements.Metadata
             metadataName ??= typeof(TMetadata).FullName;
             var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
 
-            var searchCondition = new SearchCondition(metadataName, ignoreCase: ignoreCase, searchInParent: searchInParent, returnNotDefined: false);
-            var propertyValue = metadata.GetPropertyValue<TMetadata>(searchCondition);
+            var propertyValue = metadata.GetPropertyValue<TMetadata>(Search
+                .ByNameOrAlias<TMetadata>(metadataName, ignoreCase)
+                .SearchInParent(searchInParent)
+                .ReturnNull());
+
             if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
                 return propertyValue.Value;
 

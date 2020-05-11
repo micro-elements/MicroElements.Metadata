@@ -77,12 +77,14 @@ namespace MicroElements.Metadata
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
         public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
         {
-            Type valueType = typeof(T);
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(
-                new SearchCondition(propertyName, ignoreCase: true, searchInParent: false, returnNotDefined: false));
+            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search
+                .ByNameOrAlias<T>(propertyName, true)
+                .SearchInParent(false)
+                .ReturnNull());
 
             if (propertyValue != null)
             {
+                Type valueType = typeof(T);
                 IProperty existingProperty = propertyValue.PropertyUntyped;
                 if (existingProperty.Type != valueType)
                 {
@@ -103,11 +105,14 @@ namespace MicroElements.Metadata
         /// <param name="propertyName">Property name.</param>
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
+        /// <param name="valueType">Value type if value is null.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValue(this IMutablePropertyContainer propertyContainer, string propertyName, object value, ValueSource valueSource = default)
+        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, string propertyName, object value, ValueSource valueSource = default, Type valueType = null)
         {
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(
-                new SearchCondition(propertyName, ignoreCase: false, searchInParent: true, returnNotDefined: false));
+            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search
+                .ByNameOrAlias(propertyName, true)
+                .SearchInParent(false)
+                .ReturnNull());
 
             if (propertyValue != null)
             {
@@ -125,10 +130,15 @@ namespace MicroElements.Metadata
 
                 return propertyContainer.SetValueUntyped(existingProperty, value, valueSource);
             }
+            else
+            {
+                if (value == null && valueType == null)
+                    throw new InvalidOperationException($"Unable to define property type for {propertyName} because value is null");
 
-            Type propertyTypeByValue = value?.GetType() ?? typeof(string);
-            IProperty newProperty = Property.Create(propertyTypeByValue, propertyName);
-            return propertyContainer.SetValueUntyped(newProperty, value, valueSource);
+                Type propertyTypeByValue = value?.GetType() ?? valueType;
+                IProperty newProperty = Property.Create(propertyTypeByValue, propertyName);
+                return propertyContainer.SetValueUntyped(newProperty, value, valueSource);
+            }
         }
 
         /// <summary>

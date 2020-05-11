@@ -158,6 +158,10 @@ indent_size = 2
 indent_size = 2
 
 # Shell scripts
+
+# IDE0032: Use auto property
+dotnet_style_prefer_auto_properties = true:none
+
 [*.sh]
 end_of_line = lf
 [*.{cmd, bat}]

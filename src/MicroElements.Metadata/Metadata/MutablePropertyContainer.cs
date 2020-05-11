@@ -1,10 +1,8 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -14,17 +12,23 @@ namespace MicroElements.Metadata
     public class MutablePropertyContainer : IMutablePropertyContainer
     {
         private readonly List<IPropertyValue> _propertyValues = new List<IPropertyValue>();
+        private readonly SearchOptions _searchOptions;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MutablePropertyContainer"/> class.
         /// </summary>
-        /// <param name="values">Property values.</param>
+        /// <param name="sourceValues">Property values.</param>
         /// <param name="parentPropertySource">Parent property source.</param>
-        public MutablePropertyContainer(IEnumerable<IPropertyValue> values = null, IPropertyContainer parentPropertySource = null)
+        /// <param name="searchOptions">Property search options.</param>
+        public MutablePropertyContainer(
+            IEnumerable<IPropertyValue> sourceValues = null,
+            IPropertyContainer parentPropertySource = null,
+            SearchOptions? searchOptions = null)
         {
             ParentSource = parentPropertySource ?? PropertyContainer.Empty;
-            if (values != null)
-                _propertyValues.AddRange(values);
+            if (sourceValues != null)
+                _propertyValues.AddRange(sourceValues);
+            _searchOptions = searchOptions ?? SearchOptions.Default;
         }
 
         /// <inheritdoc />
@@ -41,16 +45,18 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public object GetValueUntyped(IProperty property, bool searchInParent = true)
         {
-            //TODO: COMPILE
-            Type propertyType = property.Type;
-            MethodInfo getValue = GetType().GetMethod(nameof(GetValue));
-            MethodInfo getValueTyped = getValue.MakeGenericMethod(propertyType);
-            return getValueTyped.Invoke(this, new object[] { property, searchInParent });
+            IPropertyValue propertyValue = this.GetPropertyValueUntyped(property, _searchOptions
+                .SearchInParent(searchInParent).ReturnNotDefined());
+            return propertyValue.ValueUntyped;
         }
 
         /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property, bool searchInParent = true) =>
-            this.GetPropertyValue(property, searchInParent, calculateValue: true).Value;
+        public T GetValue<T>(IProperty<T> property, bool searchInParent = true)
+        {
+            IPropertyValue<T> propertyValue = this.GetPropertyValue(property, _searchOptions
+                .SearchInParent(searchInParent).ReturnNotDefined());
+            return propertyValue.Value;
+        }
 
         #endregion
 

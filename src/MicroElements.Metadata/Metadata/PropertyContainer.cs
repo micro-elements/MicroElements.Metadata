@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections;
 using System.Collections.Generic;
 
 namespace MicroElements.Metadata
@@ -23,9 +26,13 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="values">Property values.</param>
         /// <param name="parentPropertySource">Parent property source.</param>
-        public PropertyContainer(IEnumerable<IPropertyValue> values = null, IPropertyContainer parentPropertySource = null)
+        /// <param name="searchOptions">Property search options.</param>
+        public PropertyContainer(
+            IEnumerable<IPropertyValue> values = null,
+            IPropertyContainer parentPropertySource = null,
+            SearchOptions? searchOptions = null)
         {
-            _propertyContainer = new MutablePropertyContainer(values, parentPropertySource);
+            _propertyContainer = new MutablePropertyContainer(values, parentPropertySource, searchOptions);
         }
 
         /// <inheritdoc />

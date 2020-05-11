@@ -154,6 +154,38 @@ namespace MicroElements.Metadata
     public static class Property
     {
         /// <summary>
+        /// Property comparer by reference equality.
+        /// </summary>
+        public static readonly IEqualityComparer<IProperty> DefaultEqualityComparer = new ByReferenceEqualityComparer();
+
+        /// <summary>
+        /// Property comparer by reference equality.
+        /// </summary>
+        public static readonly IEqualityComparer<IProperty> BeReferenceComparer = new ByReferenceEqualityComparer();
+
+        /// <summary>
+        /// Property comparer by <see cref="IProperty.Name"/> and <see cref="IProperty.Type"/>.
+        /// </summary>
+        public static readonly IEqualityComparer<IProperty> ByNameAndTypeComparer = new ByNameAndTypeEqualityComparer();
+
+        /// <summary>
+        /// Property comparer by <see cref="IProperty.Name"/> or <see cref="IProperty.Alias"/> ignore case.
+        /// </summary>
+        public static readonly IEqualityComparer<IProperty> ByNameOrAliasIgnoreCase = ByNameOrAliasEqualityComparer.IgnoreCase;
+
+        /// <summary>
+        /// Property comparer by <see cref="IProperty.Name"/> or <see cref="IProperty.Alias"/> ignore case.
+        /// </summary>
+        public static readonly IEqualityComparer<IProperty> ByNameOrAliasOrdinal = ByNameOrAliasEqualityComparer.Ordinal;
+
+        /// <summary>
+        /// Gets comparer ByNameOrAlias depending <paramref name="ignoreCase"/> flag.
+        /// </summary>
+        /// <param name="ignoreCase">Search ignore case.</param>
+        /// <returns>Comparer instance.</returns>
+        public static IEqualityComparer<IProperty> ByNameOrAlias(bool ignoreCase) => ignoreCase ? ByNameOrAliasIgnoreCase : ByNameOrAliasOrdinal;
+
+        /// <summary>
         /// Creates new property.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>

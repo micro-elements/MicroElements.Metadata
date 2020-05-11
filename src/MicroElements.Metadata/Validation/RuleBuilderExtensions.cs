@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 
@@ -46,6 +47,34 @@ namespace MicroElements.Validation
         public static Message GetConfiguredMessage(this IValidationRule validationRule, IPropertyValue propertyValue, IPropertyContainer propertyContainer, string messageFormat = null)
         {
             return validationRule.GetValidationMessageOptions().GetConfiguredMessage(propertyValue, propertyContainer, messageFormat);
+        }
+
+        /// <summary>
+        /// Configures validation message (Full version).
+        /// </summary>
+        /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
+        /// <param name="validationRule">Rule to configure.</param>
+        /// <param name="configureMessage">Configure message function.</param>
+        /// <returns>The same rule.</returns>
+        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, IPropertyValue, IPropertyContainer, Message> configureMessage)
+            where TValidationRule : IValidationRule
+        {
+            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(configureMessage));
+            return validationRule;
+        }
+
+        /// <summary>
+        /// Configures validation message (Simple version).
+        /// </summary>
+        /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
+        /// <param name="validationRule">Rule to configure.</param>
+        /// <param name="configureMessage">Configure message function.</param>
+        /// <returns>The same rule.</returns>
+        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, Message> configureMessage)
+            where TValidationRule : IValidationRule
+        {
+            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(configureMessage));
+            return validationRule;
         }
 
         /// <summary>

@@ -171,46 +171,6 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Gets property and value by property.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to search.</param>
-        /// <param name="searchInParent">Search in parent.</param>
-        /// <param name="calculateValue">Calculate value if value was not found.</param>
-        /// <param name="useDefaultValue">Use default value from property.</param>
-        /// <param name="returnNotDefined">Return not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found.</param>
-        /// <param name="propertyComparer">Property equality comparer.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue<T> GetPropertyValue<T>(
-            this IPropertyContainer propertyContainer,
-            IProperty<T> property,
-            bool searchInParent = true,
-            bool calculateValue = true,
-            bool useDefaultValue = true,
-            bool returnNotDefined = true,
-            IEqualityComparer<IProperty> propertyComparer = null)
-        {
-            return propertyContainer.GetPropertyValue(
-                property, new SearchOptions(
-                    propertyComparer: propertyComparer,
-                    searchInParent: searchInParent,
-                    calculateValue: calculateValue,
-                    useDefaultValue: useDefaultValue,
-                    returnNotDefined: returnNotDefined));
-        }
-
-        /// <summary>
-        /// Gets property and value by property.
-        /// </summary>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to search.</param>
-        /// <param name="searchInParent">Search in parent.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue GetPropertyValueUntyped(this IPropertyContainer propertyContainer, IProperty property, bool searchInParent = true)
-            => propertyContainer.GetPropertyValueUntyped(property, new SearchOptions(searchInParent: searchInParent, returnNotDefined: true));
-
-        /// <summary>
         /// Gets property and value by search conditions.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
@@ -237,19 +197,5 @@ namespace MicroElements.Metadata
         /// <returns>True if property exists in container.</returns>
         public static bool HasValue(this IPropertyContainer propertyContainer, IProperty property, SearchOptions search) =>
             propertyContainer.GetPropertyValueUntyped(property, search).HasValue();
-
-        /// <summary>
-        /// Sets property value if property is not set.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
-        {
-            var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.Default.SearchInParent(false).ReturnNull());
-            if (propertyValue.IsNullOrNotDefined())
-                propertyContainer.SetValue(property, value);
-        }
     }
 }

@@ -20,7 +20,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         /// <param name="isValid">Function that checks value is valid.</param>
         public ShouldBe(IProperty<T> property, Func<T, bool> isValid)
-            : base(property, "Property {propertyName} should match condition")
+            : base(property, "{propertyName} it not matches ShouldBe condition.")
         {
             _isValid = isValid;
         }

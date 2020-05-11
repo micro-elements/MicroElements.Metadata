@@ -109,7 +109,7 @@ namespace MicroElements.Metadata
             for (int i = 0; i < _propertyValues.Count; i++)
             {
                 var existingPropertyValue = _propertyValues[i];
-                if (existingPropertyValue.PropertyUntyped == propertyValue.PropertyUntyped)
+                if (_searchOptions.PropertyComparer.Equals(existingPropertyValue.PropertyUntyped, propertyValue.PropertyUntyped))
                 {
                     // replaces existing
                     _propertyValues[i] = propertyValue;

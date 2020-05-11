@@ -168,5 +168,19 @@ namespace MicroElements.Metadata
                 propertyContainer.Add(propertyValue);
             }
         }
+
+        /// <summary>
+        /// Sets property value if property is not set.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
+        {
+            var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
+            if (propertyValue.IsNullOrNotDefined())
+                propertyContainer.SetValue(property, value);
+        }
     }
 }

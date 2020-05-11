@@ -23,13 +23,13 @@ namespace MicroElements.Validation.Rules
         public Exists(IProperty<T> property)
         {
             Property = property;
-            this.SetDefaultMessageFormat("Property {propertyName} is not exists but marked as required");
+            this.SetDefaultMessageFormat("{propertyName} is not exists.");
         }
 
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, useDefaultValue: false);
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly.ReturnNotDefined());
 
             if (propertyValue.IsNullOrNotDefined())
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);

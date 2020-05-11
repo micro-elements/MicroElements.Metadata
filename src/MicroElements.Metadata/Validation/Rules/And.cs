@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// Composite validation rule. Combines two rules.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class And<T> : IValidationRule<T>
+    public class And<T> : IValidationRule<T>, ICompositeValidationRule
     {
         /// <inheritdoc/>
         public IProperty<T> Property { get; }
@@ -19,12 +19,12 @@ namespace MicroElements.Validation.Rules
         /// <summary>
         /// Gets the first rule.
         /// </summary>
-        public IValidationRule<T> Rule1 { get; }
+        public IValidationRule FirstRule { get; }
 
         /// <summary>
         /// Gets the second rule.
         /// </summary>
-        public IValidationRule<T> Rule2 { get; }
+        public IValidationRule LastRule { get; }
 
         /// <summary>
         /// Gets a value indicating whether rule should break on first error.
@@ -39,8 +39,8 @@ namespace MicroElements.Validation.Rules
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
         public And(IValidationRule<T> rule1, IValidationRule<T> rule2, bool breakOnFirstError = false)
         {
-            Rule1 = rule1.AssertArgumentNotNull(nameof(rule1));
-            Rule2 = rule2.AssertArgumentNotNull(nameof(rule2));
+            FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
+            LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
 
             Property = rule1.Property;
             BreakOnFirstError = breakOnFirstError;
@@ -49,14 +49,14 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            foreach (var message in Rule1.Validate(propertyContainer))
+            foreach (var message in FirstRule.Validate(propertyContainer))
             {
                 yield return message;
                 if (BreakOnFirstError)
                     yield break;
             }
 
-            foreach (var message in Rule2.Validate(propertyContainer))
+            foreach (var message in LastRule.Validate(propertyContainer))
             {
                 yield return message;
                 if (BreakOnFirstError)
@@ -84,7 +84,7 @@ namespace MicroElements.Validation.Rules
         {
             nextRule.AssertArgumentNotNull(nameof(nextRule));
 
-            return new And<T>(FirstRule, nextRule);
+            return new And<T>(FirstRule, nextRule, BreakOnFirstError);
         }
 
         /// <summary>

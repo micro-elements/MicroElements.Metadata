@@ -1,3 +1,9 @@
+# 2.0.0-beta.3
+- Validation customization for last rule in chain
+- NotNull for Nullable struct
+- Added predefined search modes: Default, ExistingOnly, ExistingOnlyWithParent
+- Search clean up.
+
 # 2.0.0-beta.2
 - Property search redesigned and unified
 - Search API became more consistent and customizable

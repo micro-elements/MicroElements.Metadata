@@ -28,12 +28,12 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, useDefaultValue: false);
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
 
             if (propertyValue == null)
-                yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "Property {propertyName} is marked as required but is not exists");
+                yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "{propertyName} is marked as required but is not exists.");
             else if (propertyValue.Value.IsNull())
-                yield return this.GetConfiguredMessage(propertyValue, propertyContainer, "Property {propertyName} is marked as required but has null value");
+                yield return this.GetConfiguredMessage(propertyValue, propertyContainer, "{propertyName} is marked as required but has null value.");
         }
     }
 

@@ -23,6 +23,37 @@ namespace MicroElements.Validation
         }
 
         /// <summary>
+        /// Gets the last <see cref="IValidationRule"/> in current chain.
+        /// If rule is <see cref="ICompositeValidationRule"/> then return <see cref="ICompositeValidationRule.LastRule"/>.
+        /// </summary>
+        /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
+        /// <param name="validationRule">Validation rule to customize.</param>
+        /// <returns>The same rule or last for composite rules.</returns>
+        public static IValidationRule Last<TValidationRule>(this TValidationRule validationRule)
+            where TValidationRule : IValidationRule
+        {
+            if (validationRule is ICompositeValidationRule compositeValidationRule)
+                return compositeValidationRule.LastRule;
+            return validationRule;
+        }
+
+        /// <summary>
+        /// Configures <see cref="ValidationMessageOptions"/> metadata.
+        /// </summary>
+        /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
+        /// <param name="validationRule">Validation rule to customize.</param>
+        /// <param name="configureMetadata">Configure func.</param>
+        /// <returns>The same validation rule.</returns>
+        public static TValidationRule ConfigureValidationMessageOptions<TValidationRule>(
+            this TValidationRule validationRule,
+            Action<ValidationMessageOptions> configureMetadata)
+            where TValidationRule : IValidationRule
+        {
+            validationRule.Last().ConfigureMetadata<ValidationMessageOptions>(configureMetadata);
+            return validationRule;
+        }
+
+        /// <summary>
         /// Sets default message format.
         /// </summary>
         /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
@@ -32,7 +63,7 @@ namespace MicroElements.Validation
         public static TValidationRule SetDefaultMessageFormat<TValidationRule>(this TValidationRule validationRule, string messageFormat)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.SetDefaultMessageFormat(messageFormat));
+            validationRule.ConfigureValidationMessageOptions(options => options.SetDefaultMessageFormat(messageFormat));
             return validationRule;
         }
 
@@ -59,7 +90,7 @@ namespace MicroElements.Validation
         public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, IPropertyValue, IPropertyContainer, Message> configureMessage)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(configureMessage));
+            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(configureMessage));
             return validationRule;
         }
 
@@ -73,7 +104,7 @@ namespace MicroElements.Validation
         public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, Message> configureMessage)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(configureMessage));
+            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(configureMessage));
             return validationRule;
         }
 
@@ -87,7 +118,7 @@ namespace MicroElements.Validation
         public static TValidationRule WithMessage<TValidationRule>(this TValidationRule validationRule, string messageFormat)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(message => message.WithText(messageFormat)));
+            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(message => message.WithText(messageFormat)));
             return validationRule;
         }
 
@@ -101,7 +132,7 @@ namespace MicroElements.Validation
         public static TValidationRule WithSeverity<TValidationRule>(this TValidationRule validationRule, MessageSeverity severity)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureMetadata<ValidationMessageOptions>(options => options.ConfigureMessage(message => message.WithSeverity(severity)));
+            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(message => message.WithSeverity(severity)));
             return validationRule;
         }
 

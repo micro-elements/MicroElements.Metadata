@@ -31,4 +31,20 @@ namespace MicroElements.Validation
         /// </summary>
         IProperty<T> Property { get; }
     }
+
+    /// <summary>
+    /// Composite validation rule.
+    /// </summary>
+    public interface ICompositeValidationRule : IValidationRule
+    {
+        /// <summary>
+        /// Gets the first rule.
+        /// </summary>
+        IValidationRule FirstRule { get; }
+
+        /// <summary>
+        /// Gets the last rule.
+        /// </summary>
+        IValidationRule LastRule { get; }
+    }
 }

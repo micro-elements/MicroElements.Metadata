@@ -63,31 +63,32 @@ namespace MicroElements.Reporting.Excel
             T defaultValue = default)
         {
             IPropertyValue<T> propertyValue;
+            SearchOptions searchOptions = SearchOptions.Default.SearchInParent(false).CalculateValue(true).UseDefaultValue(true);
 
             if (source1 != null)
             {
-                propertyValue = source1.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source1.GetPropertyValue(property, searchOptions);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source2 != null)
             {
-                propertyValue = source2.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source2.GetPropertyValue(property, searchOptions);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source3 != null)
             {
-                propertyValue = source3.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source3.GetPropertyValue(property, searchOptions);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source4 != null)
             {
-                propertyValue = source4.GetPropertyValue(property, searchInParent: false, calculateValue: true, useDefaultValue: false);
+                propertyValue = source4.GetPropertyValue(property, searchOptions);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }

@@ -91,6 +91,8 @@ namespace MicroElements.Metadata.Tests.ParseExcel
             {
                 yield return FxSheetMeta.Integer.Exists().And().NotDefault().And().ShouldBe(i => i > 5);
                 yield return FxSheetMeta.Date.ShouldBe(date => date > LocalDate.MinIsoValue);
+
+                yield return FxSheetMeta.OptionalInteger.NotNull();
             }
         }
 
@@ -163,7 +165,7 @@ namespace MicroElements.Metadata.Tests.ParseExcel
                 .ToList();
 
             validationErrors.Should().NotBeNullOrEmpty();
-            validationErrors[0].FormattedMessage.Should().Be("Property Text should not be null");
+            validationErrors[0].FormattedMessage.Should().Be("Text should not be null");
             validationErrors[0].Severity.Should().Be(MessageSeverity.Warning);
         }
 
@@ -184,7 +186,7 @@ namespace MicroElements.Metadata.Tests.ParseExcel
                 .ToList();
 
             validationErrors.Should().HaveCount(1);
-            validationErrors[0].FormattedMessage.Should().Be("Property Text should not be null");
+            validationErrors[0].FormattedMessage.Should().Be("Text should not be null");
             validationErrors[0].Severity.Should().Be(MessageSeverity.Warning);
         }
 
@@ -207,7 +209,7 @@ namespace MicroElements.Metadata.Tests.ParseExcel
             validatedRows[3].IsValid().Should().BeTrue();
 
             validatedRows[4].IsValid().Should().BeFalse();
-            validatedRows[4].ValidationMessages.First().FormattedMessage.Should().Be("Property Text should not be null");
+            validatedRows[4].ValidationMessages.First().FormattedMessage.Should().Be("Text should not be null");
             validatedRows[4].ValidationMessages.First().Severity.Should().Be(MessageSeverity.Warning);
         }
     }

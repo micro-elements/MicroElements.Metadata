@@ -17,7 +17,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="property">Property to check.</param>
         public NotDefault(IProperty<T> property)
-            : base(property, "Property '{propertyName}' should not have default value '{value}'")
+            : base(property, "{propertyName} should not have default value {value}.")
         {
         }
 

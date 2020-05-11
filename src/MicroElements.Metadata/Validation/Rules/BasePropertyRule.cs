@@ -42,11 +42,7 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc/>
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(
-                property: Property,
-                searchInParent: true,
-                calculateValue: true,
-                useDefaultValue: true);
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.Default);
 
             if (!IsValid(propertyValue.Value, propertyContainer))
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);

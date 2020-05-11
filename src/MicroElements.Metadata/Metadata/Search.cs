@@ -11,12 +11,28 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Search helpers.
     /// </summary>
+    [DebuggerStepThrough]
     public static class Search
     {
         /// <summary>
         /// Type used for untyped named search.
         /// </summary>
         internal sealed class UntypedSearch { }
+
+        /// <summary>
+        /// <inheritdoc cref="SearchOptions.Default"/>.
+        /// </summary>
+        public static readonly SearchOptions Default = SearchOptions.Default;
+
+        /// <summary>
+        /// <inheritdoc cref="SearchOptions.ExistingOnly"/>.
+        /// </summary>
+        public static readonly SearchOptions ExistingOnly = SearchOptions.ExistingOnly;
+
+        /// <summary>
+        /// <inheritdoc cref="SearchOptions.ExistingOnlyWithParent"/>.
+        /// </summary>
+        public static readonly SearchOptions ExistingOnlyWithParent = SearchOptions.ExistingOnlyWithParent;
 
         /// <summary>
         /// Creates search condition by name or alias.
@@ -90,6 +106,16 @@ namespace MicroElements.Metadata
             => searchOptions.With(searchInParent: searchInParent);
 
         /// <summary>
+        /// <inheritdoc cref="SearchOptions.CalculateValue"/>
+        /// </summary>
+        /// <param name="searchOptions"><see cref="SearchOptions"/> instance.</param>
+        /// <param name="calculateValue"><see cref="SearchOptions.CalculateValue"/> value.</param>
+        /// <returns>New <see cref="SearchOptions"/> instance.</returns>
+        [DebuggerStepThrough]
+        public static SearchOptions CalculateValue(this in SearchOptions searchOptions, bool calculateValue = true)
+            => searchOptions.With(calculateValue: calculateValue);
+
+        /// <summary>
         /// <inheritdoc cref="SearchOptions.UseDefaultValue"/>
         /// </summary>
         /// <param name="searchOptions"><see cref="SearchOptions"/> instance.</param>
@@ -127,16 +153,36 @@ namespace MicroElements.Metadata
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1623:Property summary documentation should match accessors", Justification = "Ok.")]
     public readonly struct SearchOptions
     {
+        /*-------------------------------------------*/
+        /*        Predefined SearchOptions           */
+        /*-------------------------------------------*/
+
         /// <summary>
-        /// Default search options.
+        /// Default search options: (SearchInParent(), CalculateValue(), UseDefaultValue(), ReturnNotDefined()).
         /// </summary>
-        public static readonly SearchOptions Default = new SearchOptions(
-            searchProperty: null,
-            propertyComparer: null,
-            searchInParent: true,
-            calculateValue: true,
-            useDefaultValue: true,
-            returnNotDefined: true);
+        public static readonly SearchOptions Default = default(SearchOptions)
+            .SearchInParent()
+            .CalculateValue()
+            .UseDefaultValue()
+            .ReturnNotDefined();
+
+        /// <summary>
+        /// Search only existing properties in property container: (SearchInParent(false), CalculateValue(false), UseDefaultValue(false), ReturnNull()).
+        /// </summary>
+        public static readonly SearchOptions ExistingOnly = default(SearchOptions)
+            .SearchInParent(false)
+            .CalculateValue(false)
+            .UseDefaultValue(false)
+            .ReturnNull();
+
+        /// <summary>
+        /// Search only existing properties in property container including searching in parent.
+        /// </summary>
+        public static readonly SearchOptions ExistingOnlyWithParent = ExistingOnly.SearchInParent(true);
+
+        /*-------------------------------------------*/
+        /*           Private fields                  */
+        /*-------------------------------------------*/
 
         private readonly IProperty _searchProperty;
         private readonly IEqualityComparer<IProperty> _propertyComparer;
@@ -144,6 +190,10 @@ namespace MicroElements.Metadata
         private readonly bool? _calculateValue;
         private readonly bool? _useDefaultValue;
         private readonly bool? _returnNotDefined;
+
+        /*-------------------------------------------*/
+        /*           Properties                      */
+        /*-------------------------------------------*/
 
         /// <summary>
         /// Property to search. Used for by name search.

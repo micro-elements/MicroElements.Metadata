@@ -131,7 +131,6 @@ namespace MicroElements.Reporting.Excel
 
                 BookViews bookViews = new BookViews();
                 WorkbookView workbookView = new WorkbookView() { XWindow = -120, YWindow = -120, WindowWidth = (UInt32Value)19440U, WindowHeight = (UInt32Value)15000U };
-                //workbookView.SetAttribute(new OpenXmlAttribute("xr2", "uid", "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2", "{00000000-000D-0000-FFFF-FFFF00000000}"));
                 bookViews.Append(workbookView);
 
                 Sheets sheets = new Sheets();
@@ -144,6 +143,9 @@ namespace MicroElements.Reporting.Excel
 
             // Init Stylesheet.
             InitStylesheet(documentContext);
+
+            // Add empty string.
+            documentContext.GetOrAddSharedString("");
 
             // External customization
             var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.CustomizeDocument);
@@ -165,7 +167,7 @@ namespace MicroElements.Reporting.Excel
             // Add a WorksheetPart to the WorkbookPart.
             WorkbookPart workbookPart = _documentContext.Document.WorkbookPart;
             uint sheetCount = workbookPart.GetSheetCount();
-            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>($"rId{sheetCount+1}");
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>($"sheet{sheetCount+1}");
 
             var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportProvider);
 
@@ -185,11 +187,17 @@ namespace MicroElements.Reporting.Excel
             WorkbookPart workbookPart = sheetContext.DocumentContext.WorkbookPart;
             WorksheetPart worksheetPart = sheetContext.WorksheetPart;
 
-            Worksheet workSheet = new Worksheet();
-            worksheetPart.Worksheet = workSheet;
+            Worksheet worksheet = new Worksheet() { MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = "x14ac xr xr2 xr3" } };
+            worksheet.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            worksheet.AddNamespaceDeclaration("mc", "http://schemas.openxmlformats.org/markup-compatibility/2006");
+            worksheet.AddNamespaceDeclaration("x14ac", "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac");
+            worksheet.AddNamespaceDeclaration("xr", "http://schemas.microsoft.com/office/spreadsheetml/2014/revision");
+            worksheet.AddNamespaceDeclaration("xr2", "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2");
+            worksheet.AddNamespaceDeclaration("xr3", "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3");
 
- 
-            SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
+            worksheetPart.Worksheet = worksheet;
+
+            SheetViews sheetViews = worksheet.GetOrCreateSheetViews();
             SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U, };
             sheetViews.AppendChild(sheetView);
 
@@ -220,10 +228,10 @@ namespace MicroElements.Reporting.Excel
             SheetData sheetData = new SheetData();
 
             //workSheet.Append(sheetDimension);
-            workSheet.Append(sheetViews);
-            workSheet.Append(sheetFormatProperties);
-            workSheet.Append(columns);
-            workSheet.Append(sheetData);
+            worksheet.Append(sheetViews);
+            worksheet.Append(sheetFormatProperties);
+            worksheet.Append(columns);
+            worksheet.Append(sheetData);
             //workSheet.Append(pageMargins);
 
             // Append a new worksheet and associate it with the workbook.
@@ -245,7 +253,7 @@ namespace MicroElements.Reporting.Excel
 
             if (freezeTopRow)
             {
-                workSheet.FreezeTopRow(rowNum: 1);
+                worksheet.FreezeTopRow(rowNum: 1);
             }
 
             sheetContext.SheetData = sheetData;

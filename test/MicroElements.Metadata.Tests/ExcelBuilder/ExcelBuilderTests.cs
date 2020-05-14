@@ -1,5 +1,8 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
+﻿using System;
+using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Reporting.Excel;
+using NodaTime;
+using NodaTime.Extensions;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests.ExcelBuilder
@@ -10,6 +13,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
         {
             public static readonly IProperty<string> Name = new Property<string>("Name");
             public static readonly IProperty<int> Age = new Property<int>("Age");
+            public static readonly IProperty<LocalDate> Date = new Property<LocalDate>("Date");
         }
 
         public class Sheet1Report : ReportProvider
@@ -19,6 +23,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             {
                 Add(Sheet1Meta.Name).SetExcelType(CellValues.SharedString);
                 Add(Sheet1Meta.Age).SetExcelType(CellValues.Number);
+                Add(Sheet1Meta.Date).SetExcelType(CellValues.Date);
             }
         }
 
@@ -29,7 +34,8 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             {
                 new MutablePropertyContainer()
                     .WithValue(Sheet1Meta.Name, "Alex")
-                    .WithValue(Sheet1Meta.Age, 42),
+                    .WithValue(Sheet1Meta.Age, 42)
+                    .WithValue(Sheet1Meta.Date, DateTime.Today.ToLocalDateTime().Date),
                 new MutablePropertyContainer()
                     .WithValue(Sheet1Meta.Name, "Helen")
                     .WithValue(Sheet1Meta.Age, 17),

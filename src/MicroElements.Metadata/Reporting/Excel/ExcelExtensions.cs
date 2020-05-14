@@ -59,7 +59,7 @@ namespace MicroElements.Reporting.Excel
 
             if (autoCreate && workbookSharedStringsPart == null)
             {
-                workbookSharedStringsPart = workbookPart.AddNewPart<SharedStringTablePart>("sharedStr");
+                workbookSharedStringsPart = workbookPart.AddNewPart<SharedStringTablePart>("stringsPart");
             }
 
             return workbookSharedStringsPart;
@@ -111,7 +111,7 @@ namespace MicroElements.Reporting.Excel
 
             if (autoCreate && workbookStylesPart == null)
             {
-                workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
+                workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>("stylesPart");
             }
 
             return workbookStylesPart;

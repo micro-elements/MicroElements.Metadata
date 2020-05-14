@@ -17,25 +17,18 @@ namespace MicroElements.Reporting.Excel
     {
         public static SheetViews GetOrCreateSheetViews(this Worksheet workSheet)
         {
-            if (workSheet.SheetViews == null)
-            {
-                workSheet.SheetViews = new SheetViews();
-            }
-
-            return workSheet.SheetViews;
+            SheetViews sheetViews = workSheet.GetFirstChild<SheetViews>();
+            return sheetViews ?? new SheetViews();
         }
+
+        public static uint GetSheetCount(this WorkbookPart workbookPart) =>
+            (uint)workbookPart.Workbook.Sheets.ChildElements.Count;
 
         public static Worksheet FreezeTopRow(this Worksheet workSheet, int rowNum = 1)
         {
             SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
 
-            SheetView sheetView = new SheetView
-            {
-                TabSelected = true,
-                WorkbookViewId = (UInt32Value)0U,
-            };
-
-            sheetViews.AppendChild(sheetView);
+            SheetView sheetView = sheetViews.GetFirstChild<SheetView>();
 
             // the freeze pane
             Pane pane = new Pane
@@ -49,12 +42,63 @@ namespace MicroElements.Reporting.Excel
             Selection selection = new Selection
             {
                 Pane = PaneValues.BottomLeft,
+                ActiveCell = pane.TopLeftCell,
+                SequenceOfReferences = new ListValue<StringValue>() { InnerText = pane.TopLeftCell },
             };
 
             sheetView.Append(pane);
             sheetView.Append(selection);
 
             return workSheet;
+        }
+
+        public static SharedStringTablePart GetWorkbookSharedStringsPart(this DocumentContext documentContext, bool autoCreate = true)
+        {
+            WorkbookPart workbookPart = documentContext.Document.WorkbookPart;
+            SharedStringTablePart workbookSharedStringsPart = workbookPart.SharedStringTablePart;
+
+            if (autoCreate && workbookSharedStringsPart == null)
+            {
+                workbookSharedStringsPart = workbookPart.AddNewPart<SharedStringTablePart>("sharedStr");
+            }
+
+            return workbookSharedStringsPart;
+        }
+
+        public static SharedStringTable GetSharedStringTable(this DocumentContext documentContext, bool autoCreate = true)
+        {
+            SharedStringTablePart workbookSharedStringsPart = documentContext.GetWorkbookSharedStringsPart(autoCreate);
+
+            if (autoCreate && workbookSharedStringsPart.SharedStringTable == null)
+            {
+                SharedStringTable sharedStringTable = new SharedStringTable();
+                workbookSharedStringsPart.SharedStringTable = sharedStringTable;
+            }
+
+            return workbookSharedStringsPart.SharedStringTable;
+        }
+
+        public static string GetOrAddSharedString(this DocumentContext documentContext, string text)
+        {
+            if (!documentContext.SharedStringTable.TryGetValue(text, out string stringIndex))
+            {
+                SharedStringTable sharedStringTable = documentContext.GetSharedStringTable();
+
+                SharedStringItem sharedStringItem = new SharedStringItem();
+                Text text1 = new Text { Text = text };
+                sharedStringItem.Append(text1);
+
+                sharedStringTable.AppendChild(sharedStringItem);
+
+                uint itemCount = (uint)sharedStringTable.ChildElements.Count;
+                sharedStringTable.Count = itemCount;
+                sharedStringTable.UniqueCount = itemCount;
+
+                stringIndex = (itemCount-1).ToString();
+                documentContext.SharedStringTable.Add(text, stringIndex);
+            }
+
+            return stringIndex;
         }
 
         public static WorkbookStylesPart GetWorkbookStylesPart(this DocumentContext documentContext, bool autoCreate = true)

@@ -1,3 +1,7 @@
+# 2.0.0-beta.4
+- ExcelReportBuilder support for SharedStrings
+- Fixed broken copy and paste in generated excel
+
 # 2.0.0-beta.3
 - Validation customization for last rule in chain
 - NotNull for Nullable struct

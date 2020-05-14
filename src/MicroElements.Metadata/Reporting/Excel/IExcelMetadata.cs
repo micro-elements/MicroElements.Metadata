@@ -26,7 +26,7 @@ namespace MicroElements.Reporting.Excel
         /// Excel data type.
         /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
         /// </summary>
-        public static readonly IProperty<CellValues> DataType = new Property<CellValues>("DataType").SetDefaultValue(CellValues.String);
+        public static readonly IProperty<CellValues> DataType = new Property<CellValues>("DataType").SetDefaultValue(CellValues.SharedString);
 
         /// <summary>
         /// Column width.
@@ -36,12 +36,12 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Freeze top row.
         /// </summary>
-        public static readonly IProperty<bool> FreezeTopRow = new Property<bool>("FreezeTopRow").SetDefaultValue(true);
+        public static readonly IProperty<bool> FreezeTopRow = new Property<bool>("FreezeTopRow").SetDefaultValue(false);
 
         /// <summary>
         /// Transpose sheet.
         /// </summary>
-        public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose");
+        public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose").SetDefaultValue(false);
 
         /// <summary>
         /// Gets property value from the first source where value is defined.
@@ -52,48 +52,45 @@ namespace MicroElements.Reporting.Excel
         /// <param name="source2">Source 2.</param>
         /// <param name="source3">Source 3.</param>
         /// <param name="source4">Source 4.</param>
-        /// <param name="defaultValue">Default value if all sources does not contain property value.</param>
         /// <returns>Property value or default value.</returns>
         public static T GetFirstDefinedValue<T>(
             IProperty<T> property,
             IPropertyContainer source1 = null,
             IPropertyContainer source2 = null,
             IPropertyContainer source3 = null,
-            IPropertyContainer source4 = null,
-            T defaultValue = default)
+            IPropertyContainer source4 = null)
         {
             IPropertyValue<T> propertyValue;
-            SearchOptions searchOptions = SearchOptions.Default.SearchInParent(false).CalculateValue(true).UseDefaultValue(true);
 
             if (source1 != null)
             {
-                propertyValue = source1.GetPropertyValue(property, searchOptions);
+                propertyValue = source1.GetPropertyValue(property, SearchOptions.ExistingOnly);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source2 != null)
             {
-                propertyValue = source2.GetPropertyValue(property, searchOptions);
+                propertyValue = source2.GetPropertyValue(property, SearchOptions.ExistingOnly);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source3 != null)
             {
-                propertyValue = source3.GetPropertyValue(property, searchOptions);
+                propertyValue = source3.GetPropertyValue(property, SearchOptions.ExistingOnly);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
             if (source4 != null)
             {
-                propertyValue = source4.GetPropertyValue(property, searchOptions);
+                propertyValue = source4.GetPropertyValue(property, SearchOptions.ExistingOnly);
                 if (propertyValue.HasValue())
                     return propertyValue.Value;
             }
 
-            return defaultValue;
+            return (source1 ?? source2 ?? source3 ?? source4).GetPropertyValue(property, SearchOptions.Default).Value;
         }
     }
 
@@ -197,6 +194,8 @@ namespace MicroElements.Reporting.Excel
 
         public IExcelMetadata DocumentMetadata { get; }
 
+        public IDictionary<string, string> SharedStringTable { get; } = new Dictionary<string, string>();
+
         public DocumentContext(SpreadsheetDocument document, IExcelMetadata documentMetadata)
         {
             Document = document;
@@ -216,7 +215,7 @@ namespace MicroElements.Reporting.Excel
 
         public IReportProvider ReportProvider { get; }
 
-        public bool IsTransposed => ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, SheetMetadata, defaultValue: false);
+        public bool IsTransposed => ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, SheetMetadata);
 
         public bool IsNotTransposed => !IsTransposed;
 

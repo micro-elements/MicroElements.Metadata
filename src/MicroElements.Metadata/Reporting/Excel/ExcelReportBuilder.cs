@@ -122,9 +122,22 @@ namespace MicroElements.Reporting.Excel
         {
             if (document.WorkbookPart == null)
             {
-                document.AddWorkbookPart();
-                document.WorkbookPart.Workbook = new Workbook();
-                document.WorkbookPart.Workbook.AppendChild(new Sheets());
+                WorkbookPart workbookPart = document.AddWorkbookPart();
+
+                Workbook workbook = new Workbook();
+                workbook.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+
+                workbookPart.Workbook = workbook;
+
+                BookViews bookViews = new BookViews();
+                WorkbookView workbookView = new WorkbookView() { XWindow = -120, YWindow = -120, WindowWidth = (UInt32Value)19440U, WindowHeight = (UInt32Value)15000U };
+                //workbookView.SetAttribute(new OpenXmlAttribute("xr2", "uid", "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2", "{00000000-000D-0000-FFFF-FFFF00000000}"));
+                bookViews.Append(workbookView);
+
+                Sheets sheets = new Sheets();
+
+                workbook.AppendChild(bookViews);
+                workbook.AppendChild(sheets);
             }
 
             var documentContext = new DocumentContext(document, _documentMetadata);
@@ -151,7 +164,9 @@ namespace MicroElements.Reporting.Excel
 
             // Add a WorksheetPart to the WorkbookPart.
             WorkbookPart workbookPart = _documentContext.Document.WorkbookPart;
-            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            uint sheetCount = workbookPart.GetSheetCount();
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>($"rId{sheetCount+1}");
+
             var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportProvider);
 
             AddSheet(sheetContext);
@@ -170,10 +185,19 @@ namespace MicroElements.Reporting.Excel
             WorkbookPart workbookPart = sheetContext.DocumentContext.WorkbookPart;
             WorksheetPart worksheetPart = sheetContext.WorksheetPart;
 
-            SheetData sheetData = new SheetData();
-
-            Worksheet workSheet = new Worksheet(sheetData);
+            Worksheet workSheet = new Worksheet();
             worksheetPart.Worksheet = workSheet;
+
+ 
+            SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
+            SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U, };
+            sheetViews.AppendChild(sheetView);
+
+            SheetFormatProperties sheetFormatProperties = new SheetFormatProperties
+            {
+                DefaultRowHeight = 15D,
+                DyDescent = 0.25D,
+            };
 
             ColumnContext CreateColumnContext(IPropertyRenderer renderer) =>
                 new ColumnContext(
@@ -187,25 +211,24 @@ namespace MicroElements.Reporting.Excel
                 .Select(CreateColumnContext)
                 .ToList();
 
+            Columns columns = new Columns();
             if (sheetContext.IsNotTransposed)
             {
-                Columns columnsElement = CreateColumns(sheetContext.Columns);
-                workSheet.InsertAt(columnsElement, 0);
+                columns = CreateColumns(sheetContext.Columns);
             }
 
-            bool freezeTopRow = ExcelMetadata.GetFirstDefinedValue(
-                ExcelMetadata.FreezeTopRow,
-                sheetContext.SheetMetadata,
-                sheetContext.DocumentMetadata,
-                defaultValue: true);
+            SheetData sheetData = new SheetData();
 
-            if (freezeTopRow)
-            {
-                workSheet.FreezeTopRow(rowNum: 1);
-            }
+            //workSheet.Append(sheetDimension);
+            workSheet.Append(sheetViews);
+            workSheet.Append(sheetFormatProperties);
+            workSheet.Append(columns);
+            workSheet.Append(sheetData);
+            //workSheet.Append(pageMargins);
 
             // Append a new worksheet and associate it with the workbook.
-            uint sheetCount = (uint)workbookPart.Workbook.Sheets.ChildElements.Count;
+            Sheets sheets = workbookPart.Workbook.Sheets;
+            uint sheetCount = workbookPart.GetSheetCount();
             Sheet sheet = new Sheet
             {
                 Id = workbookPart.GetIdOfPart(worksheetPart),
@@ -213,10 +236,20 @@ namespace MicroElements.Reporting.Excel
                 Name = sheetContext.ReportProvider.ReportName,
             };
 
+            sheets.Append(sheet);
+
+            bool freezeTopRow = ExcelMetadata.GetFirstDefinedValue(
+                ExcelMetadata.FreezeTopRow,
+                sheetContext.SheetMetadata,
+                sheetContext.DocumentMetadata);
+
+            if (freezeTopRow)
+            {
+                workSheet.FreezeTopRow(rowNum: 1);
+            }
+
             sheetContext.SheetData = sheetData;
             sheetContext.Sheet = sheet;
-
-            workbookPart.Workbook.Sheets.Append(sheet);
         }
 
         private void AddSheetData(
@@ -229,7 +262,7 @@ namespace MicroElements.Reporting.Excel
             if (sheetContext.IsNotTransposed)
             {
                 // HEADER ROW
-                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.String));
+                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.SharedString));
                 sheetData.AppendChild(new Row(headerCells));
 
                 // DATA ROWS
@@ -242,7 +275,7 @@ namespace MicroElements.Reporting.Excel
             else
             {
                 // NAME COLUMN
-                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.String));
+                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.SharedString));
                 Row[] rows = headerCells.Select(headerCell => new Row(headerCell)).ToArray();
 
                 // VALUE COLUMN
@@ -285,8 +318,7 @@ namespace MicroElements.Reporting.Excel
                     ExcelMetadata.ColumnWidth,
                     columnContext.ColumnMetadata,
                     columnContext.SheetMetadata,
-                    columnContext.DocumentMetadata,
-                    defaultValue: 14);
+                    columnContext.DocumentMetadata);
 
                 columnContext.Column = new Column { Min = colNumber, Max = colNumber, Width = columnWidth, CustomWidth = true };
 
@@ -303,9 +335,16 @@ namespace MicroElements.Reporting.Excel
 
         private Cell ConstructCell(string value, CellValues dataType)
         {
-            return new Cell()
+            string text = value;
+
+            if (dataType == CellValues.SharedString)
             {
-                CellValue = new CellValue(value),
+                text = _documentContext.GetOrAddSharedString(value);
+            }
+
+            return new Cell
+            {
+                CellValue = new CellValue(text),
                 DataType = new EnumValue<CellValues>(dataType),
             };
         }
@@ -322,10 +361,10 @@ namespace MicroElements.Reporting.Excel
                 cellMetadata,
                 columnContext.ColumnMetadata,
                 columnContext.SheetMetadata,
-                columnContext.DocumentMetadata,
-                defaultValue: CellValues.String);
+                columnContext.DocumentMetadata);
 
             Cell cell = ConstructCell(textValue, dataType);
+
             if (dataType == CellValues.Date)
             {
                 cell.StyleIndex = _documentContext.GetCellFormatIndex("Date");

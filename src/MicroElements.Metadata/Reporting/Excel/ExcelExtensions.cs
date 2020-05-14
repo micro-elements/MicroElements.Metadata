@@ -80,6 +80,9 @@ namespace MicroElements.Reporting.Excel
 
         public static string GetOrAddSharedString(this DocumentContext documentContext, string text)
         {
+            if (text == null)
+                return null;
+
             if (!documentContext.SharedStringTable.TryGetValue(text, out string stringIndex))
             {
                 SharedStringTable sharedStringTable = documentContext.GetSharedStringTable();

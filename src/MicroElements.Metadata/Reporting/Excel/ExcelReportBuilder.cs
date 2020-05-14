@@ -337,6 +337,11 @@ namespace MicroElements.Reporting.Excel
         {
             string text = value;
 
+            if (dataType == CellValues.SharedString && string.IsNullOrEmpty(text))
+            {
+                dataType = CellValues.String;
+            }
+
             if (dataType == CellValues.SharedString)
             {
                 text = _documentContext.GetOrAddSharedString(value);

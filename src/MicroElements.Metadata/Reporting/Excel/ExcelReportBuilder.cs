@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -145,7 +146,7 @@ namespace MicroElements.Reporting.Excel
             InitStylesheet(documentContext);
 
             // Add empty string.
-            documentContext.GetOrAddSharedString("");
+            documentContext.GetOrAddSharedString(string.Empty);
 
             // External customization
             var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.CustomizeDocument);
@@ -219,7 +220,7 @@ namespace MicroElements.Reporting.Excel
                 .Select(CreateColumnContext)
                 .ToList();
 
-            Columns columns = new Columns();
+            Columns columns = null;
             if (sheetContext.IsNotTransposed)
             {
                 columns = CreateColumns(sheetContext.Columns);
@@ -230,7 +231,8 @@ namespace MicroElements.Reporting.Excel
             //workSheet.Append(sheetDimension);
             worksheet.Append(sheetViews);
             worksheet.Append(sheetFormatProperties);
-            worksheet.Append(columns);
+            if (columns != null)
+                worksheet.Append(columns);
             worksheet.Append(sheetData);
             //workSheet.Append(pageMargins);
 

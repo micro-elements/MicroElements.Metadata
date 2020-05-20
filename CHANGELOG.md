@@ -1,3 +1,35 @@
+# 2.0.0
+- Search
+  - Property search redesigned and unified
+  - Property search allows to know whether property exists, not exists or exists with undefined value
+  - Search API became more consistent and customizable
+  - PropertyContainer and MutablePropertyContainer can accept custom SearchOptions
+  - Added predefined search modes: Default, ExistingOnly, ExistingOnlyWithParent
+  - Added GetValueAsOption and SetValue extensions with functional Option support
+
+- Validation
+  - New validation rules: Exists, Required
+  - IValidationRule now implements IMetadataProvider
+  - Added generic IValidationRule<T> for holding typed property
+  - Rich rule building with combine support
+  - Validation message customization moved to ValidationMessageOptions and linked to IValidationRule as metadata
+  - Validation customization for last rule in chain
+
+- Other
+  - ExcelReader: GetRowsAs supports factory function
+  - ExcelReportBuilder support for SharedStrings
+  - PropertyRenderer: supports SearchOptions
+
+# 2.0.0-beta.8
+ - Added GetValueAsOption and SetValue extensions with functional Option support
+ - ExcelReader: GetRowsAs supports factory function
+ - PropertyRenderer: supports SearchOptions
+
+# 2.0.0-beta.7
+# 2.0.0-beta.6
+# 2.0.0-beta.5
+- minor changes
+
 # 2.0.0-beta.4
 - ExcelReportBuilder support for SharedStrings
 - Fixed broken copy and paste in generated excel

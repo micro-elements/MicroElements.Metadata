@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
 
@@ -197,5 +196,30 @@ namespace MicroElements.Metadata
         /// <returns>True if property exists in container.</returns>
         public static bool HasValue(this IPropertyContainer propertyContainer, IProperty property, SearchOptions search) =>
             propertyContainer.GetPropertyValueUntyped(property, search).HasValue();
+
+        /// <summary>
+        /// Gets optional not null value.
+        /// Returns option in <see cref="OptionState.Some"/> state if property value exists.
+        /// Returns None if value was not found.
+        /// By default uses <see cref="SearchOptions.ExistingOnlyWithParent"/> for value search.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to search.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>Optional property value.</returns>
+        public static Option<T> GetValueAsOption<T>(
+            this IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            SearchOptions? search = null)
+        {
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(property, search ?? SearchOptions.ExistingOnlyWithParent);
+            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
+            {
+                return propertyValue.Value;
+            }
+
+            return Option<T>.None;
+        }
     }
 }

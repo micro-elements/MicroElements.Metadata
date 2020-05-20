@@ -317,14 +317,27 @@ namespace MicroElements.Parsing
             return new DateTime(1899, 12, 31).AddDays(serialDate);
         }
 
-        public static T[] GetRowsAs<T>(this ExcelElement<Sheet> sheet, IParserProvider parserProvider)
-            where T : PropertyContainer
+        /// <summary>
+        /// Maps rows to entities with specified <paramref name="parserProvider"/>.
+        /// </summary>
+        /// <typeparam name="T">Entity type.</typeparam>
+        /// <param name="sheet">Sheet.</param>
+        /// <param name="parserProvider"><see cref="IParserProvider"/>.</param>
+        /// <param name="factory">Factory.</param>
+        /// <returns>Enumeration of <typeparamref name="T"/>.</returns>
+        public static IEnumerable<T> GetRowsAs<T>(
+            this ExcelElement<Sheet> sheet,
+            IParserProvider parserProvider,
+            Func<IReadOnlyList<IPropertyValue>, T> factory = null)
         {
+            if (factory == null)
+                factory = list => (T)Activator.CreateInstance(typeof(T), list);
+
             return sheet
                 .GetRows()
                 .AsDictionaryList(parserProvider)
                 .Select(parserProvider.ParseProperties)
-                .Select(list => (T)Activator.CreateInstance(typeof(T), list))
+                .Select(factory)
                 .ToArray();
         }
     }

@@ -111,7 +111,8 @@ namespace MicroElements.Metadata.Tests.ParseExcel
 
             var fxSheetRows = document
                 .GetSheet("Sheet1")
-                .GetRowsAs<FxSheetRow>(new FxSheetParserProvider());
+                .GetRowsAs<FxSheetRow>(new FxSheetParserProvider())
+                .ToArray();
 
             fxSheetRows.Length.Should().Be(8);
 

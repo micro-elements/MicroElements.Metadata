@@ -13,7 +13,7 @@ namespace MicroElements.Metadata
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
         /// <inheritdoc />
-        public IProperty<T> Property { get; set; }
+        public IProperty<T> Property { get; private set; }
 
         /// <inheritdoc />
         public IProperty PropertyUntyped => Property;
@@ -22,7 +22,12 @@ namespace MicroElements.Metadata
         public Type PropertyType => typeof(T);
 
         /// <inheritdoc />
-        public string TargetName { get; set; }
+        public string TargetName { get; private set; }
+
+        /// <summary>
+        /// Gets <see cref="SearchOptions"/> for property search.
+        /// </summary>
+        public SearchOptions? SearchOptions { get; private set; }
 
         /// <summary>
         /// Gets format function.
@@ -37,8 +42,15 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public string Render(IPropertyContainer source)
         {
-            var value = source.GetValue(Property);
-            var textValue = FormatValue?.Invoke(value, source) ?? DoDefaultFormatting(value);
+            string textValue = NullValue;
+
+            IPropertyValue<T> propertyValue = source.GetPropertyValue(Property, SearchOptions ?? Metadata.SearchOptions.ExistingOnlyWithParent);
+            if (propertyValue.HasValue())
+            {
+                T value = propertyValue.Value;
+                textValue = FormatValue?.Invoke(value, source) ?? DoDefaultFormatting(value);
+            }
+
             return textValue;
         }
 
@@ -94,6 +106,17 @@ namespace MicroElements.Metadata
         public PropertyRenderer<T> SetNullValue(string nullValue)
         {
             NullValue = nullValue;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets <see cref="SearchOptions"/> for property search.
+        /// </summary>
+        /// <param name="searchOptions"><see cref="SearchOptions"/>.</param>
+        /// <returns>The same renderer.</returns>
+        public PropertyRenderer<T> SetSearchOptions(SearchOptions searchOptions)
+        {
+            SearchOptions = searchOptions;
             return this;
         }
 

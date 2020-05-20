@@ -1,5 +1,9 @@
-﻿using System;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -181,6 +185,31 @@ namespace MicroElements.Metadata
             var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
             if (propertyValue.IsNullOrNotDefined())
                 propertyContainer.SetValue(property, value);
+        }
+
+        /// <summary>
+        /// Sets optional value if <paramref name="value"/> is in Some state.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in Option<T> value)
+        {
+            value.Match(val => propertyContainer.SetValue(property, val), () => { });
+        }
+
+        /// <summary>
+        /// Sets optional value if <paramref name="value"/> is in Some state.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in Option<T> value)
+            where T : struct
+        {
+            value.Match(val => propertyContainer.SetValue(property, val), () => { });
         }
     }
 }

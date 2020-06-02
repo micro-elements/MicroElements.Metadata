@@ -1,3 +1,6 @@
+# 3.0.0
+- Breaking Change: OpenXml reporting and parsing moved to MicroElements.Metadata.OpenXml
+
 # 2.0.0
 - Search
   - Property search redesigned and unified

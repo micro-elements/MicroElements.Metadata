@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj" />
     <ProjectReference Include="..\..\src\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>
 

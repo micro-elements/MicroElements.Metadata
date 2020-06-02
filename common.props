@@ -6,7 +6,7 @@
     <Authors>micro-elements</Authors>
     <Description>Metadata model, parsing and reporting.</Description>
 
-    <PackageTags>metadata;parsing;parse;reporting;report;etl</PackageTags>
+    <PackageTags>metadata parsing parse reporting report etl</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Metadata.git</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Metadata/master/LICENSE</PackageLicenseUrl>

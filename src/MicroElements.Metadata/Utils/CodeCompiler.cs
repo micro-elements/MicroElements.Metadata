@@ -9,7 +9,7 @@ using MicroElements.Functional;
 
 namespace MicroElements
 {
-    public static class CodeCompiler
+    internal static class CodeCompiler
     {
         #region Caches
 

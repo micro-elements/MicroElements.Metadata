@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <Import Project="..\..\common.props" />
 
   <PropertyGroup>
@@ -9,6 +10,12 @@
 
   <ItemGroup>
     <PackageReference Include="MicroElements.Functional" Version="0.17.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.0" />
+    <PackageReference Include="NodaTime" Version="2.4.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>
 
 </Project>

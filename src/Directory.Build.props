@@ -1,8 +1,10 @@
 <Project>
+
   <ItemGroup>
     <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
     <DotNetCliToolReference Include="dotnet-sourcelink" Version="2.8.3" />
   </ItemGroup>
+
   <PropertyGroup>
     <DebugType>embedded</DebugType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -10,5 +12,11 @@
     <Deterministic>true</Deterministic>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
+
   <Import Project="stylecop.props"/>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
+  </ItemGroup>
+
 </Project>

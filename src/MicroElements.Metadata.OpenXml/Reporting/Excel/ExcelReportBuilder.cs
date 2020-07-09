@@ -131,7 +131,14 @@ namespace MicroElements.Reporting.Excel
                 workbookPart.Workbook = workbook;
 
                 BookViews bookViews = new BookViews();
-                WorkbookView workbookView = new WorkbookView() { XWindow = -120, YWindow = -120, WindowWidth = (UInt32Value)19440U, WindowHeight = (UInt32Value)15000U };
+                WorkbookView workbookView = new WorkbookView()
+                {
+                    XWindow = -120,
+                    YWindow = -120,
+                    WindowWidth = (UInt32Value)19440U,
+                    WindowHeight = (UInt32Value)15000U,
+                    ActiveTab = 0,
+                };
                 bookViews.Append(workbookView);
 
                 Sheets sheets = new Sheets();
@@ -187,6 +194,7 @@ namespace MicroElements.Reporting.Excel
         {
             WorkbookPart workbookPart = sheetContext.DocumentContext.WorkbookPart;
             WorksheetPart worksheetPart = sheetContext.WorksheetPart;
+            uint sheetCount = workbookPart.GetSheetCount();
 
             Worksheet worksheet = new Worksheet() { MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = "x14ac xr xr2 xr3" } };
             worksheet.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
@@ -199,7 +207,12 @@ namespace MicroElements.Reporting.Excel
             worksheetPart.Worksheet = worksheet;
 
             SheetViews sheetViews = worksheet.GetOrCreateSheetViews();
-            SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = (UInt32Value)0U, };
+            SheetView sheetView = new SheetView { WorkbookViewId = (UInt32Value)0U };
+            if (sheetCount == 0)
+            {
+                sheetView.TabSelected = true;
+            }
+
             sheetViews.AppendChild(sheetView);
 
             SheetFormatProperties sheetFormatProperties = new SheetFormatProperties
@@ -220,11 +233,7 @@ namespace MicroElements.Reporting.Excel
                 .Select(CreateColumnContext)
                 .ToList();
 
-            Columns columns = null;
-            if (sheetContext.IsNotTransposed)
-            {
-                columns = CreateColumns(sheetContext.Columns);
-            }
+            Columns columns = sheetContext.IsNotTransposed ? CreateColumns(sheetContext.Columns) : CreateColumnsTransposed();
 
             SheetData sheetData = new SheetData();
 
@@ -238,7 +247,6 @@ namespace MicroElements.Reporting.Excel
 
             // Append a new worksheet and associate it with the workbook.
             Sheets sheets = workbookPart.Workbook.Sheets;
-            uint sheetCount = workbookPart.GetSheetCount();
             Sheet sheet = new Sheet
             {
                 Id = workbookPart.GetIdOfPart(worksheetPart),
@@ -339,6 +347,16 @@ namespace MicroElements.Reporting.Excel
                 if (columnContext.Column != null)
                     columnsElement.Append(columnContext.Column);
             }
+
+            return columnsElement;
+        }
+
+        private Columns CreateColumnsTransposed()
+        {
+            Columns columnsElement = new Columns();
+
+            columnsElement.Append(new Column { Min = 1, Max = 1, Width = 16, CustomWidth = true });
+            columnsElement.Append(new Column { Min = 2, Max = 10, Width = 30, CustomWidth = true });
 
             return columnsElement;
         }

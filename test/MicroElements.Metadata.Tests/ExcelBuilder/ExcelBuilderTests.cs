@@ -23,7 +23,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             {
                 Add(Sheet1Meta.Name).SetExcelType(CellValues.SharedString);
                 Add(Sheet1Meta.Age).SetExcelType(CellValues.Number);
-                Add(Sheet1Meta.Date).SetExcelType(CellValues.Date);
+                Add(Sheet1Meta.Date).SetExcelType(CellValues.Date).SetFormat("yyyy-MM-dd");
             }
         }
 
@@ -47,17 +47,22 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
                     .WithValue(ExcelMetadata.ColumnWidth, 14)
                 as ExcelDocumentMetadata;
 
+            var transposed = new ExcelSheetMetadata()
+                    .WithValue(ExcelMetadata.Transpose, true)
+                as ExcelSheetMetadata;
+
             ExcelReportBuilder
                 .Create("build_excel.xlsx", documentMetadata)
-                .AddReportSheet(new Sheet1Report(), rows)
+                .AddReportSheet(new Sheet1Report("Sheet1"), rows)
+                .AddReportSheet(new Sheet1Report("Sheet2").SetMetadata(transposed), rows)
                 .SaveAndClose();
         }
+
         [Fact]
         public void build_excel_with_generated_class()
         {
             //new GeneratedClass().CreatePackage("build_excel2.xlsx");
         }
-
     }
 
     public static class ExcelProviderExtensions

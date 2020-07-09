@@ -1,3 +1,11 @@
+# 3.1.0
+- PropertyCalculator that also returns ValueSource
+- Old Calculate func removed from IProperty<T>
+- New Map method that covers old other MapXX methods, old methods removed
+- DeNull method that allows to convert Nullable property to NotNullable
+- Excel: fixed selected tab
+- Excel: More wide columns in transposed mode
+
 # 3.0.0
 - Breaking Change: OpenXml reporting and parsing moved to MicroElements.Metadata.OpenXml
 

@@ -31,19 +31,19 @@ namespace MicroElements.Metadata
         /// <param name="description">Description.</param>
         /// <param name="alias">Alias.</param>
         /// <param name="examples">Examples.</param>
-        /// <param name="calculate">Calculate func.</param>
+        /// <param name="calculator">Calculate func.</param>
         internal Property(
             string name,
             LocalizableString description,
             string alias,
             IReadOnlyList<T> examples,
-            Func<IPropertyContainer, T> calculate)
+            IPropertyCalculator<T> calculator)
         {
             Name = name;
             Description = description;
             Alias = alias;
             Examples = examples;
-            Calculate = calculate;
+            Calculator = calculator;
         }
 
         /// <inheritdoc />
@@ -65,7 +65,7 @@ namespace MicroElements.Metadata
         public IReadOnlyList<T> Examples { get; private set; }
 
         /// <inheritdoc />
-        public Func<IPropertyContainer, T> Calculate { get; private set; }
+        public IPropertyCalculator<T> Calculator { get; private set; }
 
         /// <inheritdoc />
         public override string ToString() => Name;
@@ -137,13 +137,35 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Sets calculate property value func and returns the same property for builder chaining.
+        /// Sets property value calculator and returns the same property for builder chaining.
         /// </summary>
         /// <param name="calculate">Calculate property value func.</param>
         /// <returns>The same property for builder chaining.</returns>
         public Property<T> SetCalculate(Func<IPropertyContainer, T> calculate)
         {
-            Calculate = calculate;
+            Calculator = new PropertyCalculator<T>(calculate);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets property value calculator and returns the same property for builder chaining.
+        /// </summary>
+        /// <param name="calculate">Calculate property value func.</param>
+        /// <returns>The same property for builder chaining.</returns>
+        public Property<T> SetCalculate(Func<IPropertyContainer, (T Value, ValueSource ValueSource)> calculate)
+        {
+            Calculator = new PropertyCalculator<T>(calculate);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets property calculator.
+        /// </summary>
+        /// <param name="calculator">Property value calculator.</param>
+        /// <returns>The same property for builder chaining.</returns>
+        public Property<T> SetCalculator(IPropertyCalculator<T> calculator)
+        {
+            Calculator = calculator;
             return this;
         }
     }
@@ -251,7 +273,7 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             name.AssertArgumentNotNull(nameof(name));
 
-            return new Property<T>(name, property.Description, property.Alias, property.Examples, property.Calculate);
+            return new Property<T>(name, property.Description, property.Alias, property.Examples, property.Calculator);
         }
 
         /// <summary>
@@ -266,7 +288,7 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             alias.AssertArgumentNotNull(nameof(alias));
 
-            return new Property<T>(property.Name, property.Description, alias, property.Examples, property.Calculate);
+            return new Property<T>(property.Name, property.Description, alias, property.Examples, property.Calculator);
         }
 
         /// <summary>
@@ -282,7 +304,7 @@ namespace MicroElements.Metadata
             description.AssertArgumentNotNull(nameof(description));
 
             var newDescription = new LocalizableString(description.Lang(language));
-            return new Property<T>(property.Name, newDescription, property.Alias, property.Examples, property.Calculate);
+            return new Property<T>(property.Name, newDescription, property.Alias, property.Examples, property.Calculator);
         }
 
         /// <summary>
@@ -296,7 +318,7 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculate)
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculator)
                 .SetDefaultValue(constDefaultValue);
         }
 
@@ -311,7 +333,7 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculate)
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, property.Calculator)
                 .SetDefaultValue(defaultValue);
         }
 
@@ -327,7 +349,7 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             calculate.AssertArgumentNotNull(nameof(calculate));
 
-            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, calculate);
+            return new Property<T>(property.Name, property.Description, property.Alias, property.Examples, new PropertyCalculator<T>(calculate));
         }
     }
 }

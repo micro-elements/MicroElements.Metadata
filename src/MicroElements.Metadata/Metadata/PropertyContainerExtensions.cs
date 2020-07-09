@@ -66,10 +66,15 @@ namespace MicroElements.Metadata
                 return (IPropertyValue<T>)propertyValue;
 
             // Property can be calculated.
-            if (search.CalculateValue && property.Calculate != null)
+            if (search.CalculateValue && property.Calculator != null)
             {
-                var calculatedValue = property.Calculate(propertyContainer);
-                return new PropertyValue<T>(property, calculatedValue, ValueSource.Calculated);
+                var calculationResult = property.Calculator.Calculate(propertyContainer);
+                var calculatedValue = new PropertyValue<T>(property, calculationResult.Value, calculationResult.ValueSource);
+
+                if (calculatedValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)
+                    calculatedValue = null;
+
+                return calculatedValue;
             }
 
             // Maybe default value?

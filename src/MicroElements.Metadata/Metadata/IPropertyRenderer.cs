@@ -37,7 +37,7 @@ namespace MicroElements.Metadata
     /// Generic property renderer.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public interface IPropertyRenderer<out T> : IPropertyRenderer
+    public interface IPropertyRenderer<T> : IPropertyRenderer
     {
         /// <summary>
         /// Gets property to render.

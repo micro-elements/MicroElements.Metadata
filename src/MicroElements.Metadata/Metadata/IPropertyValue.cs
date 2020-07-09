@@ -28,7 +28,7 @@ namespace MicroElements.Metadata
     /// Strong typed property and value.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IPropertyValue<out T> : IPropertyValue
+    public interface IPropertyValue<T> : IPropertyValue
     {
         /// <summary>
         /// Gets property.

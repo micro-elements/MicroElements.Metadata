@@ -57,7 +57,7 @@ namespace MicroElements.Metadata.Tests
             SearchOptions searchOptions = SearchOptions.ExistingOnly.CalculateValue();
             container
                 .GetPropertyValue(Name
-                    .Map(name => $"Name {name}", searchOptions)
+                    .Map(name => $"Name {name}", searchOptions: searchOptions)
                     .Map(text => text.Length), searchOptions)
                 .Should().Be(null);
         }
@@ -79,7 +79,8 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void map_property_nullable_struct()
         {
-            var nullableInt = new Property<int?>("NullableInt");
+            var nullableInt = new Property<int?>("nullableInt");
+            var notNullableInt = new Property<int>("notNullableInt");
 
             test(new MutablePropertyContainer()
                 .WithValue(nullableInt, null));
@@ -90,14 +91,17 @@ namespace MicroElements.Metadata.Tests
             {
                 propertyContainer.GetValue(nullableInt.Map(value => value.Value, allowMapNull: false)).Should().Be(0);
 
-                propertyContainer.GetValue(nullableInt.DeNull()).Should().Be(0);
+                propertyContainer.GetValue(nullableInt.DeNullify()).Should().Be(0);
+
+                propertyContainer.GetValue(notNullableInt).Should().Be(0);
+                propertyContainer.GetValue(notNullableInt.Nullify()).Should().Be(null);
 
                 propertyContainer.GetValue(nullableInt.Map(value => value ?? 42, allowMapNull: true)).Should().Be(42);
 
-                var propertyValue = propertyContainer.GetPropertyValue(nullableInt.Map(value =>
+                var propertyValue = propertyContainer.GetPropertyValue(nullableInt.Map(pv =>
                 {
-                    return value.HasValue
-                        ? (value.Value, ValueSource.Calculated)
+                    return pv.Value.HasValue
+                        ? (pv.Value.Value, ValueSource.Calculated)
                         : (0, ValueSource.NotDefined);
                 }, allowMapNull: true));
 

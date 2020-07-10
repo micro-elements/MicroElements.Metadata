@@ -1,3 +1,7 @@
+# 3.2.0
+- Nullify and DeNullify mapper extensions for properties
+- Added Map extension with extended map functor
+
 # 3.1.0
 - PropertyCalculator that also returns ValueSource
 - Old Calculate func removed from IProperty<T>

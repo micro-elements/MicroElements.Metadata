@@ -1,3 +1,7 @@
+# 3.3.0
+- Property Map for PropertyValue fix
+- Excel: FillCellReferences, MapRows
+
 # 3.2.0
 - Nullify and DeNullify mapper extensions for properties
 - Added Map extension with extended map functor

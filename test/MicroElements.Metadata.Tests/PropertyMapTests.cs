@@ -103,10 +103,26 @@ namespace MicroElements.Metadata.Tests
                     return pv.Value.HasValue
                         ? (pv.Value.Value, ValueSource.Calculated)
                         : (0, ValueSource.NotDefined);
-                }, allowMapNull: true));
+                }));
 
                 propertyValue.Source.Should().Be(ValueSource.NotDefined);
             }
+        }
+
+        [Fact]
+        public void TestComplexProperty()
+        {
+            IProperty<double?> nullableDouble = new Property<double?>("nullableDouble");
+            IProperty<double> deNullify = nullableDouble.DeNullify();
+            deNullify.SetAliasUntyped("DeNullify");
+            var property = deNullify.UseDefaultForUndefined();
+            property.SetAliasUntyped("UseDefaultForUndefined");
+
+            var propertyContainer = new PropertyContainer();
+
+            var propertyValue = propertyContainer.GetPropertyValue(property);
+            propertyValue.HasValue().Should().BeTrue();
+            propertyValue.Value.Should().Be(0);
         }
     }
 }

@@ -183,7 +183,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Cell customization function.
         /// </summary>
-        public static readonly IProperty<Action<Cell>> CustomizeCell = new Property<Action<Cell>>("CustomizeCell");
+        public static readonly IProperty<Action<CellContext>> CustomizeCell = new Property<Action<CellContext>>("CustomizeCell");
     }
 
     public class DocumentContext
@@ -272,10 +272,32 @@ namespace MicroElements.Reporting.Excel
 
         public IExcelMetadata CellMetadata { get; }
 
-        public CellContext(ColumnContext columnContext, IExcelMetadata cellMetadata)
+        public IPropertyRenderer PropertyRenderer => ColumnContext.PropertyRenderer;
+
+        public Cell Cell { get; }
+
+        public CellContext(ColumnContext columnContext, IExcelMetadata cellMetadata, Cell cell)
         {
             ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
             CellMetadata = cellMetadata.AssertArgumentNotNull(nameof(cellMetadata));
+            Cell = cell;
+        }
+    }
+
+    public static class ExcelMetadataExtensions
+    {
+        public static TContainer WithCombinedConfigure<TContainer, TContext>(this TContainer value, IProperty<Action<TContext>> property, Action<TContext> action)
+            where TContainer : IMutablePropertyContainer
+        {
+            Action<TContext> existedAction = value.GetPropertyValue(property)?.Value;
+
+            return value.WithValue(property, context => Combine(context, existedAction, action));
+
+            static void Combine(TContext context, Action<TContext> action1, Action<TContext> action2)
+            {
+                action1?.Invoke(context);
+                action2(context);
+            }
         }
     }
 }

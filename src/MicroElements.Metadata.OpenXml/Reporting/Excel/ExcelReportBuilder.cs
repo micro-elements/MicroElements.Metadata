@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -170,6 +171,9 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder AddReportSheet(IReportProvider reportProvider, IEnumerable<IPropertyContainer> reportRows)
         {
+            reportProvider.AssertArgumentNotNull(nameof(reportProvider));
+            reportRows.AssertArgumentNotNull(nameof(reportRows));
+
             var sheetMetadata = reportProvider.GetMetadata<ExcelSheetMetadata>() ?? _defaultSheetMetadata;
 
             // Add a WorksheetPart to the WorkbookPart.
@@ -272,7 +276,7 @@ namespace MicroElements.Reporting.Excel
 
         private void AddSheetData(
             SheetContext sheetContext,
-            IEnumerable<IPropertyContainer> items)
+            IEnumerable<IPropertyContainer> dataRows)
         {
             SheetData sheetData = sheetContext.SheetData;
             var columns = sheetContext.Columns;
@@ -284,29 +288,29 @@ namespace MicroElements.Reporting.Excel
                 sheetData.AppendChild(new Row(headerCells));
 
                 // DATA ROWS
-                foreach (var item in items.NotNull())
+                foreach (var item in dataRows)
                 {
-                    var valueCells = columns.Select(renderer => ConstructCell(renderer, item));
+                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, item));
                     sheetData.AppendChild(new Row(valueCells));
                 }
             }
             else
             {
                 // NAME COLUMN
-                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.SharedString));
+                var headerCells = columns.Select(columnContext => ConstructCell(columnContext.PropertyRenderer.TargetName, CellValues.SharedString));
                 Row[] rows = headerCells.Select(headerCell => new Row(headerCell)).ToArray();
 
                 // VALUE COLUMN
                 for (int rowIndex = 0; rowIndex < rows.Length; rowIndex++)
                 {
                     var column = columns[rowIndex];
-                    foreach (var item in items.NotNull())
+                    foreach (var item in dataRows)
                     {
                         ConstructCell(column, item);
                     }
                 }
 
-                foreach (var item in items.NotNull())
+                foreach (var item in dataRows)
                 {
                     for (var index = 0; index < columns.Count; index++)
                     {
@@ -363,21 +367,21 @@ namespace MicroElements.Reporting.Excel
 
         private Cell ConstructCell(string value, CellValues dataType)
         {
-            string text = value;
+            string cellText = value;
 
-            if (dataType == CellValues.SharedString && string.IsNullOrEmpty(text))
+            if (dataType == CellValues.SharedString && string.IsNullOrEmpty(cellText))
             {
                 dataType = CellValues.String;
             }
 
             if (dataType == CellValues.SharedString)
             {
-                text = _documentContext.GetOrAddSharedString(value);
+                cellText = _documentContext.GetOrAddSharedString(value);
             }
 
             return new Cell
             {
-                CellValue = new CellValue(text),
+                CellValue = new CellValue(cellText),
                 DataType = new EnumValue<CellValues>(dataType),
             };
         }
@@ -411,7 +415,10 @@ namespace MicroElements.Reporting.Excel
 
             // External customization
             var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.CustomizeCell);
-            customizeFunc?.Invoke(cell);
+            if (customizeFunc != null)
+            {
+                customizeFunc.Invoke(new CellContext(columnContext, cellMetadata, cell));
+            }
 
             return cell;
         }

@@ -27,13 +27,15 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Sets property value and returns the same container.
         /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value, ValueSource valueSource = default)
+        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value, ValueSource valueSource = default)
+            where TContainer : IMutablePropertyContainer
         {
             propertyContainer.SetValue(property, value, valueSource);
             return propertyContainer;
@@ -43,13 +45,15 @@ namespace MicroElements.Metadata
         /// Sets value by string property name and returns the same container.
         /// Overrides property value if exists with the same <paramref name="propertyName"/>.
         /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyContainer">MutablePropertyContainer.</param>
         /// <param name="propertyName">Property name.</param>
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
+        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
+            where TContainer : IMutablePropertyContainer
         {
             propertyContainer.SetValue(propertyName, value, valueSource);
             return propertyContainer;

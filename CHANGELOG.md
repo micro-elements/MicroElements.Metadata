@@ -1,3 +1,9 @@
+# 3.4.0
+- WithValue now returns the same container type as input
+- WithCombinedConfigure takes configure action and combines action with new action
+- [Excel] ConfigureCell now uses CellContext
+- [Excel] Customuze actions renamed to Configure
+
 # 3.3.0
 - Property Map for PropertyValue fix
 - Excel: FillCellReferences, MapRows
@@ -147,7 +153,7 @@
 - IPropertySet, IPropertyContainerMapper
 
 # 0.4.0
-- Added ConfigureMetadata extension for IMetadataPrivider
+- Added CustomizeMetadata extension for IMetadataPrivider
 - Added AddRange extension for IMutablePropertyContainer
 
 # 0.3.3

@@ -118,7 +118,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Document customization function.
         /// </summary>
-        public static readonly IProperty<Action<DocumentContext>> CustomizeDocument = new Property<Action<DocumentContext>>("CustomizeDocument");
+        public static readonly IProperty<Action<DocumentContext>> ConfigureDocument = new Property<Action<DocumentContext>>("ConfigureDocument");
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Sheet customization function.
         /// </summary>
-        public static readonly IProperty<Action<SheetContext>> CustomizeSheet = new Property<Action<SheetContext>>("CustomizeSheet");
+        public static readonly IProperty<Action<SheetContext>> ConfigureSheet = new Property<Action<SheetContext>>("ConfigureSheet");
     }
 
     /// <summary>
@@ -167,7 +167,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Sheet customization function.
         /// </summary>
-        public static readonly IProperty<Action<ColumnContext>> CustomizeColumn = new Property<Action<ColumnContext>>("CustomizeColumn");
+        public static readonly IProperty<Action<ColumnContext>> ConfigureColumn = new Property<Action<ColumnContext>>("ConfigureColumn");
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Cell customization function.
         /// </summary>
-        public static readonly IProperty<Action<CellContext>> CustomizeCell = new Property<Action<CellContext>>("CustomizeCell");
+        public static readonly IProperty<Action<CellContext>> ConfigureCell = new Property<Action<CellContext>>("ConfigureCell");
     }
 
     public class DocumentContext
@@ -286,6 +286,9 @@ namespace MicroElements.Reporting.Excel
 
     public static class ExcelMetadataExtensions
     {
+        /// <summary>
+        /// Takes configure action and combines action with new action.
+        /// </summary>
         public static TContainer WithCombinedConfigure<TContainer, TContext>(this TContainer value, IProperty<Action<TContext>> property, Action<TContext> action)
             where TContainer : IMutablePropertyContainer
         {

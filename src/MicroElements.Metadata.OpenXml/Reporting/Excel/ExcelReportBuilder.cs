@@ -157,7 +157,7 @@ namespace MicroElements.Reporting.Excel
             documentContext.GetOrAddSharedString(string.Empty);
 
             // External customization
-            var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.CustomizeDocument);
+            var customizeFunc = _documentMetadata?.GetValue(ExcelDocumentMetadata.ConfigureDocument);
             customizeFunc?.Invoke(documentContext);
 
             return documentContext;
@@ -188,7 +188,7 @@ namespace MicroElements.Reporting.Excel
             AddSheetData(sheetContext, reportRows);
 
             // External customization
-            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.CustomizeSheet);
+            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.ConfigureSheet);
             customizeFunc?.Invoke(sheetContext);
 
             return this;
@@ -345,7 +345,7 @@ namespace MicroElements.Reporting.Excel
                 columnContext.Column = new Column { Min = colNumber, Max = colNumber, Width = columnWidth, CustomWidth = true };
 
                 // External customization
-                var customizeFunc = columnContext.ColumnMetadata?.GetValue(ExcelColumnMetadata.CustomizeColumn);
+                var customizeFunc = columnContext.ColumnMetadata?.GetValue(ExcelColumnMetadata.ConfigureColumn);
                 customizeFunc?.Invoke(columnContext);
 
                 if (columnContext.Column != null)
@@ -414,7 +414,7 @@ namespace MicroElements.Reporting.Excel
             }
 
             // External customization
-            var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.CustomizeCell);
+            var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
             if (customizeFunc != null)
             {
                 customizeFunc.Invoke(new CellContext(columnContext, cellMetadata, cell));

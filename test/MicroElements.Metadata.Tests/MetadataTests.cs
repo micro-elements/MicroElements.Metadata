@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using FluentAssertions;
 using NodaTime;
@@ -69,16 +70,13 @@ namespace MicroElements.Metadata.Tests
         }
 
         [Fact]
-        public void ParseTest()
+        public void PropertySetTests()
         {
-            //TODO
+            PropertySet propertySet = new PropertySet(new[] {new Property<string>("prop1"), new Property<string>("prop2"),});
+            propertySet.Count().Should().Be(2);
+            propertySet.Last().Name.Should().Be("prop2");
         }
 
-        [Fact]
-        public void ReportTest()
-        {
-            //TODO
-        }
     }
 
     public class EntityMetadata

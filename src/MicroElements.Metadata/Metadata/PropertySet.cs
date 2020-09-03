@@ -40,12 +40,6 @@ namespace MicroElements.Metadata
             if (properties != null)
                 _properties.AddRange(properties);
         }
-
-        /// <inheritdoc />
-        public IEnumerator<IProperty> GetEnumerator() => _properties.GetEnumerator();
-
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>
@@ -66,12 +60,6 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public IEnumerable<IProperty> GetProperties() => _properties;
-
-        /// <inheritdoc />
-        public IEnumerator<IProperty> GetEnumerator() => GetProperties().GetEnumerator();
-
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>

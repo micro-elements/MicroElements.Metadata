@@ -1,3 +1,6 @@
+# 3.5.0
+- MicroElements.Functional updated to version 1.0.0
+
 # 3.4.0
 - WithValue now returns the same container type as input
 - WithCombinedConfigure takes configure action and combines action with new action

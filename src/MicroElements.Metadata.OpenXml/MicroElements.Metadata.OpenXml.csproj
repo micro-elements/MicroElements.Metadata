@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MicroElements.Functional" Version="0.17.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.0" />
     <PackageReference Include="NodaTime" Version="2.4.7" />
   </ItemGroup>

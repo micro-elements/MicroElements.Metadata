@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -51,7 +52,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Adds new property renderer and returns reference for it.
         /// </summary>
-        /// <typeparam name="T">Property name.</typeparam>
+        /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to render.</param>
         /// <param name="targetName">Target name.</param>
         /// <returns>Reference for added renderer.</returns>
@@ -60,6 +61,29 @@ namespace MicroElements.Metadata
             var renderer = new PropertyRenderer<T>(property, targetName);
             _renderers.Add(renderer);
             return renderer;
+        }
+
+        /// <summary>
+        /// Adds property renderer.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="renderer">Renderer to add.</param>
+        /// <returns>The same provider instance for chaining.</returns>
+        public ReportProvider AddRenderer(IPropertyRenderer renderer)
+        {
+            _renderers.Add(renderer.AssertArgumentNotNull(nameof(renderer)));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds property renderers.
+        /// </summary>
+        /// <param name="renderers">Renderer to add.</param>
+        /// <returns>The same provider instance for chaining.</returns>
+        public ReportProvider AddRenderers(IEnumerable<IPropertyRenderer> renderers)
+        {
+            _renderers.AddRange(renderers.AssertArgumentNotNull(nameof(renderers)));
+            return this;
         }
     }
 

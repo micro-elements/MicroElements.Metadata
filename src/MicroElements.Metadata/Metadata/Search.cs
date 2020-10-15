@@ -42,7 +42,7 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<UntypedSearch>(name), Property.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(new Property<UntypedSearch>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
         /// Creates search condition by name or alias.
@@ -53,7 +53,20 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias<T>(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<T>(name), Property.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(new Property<T>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
+
+        /// <summary>
+        /// Creates search condition by type and name.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="name">Name to search.</param>
+        /// <param name="propertyComparer">Property comparer.</param>
+        /// <returns>SearchCondition.</returns>
+        [DebuggerStepThrough]
+        public static SearchOptions ByNameAndComparer<T>(string name, IEqualityComparer<IProperty> propertyComparer)
+            => new SearchOptions(
+                searchProperty: new Property<T>(name),
+                propertyComparer: propertyComparer);
 
         /// <summary>
         /// Copy with override one ore more fields.
@@ -78,7 +91,7 @@ namespace MicroElements.Metadata
         {
             return new SearchOptions(
                 searchProperty: property ?? searchOptions.SearchProperty,
-                propertyComparer: propertyComparer ?? searchOptions.PropertyComparer ?? Property.DefaultEqualityComparer,
+                propertyComparer: propertyComparer ?? searchOptions.PropertyComparer ?? PropertyComparer.DefaultEqualityComparer,
                 searchInParent: searchInParent ?? searchOptions.SearchInParent,
                 calculateValue: calculateValue ?? searchOptions.CalculateValue,
                 useDefaultValue: useDefaultValue ?? searchOptions.UseDefaultValue,
@@ -203,7 +216,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Equality comparer for comparing properties.
         /// </summary>
-        public IEqualityComparer<IProperty> PropertyComparer => _propertyComparer ?? Property.DefaultEqualityComparer;
+        public IEqualityComparer<IProperty> PropertyComparer => _propertyComparer ?? Metadata.PropertyComparer.DefaultEqualityComparer;
 
         /// <summary>
         /// Do search in parent if no PropertyValue was found.
@@ -243,7 +256,7 @@ namespace MicroElements.Metadata
             bool returnNotDefined = true)
         {
             _searchProperty = searchProperty;
-            _propertyComparer = propertyComparer ?? Property.DefaultEqualityComparer;
+            _propertyComparer = propertyComparer ?? Metadata.PropertyComparer.DefaultEqualityComparer;
             _searchInParent = searchInParent;
             _calculateValue = calculateValue;
             _useDefaultValue = useDefaultValue;
@@ -266,8 +279,19 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Property comparer by <see cref="IProperty.Name"/> and <see cref="IProperty.Type"/>.
     /// </summary>
-    public sealed class ByNameAndTypeEqualityComparer : IEqualityComparer<IProperty>
+    public sealed class ByTypeAndNameEqualityComparer : IEqualityComparer<IProperty>
     {
+        private readonly StringComparison _stringComparison;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ByTypeAndNameEqualityComparer"/> class.
+        /// </summary>
+        /// <param name="stringComparison">StringComparison for name comparing.</param>
+        public ByTypeAndNameEqualityComparer(StringComparison stringComparison = StringComparison.Ordinal)
+        {
+            _stringComparison = stringComparison;
+        }
+
         /// <inheritdoc/>
         public bool Equals(IProperty x, IProperty y)
         {
@@ -275,7 +299,7 @@ namespace MicroElements.Metadata
             if (ReferenceEquals(x, null)) return false;
             if (ReferenceEquals(y, null)) return false;
             if (x.GetType() != y.GetType()) return false;
-            return x.Name == y.Name && x.Type == y.Type;
+            return x.Type == y.Type && x.Name.Equals(y.Name, _stringComparison);
         }
 
         /// <inheritdoc/>

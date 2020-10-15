@@ -1,3 +1,7 @@
+# 3.6.0
+- Now IMetadataProvider.GetInstanceMetadata by default creates metadata with searchOptions ByNameAndTypeComparer instead Default
+- Added AddRenderer and AddRenderers to ReportProvider
+
 # 3.5.0
 - MicroElements.Functional updated to version 1.0.0
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 
 namespace MicroElements.Metadata
@@ -31,6 +33,12 @@ namespace MicroElements.Metadata
         /// <param name="source">Source object to render.</param>
         /// <returns>Rendered text value.</returns>
         string Render(IPropertyContainer source);
+
+        /// <summary>
+        /// Configures renderer.
+        /// </summary>
+        /// <param name="configure">Action to configure renderer.</param>
+        void Configure(Action<PropertyRendererOptions> configure);
     }
 
     /// <summary>
@@ -43,5 +51,50 @@ namespace MicroElements.Metadata
         /// Gets property to render.
         /// </summary>
         IProperty<T> Property { get; }
+    }
+
+    /// <summary>
+    /// Options to configure <see cref="IPropertyRenderer"/>.
+    /// </summary>
+    public class PropertyRendererOptions
+    {
+        /// <summary>
+        /// Gets property to render.
+        /// </summary>
+        public IProperty PropertyUntyped { get; }
+
+        /// <summary>
+        /// Gets or sets target name.
+        /// </summary>
+        public string? TargetName { get; set; }
+
+        /// <summary>
+        /// Gets or sets <see cref="SearchOptions"/> for property search.
+        /// </summary>
+        public SearchOptions? SearchOptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets value that is renders when property value is null.
+        /// </summary>
+        public string? NullValue { get; set; }
+
+        /// <summary>
+        /// Gets or sets CustomRender function that overrides entire Render for renderer.
+        /// </summary>
+        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; set; }
+
+        /// <summary>
+        /// Callback that invokes after configuring.
+        /// </summary>
+        public Action<IPropertyRenderer>? AfterConfigure { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyRendererOptions"/> class.
+        /// </summary>
+        /// <param name="propertyUntyped">Property to render.</param>
+        public PropertyRendererOptions(IProperty propertyUntyped)
+        {
+            PropertyUntyped = propertyUntyped;
+        }
     }
 }

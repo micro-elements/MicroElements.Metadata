@@ -1,3 +1,9 @@
+# 3.7.0
+- PropertyRenderer configurer to allow configure untyped IPropertyRenderer
+- Added ToRenderers extension to convert IEnumerable<IProperty> to IEnumerable<IPropertyRenderer> with renderers customization
+- Duplicate FormatAsTuple removed in favor of MicroElements.Functional version
+- MicroElements.Functional updated to version 1.1.0
+
 # 3.6.0
 - Now IMetadataProvider.GetInstanceMetadata by default creates metadata with searchOptions ByNameAndTypeComparer instead Default
 - Added AddRenderer and AddRenderers to ReportProvider

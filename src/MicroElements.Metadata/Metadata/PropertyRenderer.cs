@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MicroElements.Metadata
@@ -39,9 +40,19 @@ namespace MicroElements.Metadata
         /// </summary>
         public string NullValue { get; private set; }
 
+        /// <summary>
+        /// Gets or sets custom render function that overrides all render.
+        /// </summary>
+        public Func<IProperty, IPropertyContainer, string> CustomRender { get; private set; }
+
         /// <inheritdoc />
         public string Render(IPropertyContainer source)
         {
+            if (CustomRender != null)
+            {
+                return CustomRender(Property, source);
+            }
+
             string textValue = NullValue;
 
             IPropertyValue<T> propertyValue = source.GetPropertyValue(Property, SearchOptions ?? Metadata.SearchOptions.ExistingOnlyWithParent);
@@ -52,6 +63,30 @@ namespace MicroElements.Metadata
             }
 
             return textValue;
+        }
+
+        /// <inheritdoc />
+        public void Configure(Action<PropertyRendererOptions> configure)
+        {
+            if (configure != null)
+            {
+                var rendererOptions =
+                    new PropertyRendererOptions(PropertyUntyped)
+                    {
+                        TargetName = TargetName,
+                        SearchOptions = SearchOptions,
+                        NullValue = NullValue,
+                        CustomRender = CustomRender,
+                    };
+                configure(rendererOptions);
+
+                TargetName = rendererOptions.TargetName ?? TargetName;
+                SearchOptions = rendererOptions.SearchOptions ?? SearchOptions;
+                NullValue = rendererOptions.NullValue ?? NullValue;
+                CustomRender = rendererOptions.CustomRender ?? CustomRender;
+
+                rendererOptions.AfterConfigure?.Invoke(this);
+            }
         }
 
         /// <summary>
@@ -128,6 +163,43 @@ namespace MicroElements.Metadata
             }
 
             return value?.ToString() ?? NullValue;
+        }
+    }
+
+    /// <summary>
+    /// <see cref="IPropertyRenderer"/> stuff.
+    /// </summary>
+    public static class PropertyRenderer
+    {
+        /// <summary>
+        /// Creates <see cref="IPropertyRenderer"/> by property.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <param name="name">Target name.</param>
+        /// <returns><see cref="IPropertyRenderer"/> instance.</returns>
+        public static IPropertyRenderer Create(IProperty property, string name)
+        {
+            Type typedPropertyType = typeof(PropertyRenderer<>).MakeGenericType(property.Type);
+            return (IPropertyRenderer)Activator.CreateInstance(typedPropertyType, property, name ?? property.Name);
+        }
+
+        /// <summary>
+        /// Creates renderers by properties.
+        /// </summary>
+        /// <param name="propertySet">Properties.</param>
+        /// <param name="configureRenderer">Configure created renderer.</param>
+        /// <returns>Renderers.</returns>
+        public static IEnumerable<IPropertyRenderer> ToRenderers(
+            this IEnumerable<IProperty> propertySet,
+            Action<PropertyRendererOptions> configureRenderer = null)
+        {
+            foreach (IProperty property in propertySet)
+            {
+                IPropertyRenderer propertyRenderer = PropertyRenderer.Create(property, property.Name);
+                if (configureRenderer != null)
+                    propertyRenderer.Configure(configureRenderer);
+                yield return propertyRenderer;
+            }
         }
     }
 }

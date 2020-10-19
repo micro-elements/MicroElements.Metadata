@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -32,7 +33,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public override string ToString() => _propertyValues.FormatList();
+        public override string ToString() => _propertyValues.FormatAsTuple(formatValue: StringFormatter.FormatValue);
 
         #region IPropertyContainer
 

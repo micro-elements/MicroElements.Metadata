@@ -96,7 +96,7 @@ namespace MicroElements.Metadata
             _texts.FirstOrNone(s => s.Language == language).GetValueOrDefault(LocalString.Empty);
 
         /// <inheritdoc />
-        public override string ToString() => Texts.FormatList();
+        public override string ToString() => Texts.FormatAsTuple(formatValue: StringFormatter.FormatValue);
 
         /// <inheritdoc />
         public IEnumerator<LocalString> GetEnumerator() => _texts.GetEnumerator();

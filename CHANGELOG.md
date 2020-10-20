@@ -1,3 +1,8 @@
+# 3.8.0
+- Added PropertySetAttribute to attach IPropertySet to IPropertyContainer in compile time
+- Added PropertySetEvaluator to search IPropertySet in runtime by PropertySetAttribute
+- MicroElements.Functional updated to version 1.2.0
+
 # 3.7.0
 - PropertyRenderer configurer to allow configure untyped IPropertyRenderer
 - Added ToRenderers extension to convert IEnumerable<IProperty> to IEnumerable<IPropertyRenderer> with renderers customization

@@ -76,7 +76,6 @@ namespace MicroElements.Metadata.Tests
             propertySet.Count().Should().Be(2);
             propertySet.Last().Name.Should().Be("prop2");
         }
-
     }
 
     public class EntityMetadata

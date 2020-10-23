@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
@@ -141,6 +142,36 @@ namespace MicroElements.Validation
             validator.AssertArgumentNotNull(nameof(validator));
 
             return items.Select(row => row.ToValidationResult(validator));
+        }
+
+        /// <summary>
+        /// Validates and takes only validated values.
+        /// Values with validation errors will be skipped and <paramref name="onValidationError"/> call.
+        /// </summary>
+        /// <typeparam name="TPropertyContainer">Property container type.</typeparam>
+        /// <param name="values">Values to validate.</param>
+        /// <param name="validator">Validator.</param>
+        /// <param name="onValidationError">Optional validation error callback.</param>
+        /// <returns>Values without errors.</returns>
+        public static IEnumerable<TPropertyContainer> ValidateAndFilter<TPropertyContainer>(
+            this IEnumerable<TPropertyContainer> values,
+            IValidator validator,
+            Action<ValidationResult<TPropertyContainer>> onValidationError = null)
+            where TPropertyContainer : IPropertyContainer
+        {
+            values.AssertArgumentNotNull(nameof(values));
+            validator.AssertArgumentNotNull(nameof(validator));
+
+            var validationResults = values.ToValidationResults(validator.Cached());
+            foreach (var validationResult in validationResults)
+            {
+                if (validationResult.IsValid())
+                {
+                    yield return validationResult.Data;
+                }
+
+                onValidationError?.Invoke(validationResult);
+            }
         }
     }
 }

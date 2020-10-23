@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using NodaTime;
+using NodaTime.Text;
 
 namespace MicroElements.Parsing
 {
@@ -196,14 +197,14 @@ namespace MicroElements.Parsing
             return cellFormat;
         }
 
-        private static string GetFormatedValue(this ExcelElement<Cell> cell)
+        private static string GetFormattedValue(this ExcelElement<Cell> cell)
         {
-            var cellformat = cell.GetCellFormat();
             string value;
-            if (cellformat.NumberFormatId != 0)
+            var cellFormat = cell.GetCellFormat();
+            if (cellFormat.NumberFormatId != 0)
             {
                 var elements = cell.Doc.WorkbookPart.WorkbookStylesPart.Stylesheet.NumberingFormats.Elements<NumberingFormat>().ToList();
-                string format = elements.FirstOrDefault(i => i.NumberFormatId.Value == cellformat.NumberFormatId.Value)?.FormatCode;
+                string format = elements.FirstOrDefault(i => i.NumberFormatId.Value == cellFormat.NumberFormatId.Value)?.FormatCode;
 
                 //Note: Look also: https://stackoverflow.com/questions/13176832/reading-a-date-from-xlsx-using-open-xml-sdk
                 format ??= "d/m/yyyy";
@@ -214,9 +215,15 @@ namespace MicroElements.Parsing
             {
                 value = cell.Data.InnerText;
             }
+
             return value;
         }
 
+        /// <summary>
+        /// Gets text value.
+        /// Uses SharedStringTable if needed.
+        /// For DateTime, LocalDate and LocalTime tries to convert double excel value to ISO format.
+        /// </summary>
         public static string GetCellValue(this ExcelElement<Cell> cell, string nullValue = null)
         {
             Cell cellData = cell.Data;
@@ -236,27 +243,50 @@ namespace MicroElements.Parsing
                 {
                     if (propertyParser.TargetType == typeof(LocalDate))
                     {
-                        DateTime dateTime = Prelude
-                            .ParseDouble(cellValue)
-                            .Match(FromExcelSerialDate, DateTime.MinValue);
-
-                        cellTextValue = dateTime.ToString("yyyy-MM-dd");
+                        var parseResult = LocalDatePattern.Iso.Parse(cellValue);
+                        if (parseResult.Success)
+                        {
+                            cellTextValue = cellValue;
+                        }
+                        else
+                        {
+                            Prelude
+                                .ParseDouble(cellValue)
+                                .Map(FromExcelSerialDate)
+                                .Map(dt => dt.ToString("yyyy-MM-dd"))
+                                .Match(s => cellTextValue = s, () => { });
+                        }
                     }
                     else if (propertyParser.TargetType == typeof(LocalTime))
                     {
-                        DateTime dateTime = Prelude
-                            .ParseDouble(cellValue)
-                            .Match(FromExcelSerialDate, DateTime.MinValue);
-
-                        cellTextValue = dateTime.ToString("HH:mm:ss");
+                        var parseResult = LocalTimePattern.ExtendedIso.Parse(cellValue);
+                        if (parseResult.Success)
+                        {
+                            cellTextValue = cellValue;
+                        }
+                        else
+                        {
+                            Prelude
+                                .ParseDouble(cellValue)
+                                .Map(FromExcelSerialDate)
+                                .Map(dt => dt.ToString("HH:mm:ss"))
+                                .Match(s => cellTextValue = s, () => { });
+                        }
                     }
                     else if (propertyParser.TargetType == typeof(DateTime))
                     {
-                        DateTime dateTime = Prelude
-                            .ParseDouble(cellValue)
-                            .Match(FromExcelSerialDate, DateTime.MinValue);
-
-                        cellTextValue = dateTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                        if (DateTime.TryParse(cellValue, out _))
+                        {
+                            cellTextValue = cellValue;
+                        }
+                        else
+                        {
+                            Prelude
+                                .ParseDouble(cellValue)
+                                .Map(FromExcelSerialDate)
+                                .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss"))
+                                .Match(s => cellTextValue = s, () => { });
+                        }
                     }
                 }
             }

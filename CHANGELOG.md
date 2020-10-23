@@ -1,3 +1,8 @@
+# 3.9.0
+- Added extension ValidateAndFilter to select validated items with callback for not valid items
+- MicroElements.Functional updated to version 1.3.0
+- ExcelExtensions.GetCellValue now tries to parse date types as strings than as double
+
 # 3.8.0
 - Added PropertySetAttribute to attach IPropertySet to IPropertyContainer in compile time
 - Added PropertySetEvaluator to search IPropertySet in runtime by PropertySetAttribute

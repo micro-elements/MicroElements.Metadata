@@ -10,27 +10,27 @@ namespace MicroElements.Metadata
     /// Represents metadata for property.
     /// Every object consist of many properties and we should map properties from different sources to one common model.
     /// </summary>
-    public interface IProperty : IMetadataProvider, IEnumerable<IProperty>
+    public interface IProperty : IMetadataProvider
     {
         /// <summary>
-        /// Unique property name.
+        /// Gets property name.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Property value type.
+        /// Gets property value type.
         /// </summary>
         Type Type { get; }
 
         /// <summary>
-        /// Property description.
+        /// Gets property description.
         /// </summary>
-        LocalizableString Description { get; }
+        LocalizableString? Description { get; }
 
         /// <summary>
-        /// Alternative code for property.
+        /// Gets alternative name for property.
         /// </summary>
-        string Alias { get; }
+        string? Alias { get; }
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property value calculator.
         /// </summary>
-        IPropertyCalculator<T> Calculator { get; }
+        IPropertyCalculator<T>? Calculator { get; }
 
         /// <summary>
         /// Gets examples list.

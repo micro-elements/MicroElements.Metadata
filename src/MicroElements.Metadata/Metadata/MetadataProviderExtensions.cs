@@ -45,7 +45,7 @@ namespace MicroElements.Metadata
             var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
 
             var propertyValue = metadata.GetPropertyValue<TMetadata>(Search
-                .ByNameAndComparer<TMetadata>(metadataName, MetadataProvider.DefaulPropertyComparer)
+                .ByNameAndComparer<TMetadata>(metadataName, MetadataProvider.DefaultMetadataComparer)
                 .ReturnNull());
 
             if (propertyValue.HasValue() && !propertyValue.Value.IsNull())

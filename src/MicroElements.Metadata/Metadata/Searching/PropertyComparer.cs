@@ -12,14 +12,14 @@ namespace MicroElements.Metadata
     public static class PropertyComparer
     {
         /// <summary>
-        /// Property comparer by reference equality.
+        /// DefaultEqualityComparer. (Same as <see cref="ByReferenceComparer"/>).
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> DefaultEqualityComparer = new ByReferenceEqualityComparer();
+        public static readonly IEqualityComparer<IProperty> DefaultEqualityComparer = new ByTypeAndNameEqualityComparer();
 
         /// <summary>
         /// Property comparer by reference equality.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> BeReferenceComparer = new ByReferenceEqualityComparer();
+        public static readonly IEqualityComparer<IProperty> ByReferenceComparer = new ByReferenceEqualityComparer();
 
         /// <summary>
         /// Property comparer by <see cref="IProperty.Type"/> and <see cref="IProperty.Name"/>.

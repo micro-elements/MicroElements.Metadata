@@ -15,7 +15,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="value">Value to format.</param>
         /// <returns>Formatted string.</returns>
-        public static string FormatValue(this object value)
+        public static string FormatValue(this object? value)
         {
             if (value == null)
                 return "null";

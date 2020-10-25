@@ -21,21 +21,9 @@ namespace MicroElements.Metadata
         IReadOnlyList<IPropertyValue> Properties { get; }
 
         /// <summary>
-        /// Gets the value for property.
+        /// Gets default search options for container.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Property to find.</param>
-        /// <param name="searchInParent">Search in parent.</param>
-        /// <returns>The value for property.</returns>
-        T GetValue<T>(IProperty<T> property, bool searchInParent = true);
-
-        /// <summary>
-        /// Gets untyped value for property.
-        /// </summary>
-        /// <param name="property">Property to find.</param>
-        /// <param name="searchInParent">Search in parent.</param>
-        /// <returns>The value for property.</returns>
-        object GetValueUntyped(IProperty property, bool searchInParent = true);
+        SearchOptions SearchOptions { get; }
     }
 
     /// <summary>
@@ -57,7 +45,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource valueSource = default);
+        IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource? valueSource = default);
 
         /// <summary>
         /// Sets property value.

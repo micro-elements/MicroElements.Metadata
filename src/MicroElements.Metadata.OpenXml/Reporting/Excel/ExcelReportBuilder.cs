@@ -1,9 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -166,22 +164,22 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Adds new excel sheet.
         /// </summary>
-        /// <param name="reportProvider">Report provider.</param>
+        /// <param name="reportRenderer">Report renderer.</param>
         /// <param name="reportRows">Report rows.</param>
         /// <returns>Builder instance.</returns>
-        public ExcelReportBuilder AddReportSheet(IReportProvider reportProvider, IEnumerable<IPropertyContainer> reportRows)
+        public ExcelReportBuilder AddReportSheet(IReportRenderer reportRenderer, IEnumerable<IPropertyContainer> reportRows)
         {
-            reportProvider.AssertArgumentNotNull(nameof(reportProvider));
+            reportRenderer.AssertArgumentNotNull(nameof(reportRenderer));
             reportRows.AssertArgumentNotNull(nameof(reportRows));
 
-            var sheetMetadata = reportProvider.GetMetadata<ExcelSheetMetadata>() ?? _defaultSheetMetadata;
+            var sheetMetadata = reportRenderer.GetMetadata<ExcelSheetMetadata>() ?? _defaultSheetMetadata;
 
             // Add a WorksheetPart to the WorkbookPart.
             WorkbookPart workbookPart = _documentContext.Document.WorkbookPart;
             uint sheetCount = workbookPart.GetSheetCount();
             WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>($"sheet{sheetCount+1}");
 
-            var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportProvider);
+            var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportRenderer);
 
             AddSheet(sheetContext);
 
@@ -192,6 +190,20 @@ namespace MicroElements.Reporting.Excel
             customizeFunc?.Invoke(sheetContext);
 
             return this;
+        }
+
+        /// <summary>
+        /// Adds new excel sheet.
+        /// </summary>
+        /// <param name="reportProvider">Report provider.</param>
+        /// <returns>Builder instance.</returns>
+        public ExcelReportBuilder AddReportSheet(IReportProvider reportProvider)
+        {
+            reportProvider.AssertArgumentNotNull(nameof(reportProvider));
+
+            var reportRows = reportProvider.GetReportRows();
+
+            return AddReportSheet(reportProvider, reportRows);
         }
 
         private void AddSheet(SheetContext sheetContext)
@@ -232,7 +244,7 @@ namespace MicroElements.Reporting.Excel
                     renderer);
 
             sheetContext.Columns = sheetContext
-                .ReportProvider
+                .ReportRenderer
                 .Renderers
                 .Select(CreateColumnContext)
                 .ToList();
@@ -255,7 +267,7 @@ namespace MicroElements.Reporting.Excel
             {
                 Id = workbookPart.GetIdOfPart(worksheetPart),
                 SheetId = sheetCount + 1,
-                Name = sheetContext.ReportProvider.ReportName,
+                Name = sheetContext.ReportRenderer.ReportName,
             };
 
             sheets.Append(sheet);
@@ -288,9 +300,9 @@ namespace MicroElements.Reporting.Excel
                 sheetData.AppendChild(new Row(headerCells));
 
                 // DATA ROWS
-                foreach (var item in dataRows)
+                foreach (var dataRow in dataRows)
                 {
-                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, item));
+                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, dataRow));
                     sheetData.AppendChild(new Row(valueCells));
                 }
             }
@@ -298,30 +310,31 @@ namespace MicroElements.Reporting.Excel
             {
                 // NAME COLUMN
                 var headerCells = columns.Select(columnContext => ConstructCell(columnContext.PropertyRenderer.TargetName, CellValues.SharedString));
-                Row[] rows = headerCells.Select(headerCell => new Row(headerCell)).ToArray();
+                Row[] excelRows = headerCells.Select(headerCell => new Row(headerCell)).ToArray();
 
                 // VALUE COLUMN
-                for (int rowIndex = 0; rowIndex < rows.Length; rowIndex++)
+                dataRows = dataRows.ToArray();
+                for (int rowIndex = 0; rowIndex < excelRows.Length; rowIndex++)
                 {
                     var column = columns[rowIndex];
-                    foreach (var item in dataRows)
+                    foreach (var dataRow in dataRows)
                     {
-                        ConstructCell(column, item);
+                        ConstructCell(column, dataRow);
                     }
                 }
 
-                foreach (var item in dataRows)
+                foreach (var dataRow in dataRows)
                 {
                     for (var index = 0; index < columns.Count; index++)
                     {
                         var column = columns[index];
-                        Row row = rows[index];
-                        Cell cell = ConstructCell(column, item);
+                        Row row = excelRows[index];
+                        Cell cell = ConstructCell(column, dataRow);
                         row.AppendChild(cell);
                     }
                 }
 
-                foreach (Row row in rows)
+                foreach (Row row in excelRows)
                 {
                     sheetData.AppendChild(row);
                 }

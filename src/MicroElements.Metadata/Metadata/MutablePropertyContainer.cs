@@ -22,14 +22,14 @@ namespace MicroElements.Metadata
         /// <param name="parentPropertySource">Parent property source.</param>
         /// <param name="searchOptions">Property search options.</param>
         public MutablePropertyContainer(
-            IEnumerable<IPropertyValue> sourceValues = null,
-            IPropertyContainer parentPropertySource = null,
+            IEnumerable<IPropertyValue>? sourceValues = null,
+            IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
             ParentSource = parentPropertySource ?? PropertyContainer.Empty;
             if (sourceValues != null)
                 _propertyValues.AddRange(sourceValues);
-            _searchOptions = searchOptions ?? SearchOptions.Default;
+            _searchOptions = searchOptions ?? Search.Default;
         }
 
         /// <inheritdoc />
@@ -44,20 +44,7 @@ namespace MicroElements.Metadata
         public IReadOnlyList<IPropertyValue> Properties => _propertyValues;
 
         /// <inheritdoc />
-        public object GetValueUntyped(IProperty property, bool searchInParent = true)
-        {
-            IPropertyValue propertyValue = this.GetPropertyValueUntyped(property, _searchOptions
-                .SearchInParent(searchInParent).ReturnNotDefined());
-            return propertyValue.ValueUntyped;
-        }
-
-        /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property, bool searchInParent = true)
-        {
-            IPropertyValue<T> propertyValue = this.GetPropertyValue(property, _searchOptions
-                .SearchInParent(searchInParent).ReturnNotDefined());
-            return propertyValue.Value;
-        }
+        public SearchOptions SearchOptions => _searchOptions;
 
         #endregion
 
@@ -96,7 +83,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource valueSource = default)
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource? valueSource = default)
         {
             var propertyValue = new PropertyValue<T>(property, value, valueSource);
             SetValue(propertyValue);

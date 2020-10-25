@@ -28,7 +28,7 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
+            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
 
             if (propertyValue == null)
                 yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "{propertyName} is marked as required but is not exists.");

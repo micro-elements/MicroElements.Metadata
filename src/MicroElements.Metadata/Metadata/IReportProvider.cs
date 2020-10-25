@@ -2,25 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Linq;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Provides property renderers.
+    /// Provides property renderers and optional report data.
     /// </summary>
-    public interface IReportProvider : IMetadataProvider
+    public interface IReportProvider : IReportRenderer
     {
         /// <summary>
-        /// Gets report name.
+        /// Gets data rows for report rendering.
         /// </summary>
-        string ReportName { get; }
-
-        /// <summary>
-        /// Gets property renderers.
-        /// </summary>
-        IReadOnlyList<IPropertyRenderer> Renderers { get; }
+        /// <returns><see cref="IPropertyContainer"/> enumeration.</returns>
+        IEnumerable<IPropertyContainer> GetReportRows();
     }
 
     /// <summary>
@@ -29,6 +24,7 @@ namespace MicroElements.Metadata
     public class ReportProvider : IReportProvider
     {
         private readonly List<IPropertyRenderer> _renderers = new List<IPropertyRenderer>();
+        private readonly List<IPropertyContainer> _rows = new List<IPropertyContainer>();
 
         /// <inheritdoc />
         public string ReportName { get; }
@@ -36,17 +32,30 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public IReadOnlyList<IPropertyRenderer> Renderers => _renderers;
 
+        /// <inheritdoc />
+        public IEnumerable<IPropertyContainer> GetReportRows()
+        {
+            return _rows;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReportProvider"/> class.
         /// </summary>
         /// <param name="reportName">Report name.</param>
         /// <param name="propertyRenderers">Optional property renderers to add.</param>
-        public ReportProvider(string reportName = null, IEnumerable<IPropertyRenderer> propertyRenderers = null)
+        /// <param name="rows">Optional report data.</param>
+        public ReportProvider(
+            string? reportName = null,
+            IEnumerable<IPropertyRenderer>? propertyRenderers = null,
+            IEnumerable<IPropertyContainer>? rows = null)
         {
             ReportName = reportName ?? GetType().Name;
 
             if (propertyRenderers != null)
                 _renderers.AddRange(propertyRenderers);
+
+            if (rows != null)
+                _rows.AddRange(rows);
         }
 
         /// <summary>
@@ -56,7 +65,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to render.</param>
         /// <param name="targetName">Target name.</param>
         /// <returns>Reference for added renderer.</returns>
-        protected PropertyRenderer<T> Add<T>(IProperty<T> property, string targetName = null)
+        protected PropertyRenderer<T> Add<T>(IProperty<T> property, string? targetName = null)
         {
             var renderer = new PropertyRenderer<T>(property, targetName);
             _renderers.Add(renderer);
@@ -66,7 +75,6 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Adds property renderer.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
         /// <param name="renderer">Renderer to add.</param>
         /// <returns>The same provider instance for chaining.</returns>
         public ReportProvider AddRenderer(IPropertyRenderer renderer)
@@ -85,32 +93,16 @@ namespace MicroElements.Metadata
             _renderers.AddRange(renderers.AssertArgumentNotNull(nameof(renderers)));
             return this;
         }
-    }
-
-    /// <summary>
-    /// Report provider that can be easily implemented with yield return.
-    /// </summary>
-    public abstract class EnumerableReportProvider : IReportProvider
-    {
-        /// <inheritdoc />
-        public string ReportName { get; }
-
-        /// <inheritdoc />
-        public IReadOnlyList<IPropertyRenderer> Renderers => GetRenderers().ToList();
 
         /// <summary>
-        /// Gets property renderers.
+        /// Adds data rows.
         /// </summary>
-        /// <returns>Enumeration of property renderers.</returns>
-        public abstract IEnumerable<IPropertyRenderer> GetRenderers();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EnumerableReportProvider"/> class.
-        /// </summary>
-        /// <param name="reportName">Report name.</param>
-        protected EnumerableReportProvider(string reportName)
+        /// <param name="rows">Data rows.</param>
+        /// <returns>The same provider instance for chaining.</returns>
+        public ReportProvider AddRows(IEnumerable<IPropertyContainer> rows)
         {
-            ReportName = reportName;
+            _rows.AddRange(rows.AssertArgumentNotNull(nameof(rows)));
+            return this;
         }
     }
 }

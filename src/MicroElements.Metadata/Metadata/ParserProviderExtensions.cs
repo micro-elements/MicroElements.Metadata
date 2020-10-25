@@ -38,7 +38,7 @@ namespace MicroElements.Metadata
 
         public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(propertyParser.TargetType, Parse<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<CodeCompiler.GenericType>);
             return func(propertyParser, textValue);
         }
 

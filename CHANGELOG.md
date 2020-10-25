@@ -1,3 +1,15 @@
+# 4.0.0-beta.1
+- Nullability enabled, Most API annotated with nullability attributes
+- Property immutability
+- IPropertyContainer: added SearachOptions property
+- IPropertyContainer: removed GetValue and GetValueUntyped
+- Search became external to IPropertyContainer
+- Added ISearchAlgorithm with base search methods, SearchExtensions uses ISearchAlgorithm
+- IReportRenderer interface extracted from IReportProvider
+- IReportProvider: Added GetReportRows to provide report rows
+- [Excel] ExcelReportBuilder: old AddReportSheet accepts IReportRenderer and rows
+- [Excel] ExcelReportBuilder: added AddReportSheet that accepts IReportProvider
+
 # 3.9.0
 - Added extension ValidateAndFilter to select validated items with callback for not valid items
 - MicroElements.Functional updated to version 1.3.0

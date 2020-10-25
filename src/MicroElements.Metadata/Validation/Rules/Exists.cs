@@ -29,7 +29,7 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly.ReturnNotDefined());
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly.ReturnNotDefined())!;
 
             if (propertyValue.IsNullOrNotDefined())
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);

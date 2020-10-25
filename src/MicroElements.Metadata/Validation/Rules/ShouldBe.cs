@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules
@@ -26,7 +27,7 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        protected override bool IsValid(T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
         {
             return _isValid(value);
         }

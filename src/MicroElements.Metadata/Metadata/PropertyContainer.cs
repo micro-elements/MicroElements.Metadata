@@ -28,8 +28,8 @@ namespace MicroElements.Metadata
         /// <param name="parentPropertySource">Parent property source.</param>
         /// <param name="searchOptions">Property search options.</param>
         public PropertyContainer(
-            IEnumerable<IPropertyValue> values = null,
-            IPropertyContainer parentPropertySource = null,
+            IEnumerable<IPropertyValue>? values = null,
+            IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
             _propertyContainer = new MutablePropertyContainer(values, parentPropertySource, searchOptions);
@@ -63,9 +63,6 @@ namespace MicroElements.Metadata
         public IReadOnlyList<IPropertyValue> Properties => _propertyContainer.Properties;
 
         /// <inheritdoc />
-        public T GetValue<T>(IProperty<T> property, bool searchInParent = true) => _propertyContainer.GetValue(property, searchInParent);
-
-        /// <inheritdoc />
-        public object GetValueUntyped(IProperty property, bool searchInParent = true) => _propertyContainer.GetValueUntyped(property, searchInParent);
+        public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
     }
 }

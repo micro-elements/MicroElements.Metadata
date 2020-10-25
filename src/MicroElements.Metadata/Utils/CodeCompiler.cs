@@ -14,17 +14,17 @@ namespace MicroElements
 
         static class Cache<Arg0, Result>
         {
-            public static ConcurrentDictionary<Type, Func<Arg0, Result>> FuncCache = new ConcurrentDictionary<Type, Func<Arg0, Result>>();
+            public static ConcurrentDictionary<(Type, string), Func<Arg0, Result>> FuncCache = new ConcurrentDictionary<(Type, string), Func<Arg0, Result>>();
         }
 
         static class Cache<Arg0, Arg1, Result>
         {
-            public static ConcurrentDictionary<Type, Func<Arg0, Arg1, Result>> FuncCache = new ConcurrentDictionary<Type, Func<Arg0, Arg1, Result>>();
+            public static ConcurrentDictionary<(Type, string), Func<Arg0, Arg1, Result>> FuncCache = new ConcurrentDictionary<(Type, string), Func<Arg0, Arg1, Result>>();
         }
 
         static class Cache<Arg0, Arg1, Arg2, Result>
         {
-            public static ConcurrentDictionary<Type, Func<Arg0, Arg1, Arg2, Result>> FuncCache = new ConcurrentDictionary<Type, Func<Arg0, Arg1, Arg2, Result>>();
+            public static ConcurrentDictionary<(Type, string), Func<Arg0, Arg1, Arg2, Result>> FuncCache = new ConcurrentDictionary<(Type, string), Func<Arg0, Arg1, Arg2, Result>>();
         }
 
         #endregion
@@ -34,34 +34,34 @@ namespace MicroElements
         /// </summary>
         public class GenericType { }
 
-        public static Func<Arg0, Result> CachedCompiledFunc<Arg0, Result>(Type type, Func<Arg0, Result> genericMethodFunc)
+        public static Func<Arg0, Result> CachedCompiledFunc<Arg0, Result>(Type type, string name, Func<Arg0, Result> genericMethodFunc)
         {
-            if (!Cache<Arg0, Result>.FuncCache.TryGetValue(type, out var cachedFunc))
+            if (!Cache<Arg0, Result>.FuncCache.TryGetValue((type, name), out var cachedFunc))
             {
                 cachedFunc = CompileGeneric(type, genericMethodFunc);
-                Cache<Arg0, Result>.FuncCache.TryAdd(type, cachedFunc);
+                Cache<Arg0, Result>.FuncCache.TryAdd((type, name), cachedFunc);
             }
 
             return cachedFunc;
         }
 
-        public static Func<Arg0, Arg1, Result> CachedCompiledFunc<Arg0, Arg1, Result>(Type type, Func<Arg0, Arg1, Result> genericMethodFunc)
+        public static Func<Arg0, Arg1, Result> CachedCompiledFunc<Arg0, Arg1, Result>(Type type, string name, Func<Arg0, Arg1, Result> genericMethodFunc)
         {
-            if (!Cache<Arg0, Arg1, Result>.FuncCache.TryGetValue(type, out var cachedFunc))
+            if (!Cache<Arg0, Arg1, Result>.FuncCache.TryGetValue((type, name), out var cachedFunc))
             {
                 cachedFunc = CompileGeneric(type, genericMethodFunc);
-                Cache<Arg0, Arg1, Result>.FuncCache.TryAdd(type, cachedFunc);
+                Cache<Arg0, Arg1, Result>.FuncCache.TryAdd((type, name), cachedFunc);
             }
 
             return cachedFunc;
         }
 
-        public static Func<Arg0, Arg1, Arg2, Result> CachedCompiledFunc<Arg0, Arg1, Arg2, Result>(Type type, Func<Arg0, Arg1, Arg2, Result> genericMethodFunc)
+        public static Func<Arg0, Arg1, Arg2, Result> CachedCompiledFunc<Arg0, Arg1, Arg2, Result>(Type type, string name, Func<Arg0, Arg1, Arg2, Result> genericMethodFunc)
         {
-            if (!Cache<Arg0, Arg1, Arg2, Result>.FuncCache.TryGetValue(type, out var cachedFunc))
+            if (!Cache<Arg0, Arg1, Arg2, Result>.FuncCache.TryGetValue((type, name), out var cachedFunc))
             {
                 cachedFunc = CompileGeneric(type, genericMethodFunc);
-                Cache<Arg0, Arg1, Arg2, Result>.FuncCache.TryAdd(type, cachedFunc);
+                Cache<Arg0, Arg1, Arg2, Result>.FuncCache.TryAdd((type, name), cachedFunc);
             }
 
             return cachedFunc;

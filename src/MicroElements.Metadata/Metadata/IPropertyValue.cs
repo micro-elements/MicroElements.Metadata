@@ -1,6 +1,8 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace MicroElements.Metadata
 {
     /// <summary>
@@ -16,7 +18,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property value.
         /// </summary>
-        object ValueUntyped { get; }
+        object? ValueUntyped { get; }
 
         /// <summary>
         /// Gets value source.
@@ -38,6 +40,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property value.
         /// </summary>
+        [MaybeNull]
         T Value { get; }
     }
 
@@ -51,7 +54,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyValue">PropertyValue instance.</param>
         /// <returns>true if property has value.</returns>
-        public static bool HasValue(this IPropertyValue propertyValue)
+        public static bool HasValue([NotNullWhen(true)] this IPropertyValue? propertyValue)
         {
             return !IsNullOrNotDefined(propertyValue);
         }
@@ -61,7 +64,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyValue">PropertyValue instance.</param>
         /// <returns>true if PropertyValue is null or in <see cref="ValueSource.NotDefined"/> state.</returns>
-        public static bool IsNullOrNotDefined(this IPropertyValue propertyValue)
+        public static bool IsNullOrNotDefined(this IPropertyValue? propertyValue)
         {
             return propertyValue == null || propertyValue.Source == ValueSource.NotDefined;
         }

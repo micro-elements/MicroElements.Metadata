@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -11,13 +8,13 @@ namespace MicroElements.Metadata.Tests
         public static IProperty<string> StringSample = 
             Property
                 .Create<string>("StringSample")
-                .SetAlias("SampleAlias");
+                .WithAlias("SampleAlias");
 
         public static IProperty<string> ExchangeCode =
             new Property<string>("ExchangeCode")
-                .SetDescription("Short exchange code", Language.English)
-                .SetDescription("Краткий код биржи", Language.Russian)
-                .SetExamples("MOEX", "SPBEX", "LSE", "NASDAQ", "NYSE");
+                .WithDescription("Short exchange code", Language.English)
+                .WithDescription("Краткий код биржи", Language.Russian)
+                .WithExamples("MOEX", "SPBEX", "LSE", "NASDAQ", "NYSE");
     }
 
     public class MetadataUsage
@@ -25,7 +22,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void TypedPropertyCreation()
         {
-            IProperty<string> property = Property.Create<string>("StringSample").SetAlias("SampleAlias");
+            IProperty<string> property = Property.Create<string>("StringSample").WithAlias("SampleAlias");
             property.Type.Should().Be(typeof(string));
             property.Name.Should().Be("StringSample");
             property.Alias.Should().Be("SampleAlias");
@@ -34,7 +31,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void UntypedPropertyCreation()
         {
-            IProperty property = Property.Create(typeof(string), "StringSample").SetAliasUntyped("SampleAlias");
+            IProperty property = Property.Create(typeof(string), "StringSample").WithAliasUntyped("SampleAlias");
             property.Type.Should().Be(typeof(string));
             property.Name.Should().Be("StringSample");
             property.Alias.Should().Be("SampleAlias");

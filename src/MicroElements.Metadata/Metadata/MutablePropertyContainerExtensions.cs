@@ -34,7 +34,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value, ValueSource valueSource = default)
+        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value, ValueSource? valueSource = default)
             where TContainer : IMutablePropertyContainer
         {
             propertyContainer.SetValue(property, value, valueSource);
@@ -52,7 +52,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
+        public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, string propertyName, T value, ValueSource? valueSource = default)
             where TContainer : IMutablePropertyContainer
         {
             propertyContainer.SetValue(propertyName, value, valueSource);

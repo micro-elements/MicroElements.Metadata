@@ -49,7 +49,7 @@ namespace MicroElements.Metadata
     {
         public static Option<IPropertyValue> GetDefaultValueUntyped(this IPropertyParser propertyParser)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, Option<IPropertyValue>>(propertyParser.TargetType, GetDefaultValue<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, Option<IPropertyValue>>(propertyParser.TargetType, "GetDefaultValue", GetDefaultValue<CodeCompiler.GenericType>);
             return func(propertyParser);
         }
 

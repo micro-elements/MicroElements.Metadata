@@ -1,0 +1,99 @@
+﻿using System.Linq;
+using FluentAssertions;
+using Xunit;
+
+namespace MicroElements.Metadata.Tests
+{
+    public class PropertyTests
+    {
+        [Fact]
+        public void empty_property_should_be_empty()
+        {
+            Property<string>.Empty.ShouldBeEmpty();
+            Property<int>.Empty.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void property_creation()
+        {
+            IProperty<int> property = new Property<int>("test");
+
+            property.Name.Should().Be("test");
+            property.Type.Should().Be(typeof(int));
+
+            property.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void property_with_name_should_change_name()
+        {
+            var test1 = new Property<int>("test1");
+            test1.Name.Should().Be("test1");
+            test1.ShouldBeEmpty();
+
+            var test2 = test1.WithName("test2");
+            test2.Name.Should().Be("test2");
+            test2.ShouldBeEmpty();
+
+            var test3 = test1.WithNameUntyped("test3");
+            test3.Name.Should().Be("test3");
+            test3.Type.Should().Be(typeof(int));
+            ((IProperty<int>)test3).ShouldBeEmpty();
+
+            var test4 = CreateFilledProperty().WithNameUntyped("test4");
+            ((IProperty<int>)test4).ShouldBeFilled(name: "test4");
+
+            var test5 = CreateFilledProperty().WithAliasUntyped("alias5");
+            ((IProperty<int>)test5).ShouldBeFilled(alias: "alias5");
+        }
+
+        [Fact]
+        public void property_with_chaining()
+        {
+            Property<int> property = CreateFilledProperty();
+            property.ShouldBeFilled();
+        }
+
+        private static Property<int> CreateFilledProperty() => 
+            PropertyTestsExtensions.CreateFilledProperty();
+    }
+
+    internal static class PropertyTestsExtensions
+    {
+        public static void ShouldBeEmpty<T>(this IProperty<T> property)
+        {
+            property.Description.Should().BeNull();
+            property.Alias.Should().BeNull();
+            property.Examples.Should().NotBeNull().And.BeEmpty();
+            property.DefaultValue.Should().NotBeNull();
+            property.DefaultValue().Should().Be(default(T));
+            property.Calculator.Should().BeNull();
+        }
+
+        public static Property<int> CreateFilledProperty()
+        {
+            var property = Property
+                .Empty<int>()
+                .With(name: "test")
+                .With(alias: "alias")
+                .With(description: "description")
+                .With(defaultValue: () => 1)
+                .With(examples: new[] { 0, 1 })
+                .With(calculator: new PropertyCalculator<int>(container => 2));
+            return property;
+        }
+
+        public static void ShouldBeFilled(
+            this IProperty<int> property, 
+            string? name = "test",
+            string? alias = "alias")
+        {
+            property.Name.Should().Be(name);
+            property.Alias.Should().Be(alias);
+            property.Description.Should().NotBeNull().And.Subject.First().Text.Should().Be("description");
+            property.DefaultValue().Should().Be(1);
+            property.Examples.Should().BeEquivalentTo(new[] {0, 1});
+            property.Calculator.Should().NotBeNull();
+        }
+    }
+}

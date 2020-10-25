@@ -26,22 +26,22 @@ namespace MicroElements.Reporting.Excel
         /// Excel data type.
         /// Base excel meta. Every cell has type but metadata can be provided hierarchically: document->sheet->column->cell.
         /// </summary>
-        public static readonly IProperty<CellValues> DataType = new Property<CellValues>("DataType").SetDefaultValue(CellValues.SharedString);
+        public static readonly IProperty<CellValues> DataType = new Property<CellValues>("DataType").WithDefaultValue(CellValues.SharedString);
 
         /// <summary>
         /// Column width.
         /// </summary>
-        public static readonly IProperty<int> ColumnWidth = new Property<int>("ColumnWidth").SetDefaultValue(14);
+        public static readonly IProperty<int> ColumnWidth = new Property<int>("ColumnWidth").WithDefaultValue(14);
 
         /// <summary>
         /// Freeze top row.
         /// </summary>
-        public static readonly IProperty<bool> FreezeTopRow = new Property<bool>("FreezeTopRow").SetDefaultValue(false);
+        public static readonly IProperty<bool> FreezeTopRow = new Property<bool>("FreezeTopRow").WithDefaultValue(false);
 
         /// <summary>
         /// Transpose sheet.
         /// </summary>
-        public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose").SetDefaultValue(false);
+        public static readonly IProperty<bool> Transpose = new Property<bool>("Transpose").WithDefaultValue(false);
 
         /// <summary>
         /// Gets property value from the first source where value is defined.
@@ -213,7 +213,7 @@ namespace MicroElements.Reporting.Excel
 
         public IExcelMetadata SheetMetadata { get; }
 
-        public IReportProvider ReportProvider { get; }
+        public IReportRenderer ReportRenderer { get; }
 
         public bool IsTransposed => ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, SheetMetadata);
 
@@ -229,11 +229,11 @@ namespace MicroElements.Reporting.Excel
             DocumentContext documentContext,
             WorksheetPart worksheetPart,
             IExcelMetadata sheetMetadata,
-            IReportProvider reportProvider)
+            IReportRenderer reportProvider)
         {
             DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
             SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
-            ReportProvider = reportProvider.AssertArgumentNotNull(nameof(reportProvider));
+            ReportRenderer = reportProvider.AssertArgumentNotNull(nameof(reportProvider));
             WorksheetPart = worksheetPart.AssertArgumentNotNull(nameof(worksheetPart));
         }
     }

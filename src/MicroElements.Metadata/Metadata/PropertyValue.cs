@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -17,13 +18,14 @@ namespace MicroElements.Metadata
         public IProperty<T> Property { get; }
 
         /// <inheritdoc />
+        [MaybeNull]
         public T Value { get; }
 
         /// <inheritdoc />
         public IProperty PropertyUntyped => Property;
 
         /// <inheritdoc />
-        public object ValueUntyped => Value;
+        public object? ValueUntyped => Value;
 
         /// <inheritdoc />
         public ValueSource Source { get; }
@@ -34,7 +36,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="value">Value for property.</param>
         /// <param name="source">The source for value.</param>
-        public PropertyValue(IProperty<T> property, T value, ValueSource source = null)
+        public PropertyValue(IProperty<T> property, T value, ValueSource? source = null)
         {
             Property = property.AssertArgumentNotNull(nameof(property));
             Value = value;
@@ -109,7 +111,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value for property.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>Created property value.</returns>
-        public static IPropertyValue Create(IProperty property, object value, ValueSource valueSource = default)
+        public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = default)
         {
             property.AssertArgumentNotNull(nameof(property));
 

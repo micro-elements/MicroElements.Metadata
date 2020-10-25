@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace MicroElements.Metadata
@@ -33,17 +34,17 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets format function.
         /// </summary>
-        public Func<T, IPropertyContainer, string> FormatValue { get; private set; }
+        public Func<T, IPropertyContainer, string>? FormatValue { get; private set; }
 
         /// <summary>
-        /// NullValue is renders when property value is null.
+        /// Gets value that is renders when property value is null.
         /// </summary>
-        public string NullValue { get; private set; }
+        public string? NullValue { get; private set; }
 
         /// <summary>
-        /// Gets or sets custom render function that overrides all render.
+        /// Gets custom render function that overrides all render.
         /// </summary>
-        public Func<IProperty, IPropertyContainer, string> CustomRender { get; private set; }
+        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; private set; }
 
         /// <inheritdoc />
         public string Render(IPropertyContainer source)
@@ -53,9 +54,9 @@ namespace MicroElements.Metadata
                 return CustomRender(Property, source);
             }
 
-            string textValue = NullValue;
+            string? textValue = NullValue;
 
-            IPropertyValue<T> propertyValue = source.GetPropertyValue(Property, SearchOptions ?? Metadata.SearchOptions.ExistingOnlyWithParent);
+            IPropertyValue<T>? propertyValue = source.GetPropertyValue(Property, SearchOptions ?? Metadata.SearchOptions.ExistingOnlyWithParent);
             if (propertyValue.HasValue())
             {
                 T value = propertyValue.Value;
@@ -94,7 +95,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="property">Property to render.</param>
         /// <param name="targetName">Target name.</param>
-        public PropertyRenderer(IProperty<T> property, string targetName = null)
+        public PropertyRenderer(IProperty<T> property, string? targetName = null)
         {
             Property = property;
             TargetName = targetName ?? property.Name;
@@ -155,7 +156,7 @@ namespace MicroElements.Metadata
             return this;
         }
 
-        private string DoDefaultFormatting(T value, string textFormat = null)
+        private string? DoDefaultFormatting([AllowNull] T value, string? textFormat = null)
         {
             if (value is IFormattable formattable)
             {

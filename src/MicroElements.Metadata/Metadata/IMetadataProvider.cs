@@ -25,12 +25,12 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Default property comparer for metadata search.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> DefaulPropertyComparer = PropertyComparer.ByTypeAndNameComparer;
+        public static readonly IEqualityComparer<IProperty> DefaultMetadataComparer = PropertyComparer.ByTypeAndNameComparer;
 
         /// <summary>
         /// Default search options for metadata providers.
         /// </summary>
-        public static readonly SearchOptions DefaulSearchOptions = SearchOptions.Default.WithPropertyComparer(DefaulPropertyComparer);
+        public static readonly SearchOptions DefaultSearchOptions = SearchOptions.Default.WithPropertyComparer(DefaultMetadataComparer);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace MicroElements.Metadata
 
             if (!MetadataCache.TryGetValue(instance, out IPropertyContainer propertyList))
             {
-                propertyList = new MutablePropertyContainer(searchOptions: MetadataProvider.DefaulSearchOptions);
+                propertyList = new MutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
                 MetadataCache.Add(instance, propertyList);
             }
 

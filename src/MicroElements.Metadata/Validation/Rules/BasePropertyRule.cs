@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 
@@ -26,7 +27,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="value">Property value.</param>
         /// <param name="propertyContainer">Property container that holds value.</param>
         /// <returns>True if value is valid.</returns>
-        protected abstract bool IsValid(T value, IPropertyContainer propertyContainer);
+        protected abstract bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasePropertyRule{T}"/> class.
@@ -42,7 +43,7 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc/>
         public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.Default);
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, propertyContainer.SearchOptions.ReturnNotDefined())!;
 
             if (!IsValid(propertyValue.Value, propertyContainer))
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);

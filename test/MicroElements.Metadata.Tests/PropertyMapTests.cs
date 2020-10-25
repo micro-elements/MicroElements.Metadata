@@ -8,42 +8,65 @@ namespace MicroElements.Metadata.Tests
         public static IProperty<string> Name = new Property<string>("Name");
 
         [Fact]
-        public void map_filled_property()
+        public void do_not_calculate_if_value_was_provided()
+        {
+            IProperty<string> mappedName = Name.Map(name => $"Calculated {name}");
+
+            // Set value. It will not be calculated
+            var container = new MutablePropertyContainer()
+                .WithValue(mappedName, "Alex");
+
+            container.GetValue(mappedName).Should().Be("Alex");
+        }
+
+        [Fact]
+        public void calculate_value_if_base_property_value_provided()
         {
             var container = new MutablePropertyContainer()
                 .WithValue(Name, "Alex");
-            container.GetValue(Name.Map(name => $"Name {name}")).Should().Be("Name Alex");
+
+            container.GetValue(Name.Map(name => $"Calculated {name}")).Should().Be("Calculated Alex");
         }
 
         [Fact]
-        public void map_absent_property()
+        public void calculated_value_should_be_null_if_base_property_was_not_provided()
         {
             var container = new MutablePropertyContainer();
-            container.GetValue(Name.Map(name => $"Name {name}")).Should().Be(null);
+
+            container.GetValue(Name.Map(name => $"Calculated {name}")).Should().Be(null);
         }
 
         [Fact]
-        public void map_property_with_null_value()
+        public void calculated_value_should_be_null_if_base_property_was_set_to_null()
         {
             var container = new MutablePropertyContainer()
                 .WithValue(Name, null);
-            container.GetValue(Name.Map(name => $"Name {name}")).Should().Be(null);
+
+            container.GetValue(Name.Map(name => $"Calculated {name}")).Should().Be(null);
         }
 
         [Fact]
-        public void map_property_with_null_value_allowed()
+        public void map_property_with_null_value_allowed_if_base_property_is_undefined()
+        {
+            var container = new MutablePropertyContainer();
+
+            container.GetValue(Name.Map(name => $"Name {name ?? "undefined"}", allowMapNull: true)).Should().Be("Name undefined");
+        }
+
+        [Fact]
+        public void map_property_with_null_value_allowed_if_base_property_was_set_to_null()
         {
             var container = new MutablePropertyContainer()
                 .WithValue(Name, null);
+
             container.GetValue(Name.Map(name => $"Name {name ?? "undefined"}", allowMapNull: true)).Should().Be("Name undefined");
         }
 
         [Fact]
         public void map_filled_property_with_chaining()
         {
-            var container = new MutablePropertyContainer()
-                .WithValue(Name, "Alex");
-            container
+            new MutablePropertyContainer()
+                .WithValue(Name, "Alex")
                 .GetValue(Name
                     .Map(name => $"Name {name}")
                     .Map(text => text.Length))
@@ -53,9 +76,8 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void map_absent_property_with_chaining_and_search_options()
         {
-            var container = new MutablePropertyContainer();
             SearchOptions searchOptions = SearchOptions.ExistingOnly.CalculateValue();
-            container
+            new MutablePropertyContainer()
                 .GetPropertyValue(Name
                     .Map(name => $"Name {name}", searchOptions: searchOptions)
                     .Map(text => text.Length), searchOptions)
@@ -65,8 +87,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void map_absent_property_with_chaining()
         {
-            var container = new MutablePropertyContainer();
-            var propertyValue = container
+            var propertyValue = new MutablePropertyContainer()
                 .GetPropertyValue(Name
                     .Map(name => $"Name {name}")
                     .Map(text => text.Length));
@@ -114,10 +135,8 @@ namespace MicroElements.Metadata.Tests
         {
             IProperty<double?> nullableDouble = new Property<double?>("nullableDouble");
             IProperty<double> deNullify = nullableDouble.DeNullify();
-            deNullify.SetAliasUntyped("DeNullify");
             var property = deNullify.UseDefaultForUndefined();
-            property.SetAliasUntyped("UseDefaultForUndefined");
-
+            
             var propertyContainer = new PropertyContainer();
 
             var propertyValue = propertyContainer.GetPropertyValue(property);

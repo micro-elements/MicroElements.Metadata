@@ -1,4 +1,4 @@
-# 4.0.0-beta.1
+# 4.0.0
 - Nullability enabled, Most API annotated with nullability attributes
 - Property immutability
 - IPropertyContainer: added SearachOptions property

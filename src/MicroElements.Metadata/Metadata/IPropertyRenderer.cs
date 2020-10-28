@@ -34,9 +34,11 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Configures renderer.
+        /// Can be called many times.
         /// </summary>
         /// <param name="configure">Action to configure renderer.</param>
-        void Configure(Action<PropertyRendererOptions> configure);
+        /// <returns>Returns the same renderer instance for chaining.</returns>
+        IPropertyRenderer Configure(Action<PropertyRendererOptions> configure);
     }
 
     /// <summary>

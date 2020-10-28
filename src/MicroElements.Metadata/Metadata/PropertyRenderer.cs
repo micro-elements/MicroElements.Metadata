@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -67,7 +68,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public void Configure(Action<PropertyRendererOptions> configure)
+        public IPropertyRenderer Configure(Action<PropertyRendererOptions> configure)
         {
             if (configure != null)
             {
@@ -88,6 +89,8 @@ namespace MicroElements.Metadata
 
                 rendererOptions.AfterConfigure?.Invoke(this);
             }
+
+            return this;
         }
 
         /// <summary>
@@ -192,7 +195,7 @@ namespace MicroElements.Metadata
         /// <returns>Renderers.</returns>
         public static IEnumerable<IPropertyRenderer> ToRenderers(
             this IEnumerable<IProperty> propertySet,
-            Action<PropertyRendererOptions> configureRenderer = null)
+            Action<PropertyRendererOptions>? configureRenderer = null)
         {
             foreach (IProperty property in propertySet)
             {
@@ -200,6 +203,49 @@ namespace MicroElements.Metadata
                 if (configureRenderer != null)
                     propertyRenderer.Configure(configureRenderer);
                 yield return propertyRenderer;
+            }
+        }
+
+        /// <summary>
+        /// Casts typed <see cref="IPropertyRenderer{T}"/> to untyped <see cref="IPropertyRenderer"/>.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="renderer">Source renderer.</param>
+        /// <returns>The same renderer casted to untyped form.</returns>
+        public static IPropertyRenderer AsUntyped<T>(this IPropertyRenderer<T> renderer) => renderer;
+
+        /// <summary>
+        /// Sets <see cref="SearchOptions"/> for <paramref name="renderer"/>.
+        /// </summary>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="searchOptions"><see cref="SearchOptions"/> for property search.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer SetSearchOptions(this IPropertyRenderer renderer, SearchOptions searchOptions)
+        {
+            return renderer.Configure(options => options.SearchOptions = searchOptions);
+        }
+
+        /// <summary>
+        /// Sets render for <see cref="IFormattable"/> objects with text format.
+        /// Method creates custom rendering for <see cref="IPropertyRenderer"/>.
+        /// </summary>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="format">Text format.</param>
+        /// <param name="formatProvider">Optional <see cref="IFormatProvider"/>.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer SetFormat(this IPropertyRenderer renderer, string format, IFormatProvider? formatProvider = null)
+        {
+            return renderer.Configure(options => options.CustomRender = (property, container) => RenderAsFormattable(property, container, options.SearchOptions, format, formatProvider));
+
+            static string RenderAsFormattable(
+                IProperty property,
+                IPropertyContainer container,
+                SearchOptions? searchOptions,
+                string format,
+                IFormatProvider? formatProvider)
+            {
+                object? valueUntyped = container.GetPropertyValueUntyped(property, searchOptions)?.ValueUntyped;
+                return (valueUntyped as IFormattable)?.ToString(format, formatProvider ?? CultureInfo.InvariantCulture) ?? valueUntyped.DefaultFormatValue();
             }
         }
     }

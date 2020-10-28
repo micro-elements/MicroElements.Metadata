@@ -1,3 +1,7 @@
+# 4.1.0
+- IPropertyRenderer.Configure now returns IPropertyRenderer to allow chaining
+- Added AsUntyped extension for IPropertyRenderer<T> and SetSearchOptions, SetFormat extensions for untyped IPropertyRenderer
+
 # 4.0.0
 - Nullability enabled, Most API annotated with nullability attributes
 - Property immutability
@@ -7,6 +11,7 @@
 - Added ISearchAlgorithm with base search methods, SearchExtensions uses ISearchAlgorithm
 - IReportRenderer interface extracted from IReportProvider
 - IReportProvider: Added GetReportRows to provide report rows
+- Added IPropertyRenderer.Configure to allow configure untyped IPropertyRenderer
 - [Excel] ExcelReportBuilder: old AddReportSheet accepts IReportRenderer and rows
 - [Excel] ExcelReportBuilder: added AddReportSheet that accepts IReportProvider
 

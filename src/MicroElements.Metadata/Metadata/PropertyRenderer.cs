@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using MicroElements.Functional;
 
@@ -16,7 +15,7 @@ namespace MicroElements.Metadata
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
         /// <inheritdoc />
-        public IProperty<T> Property { get; private set; }
+        public IProperty<T> Property { get; }
 
         /// <inheritdoc />
         public IProperty PropertyUntyped => Property;
@@ -33,9 +32,9 @@ namespace MicroElements.Metadata
         public SearchOptions? SearchOptions { get; private set; }
 
         /// <summary>
-        /// Gets format function.
+        /// Gets custom render function that overrides all render.
         /// </summary>
-        public Func<T, IPropertyContainer, string>? FormatValue { get; private set; }
+        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; private set; }
 
         /// <summary>
         /// Gets value that is renders when property value is null.
@@ -43,28 +42,14 @@ namespace MicroElements.Metadata
         public string? NullValue { get; private set; }
 
         /// <summary>
-        /// Gets custom render function that overrides all render.
+        /// Initializes a new instance of the <see cref="PropertyRenderer{T}"/> class.
         /// </summary>
-        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; private set; }
-
-        /// <inheritdoc />
-        public string Render(IPropertyContainer source)
+        /// <param name="property">Property to render.</param>
+        /// <param name="targetName">Target name.</param>
+        public PropertyRenderer(IProperty<T> property, string? targetName = null)
         {
-            if (CustomRender != null)
-            {
-                return CustomRender(Property, source);
-            }
-
-            string? textValue = NullValue;
-
-            IPropertyValue<T>? propertyValue = source.GetPropertyValue(Property, SearchOptions ?? Metadata.SearchOptions.ExistingOnlyWithParent);
-            if (propertyValue.HasValue())
-            {
-                T value = propertyValue.Value;
-                textValue = FormatValue?.Invoke(value, source) ?? DoDefaultFormatting(value);
-            }
-
-            return textValue;
+            Property = property;
+            TargetName = targetName ?? property.Name;
         }
 
         /// <inheritdoc />
@@ -93,80 +78,21 @@ namespace MicroElements.Metadata
             return this;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyRenderer{T}"/> class.
-        /// </summary>
-        /// <param name="property">Property to render.</param>
-        /// <param name="targetName">Target name.</param>
-        public PropertyRenderer(IProperty<T> property, string? targetName = null)
+        /// <inheritdoc />
+        public string? Render(IPropertyContainer source)
         {
-            Property = property;
-            TargetName = targetName ?? property.Name;
-        }
-
-        /// <summary>
-        /// Sets text format for <see cref="IFormattable.ToString(string, IFormatProvider)"/>.
-        /// </summary>
-        /// <param name="format">Format.</param>
-        /// <returns>The same renderer.</returns>
-        public PropertyRenderer<T> SetFormat(string format)
-        {
-            FormatValue = (value, pc) => DoDefaultFormatting(value, format);
-            return this;
-        }
-
-        /// <summary>
-        /// Sets formatting func for property renderer.
-        /// </summary>
-        /// <param name="formatFunc">Func that renders property value.</param>
-        /// <returns>The same renderer.</returns>
-        public PropertyRenderer<T> SetFormat(Func<T, IPropertyContainer, string> formatFunc)
-        {
-            FormatValue = formatFunc;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets target name.
-        /// </summary>
-        /// <param name="targetName">Target name.</param>
-        /// <returns>The same renderer.</returns>
-        public PropertyRenderer<T> SetTargetName(string targetName)
-        {
-            TargetName = targetName;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets NullValue that renders when property value is null.
-        /// </summary>
-        /// <param name="nullValue">NullValue.</param>
-        /// <returns>The same renderer.</returns>
-        public PropertyRenderer<T> SetNullValue(string nullValue)
-        {
-            NullValue = nullValue;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets <see cref="SearchOptions"/> for property search.
-        /// </summary>
-        /// <param name="searchOptions"><see cref="SearchOptions"/>.</param>
-        /// <returns>The same renderer.</returns>
-        public PropertyRenderer<T> SetSearchOptions(SearchOptions searchOptions)
-        {
-            SearchOptions = searchOptions;
-            return this;
-        }
-
-        private string? DoDefaultFormatting([AllowNull] T value, string? textFormat = null)
-        {
-            if (value is IFormattable formattable)
+            if (CustomRender != null)
             {
-                return formattable.ToString(textFormat, CultureInfo.InvariantCulture);
+                return CustomRender(Property, source) ?? NullValue;
             }
 
-            return value?.ToString() ?? NullValue;
+            IPropertyValue<T>? propertyValue = source.GetPropertyValue(Property, SearchOptions);
+            if (propertyValue.HasValue())
+            {
+                return propertyValue.Value.FormatValue() ?? NullValue;
+            }
+
+            return NullValue;
         }
     }
 
@@ -181,11 +107,34 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="name">Target name.</param>
         /// <returns><see cref="IPropertyRenderer"/> instance.</returns>
-        public static IPropertyRenderer Create(IProperty property, string name)
+        public static IPropertyRenderer Create(IProperty property, string? name)
         {
             Type typedPropertyType = typeof(PropertyRenderer<>).MakeGenericType(property.Type);
             return (IPropertyRenderer)Activator.CreateInstance(typedPropertyType, property, name ?? property.Name);
         }
+    }
+
+    /// <summary>
+    /// <see cref="IPropertyRenderer"/> stuff.
+    /// </summary>
+    public static class PropertyRendererExtensions
+    {
+       /// <summary>
+        /// Creates <see cref="IPropertyRenderer{T}"/> for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="targetName">TargetName for renderer.</param>
+        /// <returns><see cref="IPropertyRenderer"/> instance.</returns>
+        public static IPropertyRenderer<T> ToRenderer<T>(this IProperty<T> property, string? targetName = null) => new PropertyRenderer<T>(property, targetName: targetName);
+
+        /// <summary>
+        /// Creates <see cref="IPropertyRenderer"/> for <paramref name="property"/>.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <param name="targetName">TargetName for renderer.</param>
+        /// <returns><see cref="IPropertyRenderer"/> instance.</returns>
+        public static IPropertyRenderer ToRendererUntyped(this IProperty property, string? targetName = null) => PropertyRenderer.Create(property, targetName);
 
         /// <summary>
         /// Creates renderers by properties.
@@ -199,9 +148,9 @@ namespace MicroElements.Metadata
         {
             foreach (IProperty property in propertySet)
             {
-                IPropertyRenderer propertyRenderer = PropertyRenderer.Create(property, property.Name);
+                IPropertyRenderer propertyRenderer = property.ToRendererUntyped();
                 if (configureRenderer != null)
-                    propertyRenderer.Configure(configureRenderer);
+                    propertyRenderer = propertyRenderer.Configure(configureRenderer);
                 yield return propertyRenderer;
             }
         }
@@ -213,6 +162,35 @@ namespace MicroElements.Metadata
         /// <param name="renderer">Source renderer.</param>
         /// <returns>The same renderer casted to untyped form.</returns>
         public static IPropertyRenderer AsUntyped<T>(this IPropertyRenderer<T> renderer) => renderer;
+
+        /// <summary>
+        /// Executes <paramref name="configureUntyped"/> and returns the renderer of the same input type.
+        /// </summary>
+        /// <typeparam name="TPropertyRenderer">PropertyRenderer type.</typeparam>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="configureUntyped">Configure action.</param>
+        /// <returns>The same renderer of the same input type.</returns>
+        public static TPropertyRenderer ConfigureTyped<TPropertyRenderer>(
+            this TPropertyRenderer renderer,
+            Func<IPropertyRenderer, IPropertyRenderer> configureUntyped)
+            where TPropertyRenderer : IPropertyRenderer
+        {
+            IPropertyRenderer propertyRenderer = configureUntyped(renderer);
+            if (!ReferenceEquals(propertyRenderer, renderer))
+                throw new InvalidOperationException("Configure action should return the same renderer instance");
+            return renderer;
+        }
+
+        /// <summary>
+        /// Sets <see cref="IPropertyRenderer.TargetName"/>.
+        /// </summary>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="targetName">Target name.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer SetTargetName(this IPropertyRenderer renderer, string targetName)
+        {
+            return renderer.Configure(options => options.TargetName = targetName);
+        }
 
         /// <summary>
         /// Sets <see cref="SearchOptions"/> for <paramref name="renderer"/>.
@@ -235,7 +213,13 @@ namespace MicroElements.Metadata
         /// <returns>The same renderer for chaining.</returns>
         public static IPropertyRenderer SetFormat(this IPropertyRenderer renderer, string format, IFormatProvider? formatProvider = null)
         {
-            return renderer.Configure(options => options.CustomRender = (property, container) => RenderAsFormattable(property, container, options.SearchOptions, format, formatProvider));
+            return renderer.Configure(options =>
+            {
+                options.CustomRender = (property, container) =>
+                {
+                    return RenderAsFormattable(property, container, options.SearchOptions, format, formatProvider);
+                };
+            });
 
             static string RenderAsFormattable(
                 IProperty property,
@@ -247,6 +231,57 @@ namespace MicroElements.Metadata
                 object? valueUntyped = container.GetPropertyValueUntyped(property, searchOptions)?.ValueUntyped;
                 return (valueUntyped as IFormattable)?.ToString(format, formatProvider ?? CultureInfo.InvariantCulture) ?? valueUntyped.DefaultFormatValue();
             }
+        }
+
+        /// <summary>
+        /// Sets rendering with provided <paramref name="formatValue"/>.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="formatValue">Func that formats value.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer<T> SetFormat<T>(IPropertyRenderer<T> renderer, Func<T, IPropertyContainer, string> formatValue)
+        {
+            return (IPropertyRenderer<T>)renderer.Configure(options =>
+            {
+                options.CustomRender = (property, container) => RenderWithFunc(container, options, formatValue);
+            });
+
+            static string? RenderWithFunc(
+                IPropertyContainer container,
+                PropertyRendererOptions options,
+                Func<T, IPropertyContainer, string?> formatFunc)
+            {
+                IPropertyValue<T>? propertyValue = container.GetPropertyValue((IProperty<T>)options.PropertyUntyped, options.SearchOptions);
+                if (propertyValue.HasValue())
+                {
+                    T value = propertyValue.Value;
+                    return formatFunc(value, container);
+                }
+
+                return options.NullValue;
+            }
+        }
+
+        /// <summary>
+        /// Sets <see cref="PropertyRendererOptions.NullValue"/> that renders when property value is null.
+        /// </summary>
+        /// <param name="renderer">Source renderer.</param>
+        /// <param name="nullValue">Null value.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer SetNullValue(this IPropertyRenderer renderer, string? nullValue)
+        {
+            return renderer.Configure(options => options.NullValue = nullValue);
+        }
+
+        /// <summary>
+        /// Sets <see cref="IPropertyRenderer.TargetName"/> from <see cref="IProperty.Alias"/>.
+        /// </summary>
+        /// <param name="renderer">Source renderer.</param>
+        /// <returns>The same renderer for chaining.</returns>
+        public static IPropertyRenderer SetNameFromAlias(this IPropertyRenderer renderer)
+        {
+            return renderer.Configure(options => options.TargetName = options.PropertyUntyped.Alias);
         }
     }
 }

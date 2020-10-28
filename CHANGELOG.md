@@ -1,6 +1,7 @@
 # 4.1.0
 - IPropertyRenderer.Configure now returns IPropertyRenderer to allow chaining
-- Added AsUntyped extension for IPropertyRenderer<T> and SetSearchOptions, SetFormat extensions for untyped IPropertyRenderer
+- New: Added AsUntyped extension for IPropertyRenderer<T> and ConfigureTyped for IPropertyRenderer
+- Change: SetTargetName, SetSearchOptions, SetFormat, SetNullValue, SetNameFromAlias bacame extension methods for untyped IPropertyRenderer
 
 # 4.0.0
 - Nullability enabled, Most API annotated with nullability attributes

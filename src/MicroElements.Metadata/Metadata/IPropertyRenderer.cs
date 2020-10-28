@@ -30,7 +30,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="source">Source object to render.</param>
         /// <returns>Rendered text value.</returns>
-        string Render(IPropertyContainer source);
+        string? Render(IPropertyContainer source);
 
         /// <summary>
         /// Configures renderer.
@@ -81,7 +81,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets or sets CustomRender function that overrides entire Render for renderer.
         /// </summary>
-        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; set; }
+        public Func<IProperty, IPropertyContainer, string?>? CustomRender { get; set; }
 
         /// <summary>
         /// Callback that invokes after configuring.

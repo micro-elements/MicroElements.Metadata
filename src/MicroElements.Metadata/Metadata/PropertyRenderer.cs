@@ -89,7 +89,7 @@ namespace MicroElements.Metadata
             IPropertyValue<T>? propertyValue = source.GetPropertyValue(Property, SearchOptions);
             if (propertyValue.HasValue())
             {
-                return propertyValue.Value.FormatValue() ?? NullValue;
+                return propertyValue.Value?.FormatValue() ?? NullValue;
             }
 
             return NullValue;

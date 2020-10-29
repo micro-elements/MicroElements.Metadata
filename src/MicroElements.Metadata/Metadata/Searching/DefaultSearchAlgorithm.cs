@@ -71,7 +71,7 @@ namespace MicroElements.Metadata
             // Property can be calculated.
             if (search.CalculateValue && property.Calculator != null)
             {
-                var calculationResult = property.Calculator.Calculate(propertyContainer);
+                var calculationResult = property.Calculator.Calculate(propertyContainer, search);
                 var calculatedValue = new PropertyValue<T>(property, calculationResult.Value, calculationResult.ValueSource);
 
                 if (calculatedValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)

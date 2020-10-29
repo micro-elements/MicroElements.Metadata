@@ -1,3 +1,8 @@
+# 4.2.0
+- IPropertyCalculator now accepts SearchOptions provided by user
+- Map function now accepts configureSearch function instead of SearchOptions so it uses user provided SearchOptions
+- SearchOptions argument removed from Nullify, DeNullify, UseDefaultForUndefined
+
 # 4.1.0
 - IPropertyRenderer.Configure now returns IPropertyRenderer to allow chaining
 - New: Added AsUntyped extension for IPropertyRenderer<T> and ConfigureTyped for IPropertyRenderer

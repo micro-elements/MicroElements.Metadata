@@ -33,17 +33,18 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
         /// <param name="allowMapNull">By default false: does not calls <paramref name="map"/> if <paramref name="property"/> value is null.</param>
-        /// <param name="searchOptions">Search options to get property value.</param>
+        /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
         /// <returns>New property of type <typeparamref name="B"/>.</returns>
         public static IProperty<B> Map<A, B>(
             this IProperty<A> property,
             Func<A, B> map,
             bool allowMapNull = false,
-            SearchOptions searchOptions = default)
+            Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (B, ValueSource) ConvertValue(IPropertyContainer container)
+            (B, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
-                var propertyValueA = container.GetPropertyValue(property, searchOptions);
+                search = configureSearch?.Invoke(search) ?? search;
+                var propertyValueA = container.GetPropertyValue(property, search);
                 if (propertyValueA.HasValue())
                 {
                     A valueA = propertyValueA.Value;
@@ -71,16 +72,17 @@ namespace MicroElements.Metadata
         /// <typeparam name="B">Result type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
-        /// <param name="searchOptions">Search options to get property value.</param>
+        /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
         /// <returns>New property of type <typeparamref name="B"/>.</returns>
         public static IProperty<B> Map<A, B>(
             this IProperty<A> property,
             Func<IPropertyValue<A>, (B Value, ValueSource ValueSource)> map,
-            SearchOptions searchOptions = default)
+            Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (B, ValueSource) ConvertValue(IPropertyContainer container)
+            (B, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
-                var propertyValueA = container.GetPropertyValue(property, searchOptions);
+                search = configureSearch?.Invoke(search) ?? search;
+                var propertyValueA = container.GetPropertyValue(property, search);
                 var valueBResult = map(propertyValueA);
                 return valueBResult;
             }
@@ -95,12 +97,12 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <typeparam name="A">Property type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <param name="searchOptions">Search options to get property value.</param>
         /// <returns>New property of type <typeparamref name="A"/>.</returns>
-        public static IProperty<A> DeNullify<A>(this IProperty<A?> property, SearchOptions searchOptions = default)
+        public static IProperty<A> DeNullify<A>(this IProperty<A?> property)
             where A : struct
         {
-            return Map(property, a => a.Value, allowMapNull: false, searchOptions: searchOptions);
+            // ReSharper disable once PossibleInvalidOperationException
+            return property.Map(map: a => a!.Value, allowMapNull: false);
         }
 
         /// <summary>
@@ -108,17 +110,14 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <typeparam name="A">Property type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <param name="searchOptions">Search options to get property value.</param>
         /// <returns>New property of type <typeparamref name="A"/>.</returns>
-        public static IProperty<A?> Nullify<A>(this IProperty<A> property, SearchOptions searchOptions = default)
+        public static IProperty<A?> Nullify<A>(this IProperty<A> property)
             where A : struct
         {
-            return property.Map(a => (A?)a,
+            return property.Map(
+                map: a => (A?)a,
                 allowMapNull: false,
-                searchOptions
-                    .UseDefaultValue(false)
-                    .CalculateValue(true))
-                .WithAlias($"{property.Name}_Nullified");
+                configureSearch: options => options.UseDefaultValue(false));
         }
 
         /// <summary>
@@ -127,17 +126,13 @@ namespace MicroElements.Metadata
         /// <typeparam name="A">Value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="defaultValue">Default value.</param>
-        /// <param name="searchOptions">Search options to get property value.</param>
         /// <returns>New property of type <typeparamref name="A"/>.</returns>
         public static IProperty<A> UseDefaultForUndefined<A>(
             this IProperty<A> property,
-            A defaultValue = default,
-            SearchOptions searchOptions = default)
+            A defaultValue = default)
             where A : struct
         {
-            return property
-                .Map(pv => pv.IsNullOrNotDefined() ? (defaultValue, ValueSource.Calculated) : (pv.Value, pv.Source), searchOptions: searchOptions)
-                .WithAlias($"{property.Name}_WithDefaultForUndefined");
+            return property.Map(pv => pv.IsNullOrNotDefined() ? (defaultValue, ValueSource.Calculated) : (pv.Value, pv.Source));
         }
     }
 }

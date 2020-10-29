@@ -79,7 +79,7 @@ namespace MicroElements.Metadata.Tests
             SearchOptions searchOptions = SearchOptions.ExistingOnly.CalculateValue();
             new MutablePropertyContainer()
                 .GetPropertyValue(Name
-                    .Map(name => $"Name {name}", searchOptions: searchOptions)
+                    .Map(name => $"Name {name}")
                     .Map(text => text.Length), searchOptions)
                 .Should().Be(null);
         }

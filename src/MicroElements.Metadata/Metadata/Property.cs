@@ -340,7 +340,23 @@ namespace MicroElements.Metadata
         /// <param name="calculate">Calculate property value func.</param>
         /// <returns>Property with new calculate func.</returns>
         [Pure]
-        public static IProperty<T> WithCalculate<T>(this IProperty<T> property, Func<IPropertyContainer, (T Value, ValueSource ValueSource)> calculate)
+        public static IProperty<T> WithCalculate<T>(this IProperty<T> property, Func<IPropertyContainer, SearchOptions, T> calculate)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            calculate.AssertArgumentNotNull(nameof(calculate));
+
+            return property.With(calculator: new PropertyCalculator<T>(calculate));
+        }
+
+        /// <summary>
+        /// Creates property copy with new calculator.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <param name="calculate">Calculate property value func.</param>
+        /// <returns>Property with new calculate func.</returns>
+        [Pure]
+        public static IProperty<T> WithCalculate<T>(this IProperty<T> property, Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)> calculate)
         {
             property.AssertArgumentNotNull(nameof(property));
             calculate.AssertArgumentNotNull(nameof(calculate));

@@ -86,13 +86,13 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Gets property and value by search conditions.
-        /// NOTE: PropertyToSearch must be set in <paramref name="search"/>.
+        /// NOTE: <see cref="SearchOptions.SearchProperty"/> must be set in <paramref name="search"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue<T>? GetPropertyValue<T>(this IPropertyContainer propertyContainer, SearchOptions search)
+        public static IPropertyValue<T>? GetPropertyValue<T>(this IPropertyContainer propertyContainer, [DisallowNull] SearchOptions search)
         {
             if (search.SearchProperty == null)
                 throw new InvalidOperationException("SearchProperty must be set in SearchOptions.");
@@ -109,7 +109,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue? SearchPropertyValueUntyped(this IPropertyContainer propertyContainer, SearchOptions search)
+        public static IPropertyValue? SearchPropertyValueUntyped(this IPropertyContainer propertyContainer, [DisallowNull] SearchOptions search)
         {
             if (search.SearchProperty == null)
                 throw new InvalidOperationException("SearchProperty must be set in SearchOptions.");
@@ -124,7 +124,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue? GetPropertyValueUntyped(this IPropertyContainer propertyContainer, SearchOptions search)
+        public static IPropertyValue? GetPropertyValueUntyped(this IPropertyContainer propertyContainer, [DisallowNull] SearchOptions search)
         {
             if (search.SearchProperty == null)
                 throw new InvalidOperationException("SearchProperty must be set in SearchOptions.");

@@ -58,7 +58,9 @@ namespace MicroElements.Metadata
                 return (default(B), ValueSource.NotDefined);
             }
 
-            return new Property<B>(property.Name).WithCalculate(ConvertValue);
+            return new Property<B>(property.Name)
+                .With(description: property.Description, alias: property.Alias)
+                .WithCalculate(ConvertValue);
         }
 
         /// <summary>
@@ -83,7 +85,9 @@ namespace MicroElements.Metadata
                 return valueBResult;
             }
 
-            return new Property<B>(property.Name).WithCalculate(ConvertValue);
+            return new Property<B>(property.Name)
+                .With(description: property.Description, alias: property.Alias)
+                .WithCalculate(ConvertValue);
         }
 
         /// <summary>

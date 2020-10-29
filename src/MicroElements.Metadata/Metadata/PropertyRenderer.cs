@@ -240,7 +240,7 @@ namespace MicroElements.Metadata
         /// <param name="renderer">Source renderer.</param>
         /// <param name="formatValue">Func that formats value.</param>
         /// <returns>The same renderer for chaining.</returns>
-        public static IPropertyRenderer<T> SetFormat<T>(IPropertyRenderer<T> renderer, Func<T, IPropertyContainer, string> formatValue)
+        public static IPropertyRenderer<T> SetFormat<T>(this IPropertyRenderer<T> renderer, Func<T, IPropertyContainer, string> formatValue)
         {
             return (IPropertyRenderer<T>)renderer.Configure(options =>
             {

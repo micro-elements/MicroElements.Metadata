@@ -11,9 +11,29 @@ Provides metadata model, parsing and reporting.
 
 [![Gitter](https://img.shields.io/gitter/room/micro-elements/MicroElements.Metadata.svg)](https://gitter.im/micro-elements/MicroElements.Metadata)
 
-## Installation
+## Table of Contents
 
-### Package Reference:
+- [MicroElements.Metadata](#microelementsmetadata)
+  - [Statuses](#statuses)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Build](#build)
+  - [License](#license)
+  - [Getting started](#getting-started)
+  - [Building blocks](#building-blocks)
+    - [Property](#property)
+    - [PropertyContainer](#propertycontainer)
+    - [MetadataProvider](#metadataprovider)
+      - [Methods](#methods)
+      - [UseCases](#usecases)
+    - [Searching TBD](#searching-tbd)
+    - [Calculation, Mapping TBD](#calculation-mapping-tbd)
+    - [Dynamic TBD](#dynamic-tbd)
+    - [Parsing TBD](#parsing-tbd)
+    - [Reporting TBD](#reporting-tbd)
+    - [Validation TBD](#validation-tbd)
+
+## Installation
 
 ```
 dotnet add package MicroElements.Metadata
@@ -59,7 +79,7 @@ MetadataProvider allows to extend any object with additional properties. `IMetad
 
 Metadata default search mode: ByTypeAndName
 
-#### Methods:
+#### Methods
  ``` csharp
     /// <summary>
     /// Gets metadata of required type.

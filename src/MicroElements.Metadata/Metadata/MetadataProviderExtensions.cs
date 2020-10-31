@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -12,17 +13,18 @@ namespace MicroElements.Metadata
     public static class MetadataProviderExtensions
     {
         /// <summary>
-        /// Gets metadata of some type.
+        /// Gets metadata of required type.
         /// </summary>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Metadata provider.</param>
         /// <param name="metadataName">Optional metadata name.</param>
         /// <param name="defaultValue">Default value to return if not metadata found.</param>
         /// <returns>Metadata or default value if not found.</returns>
+        [return: MaybeNull]
         public static TMetadata GetMetadata<TMetadata>(
             this IMetadataProvider metadataProvider,
-            string metadataName = null,
-            TMetadata defaultValue = default)
+            string? metadataName = null,
+            [AllowNull] TMetadata defaultValue = default)
         {
             return GetMetadataAsOption<TMetadata>(metadataProvider, metadataName)
                 .MatchUnsafe(metadata => metadata, defaultValue);
@@ -37,7 +39,7 @@ namespace MicroElements.Metadata
         /// <returns>Metadata or default value if not found.</returns>
         public static Option<TMetadata> GetMetadataAsOption<TMetadata>(
             this IMetadataProvider metadataProvider,
-            string metadataName = null)
+            string? metadataName = null)
         {
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
@@ -62,14 +64,16 @@ namespace MicroElements.Metadata
         /// <param name="metadataProvider">Target metadata provider.</param>
         /// <param name="data">Metadata to set.</param>
         /// <returns>The same metadataProvider.</returns>
-        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(this TMetadataProvider metadataProvider, TMetadata data)
+        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(
+            this TMetadataProvider metadataProvider,
+            TMetadata data)
             where TMetadataProvider : IMetadataProvider
         {
             return metadataProvider.SetMetadata(typeof(TMetadata).FullName, data);
         }
 
         /// <summary>
-        /// Sets metadata for item and returns the same metadataProvider for chaining.
+        /// Sets metadata for target object and returns the same metadataProvider for chaining.
         /// </summary>
         /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
@@ -77,7 +81,10 @@ namespace MicroElements.Metadata
         /// <param name="metadataName">Metadata name.</param>
         /// <param name="data">Metadata to set.</param>
         /// <returns>The same metadataProvider.</returns>
-        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(this TMetadataProvider metadataProvider, string metadataName, TMetadata data)
+        public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(
+            this TMetadataProvider metadataProvider,
+            string? metadataName,
+            TMetadata data)
             where TMetadataProvider : IMetadataProvider
         {
             metadataName ??= typeof(TMetadata).FullName;
@@ -91,7 +98,7 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Configures metadata with action.
+        /// Configures metadata with action. Can be called many times.
         /// If metadata is not exists then it creates with default constructor.
         /// </summary>
         /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
@@ -99,13 +106,11 @@ namespace MicroElements.Metadata
         /// <param name="metadataProvider">Target metadata provider.</param>
         /// <param name="configureMetadata">Configure action.</param>
         /// <param name="metadataName">Optional metadata name.</param>
-        /// <param name="ignoreCase">Use ignore case comparison.</param>
-        /// <param name="searchInParent">Search property in parent if not found in current.</param>
         /// <returns>The same metadataProvider.</returns>
         public static TMetadataProvider ConfigureMetadata<TMetadataProvider, TMetadata>(
             this TMetadataProvider metadataProvider,
             Action<TMetadata> configureMetadata,
-            string metadataName = null)
+            string? metadataName = null)
             where TMetadataProvider : IMetadataProvider
             where TMetadata : new()
         {
@@ -115,7 +120,7 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Configures metadata with action.
+        /// Configures metadata with action. Can be called many times.
         /// If metadata is not exists then it creates with default constructor.
         /// </summary>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
@@ -126,7 +131,7 @@ namespace MicroElements.Metadata
         public static IMetadataProvider ConfigureMetadata<TMetadata>(
             this IMetadataProvider metadataProvider,
             Action<TMetadata> configureMetadata,
-            string metadataName = null)
+            string? metadataName = null)
             where TMetadata : new()
         {
             configureMetadata.AssertArgumentNotNull(nameof(configureMetadata));

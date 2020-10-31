@@ -45,7 +45,7 @@ There are two main interfaces: untyped `IProperty` and generic `IProperty<T>`.
 
 ### PropertyContainer
 
-PropertyContainer represents collection object that contains properties and values for these properties. `IPropertyContainer` is an immutable collection of `IPropertyValue` 
+PropertyContainer represents collection that contains properties and values for these properties. `IPropertyContainer` is an immutable collection of `IPropertyValue` 
 
 `IPropertyContainer` provides `Properties`, `ParentSource` and `SearchOptions`
 
@@ -53,13 +53,13 @@ PropertyContainer represents collection object that contains properties and valu
 
 ### MetadataProvider
 
-`IMetadataProvider` represents object that has metadata. where Metadata is `IPropertyContainer`.
+`IMetadataProvider` represents object that has metadata where Metadata is `IPropertyContainer`.
 
 MetadataProvider allows to extend any object with additional properties. `IMetadataProvider` default implementation uses `MetadataGlobalCache.GetInstanceMetadata` that creates `MutablePropertyContainer`. If you want mutable metadata - implement Metadata with IMutablePropertyContainer.
 
 Metadata default search mode: ByTypeAndName
 
-Methods:
+#### Methods:
  ``` csharp
     /// <summary>
     /// Gets metadata of required type.
@@ -109,11 +109,10 @@ Methods:
 ```
 other methods can be found in `MetadataProviderExtensions`
 
-UseCase: 
+#### UseCases
 
-see: 
-- AttachedNameUntypedExample
-- NamedTypedMetadataUsage
+- [AttachedNameUntypedExample](/test/MicroElements.Metadata.Tests/examples/AttachedNameUntypedExample.cs)
+- [NamedTypedMetadataUsage](/test/MicroElements.Metadata.Tests/examples/NamedTypedMetadataUsage.cs)
 
 
 ### Searching TBD
@@ -124,6 +123,8 @@ see:
 - IPropertyContainerMapper
 
 ### Dynamic TBD
+
+### Parsing TBD
 
 ### Reporting TBD
 - ReportProvider

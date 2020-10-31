@@ -13,38 +13,44 @@ namespace MicroElements.Metadata
     public static class SearchExtensions
     {
         /// <summary>
-        /// Gets property and value by search conditions.
+        /// Gets or calculates typed property and value for property using search conditions.
+        /// It's a full search that uses all search options: <see cref="SearchOptions.SearchInParent"/>, <see cref="SearchOptions.CalculateValue"/>,
+        /// <see cref="SearchOptions.UseDefaultValue"/>, <see cref="SearchOptions.ReturnNotDefined"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search conditions.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        /// <returns><see cref="IPropertyValue"/> or null according option <see cref="SearchOptions.ReturnNotDefined"/>.</returns>
         public static IPropertyValue<T>? GetPropertyValue<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
             SearchOptions? search = default)
         {
-            return DefaultSearchAlgorithm.Instance.GetPropertyValue(propertyContainer, property, search);
+            return Search.Algorithm.GetPropertyValue(propertyContainer, property, search);
         }
 
         /// <summary>
-        /// Searches property and value by search conditions.
+        /// Searches property and value for untyped property using search conditions.
+        /// Search does not use <see cref="SearchOptions.UseDefaultValue"/> and <see cref="SearchOptions.CalculateValue"/>.
+        /// Search uses only <see cref="SearchOptions.SearchInParent"/> and <see cref="SearchOptions.ReturnNotDefined"/>.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search conditions.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        /// <returns><see cref="IPropertyValue"/> or null according option <see cref="SearchOptions.ReturnNotDefined"/>.</returns>
         public static IPropertyValue? SearchPropertyValueUntyped(
             this IPropertyContainer propertyContainer,
             IProperty property,
             SearchOptions? search = default)
         {
-            return DefaultSearchAlgorithm.Instance.SearchPropertyValueUntyped(propertyContainer, property, search);
+            return Search.Algorithm.SearchPropertyValueUntyped(propertyContainer, property, search);
         }
 
         /// <summary>
-        /// Gets property and value by search conditions.
+        /// Gets property and value for untyped property using search conditions.
+        /// Uses simple untyped search `SearchPropertyValueUntyped` if CanUseSimpleUntypedSearch or `property` has type <see cref="Search.UntypedSearch"/>.
+        /// Uses full `GetPropertyValue{T}` based on property.Type in other cases.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
@@ -77,7 +83,7 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Returns true if untyped search can be used.
+        /// Returns true if simple untyped search can be used.
         /// </summary>
         /// <param name="search">SearchOptions.</param>
         /// <returns>true if untyped search can be used.</returns>

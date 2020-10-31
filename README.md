@@ -26,7 +26,11 @@ Provides metadata model, parsing and reporting.
     - [MetadataProvider](#metadataprovider)
       - [Methods](#methods)
       - [UseCases](#usecases)
-    - [Searching TBD](#searching-tbd)
+    - [Searching](#searching)
+      - [SearchOptions](#searchoptions)
+      - [Search methods](#search-methods)
+        - [ISearchAlgorithm](#isearchalgorithm)
+        - [SearchExtensions](#searchextensions)
     - [Calculation, Mapping TBD](#calculation-mapping-tbd)
     - [Dynamic TBD](#dynamic-tbd)
     - [Parsing TBD](#parsing-tbd)
@@ -134,8 +138,75 @@ other methods can be found in `MetadataProviderExtensions`
 - [AttachedNameUntypedExample](/test/MicroElements.Metadata.Tests/examples/AttachedNameUntypedExample.cs)
 - [NamedTypedMetadataUsage](/test/MicroElements.Metadata.Tests/examples/NamedTypedMetadataUsage.cs)
 
+### Searching
 
-### Searching TBD
+Searching is one of the important concept of working with metadata. Most search methods accepts `SearchOptions`
+
+#### SearchOptions
+
+Property | DefaultValue | Description
+---------|----------|---------
+PropertyComparer | `ByTypeAndNameEqualityComparer` | Equality comparer for comparing properties.
+SearchInParent | `true` | Do search in parent if no PropertyValue was found.
+CalculateValue | `true` | Calculate value if value was not found.
+UseDefaultValue | `true` | Use default value from property is property value was not found.
+ReturnNotDefined | `true` | Return fake PropertyValue with <see cref="ValueSource.NotDefined"/> and Value set to default if no PropertyValue was found. Returns null if ReturnNotDefined is false.
+
+#### Search methods
+
+- Main search methods provided by `ISearchAlgorithm`
+- Main search algorithm can be get or set in `Search.Algorithm`
+- All search methods from `SearchExtensions` use `Search.Algorithm`
+- `SearchOptions` can be composed by `Search` class
+
+##### ISearchAlgorithm
+
+```csharp
+/// <summary>
+/// Represents search algorithm.
+/// </summary>
+public interface ISearchAlgorithm
+{
+    /// <summary>
+    /// Searches <see cref="IPropertyValue{T}"/> by <see cref="IProperty{T}"/> and <see cref="SearchOptions"/>.
+    /// </summary>
+    /// <param name="propertyContainer">Property container.</param>
+    /// <param name="property">Property to search.</param>
+    /// <param name="searchOptions">Search options.</param>
+    /// <returns><see cref="IPropertyValue"/> or null.</returns>
+    IPropertyValue? SearchPropertyValueUntyped(
+        IPropertyContainer propertyContainer,
+        IProperty property,
+        SearchOptions? searchOptions = default);
+
+    /// <summary>
+    /// Gets <see cref="IPropertyValue{T}"/> by <see cref="IProperty{T}"/> and <see cref="SearchOptions"/>.
+    /// </summary>
+    /// <typeparam name="T">Property type.</typeparam>
+    /// <param name="propertyContainer">Property container.</param>
+    /// <param name="property">Property to search.</param>
+    /// <param name="searchOptions">Search options.</param>
+    /// <returns><see cref="IPropertyValue"/> or null.</returns>
+    IPropertyValue<T>? GetPropertyValue<T>(
+        IPropertyContainer propertyContainer,
+        IProperty<T> property,
+        SearchOptions? searchOptions = null);
+}
+```
+
+##### SearchExtensions
+
+Method | Description
+---------|----------|---------
+ GetPropertyValue | Gets or calculates typed property and value for property using search conditions. It's a full search that uses all search options: `SearchOptions.SearchInParent`, `SearchOptions.CalculateValue`, <see cref="SearchOptions.UseDefaultValue"/>, <see cref="SearchOptions.ReturnNotDefined"/>.
+ SearchPropertyValueUntyped | Searches property and value for untyped property using search conditions. Search does not use `SearchOptions.UseDefaultValue` and `SearchOptions.CalculateValue`. Search uses only `SearchOptions.SearchInParent` and `SearchOptions.ReturnNotDefined`.
+ GetPropertyValueUntyped | Gets property and value for untyped property using search conditions. Uses simple untyped search `SearchPropertyValueUntyped` if CanUseSimpleUntypedSearch or `property` has type <see cref="Search.UntypedSearch"/>. Uses full `GetPropertyValue{T}` based on property.Type in other cases.
+
+
+
+
+Typed and untyped search
+
 
 ### Calculation, Mapping TBD
 

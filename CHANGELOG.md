@@ -1,3 +1,8 @@
+# 4.3.0
+- SearchExtensions unified and documented
+- Added Search.Algorithm with global access to optionate search
+- Added some documentation to README
+
 # 4.2.0
 - IPropertyCalculator now accepts SearchOptions provided by user
 - Map function now accepts configureSearch function instead of SearchOptions so it uses user provided SearchOptions

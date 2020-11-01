@@ -13,38 +13,44 @@ namespace MicroElements.Metadata
     public static class SearchExtensions
     {
         /// <summary>
-        /// Gets property and value by search conditions.
+        /// Gets or calculates typed property and value for property using search conditions.
+        /// It's a full search that uses all search options: <see cref="SearchOptions.SearchInParent"/>, <see cref="SearchOptions.CalculateValue"/>,
+        /// <see cref="SearchOptions.UseDefaultValue"/>, <see cref="SearchOptions.ReturnNotDefined"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search conditions.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        /// <returns><see cref="IPropertyValue"/> or null according option <see cref="SearchOptions.ReturnNotDefined"/>.</returns>
         public static IPropertyValue<T>? GetPropertyValue<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
             SearchOptions? search = default)
         {
-            return DefaultSearchAlgorithm.Instance.GetPropertyValue(propertyContainer, property, search);
+            return Search.Algorithm.GetPropertyValue(propertyContainer, property, search);
         }
 
         /// <summary>
-        /// Searches property and value by search conditions.
+        /// Searches property and value for untyped property using search conditions.
+        /// Search does not use <see cref="SearchOptions.UseDefaultValue"/> and <see cref="SearchOptions.CalculateValue"/>.
+        /// Search uses only <see cref="SearchOptions.SearchInParent"/> and <see cref="SearchOptions.ReturnNotDefined"/>.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search conditions.</param>
-        /// <returns><see cref="IPropertyValue"/> or null.</returns>
+        /// <returns><see cref="IPropertyValue"/> or null according option <see cref="SearchOptions.ReturnNotDefined"/>.</returns>
         public static IPropertyValue? SearchPropertyValueUntyped(
             this IPropertyContainer propertyContainer,
             IProperty property,
             SearchOptions? search = default)
         {
-            return DefaultSearchAlgorithm.Instance.SearchPropertyValueUntyped(propertyContainer, property, search);
+            return Search.Algorithm.SearchPropertyValueUntyped(propertyContainer, property, search);
         }
 
         /// <summary>
-        /// Gets property and value by search conditions.
+        /// Gets property and value for untyped property using search conditions.
+        /// Uses simple untyped search `SearchPropertyValueUntyped` if CanUseSimpleUntypedSearch or `property` has type <see cref="Search.UntypedSearch"/>.
+        /// Uses full `GetPropertyValue{T}` based on property.Type in other cases.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to search.</param>
@@ -77,12 +83,71 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Returns true if untyped search can be used.
+        /// Gets or calculates value for property.
         /// </summary>
-        /// <param name="search">SearchOptions.</param>
-        /// <returns>true if untyped search can be used.</returns>
-        public static bool CanUseSimpleUntypedSearch(this in SearchOptions search) =>
-            search.CalculateValue == false && search.UseDefaultValue == false;
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="property">Property to find.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>The value for property.</returns>
+        [return: MaybeNull]
+        public static T GetValue<T>(
+            this IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            SearchOptions? search = null)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
+            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
+            return propertyValue != null ? propertyValue.Value : default;
+        }
+
+        /// <summary>
+        /// Gets or calculates untyped value for property.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="property">Property to find.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>The value for property.</returns>
+        public static object? GetValueUntyped(
+            this IPropertyContainer propertyContainer,
+            IProperty property,
+            SearchOptions? search = null)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
+            IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(property, search);
+            return propertyValue?.ValueUntyped;
+        }
+
+        /// <summary>
+        /// Gets or calculates optional not null value.
+        /// Returns option in <see cref="OptionState.Some"/> state if property value exists and not null.
+        /// Returns None if value was not found.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to search.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>Optional property value.</returns>
+        public static Option<T> GetValueAsOption<T>(
+            this IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            SearchOptions? search = null)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
+            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
+            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
+            {
+                return propertyValue.Value;
+            }
+
+            return Option<T>.None;
+        }
 
         /// <summary>
         /// Gets property and value by search conditions.
@@ -133,30 +198,35 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Gets untyped value for property.
+        /// Gets or calculates value by name.
         /// </summary>
-        /// <param name="propertyContainer">Source property container.</param>
-        /// <param name="property">Property to find.</param>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="propertyName">Search conditions.</param>
         /// <param name="searchInParent">Search in parent.</param>
-        /// <returns>The value for property.</returns>
-        public static object? GetValueUntyped(this IPropertyContainer propertyContainer, IProperty property, bool searchInParent = true)
+        /// <returns>value or null.</returns>
+        [return: MaybeNull]
+        public static T GetValueByName<T>(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            propertyName.AssertArgumentNotNull(nameof(propertyName));
 
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(property, propertyContainer.SearchOptions
-                .SearchInParent(searchInParent).ReturnNotDefined())!;
-            return propertyValue.ValueUntyped;
+            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue<T>(Search
+                .ByNameOrAlias<T>(propertyName, ignoreCase: true)
+                .SearchInParent(searchInParent)
+                .ReturnNotDefined())!;
+
+            return propertyValue.Value;
         }
 
         /// <summary>
-        /// Gets property and value by search conditions.
+        /// Gets or calculates value by name.
         /// </summary>
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="propertyName">Search conditions.</param>
         /// <param name="searchInParent">Search in parent.</param>
         /// <returns>value or null.</returns>
-        public static object? GetValueUntyped(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
+        public static object? GetValueUntypedByName(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             propertyName.AssertArgumentNotNull(nameof(propertyName));
@@ -170,51 +240,12 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Gets the value for property.
+        /// Returns true if simple untyped search can be used.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Source property container.</param>
-        /// <param name="property">Property to find.</param>
-        /// <param name="searchInParent">Search in parent.</param>
-        /// <returns>The value for property.</returns>
-        [return: MaybeNull]
-        public static T GetValue<T>(this IPropertyContainer propertyContainer, IProperty<T> property, bool searchInParent = true)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
-
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(property, propertyContainer.SearchOptions
-                .SearchInParent(searchInParent).ReturnNotDefined())!;
-            return propertyValue.Value;
-        }
-
-        /// <summary>
-        /// Gets optional not null value.
-        /// Returns option in <see cref="OptionState.Some"/> state if property value exists.
-        /// Returns None if value was not found.
-        /// By default uses <see cref="SearchOptions.ExistingOnlyWithParent"/> for value search.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to search.</param>
-        /// <param name="search">Search options.</param>
-        /// <returns>Optional property value.</returns>
-        public static Option<T> GetValueAsOption<T>(
-            this IPropertyContainer propertyContainer,
-            IProperty<T> property,
-            SearchOptions? search = null)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
-
-            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
-            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
-            {
-                return propertyValue.Value;
-            }
-
-            return Option<T>.None;
-        }
+        /// <param name="search">SearchOptions.</param>
+        /// <returns>true if untyped search can be used.</returns>
+        public static bool CanUseSimpleUntypedSearch(this in SearchOptions search) =>
+            search.CalculateValue == false && search.UseDefaultValue == false;
 
         /// <summary>
         /// Returns true if <paramref name="propertyContainer"/> has property.

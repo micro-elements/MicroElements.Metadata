@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace MicroElements.Metadata
 {
@@ -31,33 +30,5 @@ namespace MicroElements.Metadata
         /// Default search options for metadata providers.
         /// </summary>
         public static readonly SearchOptions DefaultSearchOptions = SearchOptions.Default.WithPropertyComparer(DefaultMetadataComparer);
-    }
-
-    /// <summary>
-    /// Global metadata cache.
-    /// Uses <see cref="ConditionalWeakTable{TKey,TValue}"/> to store metadata for objects.
-    /// </summary>
-    public static class MetadataGlobalCache
-    {
-        private static readonly ConditionalWeakTable<object, IPropertyContainer> MetadataCache = new ConditionalWeakTable<object, IPropertyContainer>();
-
-        /// <summary>
-        /// Gets metadata for <paramref name="instance"/>.
-        /// </summary>
-        /// <param name="instance">Source.</param>
-        /// <returns>Metadata for instance.</returns>
-        public static IPropertyContainer GetInstanceMetadata(this object instance)
-        {
-            if (instance == null)
-                return PropertyContainer.Empty;
-
-            if (!MetadataCache.TryGetValue(instance, out IPropertyContainer propertyList))
-            {
-                propertyList = new MutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
-                MetadataCache.Add(instance, propertyList);
-            }
-
-            return propertyList;
-        }
     }
 }

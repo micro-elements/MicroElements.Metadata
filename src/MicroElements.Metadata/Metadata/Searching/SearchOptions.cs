@@ -84,7 +84,8 @@ namespace MicroElements.Metadata
         public bool UseDefaultValue => _useDefaultValue ?? true;
 
         /// <summary>
-        /// Return fake not null PropertyValue with <see cref="ValueSource.NotDefined"/> if no PropertyValue was found. If ReturnNotDefined is false then null will be returned.
+        /// Return fake PropertyValue with <see cref="ValueSource.NotDefined"/> and Value set to default if no PropertyValue was found.
+        /// Returns null if ReturnNotDefined is false.
         /// </summary>
         public bool ReturnNotDefined => _returnNotDefined ?? true;
 

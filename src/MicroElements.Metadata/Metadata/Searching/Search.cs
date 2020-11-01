@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Metadata
 {
@@ -12,6 +13,18 @@ namespace MicroElements.Metadata
     [DebuggerStepThrough]
     public static class Search
     {
+        private static ISearchAlgorithm _algorithm = DefaultSearchAlgorithm.Instance;
+
+        /// <summary>
+        /// Gets or Sets default <see cref="ISearchAlgorithm"/> for all extension methods.
+        /// </summary>
+        [NotNull]
+        public static ISearchAlgorithm Algorithm
+        {
+            get => _algorithm ?? DefaultSearchAlgorithm.Instance;
+            set => _algorithm = value;
+        }
+
         /// <summary>
         /// Type used for untyped named search.
         /// </summary>
@@ -40,7 +53,9 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<UntypedSearch>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(
+                searchProperty: new Property<UntypedSearch>(name),
+                propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
         /// Creates search condition by name or alias.
@@ -51,7 +66,9 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias<T>(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<T>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(
+                searchProperty: new Property<T>(name),
+                propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
         /// Creates search condition by type and name.
@@ -80,8 +97,8 @@ namespace MicroElements.Metadata
         [DebuggerStepThrough]
         public static SearchOptions With(
             this in SearchOptions searchOptions,
-            IProperty property = null,
-            IEqualityComparer<IProperty> propertyComparer = null,
+            IProperty? property = null,
+            IEqualityComparer<IProperty>? propertyComparer = null,
             bool? searchInParent = null,
             bool? calculateValue = null,
             bool? useDefaultValue = null,

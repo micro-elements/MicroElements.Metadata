@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Represents metadata for property.
+    /// Represents property description.
     /// Every object consist of many properties and we should map properties from different sources to one common model.
     /// </summary>
     public interface IProperty : IMetadataProvider

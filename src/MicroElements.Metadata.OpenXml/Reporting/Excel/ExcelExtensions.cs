@@ -129,12 +129,12 @@ namespace MicroElements.Reporting.Excel
             return workbookStylesPart.Stylesheet;
         }
 
-        internal static void SetAttachedName(this object target, string name)
+        internal static void SetStyleSheetName(this object target, string name)
         {
             target.GetInstanceMetadata().SetMetadata("StyleSheetName", name);
         }
 
-        internal static string GetAttachedName(this object target)
+        internal static string GetStyleSheetName(this object target)
         {
             return target.GetInstanceMetadata().GetMetadata<string>("StyleSheetName");
         }
@@ -158,7 +158,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.Fonts == null)
                 stylesheet.Fonts = new Fonts();
 
-            font.SetAttachedName(name);
+            font.SetStyleSheetName(name);
 
             stylesheet.Fonts.AppendChild(font);
             stylesheet.Fonts.Count = (uint)stylesheet.Fonts.ChildElements.Count;
@@ -173,7 +173,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.Fills == null)
                 stylesheet.Fills = new Fills();
 
-            fill.SetAttachedName(name);
+            fill.SetStyleSheetName(name);
 
             stylesheet.Fills.AppendChild(fill);
             stylesheet.Fills.Count = (uint)stylesheet.Fills.ChildElements.Count;
@@ -188,7 +188,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.Borders == null)
                 stylesheet.Borders = new Borders();
 
-            border.SetAttachedName(name);
+            border.SetStyleSheetName(name);
 
             stylesheet.Borders.AppendChild(border);
             stylesheet.Borders.Count = (uint)stylesheet.Borders.ChildElements.Count;
@@ -203,7 +203,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.CellStyleFormats == null)
                 stylesheet.CellStyleFormats = new CellStyleFormats();
 
-            cellFormat.SetAttachedName(name);
+            cellFormat.SetStyleSheetName(name);
 
             stylesheet.CellStyleFormats.AppendChild(cellFormat);
             stylesheet.CellStyleFormats.Count = (uint)stylesheet.CellStyleFormats.ChildElements.Count;
@@ -218,7 +218,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.CellFormats == null)
                 stylesheet.CellFormats = new CellFormats();
 
-            cellFormat.SetAttachedName(name);
+            cellFormat.SetStyleSheetName(name);
 
             stylesheet.CellFormats.AppendChild(cellFormat);
             stylesheet.CellFormats.Count = (uint)stylesheet.CellFormats.ChildElements.Count;
@@ -233,7 +233,7 @@ namespace MicroElements.Reporting.Excel
             if (stylesheet.CellStyles == null)
                 stylesheet.CellStyles = new CellStyles();
 
-            cellStyle.SetAttachedName(name);
+            cellStyle.SetStyleSheetName(name);
 
             stylesheet.CellStyles.AppendChild(cellStyle);
             stylesheet.CellStyles.Count = (uint)stylesheet.CellStyles.ChildElements.Count;
@@ -244,37 +244,37 @@ namespace MicroElements.Reporting.Excel
         public static uint GetFontIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Fonts.ChildElements.OfType<Font>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.Fonts.ChildElements.OfType<Font>().IndexOf(item => item.GetStyleSheetName() == name);
         }
 
         public static uint GetFillIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Fills.ChildElements.OfType<Fill>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.Fills.ChildElements.OfType<Fill>().IndexOf(item => item.GetStyleSheetName() == name);
         }
 
         public static uint GetBorderIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Borders.ChildElements.OfType<Border>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.Borders.ChildElements.OfType<Border>().IndexOf(item => item.GetStyleSheetName() == name);
         }
 
         public static uint GetCellStyleFormatIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
         }
 
         public static uint GetCellFormatIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
         }
 
         public static uint GetCellStyleIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetAttachedName() == name);
+            return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
         }
     }
 }

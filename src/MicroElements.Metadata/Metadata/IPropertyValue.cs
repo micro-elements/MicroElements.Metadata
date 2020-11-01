@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Property and its value.
+    /// Represents property and its value.
     /// </summary>
     public interface IPropertyValue
     {

@@ -20,9 +20,10 @@ Provides metadata model, parsing and reporting.
   - [Build](#build)
   - [License](#license)
   - [Getting started](#getting-started)
-  - [Building blocks](#building-blocks)
     - [Property](#property)
+    - [PropertyValue](#propertyvalue)
     - [PropertyContainer](#propertycontainer)
+      - [Sample](#sample)
     - [MetadataProvider](#metadataprovider)
       - [Methods](#methods)
       - [UseCases](#usecases)
@@ -31,11 +32,12 @@ Provides metadata model, parsing and reporting.
       - [Search methods](#search-methods)
         - [ISearchAlgorithm](#isearchalgorithm)
         - [SearchExtensions](#searchextensions)
+    - [EntityParseValidateReport example](#entityparsevalidatereport-example)
     - [Calculation, Mapping TBD](#calculation-mapping-tbd)
-    - [Dynamic TBD](#dynamic-tbd)
+    - [Dynamic](#dynamic)
     - [Parsing TBD](#parsing-tbd)
-    - [Reporting TBD](#reporting-tbd)
     - [Validation TBD](#validation-tbd)
+    - [Reporting TBD](#reporting-tbd)
 
 ## Installation
 
@@ -56,8 +58,6 @@ This project is licensed under the MIT license. See the [LICENSE] file for more 
 
 ## Getting started
 
-## Building blocks
-
 ### Property
 
 Represents property for describing metadata model.
@@ -67,6 +67,16 @@ There are two main interfaces: untyped `IProperty` and generic `IProperty<T>`.
 
 `IProperty<T>` extends `IProperty` with `DefaultValue`, `Calculator` and `Examples`
 
+Source: [IProperty.cs](/src/MicroElements.Metadata/Metadata/IProperty.cs)
+
+### PropertyValue
+
+Represents property and its value.
+
+Has untyped form: `IPropertyValue` and strong typed: `IPropertyValue<T>`.
+
+Source: [IPropertyValue.cs](/src/MicroElements.Metadata/Metadata/IPropertyValue.cs)
+
 ### PropertyContainer
 
 PropertyContainer represents collection that contains properties and values for these properties. `IPropertyContainer` is an immutable collection of `IPropertyValue` 
@@ -74,6 +84,44 @@ PropertyContainer represents collection that contains properties and values for 
 `IPropertyContainer` provides `Properties`, `ParentSource` and `SearchOptions`
 
 `IMutablePropertyContainer` extends `IPropertyContainer` with Add* and Set* methods.
+
+#### Sample
+
+```csharp
+  public class PropertyContainerUsage
+  {
+      public class EntityMeta
+      {
+          public static readonly IProperty<DateTime> CreatedAt = new Property<DateTime>("CreatedAt");
+          public static readonly IProperty<string> Description = new Property<string>("Description");
+      }
+
+      [Fact]
+      public void simple_set_and_get_value()
+      {
+          IPropertyContainer propertyContainer = new MutablePropertyContainer()
+              .WithValue(EntityMeta.CreatedAt, DateTime.Today)
+              .WithValue(EntityMeta.Description, "description");
+
+          propertyContainer.GetValue(EntityMeta.CreatedAt).Should().Be(DateTime.Today);
+          propertyContainer.GetValue(EntityMeta.Description).Should().Be("description");
+      }
+
+      [Fact]
+      public void get_property_value()
+      {
+          IPropertyContainer propertyContainer = new MutablePropertyContainer()
+              .WithValue(EntityMeta.CreatedAt, DateTime.Today)
+              .WithValue(EntityMeta.Description, "description");
+
+          IPropertyValue<string>? propertyValue = propertyContainer.GetPropertyValue(EntityMeta.Description);
+          propertyValue.Should().NotBeNull();
+          propertyValue.Property.Should().BeSameAs(EntityMeta.Description);
+          propertyValue.Value.Should().Be("description");
+          propertyValue.Source.Should().Be(ValueSource.Defined);
+      }
+  }
+```
 
 ### MetadataProvider
 
@@ -197,29 +245,210 @@ public interface ISearchAlgorithm
 ##### SearchExtensions
 
 Method | Description
----------|----------|---------
- GetPropertyValue | Gets or calculates typed property and value for property using search conditions. It's a full search that uses all search options: `SearchOptions.SearchInParent`, `SearchOptions.CalculateValue`, <see cref="SearchOptions.UseDefaultValue"/>, <see cref="SearchOptions.ReturnNotDefined"/>.
+---------|----------
+ GetPropertyValue | Gets or calculates typed property and value for property using search conditions. It's a full search that uses all search options: `SearchOptions.SearchInParent`, `SearchOptions.CalculateValue`, `SearchOptions.UseDefaultValue`, `SearchOptions.ReturnNotDefined`.
  SearchPropertyValueUntyped | Searches property and value for untyped property using search conditions. Search does not use `SearchOptions.UseDefaultValue` and `SearchOptions.CalculateValue`. Search uses only `SearchOptions.SearchInParent` and `SearchOptions.ReturnNotDefined`.
- GetPropertyValueUntyped | Gets property and value for untyped property using search conditions. Uses simple untyped search `SearchPropertyValueUntyped` if CanUseSimpleUntypedSearch or `property` has type <see cref="Search.UntypedSearch"/>. Uses full `GetPropertyValue{T}` based on property.Type in other cases.
+ GetPropertyValueUntyped | Gets property and value for untyped property using search conditions. Uses simple untyped search `SearchPropertyValueUntyped` if CanUseSimpleUntypedSearch or `property` has type `Search.UntypedSearch`. Uses full `GetPropertyValue{T}` based on property.Type in other cases.
+ GetValue | Gets or calculates value for property.
+ GetValueAsOption | Gets or calculates optional not null value.
+ GetValueUntyped | Gets or calculates untyped value for property.
+ GetValueByName | Gets or calculates value by name.
 
 
+### EntityParseValidateReport example
 
+Source: [EntityParseValidateReport.cs](/test/MicroElements.Metadata.Tests/examples/EntityParseValidateReport.cs)
 
-Typed and untyped search
+```csharp
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using DocumentFormat.OpenXml.Packaging;
+using FluentAssertions;
+using MicroElements.Functional;
+using MicroElements.Parsing;
+using MicroElements.Reporting.Excel;
+using MicroElements.Validation;
+using MicroElements.Validation.Rules;
+using Xunit;
 
+namespace MicroElements.Metadata.Tests.examples
+{
+    public class EntityParseValidateReport
+    {
+        public class Entity
+        {
+            public DateTime CreatedAt { get; }
+            public string Name { get; }
+
+            public Entity(DateTime createdAt, string name)
+            {
+                CreatedAt = createdAt;
+                Name = name;
+            }
+        }
+
+        public class EntityMeta : IPropertySet, IPropertyContainerMapper<Entity>
+        {
+            public static readonly EntityMeta Instance = new EntityMeta();
+
+            public static readonly IProperty<DateTime> CreatedAt = new Property<DateTime>("CreatedAt");
+            public static readonly IProperty<string> Name = new Property<string>("Name");
+
+            /// <inheritdoc />
+            public IEnumerable<IProperty> GetProperties()
+            {
+                yield return CreatedAt;
+                yield return Name;
+            }
+
+            /// <inheritdoc />
+            public IPropertyContainer ToContainer(Entity model)
+            {
+                return new MutablePropertyContainer()
+                    .WithValue(CreatedAt, model.CreatedAt)
+                    .WithValue(Name, model.Name);
+            }
+
+            /// <inheritdoc />
+            public Entity ToModel(IPropertyContainer container)
+            {
+                return new Entity(
+                    createdAt: container.GetValue(CreatedAt),
+                    name: container.GetValue(Name));
+            }
+        }
+
+        public class EntityParser : ParserProvider
+        {
+            protected Option<DateTime> ParseDate(string value) => Prelude.ParseDateTime(value);
+
+            /// <inheritdoc />
+            public EntityParser()
+            {
+                Source("CreatedAt", ParseDate).Target(EntityMeta.CreatedAt);
+                Source("Name").Target(EntityMeta.Name);
+            }
+        }
+
+        public class EntityValidator : IValidator
+        {
+            /// <inheritdoc />
+            public IEnumerable<IValidationRule> GetRules()
+            {
+                yield return EntityMeta.CreatedAt.NotDefault();
+                yield return EntityMeta.Name.Required();
+            }
+        }
+
+        public class EntityReport : ReportProvider
+        {
+            public EntityReport(string reportName = "Entities")
+                : base(reportName)
+            {
+                Add(EntityMeta.CreatedAt);
+                Add(EntityMeta.Name);
+            }
+        }
+
+        public Stream ReportToExcel(Entity[] entities)
+        {
+            var reportRows = entities.Select(entity => EntityMeta.Instance.ToContainer(entity));
+
+            var excelStream = new MemoryStream();
+            ExcelReportBuilder.Create(excelStream)
+                .AddReportSheet(new EntityReport("Entities"), reportRows)
+                .SaveAndClose();
+
+            return excelStream;
+        }
+
+        public Entity[] ParseExcel(Stream stream)
+        {
+            var document = SpreadsheetDocument.Open(stream, false);
+
+            var messages = new List<Message>();
+
+            var entities = document
+                .GetSheet("Entities")
+                .GetRowsAs(new EntityParser(), list => new PropertyContainer(list))
+                .ValidateAndFilter(new EntityValidator(), result => messages.AddRange(result.ValidationMessages))
+                .Select(container => EntityMeta.Instance.ToModel(container))
+                .ToArray();
+
+            return entities;
+        }
+
+        [Fact]
+        public void UseCase()
+        {
+            // Trim DateTime to milliseconds because default DateTime render trimmed to milliseconds
+            DateTime NowTrimmed()
+            {
+                DateTime now = DateTime.Now;
+                return now.AddTicks(-(now.Ticks % TimeSpan.TicksPerMillisecond));
+            }
+
+            Entity[] entities = {
+                new Entity(NowTrimmed(), "Name1"),
+                new Entity(NowTrimmed(), "Name2"),
+                new Entity(NowTrimmed(), "Name3"),
+            };
+
+            Stream excelStream = ReportToExcel(entities);
+
+            Entity[] fromExcel = ParseExcel(excelStream);
+
+            fromExcel.Should().HaveCount(3);
+            fromExcel.Should().BeEquivalentTo(entities);
+        }
+    }
+}
+
+```
 
 ### Calculation, Mapping TBD
 
 - IPropertySet
 - IPropertyContainerMapper
 
-### Dynamic TBD
+### Dynamic
+
+`IPropertyContainer` can be casted to `dynamic` object with `AsDynamic` extension.
+
+```csharp
+  [Fact]
+  public void DynamicContainer()
+  {
+      var propertyContainer = new MutablePropertyContainer();
+      propertyContainer.SetValue("PropertyA", "ValueA");
+      propertyContainer.SetValue(new Property<int>("PropertyB"), 42);
+
+      dynamic dynamicContainer = propertyContainer.AsDynamic();
+      object valueA = dynamicContainer.PropertyA;
+      valueA.Should().Be("ValueA");
+
+      object valueB = dynamicContainer.PropertyB;
+      valueB.Should().Be(42);
+
+      object notFoundProperty = dynamicContainer.NotFoundProperty;
+      notFoundProperty.Should().BeNull();
+  }
+```
 
 ### Parsing TBD
 
+See: [EntityParseValidateReport example](#entityparsevalidatereport-example)
+
+### Validation TBD
+
+See: [EntityParseValidateReport example](#entityparsevalidatereport-example)
+
 ### Reporting TBD
+
+See: [EntityParseValidateReport example](#entityparsevalidatereport-example)
+
 - ReportProvider
 - Renderer
 - IPropertyParser
-
-### Validation TBD

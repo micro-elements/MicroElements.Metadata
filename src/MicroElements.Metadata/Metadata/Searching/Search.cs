@@ -53,7 +53,9 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<UntypedSearch>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(
+                searchProperty: new Property<UntypedSearch>(name),
+                propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
         /// Creates search condition by name or alias.
@@ -64,7 +66,9 @@ namespace MicroElements.Metadata
         /// <returns>SearchCondition.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias<T>(string name, bool ignoreCase = false)
-            => new SearchOptions(new Property<T>(name), PropertyComparer.ByNameOrAlias(ignoreCase));
+            => new SearchOptions(
+                searchProperty: new Property<T>(name),
+                propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
         /// Creates search condition by type and name.

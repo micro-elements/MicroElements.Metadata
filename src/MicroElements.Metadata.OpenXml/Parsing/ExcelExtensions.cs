@@ -32,11 +32,15 @@ namespace MicroElements.Parsing
             return new string(cellReference.TakeWhile(char.IsLetter).ToArray());
         }
 
-        public static ExcelElement<Sheet> GetSheet(this SpreadsheetDocument document, string name)
+        public static ExcelElement<Sheet> GetSheet(this SpreadsheetDocument document, string name, bool fillCellReferences = true)
         {
             var sheets = document.WorkbookPart.Workbook.Sheets.Cast<Sheet>();
             Sheet sheet = sheets.FirstOrDefault(s => s.Name == name);
-            return new ExcelElement<Sheet>(document, sheet);
+            ExcelElement<Sheet> result = new ExcelElement<Sheet>(document, sheet);
+
+            if (fillCellReferences)
+                result.FillCellReferences();
+            return result;
         }
 
         public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)

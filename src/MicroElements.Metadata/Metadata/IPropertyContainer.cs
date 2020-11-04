@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Metadata
 {
@@ -35,7 +36,7 @@ namespace MicroElements.Metadata
         /// Sets parent property container.
         /// </summary>
         /// <param name="parentPropertySource">Parent property container.</param>
-        void SetParentPropertySource(IPropertyContainer parentPropertySource);
+        void SetParentPropertySource(IPropertyContainer? parentPropertySource);
 
         /// <summary>
         /// Sets value for property.
@@ -45,7 +46,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource? valueSource = default);
+        IPropertyValue<T> SetValue<T>(IProperty<T> property, [AllowNull] T value, ValueSource? valueSource = default);
 
         /// <summary>
         /// Sets property value.

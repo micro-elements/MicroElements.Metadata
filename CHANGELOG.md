@@ -1,3 +1,7 @@
+# 4.4.0
+- Added ToMutable, ToReadOnly extensions
+- Added more nullability asserts and markup
+
 # 4.3.0
 - SearchExtensions unified and documented
 - Added Search.Algorithm with global access to optionate search

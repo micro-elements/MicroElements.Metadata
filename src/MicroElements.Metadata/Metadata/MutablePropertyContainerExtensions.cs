@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -20,6 +21,8 @@ namespace MicroElements.Metadata
         /// <returns>The same container with changed parent.</returns>
         public static IMutablePropertyContainer WithParentPropertySource(this IMutablePropertyContainer propertyContainer, IPropertyContainer parentPropertySource)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
             propertyContainer.SetParentPropertySource(parentPropertySource);
             return propertyContainer;
         }
@@ -37,6 +40,9 @@ namespace MicroElements.Metadata
         public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value, ValueSource? valueSource = default)
             where TContainer : IMutablePropertyContainer
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
             propertyContainer.SetValue(property, value, valueSource);
             return propertyContainer;
         }
@@ -55,6 +61,9 @@ namespace MicroElements.Metadata
         public static TContainer WithValue<TContainer, T>(this TContainer propertyContainer, string propertyName, T value, ValueSource? valueSource = default)
             where TContainer : IMutablePropertyContainer
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyName.AssertArgumentNotNull(nameof(propertyName));
+
             propertyContainer.SetValue(propertyName, value, valueSource);
             return propertyContainer;
         }
@@ -67,8 +76,11 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>The same container with changed property.</returns>
-        public static IMutablePropertyContainer WithValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value, ValueSource valueSource = default)
+        public static IMutablePropertyContainer WithValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object? value, ValueSource? valueSource = default)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
             propertyContainer.SetValueUntyped(property, value, valueSource);
             return propertyContainer;
         }
@@ -83,9 +95,12 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource valueSource = default)
+        public static IPropertyValue<T> SetValue<T>(this IMutablePropertyContainer propertyContainer, string propertyName, T value, ValueSource? valueSource = default)
         {
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyName.AssertArgumentNotNull(nameof(propertyName));
+
+            IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(Search
                 .ByNameOrAlias<T>(propertyName, true)
                 .SearchInParent(false)
                 .ReturnNull());
@@ -115,9 +130,12 @@ namespace MicroElements.Metadata
         /// <param name="valueSource">Value source.</param>
         /// <param name="valueType">Value type if value is null.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, string propertyName, object value, ValueSource valueSource = default, Type valueType = null)
+        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, string propertyName, object? value, ValueSource? valueSource = null, Type? valueType = null)
         {
-            IPropertyValue propertyValue = propertyContainer.GetPropertyValueUntyped(Search
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyName.AssertArgumentNotNull(nameof(propertyName));
+
+            IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(Search
                 .ByNameOrAlias(propertyName, true)
                 .SearchInParent(false)
                 .ReturnNull());
@@ -143,7 +161,7 @@ namespace MicroElements.Metadata
                 if (value == null && valueType == null)
                     throw new InvalidOperationException($"Unable to define property type for {propertyName} because value is null");
 
-                Type propertyTypeByValue = value?.GetType() ?? valueType;
+                Type propertyTypeByValue = (value?.GetType() ?? valueType)!;
                 IProperty newProperty = Property.Create(propertyTypeByValue, propertyName);
                 return propertyContainer.SetValueUntyped(newProperty, value, valueSource);
             }
@@ -157,8 +175,11 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue"/> that holds value for property.</returns>
-        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object value, ValueSource valueSource = default)
+        public static IPropertyValue SetValueUntyped(this IMutablePropertyContainer propertyContainer, IProperty property, object? value, ValueSource? valueSource = default)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
             IPropertyValue propertyValue = PropertyValue.Create(property, value, valueSource);
             propertyContainer.SetValue(propertyValue);
             return propertyValue;
@@ -171,6 +192,9 @@ namespace MicroElements.Metadata
         /// <param name="propertyValues">PropertyValue list.</param>
         public static void AddRange(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyValues.AssertArgumentNotNull(nameof(propertyValues));
+
             foreach (IPropertyValue propertyValue in propertyValues)
             {
                 propertyContainer.Add(propertyValue);
@@ -184,8 +208,11 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
-        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, T value)
+        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, [AllowNull] T value)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
             var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
             if (propertyValue.IsNullOrNotDefined())
                 propertyContainer.SetValue(property, value);
@@ -200,6 +227,8 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to set.</param>
         public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in Option<T> value)
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
             value.Match(val => propertyContainer.SetValue(property, val), () => { });
         }
 
@@ -213,7 +242,25 @@ namespace MicroElements.Metadata
         public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in Option<T> value)
             where T : struct
         {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
             value.Match(val => propertyContainer.SetValue(property, val), () => { });
+        }
+
+        /// <summary>
+        /// Sets property values.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="propertyValues">PropertyValue list.</param>
+        public static void SetValues(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyValues.AssertArgumentNotNull(nameof(propertyValues));
+
+            foreach (IPropertyValue propertyValue in propertyValues)
+            {
+                propertyContainer.SetValue(propertyValue);
+            }
         }
     }
 }

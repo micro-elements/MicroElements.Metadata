@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Tests.ParseExcel
     {
         public class FxSheetRow : PropertyContainer
         {
-            public FxSheetRow(IEnumerable<IPropertyValue> values = null) : base(values) { }
+            public FxSheetRow(IEnumerable<IPropertyValue> sourceValues = null) : base(sourceValues) { }
         }
 
         public static class FxSheetMeta

@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -70,7 +71,7 @@ namespace MicroElements.Metadata
         /// Sets parent property container.
         /// </summary>
         /// <param name="parentPropertySource">Parent property container.</param>
-        public void SetParentPropertySource(IPropertyContainer parentPropertySource)
+        public void SetParentPropertySource(IPropertyContainer? parentPropertySource)
         {
             ParentSource = parentPropertySource ?? PropertyContainer.Empty;
         }
@@ -83,8 +84,10 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T value, ValueSource? valueSource = default)
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, [AllowNull] T value, ValueSource? valueSource = default)
         {
+            property.AssertArgumentNotNull(nameof(property));
+
             var propertyValue = new PropertyValue<T>(property, value, valueSource);
             SetValue(propertyValue);
             return propertyValue;
@@ -93,6 +96,8 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public void SetValue(IPropertyValue propertyValue)
         {
+            propertyValue.AssertArgumentNotNull(nameof(propertyValue));
+
             bool isSet = false;
             for (int i = 0; i < _propertyValues.Count; i++)
             {
@@ -113,6 +118,8 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public void Add(IPropertyValue propertyValue)
         {
+            propertyValue.AssertArgumentNotNull(nameof(propertyValue));
+
             _propertyValues.Add(propertyValue);
         }
 

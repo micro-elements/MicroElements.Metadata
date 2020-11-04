@@ -3,12 +3,12 @@
   <PropertyGroup>
     <Product>MicroElements.Metadata</Product>
     <Copyright>2020</Copyright>
-    <Authors>micro-elements</Authors>
-    <Description>Metadata model, parsing and reporting.</Description>
+    <Authors>alexey.petriashev, MicroElements</Authors>
+    <Description>Metadata model, parsing, validation and reporting.</Description>
 
     <PackageTags>metadata parsing parse reporting report etl</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Metadata.git</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Metadata</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Metadata/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/micro-elements/MicroElements.Metadata.git</RepositoryUrl>

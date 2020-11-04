@@ -24,15 +24,15 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainer"/> class.
         /// </summary>
-        /// <param name="values">Property values.</param>
+        /// <param name="sourceValues">Source property values.</param>
         /// <param name="parentPropertySource">Parent property source.</param>
         /// <param name="searchOptions">Property search options.</param>
         public PropertyContainer(
-            IEnumerable<IPropertyValue>? values = null,
+            IEnumerable<IPropertyValue>? sourceValues = null,
             IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
-            _propertyContainer = new MutablePropertyContainer(values, parentPropertySource, searchOptions);
+            _propertyContainer = new MutablePropertyContainer(sourceValues, parentPropertySource, searchOptions);
         }
 
         /// <inheritdoc />

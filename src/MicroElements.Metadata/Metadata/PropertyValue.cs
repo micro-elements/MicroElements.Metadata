@@ -19,6 +19,7 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         [MaybeNull]
+        [AllowNull]
         public T Value { get; }
 
         /// <inheritdoc />
@@ -36,7 +37,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="value">Value for property.</param>
         /// <param name="source">The source for value.</param>
-        public PropertyValue(IProperty<T> property, T value, ValueSource? source = null)
+        public PropertyValue(IProperty<T> property, [AllowNull] T value, ValueSource? source = null)
         {
             Property = property.AssertArgumentNotNull(nameof(property));
             Value = value;
@@ -47,6 +48,7 @@ namespace MicroElements.Metadata
         /// Implicitly converts to <typeparamref name="T"/>.
         /// </summary>
         /// <param name="propertyValue">PropertyValue.</param>
+        [return: MaybeNull]
         public static implicit operator T(PropertyValue<T> propertyValue) => propertyValue.Value;
 
         /// <inheritdoc />
@@ -111,7 +113,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value for property.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns>Created property value.</returns>
-        public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = default)
+        public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
             property.AssertArgumentNotNull(nameof(property));
 

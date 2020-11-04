@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 
@@ -36,7 +37,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, [MaybeNullWhen(true)] out object result)
         {
             var propertyValue = _propertyContainer.GetPropertyValueUntyped(Search
                 .ByNameOrAlias(binder.Name, _ignoreCase)

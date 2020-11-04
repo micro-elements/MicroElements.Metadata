@@ -65,7 +65,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to render.</param>
         /// <param name="targetName">Target name.</param>
         /// <returns>Reference for added renderer.</returns>
-        protected PropertyRenderer<T> Add<T>(IProperty<T> property, string? targetName = null)
+        public PropertyRenderer<T> Add<T>(IProperty<T> property, string? targetName = null)
         {
             var renderer = new PropertyRenderer<T>(property, targetName);
             _renderers.Add(renderer);

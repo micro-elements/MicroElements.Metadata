@@ -55,8 +55,8 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Value type.</typeparam>
     public class ValueParser<T> : ValueParserBase<T>
     {
-        private readonly Func<string, T> _parseFuncSimple;
-        private readonly Func<string, Option<T>> _parseFunc;
+        private readonly Func<string, T>? _parseFuncSimple;
+        private readonly Func<string, Option<T>>? _parseFunc;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ValueParser{T}"/> class.
@@ -79,7 +79,7 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public override Option<T> Parse(string source)
         {
-            return _parseFuncSimple != null ? _parseFuncSimple(source) : _parseFunc(source);
+            return _parseFuncSimple != null ? _parseFuncSimple(source) : _parseFunc?.Invoke(source) ?? Option<T>.None;
         }
     }
 }

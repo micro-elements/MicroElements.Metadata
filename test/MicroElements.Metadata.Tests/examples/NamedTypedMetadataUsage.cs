@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
 using Xunit;
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+
 namespace MicroElements.Metadata.Tests.examples
 {
     public class NamedTypedMetadataUsage

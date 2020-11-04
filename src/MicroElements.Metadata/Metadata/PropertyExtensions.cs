@@ -25,69 +25,71 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Creates new property of type <typeparamref name="TResult"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
         /// Map func can receive null values.
         /// </summary>
-        /// <typeparam name="A">Source type.</typeparam>
-        /// <typeparam name="B">Result type.</typeparam>
+        /// <typeparam name="TSource">Source type.</typeparam>
+        /// <typeparam name="TResult">Result type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="TSource"/> to type <typeparamref name="TResult"/>.
+        /// TSource MayBeNull, TResult MayBeNull but Func at the current moment does not support nullability.</param>
         /// <param name="allowMapNull">By default false: does not calls <paramref name="map"/> if <paramref name="property"/> value is null.</param>
         /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
-        /// <returns>New property of type <typeparamref name="B"/>.</returns>
-        public static IProperty<B> Map<A, B>(
-            this IProperty<A> property,
-            Func<A, B> map,
+        /// <returns>New property of type <typeparamref name="TResult"/>.</returns>
+        public static IProperty<TResult> Map<TSource, TResult>(
+            this IProperty<TSource> property,
+            Func<TSource, TResult> map,
             bool allowMapNull = false,
             Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (B, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
+            (TResult, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
                 search = configureSearch?.Invoke(search) ?? search;
-                var propertyValueA = container.GetPropertyValue(property, search);
-                if (propertyValueA.HasValue())
+                IPropertyValue<TSource>? sourcePropertyValue = container.GetPropertyValue(property, search);
+                if (sourcePropertyValue.HasValue())
                 {
-                    A valueA = propertyValueA.Value;
-                    bool shouldMap = !valueA.IsNull() || (valueA.IsNull() && allowMapNull);
+                    TSource sourceValue = sourcePropertyValue.Value;
+                    bool shouldMap = !sourceValue.IsNull() || (sourceValue.IsNull() && allowMapNull);
                     if (shouldMap)
                     {
-                        B valueB = map(valueA);
-                        return (valueB, ValueSource.Calculated);
+                        // TSource MayBeNull, TResult MayBeNull but Func at the current moment does not support nullability.
+                        TResult resultValue = map(sourceValue);
+                        return (resultValue, ValueSource.Calculated);
                     }
                 }
 
-                return (default(B), ValueSource.NotDefined);
+                return (default(TResult), ValueSource.NotDefined);
             }
 
-            return new Property<B>(property.Name)
+            return new Property<TResult>(property.Name)
                 .With(description: property.Description, alias: property.Alias)
                 .WithCalculate(ConvertValue);
         }
 
         /// <summary>
-        /// Creates new property of type <typeparamref name="B"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
+        /// Creates new property of type <typeparamref name="TResult"/> that evaluates its value as value of property <paramref name="property"/> and <paramref name="map"/> func.
         /// Map func can receive null values.
         /// </summary>
-        /// <typeparam name="A">Source type.</typeparam>
-        /// <typeparam name="B">Result type.</typeparam>
+        /// <typeparam name="TSource">Source type.</typeparam>
+        /// <typeparam name="TResult">Result type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <param name="map">Function that maps value of type <typeparamref name="A"/> to type <typeparamref name="B"/>.</param>
+        /// <param name="map">Function that maps value of type <typeparamref name="TSource"/> to type <typeparamref name="TResult"/>.</param>
         /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
-        /// <returns>New property of type <typeparamref name="B"/>.</returns>
-        public static IProperty<B> Map<A, B>(
-            this IProperty<A> property,
-            Func<IPropertyValue<A>, (B Value, ValueSource ValueSource)> map,
+        /// <returns>New property of type <typeparamref name="TResult"/>.</returns>
+        public static IProperty<TResult> Map<TSource, TResult>(
+            this IProperty<TSource> property,
+            Func<IPropertyValue<TSource>, (TResult Value, ValueSource ValueSource)> map,
             Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (B, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
+            (TResult, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
                 search = configureSearch?.Invoke(search) ?? search;
-                var propertyValueA = container.GetPropertyValue(property, search);
-                var valueBResult = map(propertyValueA);
-                return valueBResult;
+                var sourcePropertyValue = container.GetPropertyValue(property, search);
+                var resultValue = map(sourcePropertyValue);
+                return resultValue;
             }
 
-            return new Property<B>(property.Name)
+            return new Property<TResult>(property.Name)
                 .With(description: property.Description, alias: property.Alias)
                 .WithCalculate(ConvertValue);
         }
@@ -95,11 +97,11 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Converts Nullable struct property to NotNullable property of the same base type.
         /// </summary>
-        /// <typeparam name="A">Property type.</typeparam>
+        /// <typeparam name="TSource">Property type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <returns>New property of type <typeparamref name="A"/>.</returns>
-        public static IProperty<A> DeNullify<A>(this IProperty<A?> property)
-            where A : struct
+        /// <returns>New property of type <typeparamref name="TSource"/>.</returns>
+        public static IProperty<TSource> DeNullify<TSource>(this IProperty<TSource?> property)
+            where TSource : struct
         {
             // ReSharper disable once PossibleInvalidOperationException
             return property.Map(map: a => a!.Value, allowMapNull: false);
@@ -108,14 +110,14 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Converts NotNullable struct property to Nullable property of the same base type.
         /// </summary>
-        /// <typeparam name="A">Property type.</typeparam>
+        /// <typeparam name="TSource">Property type.</typeparam>
         /// <param name="property">Source property.</param>
-        /// <returns>New property of type <typeparamref name="A"/>.</returns>
-        public static IProperty<A?> Nullify<A>(this IProperty<A> property)
-            where A : struct
+        /// <returns>New property of type <typeparamref name="TSource"/>.</returns>
+        public static IProperty<TSource?> Nullify<TSource>(this IProperty<TSource> property)
+            where TSource : struct
         {
             return property.Map(
-                map: a => (A?)a,
+                map: a => (TSource?)a,
                 allowMapNull: false,
                 configureSearch: options => options.UseDefaultValue(false));
         }
@@ -123,14 +125,14 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Calculates undefined struct value to <paramref name="defaultValue"/>.
         /// </summary>
-        /// <typeparam name="A">Value type.</typeparam>
+        /// <typeparam name="TSource">Value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="defaultValue">Default value.</param>
-        /// <returns>New property of type <typeparamref name="A"/>.</returns>
-        public static IProperty<A> UseDefaultForUndefined<A>(
-            this IProperty<A> property,
-            A defaultValue = default)
-            where A : struct
+        /// <returns>New property of type <typeparamref name="TSource"/>.</returns>
+        public static IProperty<TSource> UseDefaultForUndefined<TSource>(
+            this IProperty<TSource> property,
+            TSource defaultValue = default)
+            where TSource : struct
         {
             return property.Map(pv => pv.IsNullOrNotDefined() ? (defaultValue, ValueSource.Calculated) : (pv.Value, pv.Source));
         }

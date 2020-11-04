@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -12,6 +13,7 @@ namespace MicroElements
     /// <summary>
     /// Creates compiled functions.
     /// </summary>
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1314:Type parameter names should begin with T", Justification = "Ok.")]
     public static class CodeCompiler
     {
         #region Caches

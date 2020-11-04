@@ -187,7 +187,7 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Text, (int) Language);
+            return HashCode.Combine(Text, (int)Language);
         }
 
         public static bool operator ==(LocalString left, LocalString right)

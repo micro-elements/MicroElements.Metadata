@@ -20,36 +20,16 @@ namespace MicroElements.Metadata
         /// <returns><see cref="IPropertyValue"/> list.</returns>
         public static IReadOnlyList<IPropertyValue> ParseProperties(this IParserProvider parserProvider, IReadOnlyDictionary<string, string> sourceRow)
         {
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+            sourceRow.AssertArgumentNotNull(nameof(sourceRow));
+
             var propertyValues = parserProvider
                 .GetParsers()
-                .Select(parser => ParseRowOrGetDefault(parser, sourceRow))
+                .Select(parser => parser.ParseRowUntyped(sourceRow))
                 .SelectMany(propertyValue => propertyValue)
                 .ToList();
 
             return propertyValues;
-        }
-
-        private static Option<IPropertyValue> ParseRowOrGetDefault(IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
-        {
-            return sourceRow
-                .GetValueAsOption(propertyParser.SourceName)
-                .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
-        }
-
-        public static Option<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue)
-        {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string, Option<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<CodeCompiler.GenericType>);
-            return func(propertyParser, textValue);
-        }
-
-        public static Option<IPropertyValue> Parse<T>(IPropertyParser propertyParserUntyped, string textValue)
-        {
-            var propertyParser = (IPropertyParser<T>)propertyParserUntyped;
-
-            return propertyParser
-                .ValueParser
-                .Parse(textValue)
-                .Map(value => (IPropertyValue)new PropertyValue<T>(propertyParser.TargetProperty, value, ValueSource.Defined));
         }
     }
 }

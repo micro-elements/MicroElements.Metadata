@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
-using static MicroElements.Functional.Prelude;
 
 namespace MicroElements.Metadata
 {
@@ -42,26 +40,6 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets default property value.
         /// </summary>
-        Func<T> DefaultValue { get; }
-    }
-
-    public static class PropertyParserExtensions
-    {
-        public static Option<IPropertyValue> GetDefaultValueUntyped(this IPropertyParser propertyParser)
-        {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, Option<IPropertyValue>>(propertyParser.TargetType, "GetDefaultValue", GetDefaultValue<CodeCompiler.GenericType>);
-            return func(propertyParser);
-        }
-
-        public static Option<IPropertyValue> GetDefaultValue<T>(this IPropertyParser propertyParserUntyped)
-        {
-            IPropertyParser<T> propertyParser = (IPropertyParser<T>)propertyParserUntyped;
-            if (propertyParser.DefaultValue != null)
-            {
-                var defaultValue = propertyParser.DefaultValue();
-                return new PropertyValue<T>(propertyParser.TargetProperty, defaultValue, ValueSource.DefaultValue);
-            }
-            return None;
-        }
+        Func<T>? DefaultValue { get; }
     }
 }

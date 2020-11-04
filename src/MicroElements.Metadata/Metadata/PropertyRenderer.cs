@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using MicroElements.Functional;
 
@@ -34,7 +35,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets custom render function that overrides all render.
         /// </summary>
-        public Func<IProperty, IPropertyContainer, string>? CustomRender { get; private set; }
+        public Func<IProperty, IPropertyContainer, string?>? CustomRender { get; private set; }
 
         /// <summary>
         /// Gets value that is renders when property value is null.
@@ -240,7 +241,7 @@ namespace MicroElements.Metadata
         /// <param name="renderer">Source renderer.</param>
         /// <param name="formatValue">Func that formats value.</param>
         /// <returns>The same renderer for chaining.</returns>
-        public static IPropertyRenderer<T> SetFormat<T>(this IPropertyRenderer<T> renderer, Func<T, IPropertyContainer, string> formatValue)
+        public static IPropertyRenderer<T> SetFormat<T>(this IPropertyRenderer<T> renderer, Func<T, IPropertyContainer, string?> formatValue)
         {
             return (IPropertyRenderer<T>)renderer.Configure(options =>
             {

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -15,16 +16,16 @@ namespace MicroElements.Metadata
         public Type TargetType => typeof(T);
 
         /// <inheritdoc />
-        public string SourceName { get; private set; }
+        public string SourceName { get; }
 
         /// <inheritdoc />
-        public IValueParser<T> ValueParser { get; private set; }
+        public IValueParser<T> ValueParser { get; }
 
         /// <inheritdoc />
         public IProperty<T> TargetProperty { get; private set; }
 
         /// <inheritdoc />
-        public Func<T> DefaultValue { get; private set; }
+        public Func<T>? DefaultValue { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
@@ -32,11 +33,11 @@ namespace MicroElements.Metadata
         /// <param name="sourceName">Source name.</param>
         /// <param name="valueParser">Value parser.</param>
         /// <param name="targetProperty">Target property.</param>
-        public PropertyParser(string sourceName, IValueParser<T> valueParser, IProperty<T> targetProperty)
+        public PropertyParser(string sourceName, IValueParser<T> valueParser, IProperty<T>? targetProperty)
         {
-            SourceName = sourceName ?? "UNDEFINED";
-            ValueParser = valueParser;
-            TargetProperty = targetProperty;
+            SourceName = sourceName ?? $"Undefined_{Guid.NewGuid()}";
+            ValueParser = valueParser.AssertArgumentNotNull(nameof(valueParser));
+            TargetProperty = targetProperty ?? new Property<T>($"UndefinedTarget_{SourceName}");
         }
 
         /// <inheritdoc />

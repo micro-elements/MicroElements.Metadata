@@ -12,8 +12,8 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Value type.</typeparam>
     public class PropertyCalculator<T> : IPropertyCalculator<T>
     {
-        private readonly Func<IPropertyContainer, SearchOptions, T> _calculateSimple;
-        private readonly Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)> _calculate;
+        private readonly Func<IPropertyContainer, SearchOptions, T>? _calculateSimple;
+        private readonly Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)>? _calculate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyCalculator{T}"/> class.
@@ -22,6 +22,7 @@ namespace MicroElements.Metadata
         public PropertyCalculator(Func<IPropertyContainer, T> calculateSimple)
         {
             calculateSimple.AssertArgumentNotNull(nameof(calculateSimple));
+
             _calculateSimple = (container, options) => calculateSimple(container);
         }
 
@@ -52,7 +53,7 @@ namespace MicroElements.Metadata
                 return (value, ValueSource.Calculated);
             }
 
-            var calculationResult = _calculate(propertyContainer, searchOptions);
+            var calculationResult = _calculate!.Invoke(propertyContainer, searchOptions);
             return calculationResult;
         }
     }

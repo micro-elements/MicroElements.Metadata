@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
@@ -184,80 +182,6 @@ namespace MicroElements.Reporting.Excel
         /// Cell customization function.
         /// </summary>
         public static readonly IProperty<Action<CellContext>> ConfigureCell = new Property<Action<CellContext>>("ConfigureCell");
-    }
-
-    public class DocumentContext
-    {
-        public SpreadsheetDocument Document { get; }
-
-        public WorkbookPart WorkbookPart => Document.WorkbookPart;
-
-        public IExcelMetadata DocumentMetadata { get; }
-
-        public IDictionary<string, string> SharedStringTable { get; } = new Dictionary<string, string>();
-
-        public DocumentContext(SpreadsheetDocument document, IExcelMetadata documentMetadata)
-        {
-            Document = document;
-            DocumentMetadata = documentMetadata.AssertArgumentNotNull(nameof(documentMetadata));
-        }
-    }
-
-    public class SheetContext
-    {
-        public DocumentContext DocumentContext { get; }
-
-        public WorksheetPart WorksheetPart { get; }
-
-        public IExcelMetadata DocumentMetadata => DocumentContext.DocumentMetadata;
-
-        public IExcelMetadata SheetMetadata { get; }
-
-        public IReportRenderer ReportRenderer { get; }
-
-        public bool IsTransposed => ExcelMetadata.GetFirstDefinedValue(ExcelMetadata.Transpose, SheetMetadata);
-
-        public bool IsNotTransposed => !IsTransposed;
-
-        public IReadOnlyList<ColumnContext> Columns { get; internal set; }
-
-        public SheetData SheetData { get; set; }
-
-        public Sheet Sheet { get; set; }
-
-        public SheetContext(
-            DocumentContext documentContext,
-            WorksheetPart worksheetPart,
-            IExcelMetadata sheetMetadata,
-            IReportRenderer reportProvider)
-        {
-            DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
-            SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
-            ReportRenderer = reportProvider.AssertArgumentNotNull(nameof(reportProvider));
-            WorksheetPart = worksheetPart.AssertArgumentNotNull(nameof(worksheetPart));
-        }
-    }
-
-    public class ColumnContext
-    {
-        public SheetContext SheetContext { get; }
-
-        public IExcelMetadata DocumentMetadata => SheetContext.DocumentMetadata;
-
-        public IExcelMetadata SheetMetadata => SheetContext.SheetMetadata;
-
-        public IExcelMetadata ColumnMetadata { get; }
-
-        public IPropertyRenderer PropertyRenderer { get; }
-
-        public Column Column { get; set; }
-
-        public ColumnContext(SheetContext sheetContext, IExcelMetadata columnMetadata, IPropertyRenderer propertyRenderer)
-        {
-            SheetContext = sheetContext.AssertArgumentNotNull(nameof(sheetContext));
-            ColumnMetadata = columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
-            PropertyRenderer = propertyRenderer.AssertArgumentNotNull(nameof(propertyRenderer));
-        }
     }
 
     public class CellContext

@@ -84,7 +84,7 @@ namespace MicroElements.Metadata
         public Func<IProperty, IPropertyContainer, string?>? CustomRender { get; set; }
 
         /// <summary>
-        /// Callback that invokes after configuring.
+        /// Gets or sets callback that invokes after configuring.
         /// </summary>
         public Action<IPropertyRenderer>? AfterConfigure { get; set; }
 

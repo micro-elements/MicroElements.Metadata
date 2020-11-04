@@ -20,10 +20,16 @@ namespace MicroElements.Metadata
 
         #region IEnumerable<IProperty> implementation
 
+        /// <summary>
+        /// Gets property enumerator.
+        /// </summary>
+        /// <returns>Enumerator instance.</returns>
         private IEnumerator<IProperty> GetEnumeratorInternal() => GetProperties().GetEnumerator();
 
+        /// <inheritdoc cref="GetEnumeratorInternal"/>
         IEnumerator<IProperty> IEnumerable<IProperty>.GetEnumerator() => GetEnumeratorInternal();
 
+        /// <inheritdoc cref="GetEnumeratorInternal"/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
 
         #endregion

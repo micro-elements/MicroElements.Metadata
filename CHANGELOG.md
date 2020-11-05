@@ -1,3 +1,7 @@
+# 4.4.0
+- SetFormat fixed: now for null input values it returns NullValue
+- Excel: FillCellReferences now checks whether it should fill cell references
+
 # 4.3.0
 - SearchExtensions unified and documented
 - Added Search.Algorithm with global access to optionate search

@@ -21,6 +21,12 @@ namespace MicroElements.Reporting.Excel
 
         public Column Column { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ColumnContext"/> class.
+        /// </summary>
+        /// <param name="sheetContext"></param>
+        /// <param name="columnMetadata"></param>
+        /// <param name="propertyRenderer"></param>
         public ColumnContext(SheetContext sheetContext, IExcelMetadata columnMetadata, IPropertyRenderer propertyRenderer)
         {
             SheetContext = sheetContext.AssertArgumentNotNull(nameof(sheetContext));

@@ -216,21 +216,29 @@ namespace MicroElements.Metadata
         {
             return renderer.Configure(options =>
             {
-                options.CustomRender = (property, container) =>
-                {
-                    return RenderAsFormattable(property, container, options.SearchOptions, format, formatProvider);
-                };
+                options.CustomRender = (property, container) => RenderAsFormattable(property, container, options, format, formatProvider);
             });
 
-            static string RenderAsFormattable(
+            static string? RenderAsFormattable(
                 IProperty property,
                 IPropertyContainer container,
-                SearchOptions? searchOptions,
+                PropertyRendererOptions options,
                 string format,
                 IFormatProvider? formatProvider)
             {
-                object? valueUntyped = container.GetPropertyValueUntyped(property, searchOptions)?.ValueUntyped;
-                return (valueUntyped as IFormattable)?.ToString(format, formatProvider ?? CultureInfo.InvariantCulture) ?? valueUntyped.DefaultFormatValue();
+                object? valueUntyped = container.GetPropertyValueUntyped(property, options.SearchOptions)?.ValueUntyped;
+
+                if (valueUntyped == null)
+                {
+                    return options.NullValue;
+                }
+
+                if (valueUntyped is IFormattable formattable)
+                {
+                    return formattable.ToString(format, formatProvider ?? CultureInfo.InvariantCulture);
+                }
+
+                return valueUntyped.DefaultFormatValue();
             }
         }
 

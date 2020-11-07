@@ -351,18 +351,28 @@ namespace MicroElements.Parsing
                 .Select(factory);
         }
 
+        public static bool NeedFillCellReferences(this ExcelElement<Sheet> sheet)
+        {
+            bool needFill = sheet.GetRows().FirstOrDefault()?.GetRowCells().FirstOrDefault()?.Data?.CellReference == null;
+            return needFill;
+        }
+
         public static ExcelElement<Sheet> FillCellReferences(this ExcelElement<Sheet> sheet)
         {
-            sheet
-                .GetRows()
-                .FillCellReferences()
-                .ToArray();
+            if (NeedFillCellReferences(sheet))
+            {
+                _ = sheet
+                    .GetRows()
+                    .FillCellReferences()
+                    .ToArray();
+            }
+
             return sheet;
         }
 
         public static IEnumerable<ExcelElement<Row>> FillCellReferences(this IEnumerable<ExcelElement<Row>> rows)
         {
-            int rowIndex = 0;
+            int rowIndex = 1;
             foreach (ExcelElement<Row> row in rows)
             {
                 ExcelElement<Cell>[] rowCells = row.GetRowCells();

@@ -3,7 +3,6 @@
 
 using System;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
 using MicroElements.Metadata;
 
 namespace MicroElements.Reporting.Excel
@@ -171,7 +170,6 @@ namespace MicroElements.Reporting.Excel
         /// HeaderCell customization function.
         /// </summary>
         public static readonly IProperty<Action<CellContext>> ConfigureHeaderCell = new Property<Action<CellContext>>("ConfigureHeaderCell");
-
     }
 
     /// <summary>
@@ -188,49 +186,5 @@ namespace MicroElements.Reporting.Excel
         /// Cell customization function.
         /// </summary>
         public static readonly IProperty<Action<CellContext>> ConfigureCell = new Property<Action<CellContext>>("ConfigureCell");
-    }
-
-    public class CellContext
-    {
-        public ColumnContext ColumnContext { get; }
-
-        public IExcelMetadata DocumentMetadata => ColumnContext.DocumentMetadata;
-
-        public IExcelMetadata SheetMetadata => ColumnContext.SheetMetadata;
-
-        public IExcelMetadata ColumnMetadata => ColumnContext.ColumnMetadata;
-
-        public IExcelMetadata CellMetadata { get; }
-
-        public IPropertyRenderer PropertyRenderer => ColumnContext.PropertyRenderer;
-
-        public Cell Cell { get; }
-
-        public CellContext(ColumnContext columnContext, IExcelMetadata cellMetadata, Cell cell)
-        {
-            ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
-            CellMetadata = cellMetadata.AssertArgumentNotNull(nameof(cellMetadata));
-            Cell = cell;
-        }
-    }
-
-    public static class ExcelMetadataExtensions
-    {
-        /// <summary>
-        /// Takes configure action and combines action with new action.
-        /// </summary>
-        public static TContainer WithCombinedConfigure<TContainer, TContext>(this TContainer value, IProperty<Action<TContext>> property, Action<TContext> action)
-            where TContainer : IMutablePropertyContainer
-        {
-            Action<TContext> existedAction = value.GetPropertyValue(property)?.Value;
-
-            return value.WithValue(property, context => Combine(context, existedAction, action));
-
-            static void Combine(TContext context, Action<TContext> action1, Action<TContext> action2)
-            {
-                action1?.Invoke(context);
-                action2(context);
-            }
-        }
     }
 }

@@ -190,11 +190,23 @@ namespace MicroElements.Metadata
             return HashCode.Combine(Text, (int)Language);
         }
 
+        /// <summary>
+        /// Checks whether left and right objects are equals.
+        /// </summary>
+        /// <param name="left">Left object.</param>
+        /// <param name="right">Right object.</param>
+        /// <returns>True if objects are equal.</returns>
         public static bool operator ==(LocalString left, LocalString right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Checks whether left and right objects are not equals.
+        /// </summary>
+        /// <param name="left">Left object.</param>
+        /// <param name="right">Right object.</param>
+        /// <returns>True if objects are noy equal.</returns>
         public static bool operator !=(LocalString left, LocalString right)
         {
             return !left.Equals(right);

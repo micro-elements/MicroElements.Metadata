@@ -20,7 +20,7 @@ namespace MicroElements.Metadata
         public IPropertyValue? SearchPropertyValueUntyped(
             IPropertyContainer propertyContainer,
             IProperty property,
-            SearchOptions? searchOptions = default)
+            SearchOptions? searchOptions = null)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             property.AssertArgumentNotNull(nameof(property));

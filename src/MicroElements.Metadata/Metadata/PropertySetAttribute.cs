@@ -10,6 +10,7 @@ namespace MicroElements.Metadata
 {
     /// <summary>
     /// Marks <see cref="IPropertyContainer"/> with properties that it can contain.
+    /// Type is required for <see cref="IPropertySet"/> evaluation.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class PropertySetAttribute : Attribute
@@ -18,17 +19,17 @@ namespace MicroElements.Metadata
         /// Gets or sets type that contains PropertySet.
         /// It can be instance type of typed PropertySet or static type.
         /// </summary>
-        public Type Type { get; set; }
+        public Type? Type { get; set; }
 
         /// <summary>
         /// Gets or sets property with type <see cref="IPropertySet"/> or <see cref="IEnumerable{T}"/>.
         /// </summary>
-        public string Property { get; set; }
+        public string? Property { get; set; }
 
         /// <summary>
         /// Gets or sets method that returns <see cref="IEnumerable{IProperty}"/>.
         /// </summary>
-        public string Method { get; set; }
+        public string? Method { get; set; }
 
         /// <summary>
         /// Gets <see cref="IPropertySet"/> according search conditions.
@@ -50,11 +51,15 @@ namespace MicroElements.Metadata
         /// <param name="method">Method that returns <see cref="IEnumerable{IProperty}"/>.</param>
         /// <returns><see cref="IPropertySet"/> or null.</returns>
         public static IPropertySet? GetPropertySet(
-            Type type,
+            Type? type,
             string? property = null,
             string? method = null)
         {
+            if (type == null)
+                return null;
+
             IPropertySet? result = null;
+
             if (type.IsAssignableTo<IPropertySet>() && type.IsConcreteType())
             {
                 result = (IPropertySet) Activator.CreateInstance(type);

@@ -165,18 +165,19 @@ namespace MicroElements.Metadata
         public static IPropertyRenderer AsUntyped<T>(this IPropertyRenderer<T> renderer) => renderer;
 
         /// <summary>
-        /// Executes <paramref name="configureUntyped"/> and returns the renderer of the same input type.
+        /// Executes <paramref name="configure"/> and returns the renderer of the same input type.
+        /// <paramref name="configure"/> should return the same renderer or method will throw exception.
         /// </summary>
         /// <typeparam name="TPropertyRenderer">PropertyRenderer type.</typeparam>
         /// <param name="renderer">Source renderer.</param>
-        /// <param name="configureUntyped">Configure action.</param>
+        /// <param name="configure">Configure action.</param>
         /// <returns>The same renderer of the same input type.</returns>
         public static TPropertyRenderer ConfigureTyped<TPropertyRenderer>(
             this TPropertyRenderer renderer,
-            Func<IPropertyRenderer, IPropertyRenderer> configureUntyped)
+            Func<TPropertyRenderer, IPropertyRenderer> configure)
             where TPropertyRenderer : IPropertyRenderer
         {
-            IPropertyRenderer propertyRenderer = configureUntyped(renderer);
+            IPropertyRenderer propertyRenderer = configure(renderer);
             if (!ReferenceEquals(propertyRenderer, renderer))
                 throw new InvalidOperationException("Configure action should return the same renderer instance");
             return renderer;

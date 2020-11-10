@@ -18,7 +18,7 @@ namespace MicroElements.Metadata
         IPropertyValue? SearchPropertyValueUntyped(
             IPropertyContainer propertyContainer,
             IProperty property,
-            SearchOptions? searchOptions = default);
+            SearchOptions? searchOptions = null);
 
         /// <summary>
         /// Gets <see cref="IPropertyValue{T}"/> by <see cref="IProperty{T}"/> and <see cref="SearchOptions"/>.

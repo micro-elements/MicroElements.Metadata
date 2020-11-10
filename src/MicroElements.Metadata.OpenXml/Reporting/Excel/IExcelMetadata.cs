@@ -166,6 +166,12 @@ namespace MicroElements.Reporting.Excel
         /// Sheet customization function.
         /// </summary>
         public static readonly IProperty<Action<ColumnContext>> ConfigureColumn = new Property<Action<ColumnContext>>("ConfigureColumn");
+
+        /// <summary>
+        /// HeaderCell customization function.
+        /// </summary>
+        public static readonly IProperty<Action<CellContext>> ConfigureHeaderCell = new Property<Action<CellContext>>("ConfigureHeaderCell");
+
     }
 
     /// <summary>

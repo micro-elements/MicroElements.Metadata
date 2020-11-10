@@ -3,10 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Metadata;
+using MicroElements.Parsing;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -129,12 +132,12 @@ namespace MicroElements.Reporting.Excel
             return workbookStylesPart.Stylesheet;
         }
 
-        internal static void SetStyleSheetName(this object target, string name)
+        public static void SetStyleSheetName(this OpenXmlElement target, string name)
         {
             target.GetInstanceMetadata().SetMetadata("StyleSheetName", name);
         }
 
-        internal static string GetStyleSheetName(this object target)
+        public static string GetStyleSheetName(this OpenXmlElement target)
         {
             return target.GetInstanceMetadata().GetMetadata<string>("StyleSheetName");
         }
@@ -275,6 +278,195 @@ namespace MicroElements.Reporting.Excel
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
             return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
+        }
+
+        public static void ApplyStyleToCell(this CellContext context, string applyStyleName)
+        {
+            var documentContext = context.ColumnContext.SheetContext.DocumentContext;
+
+            context.Cell.StyleIndex = GetMergedStyleIndex(documentContext, context.Cell.StyleIndex, applyStyleName);
+        }
+
+        public static void ApplyStyleToColumn(this ColumnContext context, string applyStyleName)
+        {
+            var documentContext = context.SheetContext.DocumentContext;
+
+            context.Column.Style = GetMergedStyleIndex(documentContext, context.Column.Style, applyStyleName);
+        }
+
+        public static uint GetMergedStyleIndex(
+            this DocumentContext documentContext,
+            UInt32Value currentStyleIndex,
+            string applyStyleName,
+            bool applyStyleToEnd = true)
+        {
+            int styleIndex = (int)(currentStyleIndex?.Value ?? 0);
+
+            uint mergedStyleIndex;
+            if (styleIndex != 0)
+            {
+                CellFormat currentStyle = documentContext.GetCellFormat(styleIndex);
+                string currentStyleName = currentStyle.GetStyleSheetName();
+                string combinedStyleName = applyStyleToEnd ? (currentStyleName, applyStyleName).ToString() : (applyStyleName, currentStyleName).ToString();
+
+                uint combinedStyleIndex = documentContext.GetCellFormatIndex(combinedStyleName);
+                if (combinedStyleIndex > 0)
+                {
+                    // style already created
+                    mergedStyleIndex = combinedStyleIndex;
+                }
+                else
+                {
+                    CellFormat applyStyle = documentContext.GetCellFormat(applyStyleName);
+                    CellFormat combineStyle = applyStyleToEnd ? CombineStyles(currentStyle, applyStyle) : CombineStyles(applyStyle, currentStyle);
+
+                    // register new style
+                    documentContext.AddCellFormat(combineStyle, combinedStyleName);
+
+                    mergedStyleIndex = documentContext.GetCellFormatIndex(combinedStyleName);
+                }
+            }
+            else
+            {
+                mergedStyleIndex = documentContext.GetCellFormatIndex(applyStyleName);
+            }
+
+            return mergedStyleIndex;
+        }
+
+        private static CellFormat CombineStyles(CellFormat currentStyle, CellFormat applyStyle)
+        {
+            CellFormat newStyle = new CellFormat
+            {
+                NumberFormatId = currentStyle.NumberFormatId,
+                FontId = currentStyle.FontId,
+                FillId = currentStyle.FillId,
+                BorderId = currentStyle.BorderId,
+
+                ApplyNumberFormat = currentStyle.ApplyNumberFormat,
+                ApplyFont = currentStyle.ApplyFont,
+                ApplyFill = currentStyle.ApplyFill,
+                ApplyBorder = currentStyle.ApplyBorder
+            };
+
+            if (applyStyle.ApplyNumberFormat != null && applyStyle.ApplyNumberFormat)
+            {
+                newStyle.NumberFormatId = applyStyle.NumberFormatId;
+                newStyle.ApplyNumberFormat = applyStyle.ApplyNumberFormat;
+            }
+
+            if (applyStyle.ApplyFont != null && applyStyle.ApplyFont)
+            {
+                newStyle.FontId = applyStyle.FontId;
+                newStyle.ApplyFont = applyStyle.ApplyFont;
+            }
+
+            if (applyStyle.ApplyFill != null && applyStyle.ApplyFill)
+            {
+                newStyle.FillId = applyStyle.FillId;
+                newStyle.ApplyFill = applyStyle.ApplyFill;
+            }
+
+            if (applyStyle.ApplyBorder != null && applyStyle.ApplyBorder)
+            {
+                newStyle.BorderId = applyStyle.BorderId;
+                newStyle.ApplyBorder = applyStyle.ApplyBorder;
+            }
+
+            return newStyle;
+        }
+
+        public static CellFormat GetCellFormat(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
+        }
+
+        public static CellFormat GetCellFormat(this DocumentContext documentContext, int index)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().Skip(index).FirstOrDefault();
+        }
+
+        public static TMetadataProvider ConfigureCellStyle<TMetadataProvider>(this TMetadataProvider metadataProvider, Func<string, string> getCellStyle)
+            where TMetadataProvider : IMetadataProvider
+        {
+            metadataProvider.ConfigureMetadata<ExcelCellMetadata>(metadata => metadata.SetValue(ExcelCellMetadata.ConfigureCell, context => ConfigureCell(context, getCellStyle)));
+            return metadataProvider;
+
+            static void ConfigureCell(CellContext context, Func<string, string> getCellStyle)
+            {
+                DocumentContext documentContext = context.ColumnContext.SheetContext.DocumentContext;
+                ExcelElement<Cell> excelCell = new ExcelElement<Cell>(documentContext.Document, context.Cell);
+
+                string cellValue = excelCell.GetCellValue();
+                string cellStyle = getCellStyle(cellValue);
+
+                if (cellStyle != null)
+                    context.ApplyStyleToCell(cellStyle);
+            }
+        }
+
+        public static TContainer WithExcelDocumentStyles<TContainer>(this TContainer value, params ICellFormatProvider[] formatProviders)
+            where TContainer : IMutablePropertyContainer
+        {
+            return value.WithCombinedConfigure
+            (
+                ExcelDocumentMetadata.ConfigureDocument,
+                context =>
+                {
+                    foreach (var formatProvider in formatProviders)
+                    {
+                        context.AddCellFormat(formatProvider.CreateFormat(context), formatProvider.GetFormatName());
+                    }
+                }
+            );
+        }
+
+        public static TContainer WithExcelDocumentStyles<TContainer>(this TContainer value, Type type)
+            where TContainer : IMutablePropertyContainer
+        {
+            Type[] styles = type
+                .GetProperties()
+                .Select(item => item.GetCustomAttribute<Format>()?.Provider)
+                .Where(item => item != default)
+                .Distinct()
+                .ToArray();
+
+            return styles.Length > 0
+                ? value.WithCombinedConfigure
+                (
+                    ExcelDocumentMetadata.ConfigureDocument,
+                    context =>
+                    {
+                        foreach (Type style in styles)
+                        {
+                            ICellFormatProvider instance = (ICellFormatProvider)Activator.CreateInstance(style);
+                            context.AddCellFormat(instance.CreateFormat(context), instance.GetFormatName());
+                        }
+                    }
+                )
+                : value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class Format : Attribute
+    {
+        public Type Provider { get; }
+        public Format(Type provider) => Provider = provider;
+    }
+
+    public interface ICellFormatProvider
+    {
+        CellFormat CreateFormat(DocumentContext context);
+    }
+
+    public static class FormatProviderExtensions
+    {
+        public static string GetFormatName(this ICellFormatProvider formatProvider)
+        {
+            return formatProvider.GetType().ToString();
         }
     }
 }

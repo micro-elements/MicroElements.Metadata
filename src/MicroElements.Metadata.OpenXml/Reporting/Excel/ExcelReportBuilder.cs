@@ -296,7 +296,7 @@ namespace MicroElements.Reporting.Excel
             if (sheetContext.IsNotTransposed)
             {
                 // HEADER ROW
-                var headerCells = columns.Select(column => ConstructCell(column.PropertyRenderer.TargetName, CellValues.SharedString));
+                var headerCells = columns.Select(ConstructHeaderCell);
                 sheetData.AppendChild(new Row(headerCells));
 
                 // DATA ROWS
@@ -309,7 +309,7 @@ namespace MicroElements.Reporting.Excel
             else
             {
                 // NAME COLUMN
-                var headerCells = columns.Select(columnContext => ConstructCell(columnContext.PropertyRenderer.TargetName, CellValues.SharedString));
+                var headerCells = columns.Select(ConstructHeaderCell);
                 Row[] excelRows = headerCells.Select(headerCell => new Row(headerCell)).ToArray();
 
                 // VALUE COLUMN
@@ -378,7 +378,7 @@ namespace MicroElements.Reporting.Excel
             return columnsElement;
         }
 
-        private Cell ConstructCell(string value, CellValues dataType)
+        private Cell CreateCell(string value, CellValues dataType)
         {
             string cellText = value;
 
@@ -392,11 +392,30 @@ namespace MicroElements.Reporting.Excel
                 cellText = _documentContext.GetOrAddSharedString(value);
             }
 
-            return new Cell
+            Cell cell = new Cell
             {
                 CellValue = new CellValue(cellText),
                 DataType = new EnumValue<CellValues>(dataType),
             };
+
+            return cell;
+        }
+
+        private Cell ConstructHeaderCell(ColumnContext columnContext)
+        {
+            Cell headerCell = CreateCell(columnContext.PropertyRenderer.TargetName, CellValues.String);
+
+            var propertyRenderer = columnContext.PropertyRenderer;
+            var cellMetadata = propertyRenderer.GetMetadata<ExcelColumnMetadata>();
+
+            // External customization
+            var customizeFunc = cellMetadata?.GetValue(ExcelColumnMetadata.ConfigureHeaderCell);
+            if (customizeFunc != null)
+            {
+                customizeFunc.Invoke(new CellContext(columnContext, cellMetadata, headerCell));
+            }
+
+            return headerCell;
         }
 
         private Cell ConstructCell(ColumnContext columnContext, IPropertyContainer source)
@@ -413,7 +432,7 @@ namespace MicroElements.Reporting.Excel
                 columnContext.SheetMetadata,
                 columnContext.DocumentMetadata);
 
-            Cell cell = ConstructCell(textValue, dataType);
+            Cell cell = CreateCell(textValue, dataType);
 
             if (dataType == CellValues.Date)
             {

@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Metadata
 {
@@ -64,5 +65,18 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
+
+        /// <summary>
+        /// Gets or calculates value for property.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property to find.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>The value for property.</returns>
+        [return: MaybeNull]
+        protected T GetValue<T>(IProperty<T> property, SearchOptions? search = null)
+        {
+            return SearchExtensions.GetValue(this, property, search);
+        }
     }
 }

@@ -68,6 +68,7 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Gets or calculates value for property.
+        /// For use in derived classes.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to find.</param>

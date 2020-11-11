@@ -1,5 +1,7 @@
 # 4.5.0
 - Added ToMutable, ToReadOnly extensions
+- Added Excel styling extensions
+- Change: GetValue returned to PropertyContainer and MutablePropertyContainer as protected method to use in derived classes
 - Added more nullability asserts and markup
 
 # 4.4.0
@@ -24,7 +26,7 @@
 # 4.0.0
 - Nullability enabled, Most API annotated with nullability attributes
 - Property immutability
-- IPropertyContainer: added SearachOptions property
+- IPropertyContainer: added SearchOptions property
 - IPropertyContainer: removed GetValue and GetValueUntyped
 - Search became external to IPropertyContainer
 - Added ISearchAlgorithm with base search methods, SearchExtensions uses ISearchAlgorithm

@@ -4,6 +4,7 @@
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
+using MicroElements.Parsing;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -58,6 +59,17 @@ namespace MicroElements.Reporting.Excel
             ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
             CellMetadata = cellMetadata.AssertArgumentNotNull(nameof(cellMetadata));
             Cell = cell;
+        }
+
+        /// <summary>
+        /// Gets cell text value.
+        /// </summary>
+        /// <returns>Text value.</returns>
+        public string? GetCellValue()
+        {
+            ExcelElement<Cell> excelCell = new ExcelElement<Cell>(ColumnContext.SheetContext.DocumentContext.Document, Cell);
+            string? cellValue = excelCell.GetCellValue();
+            return cellValue;
         }
     }
 }

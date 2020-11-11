@@ -19,19 +19,13 @@ namespace MicroElements.Parsing
     /// </summary>
     public static class ExcelExtensions
     {
-        public static string GetColumnReference(this StringValue cellReference)
-        {
-            return cellReference.Value.GetColumnReference();
-        }
-
-        public static string GetColumnReference(this string cellReference)
-        {
-            cellReference.AssertArgumentNotNull(nameof(cellReference));
-            if (cellReference.Length == 2)
-                return cellReference.Substring(0, 1);
-            return new string(cellReference.TakeWhile(char.IsLetter).ToArray());
-        }
-
+        /// <summary>
+        /// Gets sheet by name.
+        /// </summary>
+        /// <param name="document">OpenXml document.</param>
+        /// <param name="name">Sheet name.</param>
+        /// <param name="fillCellReferences">Will fill cell references if references are empty.</param>
+        /// <returns>Sheet element.</returns>
         public static ExcelElement<Sheet> GetSheet(this SpreadsheetDocument document, string name, bool fillCellReferences = true)
         {
             var sheets = document.WorkbookPart.Workbook.Sheets.Cast<Sheet>();
@@ -43,21 +37,74 @@ namespace MicroElements.Parsing
             return result;
         }
 
+        /// <summary>
+        /// Gets rows from sheet.
+        /// </summary>
+        /// <param name="sheet">Source sheet.</param>
+        /// <returns>Sheet rows.</returns>
         public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)
         {
             string sheetId = sheet.Data.Id.Value;
             var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
             var worksheet = worksheetPart.Worksheet;
-            var rows = worksheet.GetFirstChild<SheetData>().Descendants<Row>().Select(row => new ExcelElement<Row>(sheet.Doc, row));
+            var sheetData = worksheet.GetFirstChild<SheetData>();
+            var rows = sheetData
+                .Descendants<Row>()
+                .Select(row => new ExcelElement<Row>(sheet.Doc, row));
             return rows;
         }
 
-        public static StringValue GetCellReference(int row, int column) =>
-            new StringValue($"{GetColumnName(string.Empty, column)}{row}");
+        /// <summary>
+        /// Gets cell reference by column row index.
+        /// Example: (0,0)->A1.
+        /// </summary>
+        /// <param name="column">Column index.</param>
+        /// <param name="row">Row index.</param>
+        /// <param name="zeroBased">Is column and row zero based.</param>
+        /// <returns>Cell reference.</returns>
+        public static StringValue GetCellReference(int column, int row, bool zeroBased = true)
+        {
+            int columnIndex = zeroBased ? column : column - 1;
+            string columnName = GetColumnName(string.Empty, columnIndex);
+            int rowName = zeroBased ? row + 1 : row;
+            return new StringValue($"{columnName}{rowName}");
 
-        private static string GetColumnName(string prefix, int column) =>
-            column < 26 ? $"{prefix}{(char)(65 + column)}" :
-                GetColumnName(GetColumnName(prefix, ((column - (column % 26)) / 26) - 1), column % 26);
+            static string GetColumnName(string prefix, int columnIndex = 0)
+            {
+                return columnIndex < 26
+                    ? $"{prefix}{(char)(65 + columnIndex)}"
+                    : GetColumnName(GetColumnName(prefix, ((columnIndex - (columnIndex % 26)) / 26) - 1), columnIndex % 26);
+            }
+        }
+
+        /// <summary>
+        /// Gets column reference from cell reference.
+        /// For example: A1->A, CD22->CD.
+        /// </summary>
+        /// <param name="cellReference">Cell reference.</param>
+        /// <returns>Column reference.</returns>
+        public static string GetColumnReference(this StringValue cellReference)
+        {
+            cellReference.AssertArgumentNotNull(nameof(cellReference));
+
+            return cellReference.Value.GetColumnReference();
+        }
+
+        /// <summary>
+        /// Gets column reference from cell reference.
+        /// For example: A1->A, CD22->CD.
+        /// </summary>
+        /// <param name="cellReference">Cell reference.</param>
+        /// <returns>Column reference.</returns>
+        public static string GetColumnReference(this string cellReference)
+        {
+            cellReference.AssertArgumentNotNull(nameof(cellReference));
+
+            if (cellReference.Length == 2)
+                return cellReference.Substring(0, 1);
+
+            return new string(cellReference.TakeWhile(char.IsLetter).ToArray());
+        }
 
         public class TableDataRow
         {
@@ -76,7 +123,7 @@ namespace MicroElements.Parsing
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider = null)
         {
-            ExcelElement<Column>[] headers = null;
+            ExcelElement<HeaderCell>[] headers = null;
             foreach (var row in rows)
             {
                 if (headers == null)
@@ -104,7 +151,7 @@ namespace MicroElements.Parsing
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider)
         {
-            ExcelElement<Column>[] headers = null;
+            ExcelElement<HeaderCell>[] headers = null;
             foreach (var row in rows)
             {
                 if (headers == null)
@@ -138,19 +185,19 @@ namespace MicroElements.Parsing
             return rowCells;
         }
 
-        public static ExcelElement<Column>[] GetHeaders(this ExcelElement<Row> row)
+        public static ExcelElement<HeaderCell>[] GetHeaders(this ExcelElement<Row> row)
         {
             if (row.IsEmpty())
-                return Array.Empty<ExcelElement<Column>>();
+                return Array.Empty<ExcelElement<HeaderCell>>();
 
             var cells = row.GetRowCells();
-            var headers = cells.Select(cell => new ExcelElement<Column>(row.Doc, new Column(cell))).ToArray();
+            var headers = cells.Select(cell => new ExcelElement<HeaderCell>(row.Doc, new HeaderCell(cell))).ToArray();
             return headers;
         }
 
         public static string[] GetRowValues(
             this ExcelElement<Row> row,
-            ExcelElement<Column>[] headers,
+            ExcelElement<HeaderCell>[] headers,
             IParserProvider parserProvider,
             string nullValue = null)
         {
@@ -163,6 +210,7 @@ namespace MicroElements.Parsing
             for (int i = 0; i < headers.Length; i++)
             {
                 var header = headers[i];
+
                 // Find cell for the same column.
                 var cell = cells.FirstOrDefault(c => c.Data.CellReference.GetColumnReference() == header.Data.ColumnReference);
 
@@ -228,7 +276,7 @@ namespace MicroElements.Parsing
         /// Uses SharedStringTable if needed.
         /// For DateTime, LocalDate and LocalTime tries to convert double excel value to ISO format.
         /// </summary>
-        public static string GetCellValue(this ExcelElement<Cell> cell, string nullValue = null)
+        public static string? GetCellValue(this ExcelElement<Cell> cell, string? nullValue = null)
         {
             Cell cellData = cell.Data;
             string cellValue = cellData.CellValue?.InnerText ?? nullValue;
@@ -378,7 +426,7 @@ namespace MicroElements.Parsing
                 ExcelElement<Cell>[] rowCells = row.GetRowCells();
                 for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
                 {
-                    rowCells[colIndex].Data.CellReference = GetCellReference(rowIndex, colIndex);
+                    rowCells[colIndex].Data.CellReference = GetCellReference(colIndex, rowIndex);
                 }
 
                 rowIndex++;

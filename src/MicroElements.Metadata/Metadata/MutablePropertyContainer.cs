@@ -130,5 +130,19 @@ namespace MicroElements.Metadata
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets or calculates value for property.
+        /// For use in derived classes.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property to find.</param>
+        /// <param name="search">Search options.</param>
+        /// <returns>The value for property.</returns>
+        [return: MaybeNull]
+        protected T GetValue<T>(IProperty<T> property, SearchOptions? search = null)
+        {
+            return SearchExtensions.GetValue(this, property, search);
+        }
     }
 }

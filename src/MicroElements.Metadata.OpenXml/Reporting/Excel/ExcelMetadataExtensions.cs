@@ -26,11 +26,11 @@ namespace MicroElements.Reporting.Excel
             Action<TContext> action)
             where TContainer : IMutablePropertyContainer
         {
-            Action<TContext> existedAction = metadata.GetPropertyValue(property)?.Value;
+            Action<TContext>? existedAction = metadata.GetPropertyValue(property)?.Value;
 
             return metadata.WithValue(property, context => Combine(context, existedAction, action));
 
-            static void Combine(TContext context, Action<TContext> action1, Action<TContext> action2)
+            static void Combine(TContext context, Action<TContext>? action1, Action<TContext> action2)
             {
                 action1?.Invoke(context);
                 action2(context);

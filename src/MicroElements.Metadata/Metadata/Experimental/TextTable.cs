@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#pragma warning disable 1591
+#pragma warning disable SA1600 // Elements should be documented
+// ReSharper disable once CheckNamespace
+
 namespace MicroElements.Metadata
 {
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using FluentAssertions;
 using MicroElements.Functional;
@@ -212,6 +213,13 @@ namespace MicroElements.Metadata.Tests.ParseExcel
             validatedRows[4].IsValid().Should().BeFalse();
             validatedRows[4].ValidationMessages.First().FormattedMessage.Should().Be("Text should not be null");
             validatedRows[4].ValidationMessages.First().Severity.Should().Be(MessageSeverity.Warning);
+        }
+
+        [Fact]
+        public void CellReferenceTest()
+        {
+            ExcelExtensions.GetCellReference(0, 0, zeroBased: true).Should().Be(new StringValue("A1"));
+            ExcelExtensions.GetCellReference(1, 1, zeroBased: false).Should().Be(new StringValue("A1"));
         }
     }
 }

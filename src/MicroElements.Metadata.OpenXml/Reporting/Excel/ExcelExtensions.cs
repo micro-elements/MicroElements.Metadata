@@ -4,12 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MicroElements.Functional;
 using MicroElements.Metadata;
-using MicroElements.Parsing;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -18,15 +17,69 @@ namespace MicroElements.Reporting.Excel
     /// </summary>
     public static class ExcelExtensions
     {
+        /// <summary>
+        /// Gets or creates OpenXml SheetViews.
+        /// </summary>
+        /// <param name="workSheet">Source workSheet.</param>
+        /// <returns><see cref="SheetViews"/> instance.</returns>
         public static SheetViews GetOrCreateSheetViews(this Worksheet workSheet)
         {
             SheetViews sheetViews = workSheet.GetFirstChild<SheetViews>();
             return sheetViews ?? new SheetViews();
         }
 
+        /// <summary>
+        /// Gets sheet count.
+        /// </summary>
+        /// <param name="workbookPart">Source workbookPart.</param>
+        /// <returns>Sheet count.</returns>
         public static uint GetSheetCount(this WorkbookPart workbookPart) =>
             (uint)workbookPart.Workbook.Sheets.ChildElements.Count;
 
+        /// <summary>
+        /// Gets OpenXml <see cref="SharedStringTablePart"/> from document.
+        /// </summary>
+        /// <param name="documentContext">Source document context.</param>
+        /// <param name="autoCreate">Create if not exists.</param>
+        /// <returns><see cref="SharedStringTablePart"/> instance.</returns>
+        public static SharedStringTablePart GetWorkbookSharedStringsPart(this DocumentContext documentContext, bool autoCreate = true)
+        {
+            WorkbookPart workbookPart = documentContext.Document.WorkbookPart;
+            SharedStringTablePart workbookSharedStringsPart = workbookPart.SharedStringTablePart;
+
+            if (autoCreate && workbookSharedStringsPart == null)
+            {
+                workbookSharedStringsPart = workbookPart.AddNewPart<SharedStringTablePart>("stringsPart");
+            }
+
+            return workbookSharedStringsPart;
+        }
+
+        /// <summary>
+        /// Gets OpenXml <see cref="SharedStringTable"/> from document.
+        /// </summary>
+        /// <param name="documentContext">Source document context.</param>
+        /// <param name="autoCreate">Create if not exists.</param>
+        /// <returns><see cref="SharedStringTable"/> instance.</returns>
+        public static SharedStringTable GetSharedStringTable(this DocumentContext documentContext, bool autoCreate = true)
+        {
+            SharedStringTablePart workbookSharedStringsPart = documentContext.GetWorkbookSharedStringsPart(autoCreate);
+
+            if (autoCreate && workbookSharedStringsPart.SharedStringTable == null)
+            {
+                SharedStringTable sharedStringTable = new SharedStringTable();
+                workbookSharedStringsPart.SharedStringTable = sharedStringTable;
+            }
+
+            return workbookSharedStringsPart.SharedStringTable;
+        }
+
+        /// <summary>
+        /// Freezes top rows.
+        /// </summary>
+        /// <param name="workSheet">Source workSheet.</param>
+        /// <param name="rowNum">Number or rows to freeze.</param>
+        /// <returns>The same <paramref name="workSheet"/> instance.</returns>
         public static Worksheet FreezeTopRow(this Worksheet workSheet, int rowNum = 1)
         {
             SheetViews sheetViews = workSheet.GetOrCreateSheetViews();
@@ -49,39 +102,19 @@ namespace MicroElements.Reporting.Excel
                 SequenceOfReferences = new ListValue<StringValue>() { InnerText = pane.TopLeftCell },
             };
 
-            sheetView.Append(pane);
-            sheetView.Append(selection);
+            sheetView.AppendChild(pane);
+            sheetView.AppendChild(selection);
 
             return workSheet;
         }
 
-        public static SharedStringTablePart GetWorkbookSharedStringsPart(this DocumentContext documentContext, bool autoCreate = true)
-        {
-            WorkbookPart workbookPart = documentContext.Document.WorkbookPart;
-            SharedStringTablePart workbookSharedStringsPart = workbookPart.SharedStringTablePart;
-
-            if (autoCreate && workbookSharedStringsPart == null)
-            {
-                workbookSharedStringsPart = workbookPart.AddNewPart<SharedStringTablePart>("stringsPart");
-            }
-
-            return workbookSharedStringsPart;
-        }
-
-        public static SharedStringTable GetSharedStringTable(this DocumentContext documentContext, bool autoCreate = true)
-        {
-            SharedStringTablePart workbookSharedStringsPart = documentContext.GetWorkbookSharedStringsPart(autoCreate);
-
-            if (autoCreate && workbookSharedStringsPart.SharedStringTable == null)
-            {
-                SharedStringTable sharedStringTable = new SharedStringTable();
-                workbookSharedStringsPart.SharedStringTable = sharedStringTable;
-            }
-
-            return workbookSharedStringsPart.SharedStringTable;
-        }
-
-        public static string GetOrAddSharedString(this DocumentContext documentContext, string text)
+        /// <summary>
+        /// Gets or adds shared string anr returns its index.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="text">Text to add.</param>
+        /// <returns>Index in excel SharedStringTable.</returns>
+        public static string? GetOrAddSharedString(this DocumentContext documentContext, string? text)
         {
             if (text == null)
                 return null;
@@ -90,10 +123,7 @@ namespace MicroElements.Reporting.Excel
             {
                 SharedStringTable sharedStringTable = documentContext.GetSharedStringTable();
 
-                SharedStringItem sharedStringItem = new SharedStringItem();
-                Text text1 = new Text { Text = text };
-                sharedStringItem.Append(text1);
-
+                SharedStringItem sharedStringItem = new SharedStringItem(new Text { Text = text });
                 sharedStringTable.AppendChild(sharedStringItem);
 
                 uint itemCount = (uint)sharedStringTable.ChildElements.Count;
@@ -107,6 +137,12 @@ namespace MicroElements.Reporting.Excel
             return stringIndex;
         }
 
+        /// <summary>
+        /// Gets <see cref="WorkbookStylesPart"/> for document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="autoCreate">Create if not exists.</param>
+        /// <returns><see cref="WorkbookStylesPart"/> instance.</returns>
         public static WorkbookStylesPart GetWorkbookStylesPart(this DocumentContext documentContext, bool autoCreate = true)
         {
             WorkbookPart workbookPart = documentContext.Document.WorkbookPart;
@@ -120,6 +156,12 @@ namespace MicroElements.Reporting.Excel
             return workbookStylesPart;
         }
 
+        /// <summary>
+        /// Gets <see cref="Stylesheet"/> for document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="autoCreate">Create if not exists.</param>
+        /// <returns><see cref="Stylesheet"/> instance.</returns>
         public static Stylesheet GetStylesheet(this DocumentContext documentContext, bool autoCreate = true)
         {
             WorkbookStylesPart workbookStylesPart = documentContext.GetWorkbookStylesPart(autoCreate);
@@ -132,17 +174,281 @@ namespace MicroElements.Reporting.Excel
             return workbookStylesPart.Stylesheet;
         }
 
-        public static void SetStyleSheetName(this OpenXmlElement target, string name)
+        /// <summary>
+        /// Sets attached name to element.
+        /// </summary>
+        /// <typeparam name="TOpenXmlElement">OpenXmlElement.</typeparam>
+        /// <param name="element">Element.</param>
+        /// <param name="name">Name to attach.</param>
+        /// <returns>The same instance.</returns>
+        public static TOpenXmlElement SetStyleSheetName<TOpenXmlElement>(this TOpenXmlElement element, string name)
+            where TOpenXmlElement : OpenXmlElement
         {
-            target.GetInstanceMetadata().SetMetadata("StyleSheetName", name);
+            element.GetInstanceMetadata().SetMetadata("StyleSheetName", name);
+            return element;
         }
 
-        public static string GetStyleSheetName(this OpenXmlElement target)
+        /// <summary>
+        /// Gets attached name.
+        /// </summary>
+        /// <param name="element">Element.</param>
+        /// <returns>Name attached to element.</returns>
+        public static string GetStyleSheetName(this OpenXmlElement element)
         {
-            return target.GetInstanceMetadata().GetMetadata<string>("StyleSheetName");
+            return element.GetInstanceMetadata().GetMetadata<string>("StyleSheetName") ?? $"StyleSheetName_{element.GetHashCode()}";
         }
 
-        internal static uint IndexOf<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        /// <summary>
+        /// Adds OpenXml <see cref="Font"/> to document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="font">Font to add.</param>
+        /// <param name="name">Name attached to font.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddFont(this DocumentContext documentContext, Font font, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.Fonts == null)
+                stylesheet.Fonts = new Fonts();
+
+            stylesheet.Fonts.AppendChild(font.SetStyleSheetName(name));
+            stylesheet.Fonts.Count = (uint)stylesheet.Fonts.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Adds OpenXml <see cref="Fill"/> to document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="fill">Fill to add.</param>
+        /// <param name="name">Name attached to fill.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddFill(this DocumentContext documentContext, Fill fill, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.Fills == null)
+                stylesheet.Fills = new Fills();
+
+            stylesheet.Fills.AppendChild(fill.SetStyleSheetName(name));
+            stylesheet.Fills.Count = (uint)stylesheet.Fills.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Adds OpenXml <see cref="Border"/> to document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="border">Border to add.</param>
+        /// <param name="name">Name attached to border.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddBorder(this DocumentContext documentContext, Border border, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.Borders == null)
+                stylesheet.Borders = new Borders();
+
+            stylesheet.Borders.AppendChild(border.SetStyleSheetName(name));
+            stylesheet.Borders.Count = (uint)stylesheet.Borders.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Adds OpenXml <see cref="CellFormat"/> to document stylesheet CellStyleFormats.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="cellFormat">CellFormat to add.</param>
+        /// <param name="name">Name attached to cellFormat.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddCellStyleFormat(this DocumentContext documentContext, CellFormat cellFormat, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.CellStyleFormats == null)
+                stylesheet.CellStyleFormats = new CellStyleFormats();
+
+            stylesheet.CellStyleFormats.AppendChild(cellFormat.SetStyleSheetName(name));
+            stylesheet.CellStyleFormats.Count = (uint)stylesheet.CellStyleFormats.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Adds OpenXml <see cref="CellFormat"/> to document stylesheet CellFormats.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="cellFormat">CellFormat to add.</param>
+        /// <param name="name">Name attached to cellFormat.</param>
+        /// <param name="replaceOldIfExists">Replace old if exists.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddCellFormat(this DocumentContext documentContext, CellFormat cellFormat, string name, bool replaceOldIfExists = true)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.CellFormats == null)
+                stylesheet.CellFormats = new CellFormats();
+
+            if (replaceOldIfExists)
+            {
+                var existent = documentContext.TryGetCellFormat(name);
+                if (existent != null)
+                    stylesheet.CellFormats.RemoveChild(existent);
+            }
+
+            stylesheet.CellFormats.AppendChild(cellFormat.SetStyleSheetName(name));
+            stylesheet.CellFormats.Count = (uint)stylesheet.CellFormats.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Adds OpenXml <see cref="CellStyle"/> to document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="cellStyle">CellStyle to add.</param>
+        /// <param name="name">Name attached to cellStyle.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddCellStyle(this DocumentContext documentContext, CellStyle cellStyle, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.CellStyles == null)
+                stylesheet.CellStyles = new CellStyles();
+
+            stylesheet.CellStyles.AppendChild(cellStyle.SetStyleSheetName(name));
+            stylesheet.CellStyles.Count = (uint)stylesheet.CellStyles.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
+        /// Gets <see cref="Font"/> index by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetFontIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.Fonts.ChildElements.OfType<Font>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="Fill"/> index by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetFillIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.Fills.ChildElements.OfType<Fill>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="Border"/> index by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetBorderIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.Borders.ChildElements.OfType<Border>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="CellFormat"/> index from <see cref="Stylesheet.CellStyleFormats"/> by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetCellStyleFormatIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="CellFormat"/> index from <see cref="Stylesheet.CellFormats"/> by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetCellFormatIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="CellFormat"/> index from <see cref="Stylesheet.CellStyles"/> by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetCellStyleIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets Optional <see cref="CellFormat"/> from document stylesheet by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document context.</param>
+        /// <param name="name">CellFormat attached name.</param>
+        /// <returns>Optional <see cref="CellFormat"/> instance.</returns>
+        public static CellFormat? TryGetCellFormat(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            CellFormat? cellFormat = stylesheet.CellFormats.ChildElements.OfType<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
+            return cellFormat;
+        }
+
+        /// <summary>
+        /// Gets <see cref="CellFormat"/> from document stylesheet by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document context.</param>
+        /// <param name="name">CellFormat attached name.</param>
+        /// <returns><see cref="CellFormat"/> instance or throws <see cref="ExceptionWithError{ExcelError}"/>.</returns>
+        public static CellFormat GetCellFormat(this DocumentContext documentContext, string name)
+        {
+            CellFormat? cellFormat = TryGetCellFormat(documentContext, name);
+            if (cellFormat == null)
+                ExcelErrors.CellFormatNotFound(name).Throw();
+            return cellFormat;
+        }
+
+        /// <summary>
+        /// Gets <see cref="CellFormat"/> from document stylesheet by index.
+        /// </summary>
+        /// <param name="documentContext">Source document context.</param>
+        /// <param name="index">Zero base index.</param>
+        /// <returns><see cref="CellFormat"/> instance.</returns>
+        public static CellFormat GetCellFormat(this DocumentContext documentContext, int index)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            CellFormat? cellFormat = stylesheet.CellFormats.TryGetElementAt<CellFormat>(index);
+
+            if (index == 0 && cellFormat != null)
+                ExcelErrors.CellFormatsIsNotRegistered.Throw();
+
+            return cellFormat ?? documentContext.GetCellFormat(0);
+        }
+
+        internal static TElement? TryGetElementAt<TElement>(this OpenXmlCompositeElement element, int index)
+            where TElement : class
+        {
+            return element.ChildElements.OfType<TElement>().Skip(index).FirstOrDefault();
+        }
+
+        internal static uint UintIndexOrZero<T>(this IEnumerable<T> source, Func<T, bool> predicate)
         {
             uint i = 0;
             foreach (var item in source)
@@ -151,322 +457,8 @@ namespace MicroElements.Reporting.Excel
                     return i;
                 i++;
             }
+
             return 0;
-        }
-
-        public static DocumentContext AddFont(this DocumentContext documentContext, Font font, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.Fonts == null)
-                stylesheet.Fonts = new Fonts();
-
-            font.SetStyleSheetName(name);
-
-            stylesheet.Fonts.AppendChild(font);
-            stylesheet.Fonts.Count = (uint)stylesheet.Fonts.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static DocumentContext AddFill(this DocumentContext documentContext, Fill fill, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.Fills == null)
-                stylesheet.Fills = new Fills();
-
-            fill.SetStyleSheetName(name);
-
-            stylesheet.Fills.AppendChild(fill);
-            stylesheet.Fills.Count = (uint)stylesheet.Fills.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static DocumentContext AddBorder(this DocumentContext documentContext, Border border, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.Borders == null)
-                stylesheet.Borders = new Borders();
-
-            border.SetStyleSheetName(name);
-
-            stylesheet.Borders.AppendChild(border);
-            stylesheet.Borders.Count = (uint)stylesheet.Borders.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static DocumentContext AddCellStyleFormat(this DocumentContext documentContext, CellFormat cellFormat, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.CellStyleFormats == null)
-                stylesheet.CellStyleFormats = new CellStyleFormats();
-
-            cellFormat.SetStyleSheetName(name);
-
-            stylesheet.CellStyleFormats.AppendChild(cellFormat);
-            stylesheet.CellStyleFormats.Count = (uint)stylesheet.CellStyleFormats.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static DocumentContext AddCellFormat(this DocumentContext documentContext, CellFormat cellFormat, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.CellFormats == null)
-                stylesheet.CellFormats = new CellFormats();
-
-            cellFormat.SetStyleSheetName(name);
-
-            stylesheet.CellFormats.AppendChild(cellFormat);
-            stylesheet.CellFormats.Count = (uint)stylesheet.CellFormats.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static DocumentContext AddCellStyle(this DocumentContext documentContext, CellStyle cellStyle, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-
-            if (stylesheet.CellStyles == null)
-                stylesheet.CellStyles = new CellStyles();
-
-            cellStyle.SetStyleSheetName(name);
-
-            stylesheet.CellStyles.AppendChild(cellStyle);
-            stylesheet.CellStyles.Count = (uint)stylesheet.CellStyles.ChildElements.Count;
-
-            return documentContext;
-        }
-
-        public static uint GetFontIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Fonts.ChildElements.OfType<Font>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static uint GetFillIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Fills.ChildElements.OfType<Fill>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static uint GetBorderIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.Borders.ChildElements.OfType<Border>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static uint GetCellStyleFormatIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static uint GetCellFormatIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static uint GetCellStyleIndex(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().IndexOf(item => item.GetStyleSheetName() == name);
-        }
-
-        public static void ApplyStyleToCell(this CellContext context, string applyStyleName)
-        {
-            var documentContext = context.ColumnContext.SheetContext.DocumentContext;
-
-            context.Cell.StyleIndex = GetMergedStyleIndex(documentContext, context.Cell.StyleIndex, applyStyleName);
-        }
-
-        public static void ApplyStyleToColumn(this ColumnContext context, string applyStyleName)
-        {
-            var documentContext = context.SheetContext.DocumentContext;
-
-            context.Column.Style = GetMergedStyleIndex(documentContext, context.Column.Style, applyStyleName);
-        }
-
-        public static uint GetMergedStyleIndex(
-            this DocumentContext documentContext,
-            UInt32Value currentStyleIndex,
-            string applyStyleName,
-            bool applyStyleToEnd = true)
-        {
-            int styleIndex = (int)(currentStyleIndex?.Value ?? 0);
-
-            uint mergedStyleIndex;
-            if (styleIndex != 0)
-            {
-                CellFormat currentStyle = documentContext.GetCellFormat(styleIndex);
-                string currentStyleName = currentStyle.GetStyleSheetName();
-                string combinedStyleName = applyStyleToEnd ? (currentStyleName, applyStyleName).ToString() : (applyStyleName, currentStyleName).ToString();
-
-                uint combinedStyleIndex = documentContext.GetCellFormatIndex(combinedStyleName);
-                if (combinedStyleIndex > 0)
-                {
-                    // style already created
-                    mergedStyleIndex = combinedStyleIndex;
-                }
-                else
-                {
-                    CellFormat applyStyle = documentContext.GetCellFormat(applyStyleName);
-                    CellFormat combineStyle = applyStyleToEnd ? CombineStyles(currentStyle, applyStyle) : CombineStyles(applyStyle, currentStyle);
-
-                    // register new style
-                    documentContext.AddCellFormat(combineStyle, combinedStyleName);
-
-                    mergedStyleIndex = documentContext.GetCellFormatIndex(combinedStyleName);
-                }
-            }
-            else
-            {
-                mergedStyleIndex = documentContext.GetCellFormatIndex(applyStyleName);
-            }
-
-            return mergedStyleIndex;
-        }
-
-        private static CellFormat CombineStyles(CellFormat currentStyle, CellFormat applyStyle)
-        {
-            CellFormat newStyle = new CellFormat
-            {
-                NumberFormatId = currentStyle.NumberFormatId,
-                FontId = currentStyle.FontId,
-                FillId = currentStyle.FillId,
-                BorderId = currentStyle.BorderId,
-
-                ApplyNumberFormat = currentStyle.ApplyNumberFormat,
-                ApplyFont = currentStyle.ApplyFont,
-                ApplyFill = currentStyle.ApplyFill,
-                ApplyBorder = currentStyle.ApplyBorder
-            };
-
-            if (applyStyle.ApplyNumberFormat != null && applyStyle.ApplyNumberFormat)
-            {
-                newStyle.NumberFormatId = applyStyle.NumberFormatId;
-                newStyle.ApplyNumberFormat = applyStyle.ApplyNumberFormat;
-            }
-
-            if (applyStyle.ApplyFont != null && applyStyle.ApplyFont)
-            {
-                newStyle.FontId = applyStyle.FontId;
-                newStyle.ApplyFont = applyStyle.ApplyFont;
-            }
-
-            if (applyStyle.ApplyFill != null && applyStyle.ApplyFill)
-            {
-                newStyle.FillId = applyStyle.FillId;
-                newStyle.ApplyFill = applyStyle.ApplyFill;
-            }
-
-            if (applyStyle.ApplyBorder != null && applyStyle.ApplyBorder)
-            {
-                newStyle.BorderId = applyStyle.BorderId;
-                newStyle.ApplyBorder = applyStyle.ApplyBorder;
-            }
-
-            return newStyle;
-        }
-
-        public static CellFormat GetCellFormat(this DocumentContext documentContext, string name)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
-        }
-
-        public static CellFormat GetCellFormat(this DocumentContext documentContext, int index)
-        {
-            Stylesheet stylesheet = documentContext.GetStylesheet();
-            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().Skip(index).FirstOrDefault();
-        }
-
-        public static TMetadataProvider ConfigureCellStyle<TMetadataProvider>(this TMetadataProvider metadataProvider, Func<string, string> getCellStyle)
-            where TMetadataProvider : IMetadataProvider
-        {
-            metadataProvider.ConfigureMetadata<ExcelCellMetadata>(metadata => metadata.SetValue(ExcelCellMetadata.ConfigureCell, context => ConfigureCell(context, getCellStyle)));
-            return metadataProvider;
-
-            static void ConfigureCell(CellContext context, Func<string, string> getCellStyle)
-            {
-                DocumentContext documentContext = context.ColumnContext.SheetContext.DocumentContext;
-                ExcelElement<Cell> excelCell = new ExcelElement<Cell>(documentContext.Document, context.Cell);
-
-                string cellValue = excelCell.GetCellValue();
-                string cellStyle = getCellStyle(cellValue);
-
-                if (cellStyle != null)
-                    context.ApplyStyleToCell(cellStyle);
-            }
-        }
-
-        public static TContainer WithExcelDocumentStyles<TContainer>(this TContainer value, params ICellFormatProvider[] formatProviders)
-            where TContainer : IMutablePropertyContainer
-        {
-            return value.WithCombinedConfigure
-            (
-                ExcelDocumentMetadata.ConfigureDocument,
-                context =>
-                {
-                    foreach (var formatProvider in formatProviders)
-                    {
-                        context.AddCellFormat(formatProvider.CreateFormat(context), formatProvider.GetFormatName());
-                    }
-                }
-            );
-        }
-
-        public static TContainer WithExcelDocumentStyles<TContainer>(this TContainer value, Type type)
-            where TContainer : IMutablePropertyContainer
-        {
-            Type[] styles = type
-                .GetProperties()
-                .Select(item => item.GetCustomAttribute<Format>()?.Provider)
-                .Where(item => item != default)
-                .Distinct()
-                .ToArray();
-
-            return styles.Length > 0
-                ? value.WithCombinedConfigure
-                (
-                    ExcelDocumentMetadata.ConfigureDocument,
-                    context =>
-                    {
-                        foreach (Type style in styles)
-                        {
-                            ICellFormatProvider instance = (ICellFormatProvider)Activator.CreateInstance(style);
-                            context.AddCellFormat(instance.CreateFormat(context), instance.GetFormatName());
-                        }
-                    }
-                )
-                : value;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class Format : Attribute
-    {
-        public Type Provider { get; }
-        public Format(Type provider) => Provider = provider;
-    }
-
-    public interface ICellFormatProvider
-    {
-        CellFormat CreateFormat(DocumentContext context);
-    }
-
-    public static class FormatProviderExtensions
-    {
-        public static string GetFormatName(this ICellFormatProvider formatProvider)
-        {
-            return formatProvider.GetType().ToString();
         }
     }
 }

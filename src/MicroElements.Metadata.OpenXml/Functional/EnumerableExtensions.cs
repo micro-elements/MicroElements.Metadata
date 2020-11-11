@@ -5,30 +5,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MicroElements.Parsing
+namespace MicroElements.Functional
 {
-    //TODO: to Functional
     internal static class EnumerableExtensions
     {
         /// <summary>
-        /// В отладке показыает перечисление как Array<T>, в релизной сборке IEnumerable<T>.
-        /// Используется для более простой отладки, но чтобы не влияло на Performance в релизе.
+        /// Shows <see cref="IEnumerable{T}"/> as array in debug mode.
         /// </summary>
         public static IEnumerable<T> ToArrayDebug<T>(this IEnumerable<T> source)
         {
 #if DEBUG
             return source.ToArray();
-#else
-            return source;
-#endif
-        }
-
-        public static IEnumerable<T> MaterializeDebug<T>(this IEnumerable<T> source, Action<IReadOnlyList<T>> action)
-        {
-#if DEBUG
-            var materializedItems = source.ToArray();
-            action(materializedItems);
-            return materializedItems;
 #else
             return source;
 #endif

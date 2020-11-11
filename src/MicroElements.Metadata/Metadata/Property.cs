@@ -128,8 +128,8 @@ namespace MicroElements.Metadata
                 name: name ?? source.Name,
                 alias: alias ?? source.Alias,
                 description: description ?? source.Description,
-                defaultValue: defaultValue ?? source.DefaultValue ?? Property<T>.Empty.DefaultValue,
-                examples: examples ?? source.Examples ?? Property<T>.Empty.Examples,
+                defaultValue: defaultValue ?? source.DefaultValue,
+                examples: examples ?? source.Examples,
                 calculator: calculator ?? source.Calculator);
         }
 
@@ -186,9 +186,9 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             name.AssertArgumentNotNull(nameof(name));
 
-            static IProperty WithName<T>(IProperty property, string name) => ((IProperty<T>)property).WithName(name);
+            static IProperty WithNameCompiled<T>(IProperty property, string name) => ((IProperty<T>)property).WithName(name);
 
-            var withName = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, "WithName", WithName<CodeCompiler.GenericType>);
+            var withName = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, "WithName", WithNameCompiled<CodeCompiler.GenericType>);
             return withName(property, name);
         }
 
@@ -220,9 +220,9 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             alias.AssertArgumentNotNull(nameof(alias));
 
-            static IProperty WithAlias<T>(IProperty property, string name) => ((IProperty<T>)property).WithAlias(name);
+            static IProperty WithAliasCompiled<T>(IProperty property, string name) => ((IProperty<T>)property).WithAlias(name);
 
-            var withAlias = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, "WithAlias", WithAlias<CodeCompiler.GenericType>);
+            var withAlias = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, "WithAlias", WithAliasCompiled<CodeCompiler.GenericType>);
             return withAlias(property, alias);
         }
 
@@ -277,10 +277,10 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
             description.AssertArgumentNotNull(nameof(description));
 
-            static IProperty WithDescription<T>(IProperty property, string description, Language language) =>
+            static IProperty WithDescriptionCompiled<T>(IProperty property, string description, Language language) =>
                 ((IProperty<T>)property).WithDescription(description, language);
 
-            var withDescription = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, "WithDescription", WithDescription<CodeCompiler.GenericType>);
+            var withDescription = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, "WithDescription", WithDescriptionCompiled<CodeCompiler.GenericType>);
             return withDescription(property, description, language);
         }
 

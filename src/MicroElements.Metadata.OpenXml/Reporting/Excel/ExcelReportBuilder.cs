@@ -451,7 +451,7 @@ namespace MicroElements.Reporting.Excel
                 }
             }
 
-            CellContext cellContext = new CellContext(columnContext, cellMetadata!, cell);
+            CellContext cellContext = new CellContext(columnContext, cellMetadata, cell);
 
             // External customization
             if (callCustomize)

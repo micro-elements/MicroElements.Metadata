@@ -21,7 +21,7 @@ namespace MicroElements.Reporting.Excel
         /// <summary>
         /// Gets cell metadata.
         /// </summary>
-        public IExcelMetadata CellMetadata { get; }
+        public IExcelMetadata? CellMetadata { get; }
 
         /// <summary>
         /// Gets OpenXml cell.
@@ -44,10 +44,10 @@ namespace MicroElements.Reporting.Excel
         /// <param name="columnContext">ColumnContext for this cell.</param>
         /// <param name="cellMetadata">Cell metadata.</param>
         /// <param name="cell">OpenXml cell.</param>
-        public CellContext(ColumnContext columnContext, IExcelMetadata cellMetadata, Cell cell)
+        public CellContext(ColumnContext columnContext, IExcelMetadata? cellMetadata, Cell cell)
         {
             ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
-            CellMetadata = cellMetadata.AssertArgumentNotNull(nameof(cellMetadata));
+            CellMetadata = cellMetadata;
             Cell = cell;
         }
 

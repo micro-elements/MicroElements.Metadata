@@ -1,3 +1,7 @@
+# 4.6.0
+- Added Row customization with ExcelSheetMetadata.ConfigureRow
+- Added ConfigureCell, ConfigureHeaderCell, ConficureColumn, ConfigureRow configuration extensions
+
 # 4.5.0
 - Added ToMutable, ToReadOnly extensions
 - Added Excel styling extensions

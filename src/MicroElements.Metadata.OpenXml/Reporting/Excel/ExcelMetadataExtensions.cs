@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.Metadata;
+using MicroElements.Reporting.Styling;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -19,21 +20,50 @@ namespace MicroElements.Reporting.Excel
         /// <param name="metadata">Metadata container.</param>
         /// <param name="property">Property with action.</param>
         /// <param name="action">Action to add.</param>
+        /// <param name="combineMode">Method combine mode.</param>
         /// <returns>The same container.</returns>
         public static TContainer WithCombinedConfigure<TContainer, TContext>(
             this TContainer metadata,
             IProperty<Action<TContext>> property,
-            Action<TContext> action)
+            Action<TContext> action,
+            CombineMode combineMode = CombineMode.AppendToEnd)
             where TContainer : IMutablePropertyContainer
         {
             Action<TContext>? existedAction = metadata.GetPropertyValue(property)?.Value;
 
-            return metadata.WithValue(property, context => Combine(context, existedAction, action));
+            return metadata.WithValue(property, context => Combine(context, existedAction, action, combineMode));
 
-            static void Combine(TContext context, Action<TContext>? action1, Action<TContext> action2)
+            static void Combine(TContext context, Action<TContext>? action1, Action<TContext> action2, CombineMode combineMode)
+            {
+                switch (combineMode)
+                {
+                    case CombineMode.Set:
+                        Set(context, action1, action2);
+                        break;
+                    case CombineMode.AppendToEnd:
+                        AppendToEnd(context, action1, action2);
+                        break;
+                    case CombineMode.AppendToStart:
+                        AppendToStart(context, action1, action2);
+                        break;
+                }
+            }
+
+            static void Set(TContext context, Action<TContext>? action1, Action<TContext> action2)
+            {
+                action2(context);
+            }
+
+            static void AppendToEnd(TContext context, Action<TContext>? action1, Action<TContext> action2)
             {
                 action1?.Invoke(context);
                 action2(context);
+            }
+
+            static void AppendToStart(TContext context, Action<TContext>? action1, Action<TContext> action2)
+            {
+                action2(context);
+                action1?.Invoke(context);
             }
         }
     }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Metadata;
 
@@ -50,14 +51,15 @@ namespace MicroElements.Reporting.Excel
         /// <param name="source3">Source 3.</param>
         /// <param name="source4">Source 4.</param>
         /// <returns>Property value or default value.</returns>
+        [return: MaybeNull]
         public static T GetFirstDefinedValue<T>(
             IProperty<T> property,
-            IPropertyContainer source1 = null,
-            IPropertyContainer source2 = null,
-            IPropertyContainer source3 = null,
-            IPropertyContainer source4 = null)
+            IPropertyContainer? source1 = null,
+            IPropertyContainer? source2 = null,
+            IPropertyContainer? source3 = null,
+            IPropertyContainer? source4 = null)
         {
-            IPropertyValue<T> propertyValue;
+            IPropertyValue<T>? propertyValue;
 
             if (source1 != null)
             {
@@ -87,7 +89,8 @@ namespace MicroElements.Reporting.Excel
                     return propertyValue.Value;
             }
 
-            return (source1 ?? source2 ?? source3 ?? source4).GetPropertyValue(property, SearchOptions.Default).Value;
+            IPropertyContainer source = source1 ?? source2 ?? source3 ?? source4 ?? PropertyContainer.Empty;
+            return source.GetValue(property);
         }
     }
 
@@ -143,6 +146,11 @@ namespace MicroElements.Reporting.Excel
         /// Sheet customization function.
         /// </summary>
         public static readonly IProperty<Action<SheetContext>> ConfigureSheet = new Property<Action<SheetContext>>("ConfigureSheet");
+
+        /// <summary>
+        /// Row customization function.
+        /// </summary>
+        public static readonly IProperty<Action<RowContext>> ConfigureRow = new Property<Action<RowContext>>("ConfigureRow");
     }
 
     /// <summary>

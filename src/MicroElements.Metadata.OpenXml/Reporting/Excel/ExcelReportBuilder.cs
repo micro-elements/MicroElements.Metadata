@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -293,6 +294,8 @@ namespace MicroElements.Reporting.Excel
             SheetData sheetData = sheetContext.SheetData;
             var columns = sheetContext.Columns;
 
+            var configureRow = sheetContext.SheetMetadata.GetValue(ExcelSheetMetadata.ConfigureRow);
+
             if (sheetContext.IsNotTransposed)
             {
                 // HEADER ROW
@@ -302,8 +305,20 @@ namespace MicroElements.Reporting.Excel
                 // DATA ROWS
                 foreach (var dataRow in dataRows)
                 {
-                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, dataRow));
-                    sheetData.AppendChild(new Row(valueCells));
+                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, dataRow, callCustomize: false)).ToArray();
+                    Row excelRow = new Row(valueCells.Select(context => context.Cell));
+
+                    // Customize Row
+                    configureRow?.Invoke(new RowContext(valueCells, excelRow));
+
+                    // Customize Cells
+                    foreach (CellContext cellContext in valueCells)
+                    {
+                        var customizeFunc = cellContext.CellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
+                        customizeFunc?.Invoke(cellContext);
+                    }
+
+                    sheetData.AppendChild(excelRow);
                 }
             }
             else
@@ -314,22 +329,13 @@ namespace MicroElements.Reporting.Excel
 
                 // VALUE COLUMN
                 dataRows = dataRows.ToArray();
-                for (int rowIndex = 0; rowIndex < excelRows.Length; rowIndex++)
-                {
-                    var column = columns[rowIndex];
-                    foreach (var dataRow in dataRows)
-                    {
-                        ConstructCell(column, dataRow);
-                    }
-                }
-
                 foreach (var dataRow in dataRows)
                 {
                     for (var index = 0; index < columns.Count; index++)
                     {
                         var column = columns[index];
                         Row row = excelRows[index];
-                        Cell cell = ConstructCell(column, dataRow);
+                        Cell cell = ConstructCell(column, dataRow).Cell;
                         row.AppendChild(cell);
                     }
                 }
@@ -378,9 +384,9 @@ namespace MicroElements.Reporting.Excel
             return columnsElement;
         }
 
-        private Cell CreateCell(string value, CellValues dataType)
+        private Cell CreateCell(string? value, CellValues dataType)
         {
-            string cellText = value;
+            string? cellText = value;
 
             if (dataType == CellValues.SharedString && string.IsNullOrEmpty(cellText))
             {
@@ -406,22 +412,22 @@ namespace MicroElements.Reporting.Excel
             Cell headerCell = CreateCell(columnContext.PropertyRenderer.TargetName, CellValues.String);
 
             var propertyRenderer = columnContext.PropertyRenderer;
-            var cellMetadata = propertyRenderer.GetMetadata<ExcelColumnMetadata>();
+            ExcelColumnMetadata? excelColumnMetadata = propertyRenderer.GetMetadata<ExcelColumnMetadata>();
 
             // External customization
-            var customizeFunc = cellMetadata?.GetValue(ExcelColumnMetadata.ConfigureHeaderCell);
+            var customizeFunc = excelColumnMetadata?.GetValue(ExcelColumnMetadata.ConfigureHeaderCell);
             if (customizeFunc != null)
             {
-                customizeFunc.Invoke(new CellContext(columnContext, cellMetadata, headerCell));
+                customizeFunc.Invoke(new CellContext(columnContext, excelColumnMetadata!, headerCell));
             }
 
             return headerCell;
         }
 
-        private Cell ConstructCell(ColumnContext columnContext, IPropertyContainer source)
+        private CellContext ConstructCell(ColumnContext columnContext, IPropertyContainer source, bool callCustomize = true)
         {
             var propertyRenderer = columnContext.PropertyRenderer;
-            string textValue = propertyRenderer.Render(source);
+            string? textValue = propertyRenderer.Render(source);
 
             var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
 
@@ -445,14 +451,16 @@ namespace MicroElements.Reporting.Excel
                 }
             }
 
+            CellContext cellContext = new CellContext(columnContext, cellMetadata!, cell);
+
             // External customization
-            var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
-            if (customizeFunc != null)
+            if (callCustomize)
             {
-                customizeFunc.Invoke(new CellContext(columnContext, cellMetadata, cell));
+                var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
+                customizeFunc?.Invoke(cellContext);
             }
 
-            return cell;
+            return cellContext;
         }
 
         private void InitStylesheet(DocumentContext document)

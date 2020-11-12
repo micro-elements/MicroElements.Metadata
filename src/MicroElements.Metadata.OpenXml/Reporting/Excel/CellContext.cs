@@ -29,24 +29,14 @@ namespace MicroElements.Reporting.Excel
         public Cell Cell { get; }
 
         /// <summary>
-        /// Gets document metadata.
-        /// </summary>
-        public IExcelMetadata DocumentMetadata => ColumnContext.DocumentMetadata;
-
-        /// <summary>
-        /// Gets sheet metadata.
-        /// </summary>
-        public IExcelMetadata SheetMetadata => ColumnContext.SheetMetadata;
-
-        /// <summary>
-        /// Gets column metadata.
-        /// </summary>
-        public IExcelMetadata ColumnMetadata => ColumnContext.ColumnMetadata;
-
-        /// <summary>
         /// Gets <see cref="IPropertyRenderer"/> for this cell.
         /// </summary>
         public IPropertyRenderer PropertyRenderer => ColumnContext.PropertyRenderer;
+
+        /// <summary>
+        /// Gets DocumentContext for this cell.
+        /// </summary>
+        public DocumentContext DocumentContext => ColumnContext.SheetContext.DocumentContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CellContext"/> class.

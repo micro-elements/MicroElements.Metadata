@@ -4,23 +4,23 @@
 namespace MicroElements.Reporting.Styling
 {
     /// <summary>
-    /// Style apply mode.
+    /// Combine mode.
     /// </summary>
-    public enum StyleApply
+    public enum CombineMode
     {
         /// <summary>
-        /// Replace style.
+        /// Replace with new value.
         /// </summary>
         Set,
 
         /// <summary>
-        /// Merge style. New style appends on Current.
+        /// Appends to end.
         /// </summary>
-        Merge,
+        AppendToEnd,
 
         /// <summary>
-        /// Merge in reverse order. Current style appends on New.
+        /// Appends to start.
         /// </summary>
-        ReverseMerge,
+        AppendToStart,
     }
 }

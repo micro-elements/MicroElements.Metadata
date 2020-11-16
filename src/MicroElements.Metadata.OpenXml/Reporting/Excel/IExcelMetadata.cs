@@ -53,7 +53,7 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Property value or default value.</returns>
         [return: MaybeNull]
         public static T GetFirstDefinedValue<T>(
-            IProperty<T> property,
+            this IProperty<T> property,
             IPropertyContainer? source1 = null,
             IPropertyContainer? source2 = null,
             IPropertyContainer? source3 = null,

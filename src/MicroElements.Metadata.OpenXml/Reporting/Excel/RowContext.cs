@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MicroElements.Metadata;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -22,14 +23,21 @@ namespace MicroElements.Reporting.Excel
         public Row Row { get; }
 
         /// <summary>
+        /// Gets the source container for row.
+        /// </summary>
+        public IPropertyContainer RowSource { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RowContext"/> class.
         /// </summary>
         /// <param name="cells">Cells in this row.</param>
         /// <param name="excelRow">OpenXml row.</param>
-        public RowContext(IReadOnlyCollection<CellContext> cells, Row excelRow)
+        /// <param name="rowSource">Source container for row.</param>
+        public RowContext(IReadOnlyCollection<CellContext> cells, Row excelRow, IPropertyContainer rowSource)
         {
             Cells = cells;
             Row = excelRow;
+            RowSource = rowSource;
         }
     }
 }

@@ -1,3 +1,8 @@
+# 4.8.0
+- Added RowContext.RowSource to access source property container for row
+- ConfigureCell and ConfigureRow search propagation
+- Removed obsolete Flatten method
+
 # 4.7.0
 - Change: Fills cell references in AddReportSheet
 

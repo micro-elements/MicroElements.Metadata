@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -189,8 +190,11 @@ namespace MicroElements.Reporting.Excel
             sheetContext.SheetElement.FillCellReferences(forceFill: true);
 
             // External customization
-            var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.ConfigureSheet);
-            customizeFunc?.Invoke(sheetContext);
+            var configureSheet = ExcelSheetMetadata.ConfigureSheet.GetFirstDefinedValue(
+                sheetContext.SheetMetadata,
+                _documentMetadata);
+
+            configureSheet?.Invoke(sheetContext);
 
             return this;
         }
@@ -275,8 +279,7 @@ namespace MicroElements.Reporting.Excel
 
             sheets.Append(sheet);
 
-            bool freezeTopRow = ExcelMetadata.GetFirstDefinedValue(
-                ExcelMetadata.FreezeTopRow,
+            bool freezeTopRow = ExcelMetadata.FreezeTopRow.GetFirstDefinedValue(
                 sheetContext.SheetMetadata,
                 sheetContext.DocumentMetadata);
 
@@ -296,7 +299,9 @@ namespace MicroElements.Reporting.Excel
             SheetData sheetData = sheetContext.SheetData;
             var columns = sheetContext.Columns;
 
-            var configureRow = sheetContext.SheetMetadata.GetValue(ExcelSheetMetadata.ConfigureRow);
+            var configureRow = ExcelSheetMetadata.ConfigureRow.GetFirstDefinedValue(
+                sheetContext.SheetMetadata,
+                sheetContext.DocumentContext.DocumentMetadata);
 
             if (sheetContext.IsNotTransposed)
             {
@@ -307,17 +312,23 @@ namespace MicroElements.Reporting.Excel
                 // DATA ROWS
                 foreach (var dataRow in dataRows)
                 {
+                    // Create cells and row
                     var valueCells = columns.Select(columnContext => ConstructCell(columnContext, dataRow, callCustomize: false)).ToArray();
                     Row excelRow = new Row(valueCells.Select(context => context.Cell));
 
-                    // Customize Row
-                    configureRow?.Invoke(new RowContext(valueCells, excelRow));
+                    // Customize row
+                    configureRow?.Invoke(new RowContext(valueCells, excelRow, dataRow));
 
-                    // Customize Cells
+                    // Customize cells
                     foreach (CellContext cellContext in valueCells)
                     {
-                        var customizeFunc = cellContext.CellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
-                        customizeFunc?.Invoke(cellContext);
+                        var configureCell = ExcelCellMetadata.ConfigureCell.GetFirstDefinedValue(
+                            cellContext.CellMetadata,
+                            cellContext.ColumnContext.ColumnMetadata,
+                            sheetContext.SheetMetadata,
+                            sheetContext.DocumentContext.DocumentMetadata);
+
+                        configureCell?.Invoke(cellContext);
                     }
 
                     sheetData.AppendChild(excelRow);
@@ -357,8 +368,7 @@ namespace MicroElements.Reporting.Excel
                 var columnContext = columns[index];
                 uint colNumber = (uint)(index + 1);
 
-                int columnWidth = ExcelMetadata.GetFirstDefinedValue(
-                    ExcelMetadata.ColumnWidth,
+                int columnWidth = ExcelMetadata.ColumnWidth.GetFirstDefinedValue(
                     columnContext.ColumnMetadata,
                     columnContext.SheetMetadata,
                     columnContext.DocumentMetadata);
@@ -438,8 +448,7 @@ namespace MicroElements.Reporting.Excel
 
             var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
 
-            CellValues dataType = ExcelMetadata.GetFirstDefinedValue(
-                ExcelMetadata.DataType,
+            CellValues dataType = ExcelMetadata.DataType.GetFirstDefinedValue(
                 cellMetadata,
                 columnContext.ColumnMetadata,
                 columnContext.SheetMetadata,

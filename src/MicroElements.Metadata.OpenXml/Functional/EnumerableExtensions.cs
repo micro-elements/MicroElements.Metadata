@@ -20,12 +20,5 @@ namespace MicroElements.Functional
             return source;
 #endif
         }
-
-        public static IEnumerable<T> Materialize<T>(this IEnumerable<T> source, Action<IReadOnlyList<T>> action)
-        {
-            var materializedItems = source.ToArray();
-            action(materializedItems);
-            return materializedItems;
-        }
     }
 }

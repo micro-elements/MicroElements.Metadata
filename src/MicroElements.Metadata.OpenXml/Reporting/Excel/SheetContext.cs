@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
+using MicroElements.Parsing;
 
 namespace MicroElements.Reporting.Excel
 {
@@ -63,6 +64,11 @@ namespace MicroElements.Reporting.Excel
         /// Gets <see cref="DocumentFormat.OpenXml.Spreadsheet.Sheet"/> part.
         /// </summary>
         public Sheet Sheet { get; internal set; }
+
+        /// <summary>
+        /// Gets <see cref="Sheet"/> as <see cref="ExcelElement{TOpenXmlElement}"/>.
+        /// </summary>
+        public ExcelElement<Sheet> SheetElement => new ExcelElement<Sheet>(DocumentContext.Document, Sheet);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SheetContext"/> class.

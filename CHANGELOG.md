@@ -1,3 +1,6 @@
+# 4.7.0
+- Change: Fills cell references in AddReportSheet
+
 # 4.6.0
 - Added Row customization with ExcelSheetMetadata.ConfigureRow
 - Added ConfigureCell, ConfigureHeaderCell, ConficureColumn, ConfigureRow configuration extensions

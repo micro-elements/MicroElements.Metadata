@@ -29,12 +29,29 @@ namespace MicroElements.Parsing
         public static ExcelElement<Sheet> GetSheet(this SpreadsheetDocument document, string name, bool fillCellReferences = true)
         {
             var sheets = document.WorkbookPart.Workbook.Sheets.Cast<Sheet>();
-            Sheet sheet = sheets.FirstOrDefault(s => s.Name == name);
+            Sheet? sheet = sheets.FirstOrDefault(s => s.Name == name);
             ExcelElement<Sheet> result = new ExcelElement<Sheet>(document, sheet);
 
             if (fillCellReferences)
                 result.FillCellReferences();
             return result;
+        }
+
+        /// <summary>
+        /// Gets columns from sheet.
+        /// </summary>
+        /// <param name="sheet">Source sheet.</param>
+        /// <returns>Sheet rows.</returns>
+        public static IEnumerable<ExcelElement<Column>> GetColumns(this ExcelElement<Sheet> sheet)
+        {
+            string sheetId = sheet.Data.Id.Value;
+            var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
+            var worksheet = worksheetPart.Worksheet;
+            var excelColumns = worksheet.GetFirstChild<Columns>();
+            var columns = excelColumns
+                .Descendants<Column>()
+                .Select(column => new ExcelElement<Column>(sheet.Doc, column));
+            return columns;
         }
 
         /// <summary>
@@ -180,10 +197,15 @@ namespace MicroElements.Parsing
             if (row.IsEmpty())
                 return Array.Empty<ExcelElement<Cell>>();
 
-            var cells = row.Data.Descendants<Cell>();
-            var rowCells = cells.Select(cell => new ExcelElement<Cell>(row.Doc, cell)).ToArray();
+            var rowCells = row.Data
+                .GetRowCells()
+                .Select(cell => new ExcelElement<Cell>(row.Doc, cell))
+                .ToArray();
+
             return rowCells;
         }
+
+        public static IEnumerable<Cell> GetRowCells(this Row row) => row.Descendants<Cell>();
 
         public static ExcelElement<HeaderCell>[] GetHeaders(this ExcelElement<Row> row)
         {
@@ -293,7 +315,7 @@ namespace MicroElements.Parsing
 
                 if (propertyParser != null)
                 {
-                    if (propertyParser.TargetType == typeof(LocalDate))
+                    if (propertyParser.TargetType == typeof(LocalDate) || propertyParser.TargetType == typeof(LocalDate?))
                     {
                         var parseResult = LocalDatePattern.Iso.Parse(cellValue);
                         if (parseResult.Success)
@@ -309,7 +331,7 @@ namespace MicroElements.Parsing
                                 .Match(s => cellTextValue = s, () => { });
                         }
                     }
-                    else if (propertyParser.TargetType == typeof(LocalTime))
+                    else if (propertyParser.TargetType == typeof(LocalTime) || propertyParser.TargetType == typeof(LocalTime?))
                     {
                         var parseResult = LocalTimePattern.ExtendedIso.Parse(cellValue);
                         if (parseResult.Success)
@@ -325,7 +347,7 @@ namespace MicroElements.Parsing
                                 .Match(s => cellTextValue = s, () => { });
                         }
                     }
-                    else if (propertyParser.TargetType == typeof(DateTime))
+                    else if (propertyParser.TargetType == typeof(DateTime) || propertyParser.TargetType == typeof(DateTime?))
                     {
                         if (DateTime.TryParse(cellValue, out _))
                         {
@@ -385,7 +407,7 @@ namespace MicroElements.Parsing
         public static IEnumerable<T> MapRows<T>(
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider,
-            Func<IReadOnlyList<IPropertyValue>, T> factory = null)
+            Func<IReadOnlyList<IPropertyValue>, T>? factory = null)
         {
             rows.AssertArgumentNotNull(nameof(rows));
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
@@ -405,32 +427,41 @@ namespace MicroElements.Parsing
             return needFill;
         }
 
-        public static ExcelElement<Sheet> FillCellReferences(this ExcelElement<Sheet> sheet)
+        public static ExcelElement<Sheet> FillCellReferences(this ExcelElement<Sheet> sheet, bool forceFill = false, bool zeroBased = false)
         {
-            if (NeedFillCellReferences(sheet))
+            if (forceFill || NeedFillCellReferences(sheet))
             {
-                _ = sheet
+                sheet
                     .GetRows()
-                    .FillCellReferences()
-                    .ToArray();
+                    .FillCellReferences(zeroBased: zeroBased)
+                    .Iterate();
             }
 
             return sheet;
         }
 
-        public static IEnumerable<ExcelElement<Row>> FillCellReferences(this IEnumerable<ExcelElement<Row>> rows)
+        public static IEnumerable<ExcelElement<Row>> FillCellReferences(this IEnumerable<ExcelElement<Row>> rows, bool zeroBased = false)
         {
-            int rowIndex = 1;
+            int rowIndex = zeroBased ? 0 : 1;
             foreach (ExcelElement<Row> row in rows)
             {
-                ExcelElement<Cell>[] rowCells = row.GetRowCells();
-                for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
-                {
-                    rowCells[colIndex].Data.CellReference = GetCellReference(colIndex, rowIndex);
-                }
+                FillCellReferences(row, rowIndex, zeroBased: false);
 
                 rowIndex++;
                 yield return row;
+            }
+        }
+
+        private static void FillCellReferences(Row row, int rowIndex, bool zeroBased = false)
+        {
+            // Set row index
+            row.RowIndex = (uint)rowIndex;
+
+            var rowCells = row.GetRowCells().ToArray();
+            for (int colIndex = 1; colIndex <= rowCells.Length; colIndex++)
+            {
+                // Set cell reference
+                rowCells[colIndex].CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
             }
         }
     }

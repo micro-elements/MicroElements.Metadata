@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
 using MicroElements.Metadata;
+using MicroElements.Parsing;
 using NodaTime;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
 using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
@@ -186,6 +186,8 @@ namespace MicroElements.Reporting.Excel
 
             AddSheetData(sheetContext, reportRows);
 
+            sheetContext.SheetElement.FillCellReferences(forceFill: true);
+
             // External customization
             var customizeFunc = sheetContext.SheetMetadata?.GetValue(ExcelSheetMetadata.ConfigureSheet);
             customizeFunc?.Invoke(sheetContext);
@@ -257,8 +259,8 @@ namespace MicroElements.Reporting.Excel
             //workSheet.Append(sheetDimension);
             worksheet.Append(sheetViews);
             worksheet.Append(sheetFormatProperties);
-            if (columns != null)
-                worksheet.Append(columns);
+
+            worksheet.Append(columns);
             worksheet.Append(sheetData);
             //workSheet.Append(pageMargins);
 
@@ -361,14 +363,19 @@ namespace MicroElements.Reporting.Excel
                     columnContext.SheetMetadata,
                     columnContext.DocumentMetadata);
 
-                columnContext.Column = new Column { Min = colNumber, Max = colNumber, Width = columnWidth, CustomWidth = true };
+                columnContext.Column = new Column
+                {
+                    Min = colNumber,
+                    Max = colNumber,
+                    Width = columnWidth,
+                    CustomWidth = true,
+                };
 
                 // External customization
                 var customizeFunc = columnContext.ColumnMetadata?.GetValue(ExcelColumnMetadata.ConfigureColumn);
                 customizeFunc?.Invoke(columnContext);
 
-                if (columnContext.Column != null)
-                    columnsElement.Append(columnContext.Column);
+                columnsElement.AppendChild(columnContext.Column);
             }
 
             return columnsElement;

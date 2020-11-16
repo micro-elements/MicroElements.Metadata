@@ -44,12 +44,6 @@ namespace MicroElements.Reporting.Excel
             "No CellFormat registered in stylesheet");
 
         [DoesNotReturn]
-        public static void Throw<TErrorCode>(this in Error<TErrorCode> error)
-        {
-            throw new ExceptionWithError<TErrorCode>(error);
-        }
-
-        [DoesNotReturn]
         public static void Throw(this in Error<ExcelError> error)
         {
             throw new ExcelException(error);

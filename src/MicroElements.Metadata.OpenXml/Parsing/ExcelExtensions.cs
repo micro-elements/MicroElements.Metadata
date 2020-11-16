@@ -458,10 +458,11 @@ namespace MicroElements.Parsing
             row.RowIndex = (uint)rowIndex;
 
             var rowCells = row.GetRowCells().ToArray();
-            for (int colIndex = 1; colIndex <= rowCells.Length; colIndex++)
+            for (int colIndexZeroBased = 0; colIndexZeroBased < rowCells.Length; colIndexZeroBased++)
             {
                 // Set cell reference
-                rowCells[colIndex].CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
+                var colIndex = zeroBased ? colIndexZeroBased : colIndexZeroBased + 1;
+                rowCells[colIndexZeroBased].CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
             }
         }
     }

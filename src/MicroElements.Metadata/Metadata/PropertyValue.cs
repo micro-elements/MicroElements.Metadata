@@ -119,7 +119,7 @@ namespace MicroElements.Metadata
 
             Type propertyType = property.Type;
 
-            if (value != null && value.GetType() != propertyType)
+            if (value != null && !propertyType.IsInstanceOfType(value))
                 throw new InvalidOperationException($"Value type {value.GetType()} should be the same as property type {propertyType}.");
 
             if (value == null && property.Type.IsValueType)

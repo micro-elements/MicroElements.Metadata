@@ -1,3 +1,6 @@
+# 4.9.0
+- PropertyValue.Create fix to correctly work with nullable structs
+
 # 4.8.0
 - Added RowContext.RowSource to access source property container for row
 - ConfigureCell and ConfigureRow search propagation

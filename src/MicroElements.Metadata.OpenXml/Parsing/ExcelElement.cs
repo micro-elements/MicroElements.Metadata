@@ -50,6 +50,12 @@ namespace MicroElements.Parsing
         public TOpenXmlElement Data { get; }
 
         /// <summary>
+        /// Gets OpenXml element as <see cref="Option{A}"/>.
+        /// </summary>
+        /// <returns>Optional OpenXml element.</returns>
+        public Option<TOpenXmlElement> AsOption() => Data!;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExcelElement{TOpenXmlElement}"/> class.
         /// </summary>
         /// <param name="doc">OpenXml document that contains this element.</param>

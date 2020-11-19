@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -130,38 +129,6 @@ namespace MicroElements.Metadata
             ValueSource source = valueSource ?? ValueSource.Defined;
             IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
             return propertyValue;
-        }
-    }
-
-    // TODO: To Functional
-    internal static class TypeCheck
-    {
-        public static bool CanAcceptNull(this Type type) => type.IsReferenceType() || type.IsNullableStruct();
-
-        public static bool CanNotAcceptNull(this Type type) => !type.CanAcceptNull();
-
-        public static bool IsAssignableTo(this Type type, object value)
-        {
-            type.AssertArgumentNotNull(nameof(type));
-            value.AssertArgumentNotNull(nameof(value));
-
-            return value.GetType().IsAssignableTo(type);
-        }
-
-        public static bool IsAssignableTo(this object value, Type typeToCheck)
-        {
-            value.AssertArgumentNotNull(nameof(value));
-            typeToCheck.AssertArgumentNotNull(nameof(typeToCheck));
-
-            return value.GetType().IsAssignableTo(typeToCheck);
-        }
-
-        public static bool IsAssignableTo(this Type type, Type typeToCheck)
-        {
-            type.AssertArgumentNotNull(nameof(type));
-            typeToCheck.AssertArgumentNotNull(nameof(typeToCheck));
-
-            return typeToCheck.GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
         }
     }
 }

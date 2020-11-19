@@ -1,3 +1,7 @@
+# 5.1.0
+- MicroElements.Functional updated to version 1.6.0
+- TypeCheck methods replaced with methods from MicroElements.Functional
+
 # 5.0.0
 - Breaking: IProperyContainerMapper renamed to IModelMapper
 - Breaking: Removed unused IPropertyMapper

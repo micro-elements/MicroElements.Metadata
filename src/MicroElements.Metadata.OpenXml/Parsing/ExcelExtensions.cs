@@ -133,60 +133,30 @@ namespace MicroElements.Parsing
             return new string(cellReference.TakeWhile(char.IsLetter).ToArray());
         }
 
-        public class TableDataRow
-        {
-            public IReadOnlyDictionary<string, string> Data { get; }
-
-            public ExcelElement<Row> Row { get; }
-
-            public TableDataRow(IReadOnlyDictionary<string, string> data, ExcelElement<Row> row)
-            {
-                Data = data;
-                Row = row;
-            }
-        }
-
-        public static IEnumerable<TableDataRow> AsParsedRows(
-            this IEnumerable<ExcelElement<Row>> rows,
-            IParserProvider parserProvider = null)
-        {
-            ExcelElement<HeaderCell>[] headers = null;
-            foreach (var row in rows)
-            {
-                if (headers == null)
-                {
-                    headers = row.GetHeaders();
-                    continue;
-                }
-
-                var rowValues = row.GetRowValues(headers: headers, parserProvider: parserProvider);
-
-                // skip empty line
-                if (rowValues.All(string.IsNullOrWhiteSpace))
-                    continue;
-
-                var headerNames = headers.Select(header => header.Data.Name ?? header.Data.ColumnReference).ToArrayDebug();
-                var expandoObject = headerNames
-                    .Zip(rowValues, (header, value) => (header, value))
-                    .ToDictionary(tuple => tuple.header, tuple => tuple.value);
-
-                yield return new TableDataRow(expandoObject, row);
-            }
-        }
-
+        /// <summary>
+        /// Gets rows as enumeration of dictionaries.
+        /// </summary>
+        /// <param name="rows">Source rows.</param>
+        /// <param name="parserProvider"></param>
+        /// <returns></returns>
         public static IEnumerable<IReadOnlyDictionary<string, string>> AsDictionaryList(
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider)
         {
-            ExcelElement<HeaderCell>[] headers = null;
+            rows.AssertArgumentNotNull(nameof(rows));
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+
+            ExcelElement<HeaderCell>[]? headers = null;
             foreach (var row in rows)
             {
                 if (headers == null)
                 {
+                    // Use first row as headers
                     headers = row.GetHeaders();
                     continue;
                 }
 
+                //TODO: Use cached parserProvider
                 var rowValues = row.GetRowValues(headers: headers, parserProvider: parserProvider);
 
                 // skip empty line
@@ -202,12 +172,17 @@ namespace MicroElements.Parsing
             }
         }
 
+        /// <summary>
+        /// Gets row cells.
+        /// </summary>
+        /// <param name="row">Source row.</param>
+        /// <returns>Cells.</returns>
         public static ExcelElement<Cell>[] GetRowCells(this ExcelElement<Row> row)
         {
             if (row.IsEmpty())
                 return Array.Empty<ExcelElement<Cell>>();
 
-            var rowCells = row.Data
+            var rowCells = row.Data!
                 .GetRowCells()
                 .Select(cell => new ExcelElement<Cell>(row.Doc, cell))
                 .ToArray();
@@ -215,8 +190,19 @@ namespace MicroElements.Parsing
             return rowCells;
         }
 
-        public static IEnumerable<Cell> GetRowCells(this Row row) => row.Descendants<Cell>();
+        /// <summary>
+        /// Gets row cells.
+        /// </summary>
+        /// <param name="row">Source row.</param>
+        /// <returns>Cells.</returns>
+        public static IEnumerable<Cell> GetRowCells(this Row row) =>
+            row.Descendants<Cell>();
 
+        /// <summary>
+        /// Gets row cells as <see cref="HeaderCell"/>.
+        /// </summary>
+        /// <param name="row">Source row.</param>
+        /// <returns>HeaderCells.</returns>
         public static ExcelElement<HeaderCell>[] GetHeaders(this ExcelElement<Row> row)
         {
             if (row.IsEmpty())
@@ -227,11 +213,15 @@ namespace MicroElements.Parsing
             return headers;
         }
 
+        /// <summary>
+        /// Gets value for each header.
+        /// <see cref="IPropertyParser"/> will be attached to cells where cell header name same as <see cref="IPropertyParser.SourceName"/>.
+        /// </summary>
         public static string[] GetRowValues(
             this ExcelElement<Row> row,
             ExcelElement<HeaderCell>[] headers,
             IParserProvider parserProvider,
-            string nullValue = null)
+            string? nullValue = null)
         {
             if (row.IsEmpty())
                 return Array.Empty<string>();
@@ -401,7 +391,7 @@ namespace MicroElements.Parsing
         public static IEnumerable<T> GetRowsAs<T>(
             this ExcelElement<Sheet> sheet,
             IParserProvider parserProvider,
-            Func<IReadOnlyList<IPropertyValue>, T> factory = null)
+            Func<IReadOnlyList<IPropertyValue>, T>? factory = null)
         {
             if (factory == null)
                 factory = list => (T)Activator.CreateInstance(typeof(T), list);
@@ -478,5 +468,50 @@ namespace MicroElements.Parsing
                 rowCells[colIndexZeroBased].CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
             }
         }
+
+        #region Unused
+
+        public class TableDataRow
+        {
+            public IReadOnlyDictionary<string, string> Data { get; }
+
+            public ExcelElement<Row> Row { get; }
+
+            public TableDataRow(IReadOnlyDictionary<string, string> data, ExcelElement<Row> row)
+            {
+                Data = data;
+                Row = row;
+            }
+        }
+
+        public static IEnumerable<TableDataRow> AsParsedRows(
+            this IEnumerable<ExcelElement<Row>> rows,
+            IParserProvider parserProvider = null)
+        {
+            ExcelElement<HeaderCell>[] headers = null;
+            foreach (var row in rows)
+            {
+                if (headers == null)
+                {
+                    headers = row.GetHeaders();
+                    continue;
+                }
+
+                var rowValues = row.GetRowValues(headers: headers, parserProvider: parserProvider);
+
+                // skip empty line
+                if (rowValues.All(string.IsNullOrWhiteSpace))
+                    continue;
+
+                var headerNames = headers.Select(header => header.Data.Name ?? header.Data.ColumnReference).ToArrayDebug();
+                var expandoObject = headerNames
+                    .Zip(rowValues, (header, value) => (header, value))
+                    .ToDictionary(tuple => tuple.header, tuple => tuple.value);
+
+                yield return new TableDataRow(expandoObject, row);
+            }
+        }
+
+        #endregion
     }
 }

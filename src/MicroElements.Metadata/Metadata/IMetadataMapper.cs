@@ -1,18 +1,13 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Provides property mappers.
+    /// Represents object to metadata mapper and provides available property list.
     /// </summary>
-    public interface IMapperProvider
+    /// <typeparam name="T">Model type.</typeparam>
+    public interface IMetadataMapper<T> : IPropertySet, IModelMapper<T>
     {
-        /// <summary>
-        /// Gets property mappers.
-        /// </summary>
-        IEnumerable<IPropertyMapper> Mappers { get; }
     }
 }

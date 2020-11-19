@@ -44,14 +44,19 @@ namespace MicroElements.Parsing
         /// <returns>Sheet rows.</returns>
         public static IEnumerable<ExcelElement<Column>> GetColumns(this ExcelElement<Sheet> sheet)
         {
-            string sheetId = sheet.Data.Id.Value;
-            var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
-            var worksheet = worksheetPart.Worksheet;
-            var excelColumns = worksheet.GetFirstChild<Columns>();
-            var columns = excelColumns
-                .Descendants<Column>()
-                .Select(column => new ExcelElement<Column>(sheet.Doc, column));
-            return columns;
+            if (sheet.Data != null)
+            {
+                string sheetId = sheet.Data.Id.Value;
+                var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
+                var worksheet = worksheetPart.Worksheet;
+                var excelColumns = worksheet.GetFirstChild<Columns>();
+                var columns = excelColumns
+                    .Descendants<Column>()
+                    .Select(column => new ExcelElement<Column>(sheet.Doc, column));
+                return columns;
+            }
+
+            return Array.Empty<ExcelElement<Column>>();
         }
 
         /// <summary>
@@ -61,14 +66,19 @@ namespace MicroElements.Parsing
         /// <returns>Sheet rows.</returns>
         public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)
         {
-            string sheetId = sheet.Data.Id.Value;
-            var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
-            var worksheet = worksheetPart.Worksheet;
-            var sheetData = worksheet.GetFirstChild<SheetData>();
-            var rows = sheetData
-                .Descendants<Row>()
-                .Select(row => new ExcelElement<Row>(sheet.Doc, row));
-            return rows;
+            if (sheet.Data != null)
+            {
+                string sheetId = sheet.Data.Id.Value;
+                var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
+                var worksheet = worksheetPart.Worksheet;
+                var sheetData = worksheet.GetFirstChild<SheetData>();
+                var rows = sheetData
+                    .Descendants<Row>()
+                    .Select(row => new ExcelElement<Row>(sheet.Doc, row));
+                return rows;
+            }
+
+            return Array.Empty<ExcelElement<Row>>();
         }
 
         /// <summary>
@@ -423,6 +433,9 @@ namespace MicroElements.Parsing
 
         public static bool NeedFillCellReferences(this ExcelElement<Sheet> sheet)
         {
+            if (sheet.IsEmpty())
+                return false;
+
             bool needFill = sheet.GetRows().FirstOrDefault()?.GetRowCells().FirstOrDefault()?.Data?.CellReference == null;
             return needFill;
         }

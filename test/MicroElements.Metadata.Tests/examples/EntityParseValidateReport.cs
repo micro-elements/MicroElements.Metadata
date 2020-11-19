@@ -27,7 +27,7 @@ namespace MicroElements.Metadata.Tests.examples
             }
         }
 
-        public class EntityMeta : IPropertySet, IPropertyContainerMapper<Entity>
+        public class EntityMeta : IPropertySet, IModelMapper<Entity>
         {
             public static readonly EntityMeta Instance = new EntityMeta();
 

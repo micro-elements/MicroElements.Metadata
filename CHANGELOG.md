@@ -1,3 +1,9 @@
+# 5.0.0
+- Breaking: IProperyContainerMapper renamed to IModelMapper
+- Breaking: Removed unused IPropertyMapper
+- Added: IMetadataMapper that is combination of IModelMapper<T> and IPropertySet
+- Fixed: ExcelExtensions GetRows and FillCellReferences for absent sheet
+
 # 4.9.0
 - PropertyValue.Create fix to correctly work with nullable structs
 

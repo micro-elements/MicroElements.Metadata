@@ -76,8 +76,8 @@ namespace MicroElements.Metadata
                 propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
                 property.AssertArgumentNotNull(nameof(property));
 
-                static IPropertyValue? GetPropertyValue<T>(IPropertyContainer pc, IProperty p, SearchOptions? s) => pc.GetPropertyValue((IProperty<T>)p, s);
-                var getPropertyValue = CodeCompiler.CachedCompiledFunc<IPropertyContainer, IProperty, SearchOptions?, IPropertyValue?>(property.Type, "GetPropertyValue", GetPropertyValue<CodeCompiler.GenericType>);
+                static IPropertyValue? GetPropertyValueAdapter<T>(IPropertyContainer pc, IProperty p, SearchOptions? s) => pc.GetPropertyValue((IProperty<T>)p, s);
+                var getPropertyValue = CodeCompiler.CachedCompiledFunc<IPropertyContainer, IProperty, SearchOptions?, IPropertyValue?>(property.Type, "GetPropertyValue", GetPropertyValueAdapter<CodeCompiler.GenericType>);
                 return getPropertyValue(propertyContainer, property, search);
             }
         }

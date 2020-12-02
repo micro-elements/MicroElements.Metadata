@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MicroElements.Metadata.Json\MicroElements.Metadata.Json.csproj" />
+    <ProjectReference Include="..\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj" />
+    <ProjectReference Include="..\MicroElements.Metadata\MicroElements.Metadata.csproj" />
+  </ItemGroup>
+
+</Project>

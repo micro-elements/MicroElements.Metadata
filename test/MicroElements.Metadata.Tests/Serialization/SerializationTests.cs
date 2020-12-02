@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using FluentAssertions;
 using MicroElements.Functional;
-using MicroElements.Metadata.Contracts;
-using MicroElements.Shared;
+using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.NewtonsoftJson;
+using MicroElements.Metadata.Serialization;
+using MicroElements.Metadata.SystemTextJson;
+using Newtonsoft.Json;
 using NodaTime;
 using Xunit;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace MicroElements.Metadata.Tests.Serialization
 {
@@ -126,6 +131,9 @@ namespace MicroElements.Metadata.Tests.Serialization
         [InlineData("DateTime", "2020-11-26T15:27:17", "DateTime")]
         [InlineData("DateTime", "null", "DateTime?")]
 
+        [InlineData("StringArray", "[a1, a2]", "System.String[]")]
+        [InlineData("IntArray", "[1, 2]", "System.Int32[]")]
+
         public void DeserializeProperty(string name, string value, string type, string? type2 = null)
         {
             var mapperSettings = new DefaultMapperSettings();
@@ -142,10 +150,56 @@ namespace MicroElements.Metadata.Tests.Serialization
         {
             var propertyContainer = new MutablePropertyContainer()
                 .WithValue(TestMeta.StringProperty, "Text")
-                .WithValue(TestMeta.IntProperty, 42);
+                .WithValue(TestMeta.IntProperty, 42)
+                .WithValue(TestMeta.StringArray, new [] { "a1", "a2" })
+                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
+                ;
 
             var propertyContainerContract = propertyContainer.ToContract(new DefaultMapperSettings());
             propertyContainerContract.Should().NotBeNull();
+
+            var contractJson = propertyContainerContract.ToJsonWithSystemTextJson();
+
+            var json1 = propertyContainer.ToJsonWithSystemTextJson();
+            var container = JsonSerializer.Deserialize<PropertyContainer>(json1, new JsonSerializerOptions().ConfigureJsonOptions());
+
+            var json2 = propertyContainer.ToJsonWithNewtonsoftJson();
+            var container2 = json2.DeserializeWithNewtonsoftJson<IPropertyContainer>();
+
+            ObjectDiff objectDiff = MetadataComparer.GetDiff(container, container2);
+            objectDiff.Diffs.Should().BeEmpty();
+        }
+    }
+
+    internal static class SerializationExtensions
+    {
+        public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options)
+        {
+            options.ConfigureForMetadata();
+
+            options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            options.WriteIndented = true;
+
+            return options;
+        }
+
+        public static string ToJsonWithSystemTextJson<T>(this T entity)
+        {
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            byte[] utf8Bytes = JsonSerializer.SerializeToUtf8Bytes(entity, jsonSerializerOptions);
+            return Encoding.UTF8.GetString(utf8Bytes);
+        }
+
+        public static string ToJsonWithNewtonsoftJson<T>(this T entity)
+        {
+            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureForMetadata();
+            return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
+        }
+
+        public static T DeserializeWithNewtonsoftJson<T>(this string json)
+        {
+            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureForMetadata();
+            return JsonConvert.DeserializeObject<T>(json, jsonSerializerSettings);
         }
     }
 
@@ -153,7 +207,8 @@ namespace MicroElements.Metadata.Tests.Serialization
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");
-        
+        public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
+        public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");
 
         public static IPropertySet PropertySet { get; } = new PropertySet(GetProperties());
 
@@ -161,19 +216,6 @@ namespace MicroElements.Metadata.Tests.Serialization
         {
             yield return StringProperty;
             yield return IntProperty;
-        }
-    }
-
-    static class ResultExtensions
-    {
-        [Obsolete("Use from Functional")]
-        public static A GetValueOrThrow<A, TErrorCode>(this in Result<A, IError<TErrorCode>> result, bool allowNullResult = false)
-            where TErrorCode : notnull
-        {
-            if (allowNullResult)
-                return result.MatchUnsafe((a) => a, (error) => throw error.ToException());
-
-            return result.Match((a) => a, (error) => throw error.ToException());
         }
     }
 }

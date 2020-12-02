@@ -1,3 +1,10 @@
+# 5.2.0
+- Added Metadata Setialization
+- Added package MicroElements.Metadata.Json
+- Added package MicroElements.Metadata.NewtonsoftJson
+- Added package MicroElements.Metadata.All
+- MicroElements.Functional updated to version 1.10.0
+
 # 5.1.0
 - MicroElements.Functional updated to version 1.6.0
 - TypeCheck methods replaced with methods from MicroElements.Functional

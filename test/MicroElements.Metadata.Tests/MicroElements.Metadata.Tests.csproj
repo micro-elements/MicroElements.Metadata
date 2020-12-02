@@ -23,6 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.Json\MicroElements.Metadata.Json.csproj" />
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\..\src\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj" />
     <ProjectReference Include="..\..\src\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>

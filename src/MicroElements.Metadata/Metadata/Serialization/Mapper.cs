@@ -2,66 +2,51 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Shared;
 
-namespace MicroElements.Metadata.Contracts
+namespace MicroElements.Metadata.Serialization
 {
-    public class PropertyContainerContract
-    {
-        public PropertyValueContract[] Properties { get; set; }
-    }
-
-    public class PropertyValueContract
-    {
-        /// <summary>
-        /// Gets property name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Gets property value.
-        /// </summary>
-        public string Value { get; set; }
-
-        /// <summary>
-        /// Gets property value type.
-        /// </summary>
-        public string Type { get; set; }
-    }
-
+    /// <summary>
+    /// Metadata serializer settings.
+    /// </summary>
     public interface IMapperSettings
     {
+        /// <summary>
+        /// Gets type name.
+        /// </summary>
+        /// <param name="type">Source type.</param>
+        /// <returns>Type name.</returns>
         string GetTypeName(Type type);
 
+        /// <summary>
+        /// Gets type by name.
+        /// It should work with all type names generated with <see cref="GetTypeName"/>.
+        /// </summary>
+        /// <param name="typeName">Type name.</param>
+        /// <returns>Type.</returns>
         Type GetTypeByName(string typeName);
 
+        /// <summary>
+        /// Serializes value to string.
+        /// </summary>
+        /// <param name="type">Value type.</param>
+        /// <param name="value">Optional value.</param>
+        /// <returns>String or null.</returns>
         string? SerializeValue(Type type, object? value);
 
-        Result<object?, IError<string>> DeserializeValue(Type type, string? text);
-    }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        Result<object?, Message> DeserializeValue(Type type, string? text);
 
-    public abstract class TypeConverter
-    {
-        public abstract bool CanConvert(Type typeToConvert);
-
-        // This is used internally to quickly determine the type being converted for JsonConverter<T>.
-        internal virtual Type TypeToConvert => null;
-    }
-
-    public abstract class TypeConverter<T> : TypeConverter
-    {
-        public override bool CanConvert(Type typeToConvert)
-        {
-            return typeToConvert == typeof(T);
-        }
-
-        public abstract string? Serialize(T value);
-
-        public abstract Result<T, IError<string>> Deserialize(string? text);
     }
 
     public class DefaultMapperSettings : IMapperSettings
@@ -75,54 +60,24 @@ namespace MicroElements.Metadata.Contracts
                 NumberDecimalSeparator = ".",
             });
 
-        private static TypeCache TypeCache { get; }
+        public static TypeCache TypeCache { get; }
 
         static DefaultMapperSettings()
         {
-            TypeRegistration[] registrations =
-            {
-                new TypeRegistration(typeof(string), "string"),
-
-                new TypeRegistration(typeof(int), "int"),
-                new TypeRegistration(typeof(int?), "int?"),
-
-                new TypeRegistration(typeof(double), "double"),
-                new TypeRegistration(typeof(double?), "double?"),
-
-                new TypeRegistration(typeof(float), "float"),
-                new TypeRegistration(typeof(float?), "float?"),
-
-                new TypeRegistration(typeof(decimal), "decimal"),
-                new TypeRegistration(typeof(decimal?), "decimal?"),
-
-                new TypeRegistration(typeof(DateTime), "DateTime"),
-                new TypeRegistration(typeof(DateTime?), "DateTime?"),
-            };
-
-            IEnumerable<TypeRegistration> NodaTypeRegistrations(string fullName, string alias)
-            {
-                Type? nodaType = TypeCache.Default.GetType(fullName);
-                if (nodaType != null)
+            var typeRegistrations = Enumerable.Empty<TypeRegistration>()
+                .Concat(TypeCache.NumericTypesWithNullable.TypeSource.TypeRegistrations)
+                .Concat(TypeCache.NodaTimeTypes.Value.TypeSource.TypeRegistrations)
+                .Concat(new[] 
                 {
-                    yield return new TypeRegistration(nodaType, alias);
-                    if (nodaType.IsValueType)
-                    {
-                        Type nullableType = typeof(Nullable<>).MakeGenericType(nodaType);
-                        yield return new TypeRegistration(nullableType, alias + "?");
-                    }
-                }
-            }
-
-            IEnumerable<TypeRegistration> nodaTimeRegistrations = Enumerable.Empty<TypeRegistration>()
-                .Concat(NodaTypeRegistrations("NodaTime.LocalDate", "LocalDate"))
-                .Concat(NodaTypeRegistrations("NodaTime.LocalDateTime", "LocalDateTime"))
+                    new TypeRegistration(typeof(string), "string"),
+                    new TypeRegistration(typeof(DateTime), "DateTime"),
+                    new TypeRegistration(typeof(DateTime?), "DateTime?"),
+                })
                 .ToArray();
-
-            var typeRegistrations = registrations.Concat(nodaTimeRegistrations).ToArray();
 
             TypeCache = TypeCache.Create(
                 AssemblySource.Default,
-                TypeSource.Default.With(typeRegistrations: typeRegistrations));
+                TypeSource.Empty.With(typeRegistrations: typeRegistrations));
         }
 
         public DefaultMapperSettings()
@@ -132,53 +87,13 @@ namespace MicroElements.Metadata.Contracts
         /// <inheritdoc />
         public string GetTypeName(Type type)
         {
-            if (type == typeof(string))
-                return "string";
-
-            if (type == typeof(int))
-                return "int";
-            if (type == typeof(int?))
-                return "int?";
-
-            if (type == typeof(double))
-                return "double";
-            if (type == typeof(double?))
-                return "double?";
-
-            if (type == typeof(float))
-                return "float";
-            if (type == typeof(float?))
-                return "float?";
-
-            if (type == typeof(decimal))
-                return "decimal";
-            if (type == typeof(decimal?))
-                return "decimal?";
-
-            if (type == typeof(DateTime))
-                return "DateTime";
-            if (type == typeof(DateTime?))
-                return "DateTime?";
-
-            string typeFullName = type.FullName;
-
-            if (typeFullName == "NodaTime.LocalDate")
-                return "LocalDate";
-            if (typeFullName.StartsWith("System.Nullable`1[[NodaTime.LocalDate, NodaTime"))
-                return "LocalDate?";
-
-            if (typeFullName == "NodaTime.LocalDateTime")
-                return "LocalDateTime";
-            if (typeFullName.StartsWith("System.Nullable`1[[NodaTime.LocalDateTime, NodaTime"))
-                return "LocalDateTime?";
-
-            return typeFullName;
+            return TypeCache.GetAliasForType(type) ?? type.FullName;
         }
 
         /// <inheritdoc />
         public Type GetTypeByName(string typeName)
         {
-            return TypeCache.GetByAlias(typeName) ?? TypeCache.GetType(typeName);
+            return TypeCache.GetByAliasOrFullName(typeName);
         }
 
         /// <inheritdoc />
@@ -210,17 +125,30 @@ namespace MicroElements.Metadata.Contracts
             if (typeFullName == "NodaTime.LocalDateTime" && value is IFormattable localDateTime)
                 return localDateTime.ToString("yyyy-MM-ddTHH:mm:ss", null);
 
+            if (value is ICollection collection)
+                return collection.FormatAsTuple(startSymbol: "[", endSymbol: "]");
+
             return $"{value}";
         }
 
         /// <inheritdoc />
-        public Result<object?, IError<string>> DeserializeValue(Type type, string? text)
+        public Result<object?, Message> DeserializeValue(Type type, string? text)
         {
             if (text == "null")
-                return Result.Success<object>(null);
+                return (object?)null;
 
             if (type == typeof(string))
                 return text;
+
+            if (type.IsConcreteAndAssignableTo<ICollection>())
+                return DeserializeCollection(type, text);
+
+            Message ReturnWithError() =>
+                new Message(
+                        "Value {text} can not be parsed as {type}",
+                        MessageSeverity.Error,
+                        eventName: "ParseError")
+                    .WithArgs(text, type);
 
             #region Numbers
 
@@ -229,7 +157,7 @@ namespace MicroElements.Metadata.Contracts
                 if (double.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
                     return result;
 
-                return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+                return ReturnWithError();
             }
 
             if (type == typeof(int) || type == typeof(int?))
@@ -237,7 +165,7 @@ namespace MicroElements.Metadata.Contracts
                 if (int.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
                     return result;
 
-                return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+                return ReturnWithError();
             }
 
             if (type == typeof(float) || type == typeof(float?))
@@ -245,7 +173,7 @@ namespace MicroElements.Metadata.Contracts
                 if (float.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
                     return result;
 
-                return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+                return ReturnWithError();
             }
 
             if (type == typeof(decimal) || type == typeof(decimal?))
@@ -253,7 +181,7 @@ namespace MicroElements.Metadata.Contracts
                 if (decimal.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
                     return result;
 
-                return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+                return ReturnWithError();
             }
 
             #endregion
@@ -263,7 +191,7 @@ namespace MicroElements.Metadata.Contracts
                 if (DateTime.TryParse(text, out var result))
                     return result;
 
-                return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+                return ReturnWithError();
             }
 
             string typeFullName = type.FullName;
@@ -286,7 +214,7 @@ namespace MicroElements.Metadata.Contracts
                 }
             }
 
-            Result<object?, IError<string>> TryCreateInstance(Type type, params object[] args)
+            Result<object?, Message> TryCreateInstance(Type type, params object[] args)
             {
                 try
                 {
@@ -294,16 +222,42 @@ namespace MicroElements.Metadata.Contracts
                 }
                 catch (Exception e)
                 {
-                    return Error.CreateError("CreateError", "Value {text} can not be parsed as {type}. Error: {error}", text, type, e.Message);
+                    return Error.CreateError("CreateError", "Value {text} can not be parsed as {type}. Error: {error}", text, type, e.Message).Message;
                 }
             }
 
-            return Error.CreateError("ParseError", "Value {text} can not be parsed as {type}", text, type);
+            return ReturnWithError();
+        }
+
+        private Result<object?, Message> DeserializeCollection(Type type, string text)
+        {
+            string[] strings = text.TrimStart('[').TrimEnd(']').Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+
+            Type elementType = typeof(string);
+            if (type.IsArray)
+                elementType = type.GetElementType();
+
+            if (elementType == typeof(string))
+                return strings;
+
+            var elements = strings
+                .Select(s => DeserializeValue(elementType, s).GetValueOrDefault(message => elementType.GetDefaultValue()))
+                .ToArray(elementType);
+
+            return elements;
         }
     }
 
     public static class Mapper
     {
+        public static object ToArray(this IEnumerable<object?> objects, Type type)
+        {
+            object?[] array = objects.ToArray();
+            Array typedArray = Array.CreateInstance(type, array.Length);
+            Array.Copy(array, typedArray, array.Length);
+            return typedArray;
+        }
+
         public static PropertyContainerContract ToContract(this IPropertyContainer propertyContainer, IMapperSettings mapperSettings)
         {
             var properties = propertyContainer.Properties.Select(value => value.ToContract(mapperSettings)).ToArray();
@@ -327,20 +281,18 @@ namespace MicroElements.Metadata.Contracts
         {
             Type propertyType = mapperSettings.GetTypeByName(propertyValueContract.Type);
             string propertyName = propertyValueContract.Name;
-            var propertyValueResult = mapperSettings.DeserializeValue(propertyType, propertyValueContract.Value);
-
             IProperty property = Property.Create(propertyType, propertyName);
 
-            object? value = propertyValueResult.GetValueOrDefault(error =>
+            var propertyValueResult = mapperSettings.DeserializeValue(propertyType, propertyValueContract.Value);
+
+            object? value = propertyValueResult.GetValueOrDefault(message =>
             {
-                messages?.Add(error.Message);
-                return propertyType.GetDefaultValue();
+                messages?.Add(message);
+                return null;
             });
 
             IPropertyValue propertyValue = PropertyValue.Create(property, value: value, valueSource: propertyValueResult.IsSuccess ? ValueSource.Defined : ValueSource.NotDefined);
             return propertyValue;
         }
-
     }
-
 }

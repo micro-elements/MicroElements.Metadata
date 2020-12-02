@@ -15,7 +15,7 @@
   <Import Project="stylecop.props"/>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\GlobalSuppressions.cs" Link="_shared\GlobalSuppressions.cs" />
   </ItemGroup>
 
 </Project>

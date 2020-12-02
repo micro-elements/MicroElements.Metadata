@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -18,4 +17,9 @@ jobs:
       with:
         dotnet-version: 3.1.301
     - name: Build
-      run: build.sh --target=Travis --verbosity=normal --ForceUploadPackages=false
+      env:
+        UPLOAD_NUGET: ${{ secrets.UPLOAD_NUGET }}
+        UPLOAD_NUGET_API_KEY: ${{ secrets.UPLOAD_NUGET_API_KEY }}
+      run: |
+        chmod a+x ./build.sh
+        ./build.sh --target=Travis --verbosity=normal --ForceUploadPackages=false

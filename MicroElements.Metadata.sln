@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CHANGELOG.md = CHANGELOG.md
 		common.props = common.props
 		src\Directory.Build.props = src\Directory.Build.props
+		.github\workflows\github_build_and_publish.yml = .github\workflows\github_build_and_publish.yml
 		src\GlobalSuppressions.cs = src\GlobalSuppressions.cs
 		README.md = README.md
 		src\stylecop.json = src\stylecop.json
@@ -30,11 +31,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Metadata.OpenXml", "src\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj", "{777D53F1-F5E0-45D4-8FEB-EC5394BD036D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroElements.Metadata.Json", "src\MicroElements.Metadata.Json\MicroElements.Metadata.Json.csproj", "{306E5A13-F765-446C-9DD2-CCFA078E10EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Metadata.Json", "src\MicroElements.Metadata.Json\MicroElements.Metadata.Json.csproj", "{306E5A13-F765-446C-9DD2-CCFA078E10EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroElements.Metadata.NewtonsoftJson", "src\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj", "{28E81DBD-9A52-4F38-ABA4-DD10065E9B0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Metadata.NewtonsoftJson", "src\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj", "{28E81DBD-9A52-4F38-ABA4-DD10065E9B0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroElements.Metadata.All", "src\MicroElements.Metadata.All\MicroElements.Metadata.All.csproj", "{81E987BF-60FD-44F2-B528-78F9D5A3D112}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Metadata.All", "src\MicroElements.Metadata.All\MicroElements.Metadata.All.csproj", "{81E987BF-60FD-44F2-B528-78F9D5A3D112}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

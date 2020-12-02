@@ -1,5 +1,5 @@
 # 5.2.0
-- Added Metadata Setialization
+- Added Metadata Serialization
 - Added package MicroElements.Metadata.Json
 - Added package MicroElements.Metadata.NewtonsoftJson
 - Added package MicroElements.Metadata.All

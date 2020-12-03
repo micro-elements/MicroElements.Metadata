@@ -1,3 +1,8 @@
+# 5.3.0
+- Json read fixed
+- Default metadata search changed to ignore case
+- Added extensions AsReadOnly, AsMutable, CopyMetadataTo for metadata providers
+
 # 5.2.0
 - Added Metadata Serialization
 - Added package MicroElements.Metadata.Json

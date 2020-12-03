@@ -148,5 +148,50 @@ namespace MicroElements.Metadata
 
             return metadataProvider;
         }
+
+        /// <summary>
+        /// Copies metadata from source object to target <see cref="IMetadataProvider"/>.
+        /// </summary>
+        /// <param name="source">Source object.</param>
+        /// <param name="target">Target.</param>
+        public static void CopyMetadataTo(this object? source, IMetadataProvider target)
+        {
+            if (source is IMetadataProvider metadataProvider)
+            {
+                IMutablePropertyContainer targetMetadata = target.Metadata.ToMutable();
+                IPropertyContainer sourceMetadata = metadataProvider.Metadata;
+                targetMetadata.SetValues(sourceMetadata);
+            }
+        }
+
+        /// <summary>
+        /// Returns provider metadata.
+        /// </summary>
+        /// <param name="metadataProvider">Source metadata provider.</param>
+        /// <returns>Metadata.</returns>
+        public static IPropertyContainer AsReadOnly(this IMetadataProvider metadataProvider)
+        {
+            return metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+        }
+
+        /// <summary>
+        /// Returns provider metadata as <see cref="IMutablePropertyContainer"/>.
+        /// </summary>
+        /// <param name="metadataProvider">Source metadata provider.</param>
+        /// <returns>Metadata.</returns>
+        public static IMutablePropertyContainer AsMutable(this IMetadataProvider metadataProvider)
+        {
+            if (metadataProvider.Metadata is IMutablePropertyContainer container)
+                return container;
+
+            if (metadataProvider.Metadata is { } readOnlyContainer)
+            {
+                MutablePropertyContainer mutablePropertyContainer = new MutablePropertyContainer(readOnlyContainer);
+                metadataProvider.SetInstanceMetadata(mutablePropertyContainer);
+                return mutablePropertyContainer;
+            }
+
+            return metadataProvider.GetInstanceMetadata().ToMutable();
+        }
     }
 }

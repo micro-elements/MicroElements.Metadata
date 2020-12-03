@@ -40,53 +40,54 @@ namespace MicroElements.Metadata.SystemTextJson
             int propertyIndex = 0;
             while (reader.Read())
             {
-                switch (reader.TokenType)
+                if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    case JsonTokenType.PropertyName:
+                    var propertyName = reader.GetString();
+                    reader.Read();
+                    if (propertyName == "@metadata.types")
                     {
-                        var propertyName = reader.GetString();
-                        reader.Read();
-                        if (propertyName == "@metadata.types")
-                        {
-                            var typeNames = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                            types = typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
-                        }
-                        else
-                        {
-                            Type GetPropertyType(ref Utf8JsonReader reader)
-                            {
-                                if (types != null)
-                                {
-                                    if (propertyIndex >= types.Length)
-                                        throw new Exception("@metadata.types out of bound");
+                        var typeNames = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                        types = typeNames
+                            .Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName))
+                            .ToArray();
+                    }
+                    else
+                    {
+                        Type propertyType = GetPropertyType(ref reader);
+                        object propertyValue = JsonSerializer.Deserialize(ref reader, propertyType, options);
+                        IProperty property = Property.Create(propertyType, propertyName);
+                        propertyContainer.WithValueUntyped(property, propertyValue);
+                        propertyIndex++;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-                                    return types[propertyIndex];
-                                }
-                                else
-                                {
-                                    switch (reader.TokenType)
-                                    {
-                                        case JsonTokenType.String:
-                                            return typeof(string);
-                                        case JsonTokenType.Number:
-                                            return typeof(decimal);
-                                        case JsonTokenType.True:
-                                        case JsonTokenType.False:
-                                            return typeof(bool);
-                                        default:
-                                            return typeof(object);
-                                    }
-                                }
-                            }
+            Type GetPropertyType(ref Utf8JsonReader reader)
+            {
+                if (types != null)
+                {
+                    if (propertyIndex >= types.Length)
+                        throw new Exception("@metadata.types out of bound");
 
-                            Type propertyType = GetPropertyType(ref reader);
-                            object propertyValue = JsonSerializer.Deserialize(ref reader, propertyType, options);
-                            IProperty property = Property.Create(propertyType, propertyName);
-                            propertyContainer.WithValueUntyped(property, propertyValue);
-                            propertyIndex++;
-                        }
-
-                        break;
+                    return types[propertyIndex];
+                }
+                else
+                {
+                    switch (reader.TokenType)
+                    {
+                        case JsonTokenType.String:
+                            return typeof(string);
+                        case JsonTokenType.Number:
+                            return typeof(decimal);
+                        case JsonTokenType.True:
+                        case JsonTokenType.False:
+                            return typeof(bool);
+                        default:
+                            return typeof(object);
                     }
                 }
             }

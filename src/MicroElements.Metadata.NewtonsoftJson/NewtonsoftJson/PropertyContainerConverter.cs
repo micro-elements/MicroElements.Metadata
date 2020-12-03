@@ -39,54 +39,53 @@ namespace MicroElements.Metadata.NewtonsoftJson
             int propertyIndex = 0;
             while (reader.Read())
             {
-                switch (reader.TokenType)
+                if (reader.TokenType == JsonToken.PropertyName)
                 {
-                    case JsonToken.PropertyName:
+                    string propertyName = (string)reader.Value;
+                    reader.Read();
+                    if (propertyName == "@metadata.types")
                     {
-                        string propertyName = (string)reader.Value;
-                        reader.Read();
-                        if (propertyName == "@metadata.types")
-                        {
-                            var typeNames = serializer.Deserialize<string[]>(reader);
-                            types = typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
-                        }
-                        else
-                        {
-                            Type GetPropertyType(JsonReader reader)
-                            {
-                                if (types != null)
-                                {
-                                    if (propertyIndex >= types.Length)
-                                        throw new Exception("@metadata.types out of bound");
+                        var typeNames = serializer.Deserialize<string[]>(reader);
+                        types = typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
+                    }
+                    else
+                    {
+                        Type propertyType = GetPropertyType(reader);
+                        object? propertyValue = serializer.Deserialize(reader, propertyType);
+                        IProperty property = Property.Create(propertyType, propertyName);
+                        propertyContainer.WithValueUntyped(property, propertyValue);
+                        propertyIndex++;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-                                    return types[propertyIndex];
-                                }
-                                else
-                                {
-                                    switch (reader.TokenType)
-                                    {
-                                        case JsonToken.String:
-                                            return typeof(string);
-                                        case JsonToken.Integer:
-                                            return typeof(int);
-                                        case JsonToken.Float:
-                                            return typeof(double);
-                                        case JsonToken.Boolean:
-                                            return typeof(bool);
-                                        default:
-                                            return typeof(object);
-                                    }
-                                }
-                            }
+            Type GetPropertyType(JsonReader reader)
+            {
+                if (types != null)
+                {
+                    if (propertyIndex >= types.Length)
+                        throw new Exception("@metadata.types out of bound");
 
-                            Type propertyType = GetPropertyType(reader);
-                            object? propertyValue = serializer.Deserialize(reader, propertyType);
-                            IProperty property = Property.Create(propertyType, propertyName);
-                            propertyContainer.WithValueUntyped(property, propertyValue);
-                            propertyIndex++;
-                        }
-
-                        break;
+                    return types[propertyIndex];
+                }
+                else
+                {
+                    switch (reader.TokenType)
+                    {
+                        case JsonToken.String:
+                            return typeof(string);
+                        case JsonToken.Integer:
+                            return typeof(int);
+                        case JsonToken.Float:
+                            return typeof(double);
+                        case JsonToken.Boolean:
+                            return typeof(bool);
+                        default:
+                            return typeof(object);
                     }
                 }
             }

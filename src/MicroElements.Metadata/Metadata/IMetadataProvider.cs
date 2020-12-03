@@ -7,6 +7,7 @@ namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents object that has metadata.
+    /// Has default interface implementation of <see cref="Metadata"/> as <see cref="MetadataGlobalCache.GetInstanceMetadata"/>.
     /// </summary>
     public interface IMetadataProvider
     {
@@ -24,7 +25,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Default property comparer for metadata search.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> DefaultMetadataComparer = PropertyComparer.ByTypeAndNameComparer;
+        public static readonly IEqualityComparer<IProperty> DefaultMetadataComparer = PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
 
         /// <summary>
         /// Default search options for metadata providers.

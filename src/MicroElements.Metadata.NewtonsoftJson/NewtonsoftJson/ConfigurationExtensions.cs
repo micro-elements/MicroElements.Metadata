@@ -15,10 +15,16 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// </summary>
         /// <param name="options"><see cref="JsonSerializerSettings"/> instance.</param>
         /// <returns>The same options.</returns>
-        public static JsonSerializerSettings ConfigureForMetadata(this JsonSerializerSettings options)
+        public static JsonSerializerSettings ConfigureJsonForPropertyContainers(this JsonSerializerSettings options)
         {
             options.Converters.Add(new PropertyContainerConverter());
             return options;
+        }
+
+        /// <inheritdoc cref="ConfigureJsonForPropertyContainers"/>.
+        public static JsonSerializerSettings ConfigureForMetadata(this JsonSerializerSettings options)
+        {
+            return options.ConfigureJsonForPropertyContainers();
         }
     }
 }

@@ -4,13 +4,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>MicroElements.Metadata</RootNamespace>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MicroElements.Metadata\MicroElements.Metadata.csproj" />
-    <ProjectReference Include="..\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MicroElements.Metadata.SystemTextJson\MicroElements.Metadata.SystemTextJson.csproj" />
-    <ProjectReference Include="..\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>
 
 </Project>

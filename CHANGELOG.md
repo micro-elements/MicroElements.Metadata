@@ -1,3 +1,7 @@
+# 6.0.0
+- Added new package MicroElements.Metadata.AspNetCore that contains swagger extensions and json serialization for IPropertyContainer
+- Package MicroElements.Metadata.Json renamed to MicroElements.Metadata.SystemTextJson
+
 # 5.3.0
 - Json read fixed
 - Default metadata search changed to ignore case

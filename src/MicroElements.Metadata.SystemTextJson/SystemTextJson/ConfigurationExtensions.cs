@@ -15,10 +15,16 @@ namespace MicroElements.Metadata.SystemTextJson
         /// </summary>
         /// <param name="options"><see cref="JsonSerializerOptions"/> instance.</param>
         /// <returns>The same options.</returns>
-        public static JsonSerializerOptions ConfigureForMetadata(this JsonSerializerOptions options)
+        public static JsonSerializerOptions ConfigureJsonForPropertyContainers(this JsonSerializerOptions options)
         {
             options.Converters.Add(new PropertyContainerConverter());
             return options;
+        }
+
+        /// <inheritdoc cref="ConfigureJsonForPropertyContainers"/>.
+        public static JsonSerializerOptions ConfigureForMetadata(this JsonSerializerOptions options)
+        {
+            return options.ConfigureJsonForPropertyContainers();
         }
     }
 }

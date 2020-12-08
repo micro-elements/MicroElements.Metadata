@@ -175,7 +175,7 @@ namespace MicroElements.Metadata.Tests.Serialization
     {
         public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options)
         {
-            options.ConfigureForMetadata();
+            options.ConfigureJsonForPropertyContainers();
 
             options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             options.WriteIndented = true;
@@ -192,13 +192,13 @@ namespace MicroElements.Metadata.Tests.Serialization
 
         public static string ToJsonWithNewtonsoftJson<T>(this T entity)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureForMetadata();
+            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
             return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
         }
 
         public static T DeserializeWithNewtonsoftJson<T>(this string json)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureForMetadata();
+            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
             return JsonConvert.DeserializeObject<T>(json, jsonSerializerSettings);
         }
     }

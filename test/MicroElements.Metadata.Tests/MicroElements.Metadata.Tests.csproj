@@ -19,14 +19,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.All\MicroElements.Metadata.All.csproj" />
     <PackageReference Update="coverlet.msbuild" Version="2.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\MicroElements.Metadata.Json\MicroElements.Metadata.Json.csproj" />
-    <ProjectReference Include="..\..\src\MicroElements.Metadata.NewtonsoftJson\MicroElements.Metadata.NewtonsoftJson.csproj" />
-    <ProjectReference Include="..\..\src\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj" />
-    <ProjectReference Include="..\..\src\MicroElements.Metadata\MicroElements.Metadata.csproj" />
   </ItemGroup>
 
   <ItemGroup>

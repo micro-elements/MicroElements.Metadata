@@ -92,7 +92,8 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
             if (objectType.IsAssignableTo<IMutablePropertyContainer>())
                 return propertyContainer;
-            return new PropertyContainer(sourceValues: propertyContainer);
+
+            return new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 
         /// <inheritdoc />

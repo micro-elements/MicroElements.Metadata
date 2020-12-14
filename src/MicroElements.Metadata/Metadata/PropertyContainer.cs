@@ -33,7 +33,7 @@ namespace MicroElements.Metadata
             IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
-            _propertyContainer = new MutablePropertyContainer(sourceValues, parentPropertySource, searchOptions);
+            _propertyContainer = new MutablePropertyContainerNoLock(sourceValues, parentPropertySource, searchOptions);
         }
 
         /// <inheritdoc />
@@ -49,19 +49,16 @@ namespace MicroElements.Metadata
         public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.GetEnumerator();
 
         /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_propertyContainer).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc />
         public int Count => _propertyContainer.Count;
 
         /// <inheritdoc />
-        public IPropertyValue this[int index] => _propertyContainer[index];
-
-        /// <inheritdoc />
         public IPropertyContainer ParentSource => _propertyContainer.ParentSource;
 
         /// <inheritdoc />
-        public IReadOnlyList<IPropertyValue> Properties => _propertyContainer.Properties;
+        public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer.Properties;
 
         /// <inheritdoc />
         public SearchOptions SearchOptions => _propertyContainer.SearchOptions;

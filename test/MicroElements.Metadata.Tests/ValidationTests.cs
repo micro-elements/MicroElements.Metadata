@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using MicroElements.Metadata.Schema;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 using Xunit;
@@ -14,22 +15,28 @@ namespace MicroElements.Metadata.Tests
         public static IProperty<int> Age = new Property<int>("Age");
         public static IProperty<int?> NullableInt = new Property<int?>("NullableInt");
 
+        public static IProperty<string> Sex = new Property<string>("Sex")
+            .WithAllowedValues("Male", "Female");
+
         [Fact]
         public void validate()
         {
             var container = new MutablePropertyContainer()
                 .WithValue(Name, "Alex Jr")
-                .WithValue(Age, 9);
+                .WithValue(Age, 9)
+                .WithValue(Sex, "Undefined");
 
             IEnumerable<IValidationRule> Rules()
             {
                 yield return Name.NotNull();
                 yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}");
+                yield return Sex.OnlyAllowedValues().And().ShouldMatchNullability();
             }
 
             var messages = container.Validate(Rules().Cached()).ToList();
-            messages.Should().HaveCount(1);
+            messages.Should().HaveCount(2);
             messages[0].FormattedMessage.Should().Be("Age should be over 18! but was 9");
+            messages[1].FormattedMessage.Should().Be("Sex can not be 'Undefined' because it is not in allowed values list.");
         }
 
         [Fact]

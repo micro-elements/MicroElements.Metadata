@@ -3,9 +3,9 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
-using MicroElements.Shared;
+using MicroElements.Metadata.AspNetCore;
+using MicroElements.Metadata.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -16,7 +16,7 @@ namespace MicroElements.Metadata.Swashbuckle
     /// <summary>
     /// Extensions for DI.
     /// </summary>
-    public static class DependencyInjectionExtensions
+    public static class SwaggerConfigurationExtensions
     {
         /// <summary>
         /// Configures swagger to properly generate info for <see cref="IPropertyContainer"/>.
@@ -58,36 +58,19 @@ namespace MicroElements.Metadata.Swashbuckle
             {
                 services.TryAddTransient(provider =>
                 {
-                    JsonSerializerOptions? jsonSerializerOptions = null;
+                    JsonSerializerOptions? jsonSerializerOptions = provider.GetJsonSerializerOptions();
 
-                    Type? jsonOptionsType = TypeCache.Default.Value.GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
-                    if (jsonOptionsType != null)
-                    {
-                        // IOptions<JsonOptions>
-                        Type jsonOptionsInterfaceType = typeof(IOptions<>).MakeGenericType(jsonOptionsType);
-                        object? jsonOptionsOption = provider.GetService(jsonOptionsInterfaceType);
+                    // Configure json serializer
+                    jsonSerializerOptions?.ConfigureJsonForPropertyContainers();
 
-                        if (jsonOptionsOption != null)
-                        {
-                            PropertyInfo? valueProperty = jsonOptionsInterfaceType.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public);
-                            PropertyInfo? jsonSerializerOptionsProperty = jsonOptionsType.GetProperty("JsonSerializerOptions", BindingFlags.Instance | BindingFlags.Public);
+                    var schemaFilterOptions = new PropertyContainerSchemaFilterOptions();
+                    schemaFilterOptions.ConfigureFromJsonOptions(jsonSerializerOptions);
 
-                            if (valueProperty != null && jsonSerializerOptionsProperty != null)
-                            {
-                                // JsonOptions
-                                var jsonOptions = valueProperty.GetValue(jsonOptionsOption);
-
-                                // JsonSerializerOptions
-                                if (jsonOptions != null)
-                                    jsonSerializerOptions = jsonSerializerOptionsProperty.GetValue(jsonOptions) as JsonSerializerOptions;
-                            }
-                        }
-                    }
-
-                    return new PropertyContainerSchemaFilterOptions().ConfigureFromJsonOptions(jsonSerializerOptions);
+                    return schemaFilterOptions;
                 });
             }
 
+            // Configure swagger
             services.ConfigureSwaggerGen(swagger => swagger.ConfigureForPropertyContainers());
         }
 

@@ -18,7 +18,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="property">Property to check.</param>
         public NotNull(IProperty<T> property)
-            : base(property, "{propertyName} should not be null")
+            : base(property, "{propertyName} should not be null.")
         {
         }
 

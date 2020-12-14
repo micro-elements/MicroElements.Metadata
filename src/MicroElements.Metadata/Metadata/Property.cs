@@ -49,7 +49,7 @@ namespace MicroElements.Metadata
         /// <param name="calculator">Calculate property value function.</param>
         internal Property(
             string name,
-            LocalizableString? description,
+            string? description,
             string? alias,
             Func<T> defaultValue,
             IReadOnlyList<T> examples,
@@ -70,7 +70,7 @@ namespace MicroElements.Metadata
         public Type Type { get; } = typeof(T);
 
         /// <inheritdoc />
-        public LocalizableString? Description { get; }
+        public string? Description { get; }
 
         /// <inheritdoc />
         public string? Alias { get; }
@@ -116,7 +116,7 @@ namespace MicroElements.Metadata
         public static Property<T> With<T>(
             this IProperty<T> source,
             string? name = null,
-            LocalizableString? description = null,
+            string? description = null,
             string? alias = null,
             Func<T>? defaultValue = null,
             IReadOnlyList<T>? examples = null,
@@ -232,36 +232,14 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="description">New description.</param>
-        /// <param name="language">Description language.</param>
         /// <returns>Property with new description.</returns>
         [Pure]
-        public static Property<T> WithDescription<T>(this IProperty<T> property, string description, Language language = Language.Undefined)
+        public static Property<T> WithDescription<T>(this IProperty<T> property, string description)
         {
             property.AssertArgumentNotNull(nameof(property));
             description.AssertArgumentNotNull(nameof(description));
 
-            return property.With(description: new LocalizableString(description.Lang(language)));
-        }
-
-        /// <summary>
-        /// Creates property copy with updated description.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Source property.</param>
-        /// <param name="description">New description.</param>
-        /// <param name="language">Description language.</param>
-        /// <returns>Property with new description.</returns>
-        [Pure]
-        public static Property<T> AddDescription<T>(this IProperty<T> property, string description, Language language = Language.Undefined)
-        {
-            property.AssertArgumentNotNull(nameof(property));
-            description.AssertArgumentNotNull(nameof(description));
-
-            var newDescription = property.Description != null ?
-                property.Description.AddOrReplace(description.WithLang(language)) :
-                new LocalizableString(description.WithLang(language));
-
-            return property.With(description: newDescription);
+            return property.With(description: description);
         }
 
         /// <summary>
@@ -269,19 +247,18 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="property">Source property.</param>
         /// <param name="description">New description.</param>
-        /// <param name="language">Description language.</param>
         /// <returns>Property with new description.</returns>
         [Pure]
-        public static IProperty WithDescriptionUntyped(this IProperty property, string description, Language language = Language.Undefined)
+        public static IProperty WithDescriptionUntyped(this IProperty property, string description)
         {
             property.AssertArgumentNotNull(nameof(property));
             description.AssertArgumentNotNull(nameof(description));
 
-            static IProperty WithDescriptionCompiled<T>(IProperty property, string description, Language language) =>
-                ((IProperty<T>)property).WithDescription(description, language);
+            static IProperty WithDescriptionCompiled<T>(IProperty property, string description) =>
+                ((IProperty<T>)property).WithDescription(description);
 
-            var withDescription = CodeCompiler.CachedCompiledFunc<IProperty, string, Language, IProperty>(property.Type, "WithDescription", WithDescriptionCompiled<CodeCompiler.GenericType>);
-            return withDescription(property, description, language);
+            var withDescription = CodeCompiler.CachedCompiledFunc<IProperty, string, IProperty>(property.Type, "WithDescription", WithDescriptionCompiled<CodeCompiler.GenericType>);
+            return withDescription(property, description);
         }
 
         /// <summary>

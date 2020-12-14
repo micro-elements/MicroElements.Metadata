@@ -44,7 +44,7 @@ namespace MicroElements.Metadata
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            var metadata = metadataProvider.GetMetadata();
 
             var propertyValue = metadata.GetPropertyValue<TMetadata>(Search
                 .ByNameAndComparer<TMetadata>(metadataName, MetadataProvider.DefaultMetadataComparer)
@@ -88,7 +88,8 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
         {
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            var metadata = metadataProvider.GetMetadata();
+
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
                 mutablePropertyContainer.SetValue(new Property<TMetadata>(metadataName), data);
@@ -150,17 +151,18 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Copies metadata from source object to target <see cref="IMetadataProvider"/>.
+        /// Copies metadata from source object to target object.
+        /// Source and target can be <see cref="IMetadataProvider"/> or any other reference type.
         /// </summary>
         /// <param name="source">Source object.</param>
-        /// <param name="target">Target.</param>
-        public static void CopyMetadataTo(this object? source, IMetadataProvider target)
+        /// <param name="target">Target object.</param>
+        public static void CopyMetadataTo(this object? source, object? target)
         {
-            if (source is IMetadataProvider metadataProvider)
+            if (source != null && target != null)
             {
-                IMutablePropertyContainer targetMetadata = target.Metadata.ToMutable();
-                IPropertyContainer sourceMetadata = metadataProvider.Metadata;
-                targetMetadata.SetValues(sourceMetadata);
+                IPropertyContainer sourceMetadata = source.AsMetadataProvider().Metadata;
+                IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().Metadata.ToMutable();
+                targetMetadata.SetValues(sourceMetadata.Properties);
             }
         }
 
@@ -171,7 +173,7 @@ namespace MicroElements.Metadata
         /// <returns>Metadata.</returns>
         public static IPropertyContainer AsReadOnly(this IMetadataProvider metadataProvider)
         {
-            return metadataProvider.Metadata ?? metadataProvider.GetInstanceMetadata();
+            return metadataProvider.GetMetadata();
         }
 
         /// <summary>
@@ -186,7 +188,7 @@ namespace MicroElements.Metadata
 
             if (metadataProvider.Metadata is { } readOnlyContainer)
             {
-                MutablePropertyContainer mutablePropertyContainer = new MutablePropertyContainer(readOnlyContainer);
+                MutablePropertyContainer mutablePropertyContainer = new MutablePropertyContainer(readOnlyContainer.Properties);
                 metadataProvider.SetInstanceMetadata(mutablePropertyContainer);
                 return mutablePropertyContainer;
             }

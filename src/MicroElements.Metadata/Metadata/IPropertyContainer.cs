@@ -9,7 +9,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents object that contains properties and values for these properties.
     /// </summary>
-    public interface IPropertyContainer : IReadOnlyList<IPropertyValue>, IMetadataProvider
+    public interface IPropertyContainer : IReadOnlyCollection<IPropertyValue>, IMetadataProvider
     {
         /// <summary>
         /// Gets parent property source.
@@ -19,7 +19,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets properties with values.
         /// </summary>
-        IReadOnlyList<IPropertyValue> Properties { get; }
+        IReadOnlyCollection<IPropertyValue> Properties { get; }
 
         /// <summary>
         /// Gets default search options for container.

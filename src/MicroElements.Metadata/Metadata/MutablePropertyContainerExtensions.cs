@@ -186,22 +186,6 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Adds property values.
-        /// </summary>
-        /// <param name="propertyContainer">Source property container.</param>
-        /// <param name="propertyValues">PropertyValue list.</param>
-        public static void AddRange(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            propertyValues.AssertArgumentNotNull(nameof(propertyValues));
-
-            foreach (IPropertyValue propertyValue in propertyValues)
-            {
-                propertyContainer.Add(propertyValue);
-            }
-        }
-
-        /// <summary>
         /// Sets property value if property is not set.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
@@ -248,6 +232,31 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
+        /// Adds property values.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="propertyValues">PropertyValue list.</param>
+        [Obsolete("Use AddValues, SetValues or WithValues")]
+        public static void AddRange(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues) =>
+            AddValues(propertyContainer, propertyValues);
+
+        /// <summary>
+        /// Adds property values.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="propertyValues">PropertyValue list.</param>
+        public static void AddValues(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyValues.AssertArgumentNotNull(nameof(propertyValues));
+
+            foreach (IPropertyValue propertyValue in propertyValues)
+            {
+                propertyContainer.Add(propertyValue);
+            }
+        }
+
+        /// <summary>
         /// Sets property values.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
@@ -261,6 +270,51 @@ namespace MicroElements.Metadata
             {
                 propertyContainer.SetValue(propertyValue);
             }
+        }
+
+        /// <summary>
+        /// Returns the same property container with new values added according add mode.
+        /// By default works as SetValues.
+        /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="propertyValues">Property values to add.</param>
+        /// <param name="addMode">Property add mode.</param>
+        /// <returns>The same container.</returns>
+        public static TContainer WithValues<TContainer>(
+            this TContainer propertyContainer,
+            IEnumerable<IPropertyValue> propertyValues,
+            PropertyAddMode addMode = PropertyAddMode.Set)
+            where TContainer : IMutablePropertyContainer
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            propertyValues.AssertArgumentNotNull(nameof(propertyValues));
+
+            switch (addMode)
+            {
+                case PropertyAddMode.Set:
+                    propertyContainer.SetValues(propertyValues);
+                    break;
+
+                case PropertyAddMode.Add:
+                    propertyContainer.AddValues(propertyValues);
+                    break;
+
+                case PropertyAddMode.SetNotExisting:
+                {
+                    foreach (IPropertyValue propertyValue in propertyValues)
+                    {
+                        IPropertyValue? existing = propertyContainer.GetPropertyValueUntyped(propertyValue.PropertyUntyped, SearchOptions.ExistingOnly);
+
+                        if (existing == null)
+                            propertyContainer.Add(propertyValue);
+                    }
+
+                    break;
+                }
+            }
+
+            return propertyContainer;
         }
     }
 }

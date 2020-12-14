@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// <summary>
     /// Base configurable property validation rule.
     /// Implement <see cref="IsValid"/>.
-    /// You can use {propertyName} and {value} in message format.
+    /// You can use {propertyName}, {propertyType}, {value} in message format.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
     public abstract class BasePropertyRule<T> : IValidationRule<T>

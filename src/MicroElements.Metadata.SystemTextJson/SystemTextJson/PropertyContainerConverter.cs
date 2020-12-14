@@ -94,7 +94,8 @@ namespace MicroElements.Metadata.SystemTextJson
 
             if (typeToConvert.IsAssignableTo<IMutablePropertyContainer>())
                 return propertyContainer;
-            return new PropertyContainer(sourceValues: propertyContainer);
+
+            return new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 
         /// <inheritdoc />

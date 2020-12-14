@@ -23,8 +23,9 @@ namespace MicroElements.Metadata
 
             if (propertyContainer is IMutablePropertyContainer mutablePropertyContainer)
                 return mutablePropertyContainer;
+
             return new MutablePropertyContainer(
-                sourceValues: propertyContainer,
+                sourceValues: propertyContainer.Properties,
                 parentPropertySource: propertyContainer.ParentSource,
                 searchOptions: propertyContainer.SearchOptions);
         }
@@ -43,7 +44,7 @@ namespace MicroElements.Metadata
             if (propertyContainer is IMutablePropertyContainer)
             {
                 return new PropertyContainer(
-                    sourceValues: propertyContainer,
+                    sourceValues: propertyContainer.Properties,
                     parentPropertySource: propertyContainer.ParentSource,
                     searchOptions: propertyContainer.SearchOptions);
             }

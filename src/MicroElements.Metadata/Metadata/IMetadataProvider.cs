@@ -23,13 +23,13 @@ namespace MicroElements.Metadata
     public static class MetadataProvider
     {
         /// <summary>
-        /// Default property comparer for metadata search.
+        /// Gets default property comparer for metadata search.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> DefaultMetadataComparer = PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
+        public static IEqualityComparer<IProperty> DefaultMetadataComparer { get; } = PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
 
         /// <summary>
-        /// Default search options for metadata providers.
+        /// Gets default search options for metadata providers.
         /// </summary>
-        public static readonly SearchOptions DefaultSearchOptions = SearchOptions.Default.WithPropertyComparer(DefaultMetadataComparer);
+        public static SearchOptions DefaultSearchOptions { get; } = SearchOptions.Default.WithPropertyComparer(DefaultMetadataComparer);
     }
 }

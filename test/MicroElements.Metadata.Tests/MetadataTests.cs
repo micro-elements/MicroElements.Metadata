@@ -25,7 +25,7 @@ namespace MicroElements.Metadata.Tests
 
             // Get metadata for client
             IPropertyContainer metadata = ((IMetadataProvider) client).Metadata;
-            metadata.Count.Should().Be(2);
+            metadata.Properties.Count.Should().Be(2);
 
             // Instance properties does not include Metadata from IMetadataProvider
             var clientProperties = client.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);

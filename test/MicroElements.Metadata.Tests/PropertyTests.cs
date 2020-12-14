@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -90,7 +89,7 @@ namespace MicroElements.Metadata.Tests
         {
             property.Name.Should().Be(name);
             property.Alias.Should().Be(alias);
-            property.Description.Should().NotBeNull().And.Subject.First().Text.Should().Be("description");
+            property.Description.Should().Be("description");
             property.DefaultValue().Should().Be(1);
             property.Examples.Should().BeEquivalentTo(new[] {0, 1});
             property.Calculator.Should().NotBeNull();

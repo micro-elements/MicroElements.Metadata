@@ -71,7 +71,7 @@ namespace MicroElements.Validation
         /// <param name="propertyContainer">Property container that holds value.</param>
         /// <param name="messageFormat">Optional message format.</param>
         /// <returns>Configured message.</returns>
-        public Message GetConfiguredMessage(IPropertyValue propertyValue, IPropertyContainer propertyContainer, string messageFormat = null)
+        public Message GetConfiguredMessage(IPropertyValue propertyValue, IPropertyContainer propertyContainer, string? messageFormat = null)
         {
             KeyValuePair<string, object>[] properties = null;
 

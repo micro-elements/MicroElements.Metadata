@@ -12,8 +12,7 @@ namespace MicroElements.Metadata.Tests
 
         public static IProperty<string> ExchangeCode =
             new Property<string>("ExchangeCode")
-                .WithDescription("Short exchange code", Language.English)
-                .WithDescription("Краткий код биржи", Language.Russian)
+                .WithDescription("Short exchange code")
                 .WithExamples("MOEX", "SPBEX", "LSE", "NASDAQ", "NYSE");
     }
 

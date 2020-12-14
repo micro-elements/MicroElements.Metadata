@@ -1,3 +1,21 @@
+# 7.0.0-rc.1
+- Added ReflectionDependencyInjectionExtensions to allow configure AspNetCore from netstandard package
+- Added DependencyInjectionExtensions.AddMetadata - all in one registration (json serialization, swagger customization)
+- Added sample of using it in AspNetCore application
+- Added MetadataGlobalCache.AsMetadataProvider that converts any object to IMetadataProvider. It uses new MetadataProviderWrapper
+- Property.Description simplified to string (was LocalizableString)
+- MetadataProviderExtensions.CopyMetadataTo now can copy metadata from any object to any other object (not only IMetadataProvider)
+- MutablePropertyContainer became ThreadSafe, old implementation became MutablePropertyContainerNoLock
+- IPropertyContainer simplified: implements IReadOnlyCollection instead of IReadOnlyList, Properties also is IReadOnlyCollection
+- Added interface IKnownPropertySet<> to describe what properties can be in a property container
+- Added IAllowNull and IAllowedValues property metadata
+- Added validation rule OnlyAllowedValues
+- Added 'Or' validation rules
+- PropertyContainerSchemaFilter can get IPropertySet from IKnownPropertySet<>
+- PropertyContainerSchemaFilter uses optional IAllowNull and IAllowedValues to generate schema
+- Added PropertyAddMode to WithValues extension method
+- OpenXml: Added DocumentContext extensions: AddNumberingFormat, GetNumberingFormatIndex, GetNumberingFormatId
+
 # 6.0.0
 - Added new package MicroElements.Metadata.AspNetCore that contains swagger extensions and json serialization for IPropertyContainer
 - Package MicroElements.Metadata.Json renamed to MicroElements.Metadata.SystemTextJson

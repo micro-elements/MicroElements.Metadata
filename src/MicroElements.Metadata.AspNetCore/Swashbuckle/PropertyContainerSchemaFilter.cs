@@ -1,9 +1,13 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -38,20 +42,45 @@ namespace MicroElements.Metadata.Swashbuckle
                 schema.Items = null;
                 schema.Properties = new Dictionary<string, OpenApiSchema>();
 
-                PropertySetAttribute? propertySetAttribute = context.MemberInfo.GetCustomAttribute<PropertySetAttribute>();
-                if (propertySetAttribute != null)
-                {
-                    IPropertySet? propertySet = propertySetAttribute.GetPropertySet();
-                    if (propertySet != null)
-                    {
-                        foreach (IProperty property in propertySet)
-                        {
-                            var propertySchema = context.SchemaGenerator.GenerateSchema(property.Type, context.SchemaRepository);
-                            propertySchema.Description = property.Description?.Text ?? propertySchema.Description;
+                PropertySetAttribute? propertySetAttribute = context.MemberInfo?.GetCustomAttribute<PropertySetAttribute>();
+                IPropertySet? propertySet = propertySetAttribute?.GetPropertySet();
 
-                            var propertyName = _options.ResolvePropertyName!(property.Name);
-                            schema.Properties.Add(propertyName, propertySchema);
+                if (propertySet == null)
+                {
+                    Type? hasPropertySetType = context.Type
+                        .GetInterfaces()
+                        .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IKnownPropertySet<>));
+                    Type? propertySetType = hasPropertySetType
+                        ?.GenericTypeArguments
+                        .First();
+                    if (propertySetType != null)
+                        propertySet = PropertySetEvaluator.GetPropertySet(type: propertySetType);
+                }
+
+                if (propertySet != null)
+                {
+                    foreach (IProperty property in propertySet)
+                    {
+                        var propertySchema = context.SchemaGenerator.GenerateSchema(property.Type, context.SchemaRepository);
+                        propertySchema.Description = property.Description ?? propertySchema.Description;
+
+                        if (property.GetOrEvaluateAllowNull() is { } allowNull)
+                        {
+                            propertySchema.Nullable = allowNull.IsNullAllowed;
                         }
+
+                        if (property.GetAllowedValuesUntyped() is { } allowedValues)
+                        {
+                            propertySchema.Enum = new List<IOpenApiAny>();
+                            foreach (object allowedValue in allowedValues.ValuesUntyped)
+                            {
+                                IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFor(propertySchema, allowedValue);
+                                propertySchema.Enum.Add(openApiAny);
+                            }
+                        }
+
+                        var propertyName = _options.ResolvePropertyName!(property.Name);
+                        schema.Properties.Add(propertyName, propertySchema);
                     }
                 }
             }

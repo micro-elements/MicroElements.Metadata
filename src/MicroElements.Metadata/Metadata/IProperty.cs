@@ -25,7 +25,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property description.
         /// </summary>
-        LocalizableString? Description { get; }
+        string? Description { get; }
 
         /// <summary>
         /// Gets alternative name for property.

@@ -71,7 +71,7 @@ namespace MicroElements.Metadata
             {
                 if (result == null && property != null)
                 {
-                    PropertyInfo propertyInfo = type.GetProperty(property, BindingFlags.Static | BindingFlags.Public);
+                    PropertyInfo? propertyInfo = type.GetProperty(property, BindingFlags.Static | BindingFlags.Public);
                     if (propertyInfo != null && propertyInfo.PropertyType.IsAssignableTo<IPropertySet>())
                     {
                         result = (IPropertySet)propertyInfo.GetValue(null);
@@ -80,7 +80,7 @@ namespace MicroElements.Metadata
 
                 if (result == null && method != null)
                 {
-                    MethodInfo methodInfo = type.GetMethod(method, BindingFlags.Static | BindingFlags.Public);
+                    MethodInfo? methodInfo = type.GetMethod(method, BindingFlags.Static | BindingFlags.Public);
                     if (methodInfo != null && methodInfo.ReturnType.IsAssignableTo<IPropertySet>())
                     {
                         result = (IPropertySet)methodInfo.Invoke(null, null);

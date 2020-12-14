@@ -29,6 +29,7 @@ namespace MicroElements.Metadata
 
             // Search property by EqualityComparer
             IPropertyValue? propertyValue = propertyContainer
+                .Properties
                 .FirstOrDefault(pv => search.PropertyComparer.Equals(pv.PropertyUntyped, property));
 
             // Good try! Return

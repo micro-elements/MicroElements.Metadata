@@ -12,7 +12,7 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class MetadataGlobalCache
     {
-        private static readonly ConditionalWeakTable<object, IPropertyContainer> MetadataCache = new ConditionalWeakTable<object, IPropertyContainer>();
+        private static ConditionalWeakTable<object, IPropertyContainer> MetadataCache { get; } = new ConditionalWeakTable<object, IPropertyContainer>();
 
         /// <summary>
         /// Gets or creates metadata for <paramref name="instance"/>.
@@ -60,13 +60,56 @@ namespace MicroElements.Metadata
         /// <returns>Metadata for instance.</returns>
         public static IPropertyContainer GetMetadata(this object? instance)
         {
-            if (instance == null)
-                return PropertyContainer.Empty;
+            return instance switch
+            {
+                null => PropertyContainer.Empty,
+                IMetadataProvider metadataProvider => metadataProvider.Metadata,
+                _ => instance.GetInstanceMetadata(),
+            };
+        }
 
-            if (instance is IMetadataProvider metadataProvider)
-                return metadataProvider.Metadata;
+        /// <summary>
+        /// Returns <see cref="IMetadataProvider"/> for any object.
+        /// </summary>
+        /// <param name="instance">Object instance.</param>
+        /// <returns><see cref="MetadataProviderWrapper"/>.</returns>
+        public static MetadataProviderWrapper AsMetadataProvider(this object instance)
+        {
+            instance.AssertArgumentNotNull(nameof(instance));
+            return new MetadataProviderWrapper(instance);
+        }
+    }
 
-            return instance.GetInstanceMetadata();
+    /// <summary>
+    /// Represents <see cref="IMetadataProvider"/> wrapper for any object.
+    /// If object is <see cref="IMetadataProvider"/> then returns <see cref="IMetadataProvider.Metadata"/>,
+    /// otherwise returns <see cref="MetadataGlobalCache.GetInstanceMetadata"/>.
+    /// </summary>
+    public readonly struct MetadataProviderWrapper : IMetadataProvider
+    {
+        private readonly object _instance;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetadataProviderWrapper"/> struct.
+        /// </summary>
+        /// <param name="instance">Object instance.</param>
+        public MetadataProviderWrapper(object instance)
+        {
+            instance.AssertArgumentNotNull(nameof(instance));
+            _instance = instance;
+        }
+
+        /// <inheritdoc />
+        public IPropertyContainer Metadata
+        {
+            get
+            {
+                return _instance switch
+                {
+                    IMetadataProvider metadataProvider => metadataProvider.Metadata,
+                    _ => _instance.GetInstanceMetadata(),
+                };
+            }
         }
     }
 }

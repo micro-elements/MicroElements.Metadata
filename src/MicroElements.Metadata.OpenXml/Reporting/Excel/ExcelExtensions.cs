@@ -184,7 +184,7 @@ namespace MicroElements.Reporting.Excel
         public static TOpenXmlElement SetStyleSheetName<TOpenXmlElement>(this TOpenXmlElement element, string name)
             where TOpenXmlElement : OpenXmlElement
         {
-            element.GetInstanceMetadata().SetMetadata("StyleSheetName", name);
+            element.AsMetadataProvider().SetMetadata("StyleSheetName", name);
             return element;
         }
 
@@ -195,7 +195,7 @@ namespace MicroElements.Reporting.Excel
         /// <returns>Name attached to element.</returns>
         public static string GetStyleSheetName(this OpenXmlElement element)
         {
-            return element.GetInstanceMetadata().GetMetadata<string>("StyleSheetName") ?? $"StyleSheetName_{element.GetHashCode()}";
+            return element.AsMetadataProvider().GetMetadata<string>("StyleSheetName") ?? $"StyleSheetName_{element.GetHashCode()}";
         }
 
         /// <summary>
@@ -327,6 +327,26 @@ namespace MicroElements.Reporting.Excel
         }
 
         /// <summary>
+        /// Adds OpenXml <see cref="NumberingFormat"/> to document.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="numberingFormat">NumberingFormat to add.</param>
+        /// <param name="name">Name attached to numberingFormat.</param>
+        /// <returns>The same document context.</returns>
+        public static DocumentContext AddNumberingFormat(this DocumentContext documentContext, NumberingFormat numberingFormat, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+
+            if (stylesheet.NumberingFormats == null)
+                stylesheet.NumberingFormats = new NumberingFormats();
+
+            stylesheet.NumberingFormats.AppendChild(numberingFormat.SetStyleSheetName(name));
+            stylesheet.NumberingFormats.Count = (uint)stylesheet.NumberingFormats.ChildElements.Count;
+
+            return documentContext;
+        }
+
+        /// <summary>
         /// Gets <see cref="Font"/> index by attached name.
         /// </summary>
         /// <param name="documentContext">Source document.</param>
@@ -360,6 +380,35 @@ namespace MicroElements.Reporting.Excel
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
             return stylesheet.Borders.ChildElements.OfType<Border>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="NumberingFormat"/> index by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetNumberingFormatIndex(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet.NumberingFormats.ChildElements.OfType<NumberingFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+        }
+
+        /// <summary>
+        /// Gets <see cref="NumberingFormat.NumberFormatId"/> by attached name.
+        /// </summary>
+        /// <param name="documentContext">Source document.</param>
+        /// <param name="name">Name to search.</param>
+        /// <returns>Index or 0 if not found.</returns>
+        public static uint GetNumberingFormatId(this DocumentContext documentContext, string name)
+        {
+            Stylesheet stylesheet = documentContext.GetStylesheet();
+            return stylesheet
+                .NumberingFormats
+                .ChildElements
+                .OfType<NumberingFormat>()
+                .FirstOrDefault(item => item.GetStyleSheetName() == name)
+                ?.NumberFormatId;
         }
 
         /// <summary>

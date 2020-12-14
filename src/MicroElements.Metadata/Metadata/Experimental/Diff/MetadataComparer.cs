@@ -28,10 +28,13 @@ namespace MicroElements.Metadata.Diff
             var search = searchOptions ?? Search.ExistingOnlyWithParent.WithPropertyComparer(PropertyComparer.ByTypeAndNameComparer);
 
             IEnumerable<(IPropertyValue? PropertyValue1, IPropertyValue PropertyValue2)> propertyPairs =
-                container2.Select(propertyValue2 => (container1.GetPropertyValueUntyped(propertyValue2.PropertyUntyped, search), propertyValue2));
+                container2
+                    .Properties
+                    .Select(propertyValue2 => (container1.GetPropertyValueUntyped(propertyValue2.PropertyUntyped, search), propertyValue2));
 
             IEnumerable<(IPropertyValue PropertyValue1, IPropertyValue? PropertyValue2)> removedPropertyPairs =
                 container1
+                    .Properties
                     .Select(propertyValue1 => (propertyValue1, container2.GetPropertyValueUntyped(propertyValue1.PropertyUntyped, search)))
                     .Where(tuple => tuple.Item2 == null);
 

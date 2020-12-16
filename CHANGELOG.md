@@ -1,3 +1,7 @@
+# 7.0.0-rc.2
+- Added ThreadSafe ConcurrentMutablePropertyContainer, GetInstanceMetadata uses ConcurrentMutablePropertyContainer by default
+- OpenXml: GetOrAddSharedString optimized
+
 # 7.0.0-rc.1
 - Added ReflectionDependencyInjectionExtensions to allow configure AspNetCore from netstandard package
 - Added DependencyInjectionExtensions.AddMetadata - all in one registration (json serialization, swagger customization)

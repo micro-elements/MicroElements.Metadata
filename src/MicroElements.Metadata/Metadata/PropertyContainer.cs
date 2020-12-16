@@ -33,7 +33,7 @@ namespace MicroElements.Metadata
             IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
-            _propertyContainer = new MutablePropertyContainerNoLock(sourceValues, parentPropertySource, searchOptions);
+            _propertyContainer = new MutablePropertyContainer(sourceValues, parentPropertySource, searchOptions);
         }
 
         /// <inheritdoc />

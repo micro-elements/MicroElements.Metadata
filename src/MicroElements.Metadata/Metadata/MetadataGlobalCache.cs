@@ -28,7 +28,7 @@ namespace MicroElements.Metadata
 
             if (!MetadataCache.TryGetValue(instance, out IPropertyContainer metadata))
             {
-                metadata = new MutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
+                metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
                 instance.SetInstanceMetadata(metadata);
             }
 

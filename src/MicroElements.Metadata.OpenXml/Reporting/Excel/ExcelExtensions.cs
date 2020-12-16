@@ -68,6 +68,8 @@ namespace MicroElements.Reporting.Excel
             if (autoCreate && workbookSharedStringsPart.SharedStringTable == null)
             {
                 SharedStringTable sharedStringTable = new SharedStringTable();
+                sharedStringTable.Count = UInt32Value.FromUInt32(0);
+                sharedStringTable.UniqueCount = UInt32Value.FromUInt32(0);
                 workbookSharedStringsPart.SharedStringTable = sharedStringTable;
             }
 
@@ -125,12 +127,10 @@ namespace MicroElements.Reporting.Excel
 
                 SharedStringItem sharedStringItem = new SharedStringItem(new Text { Text = text });
                 sharedStringTable.AppendChild(sharedStringItem);
+                sharedStringTable.Count += 1;
+                sharedStringTable.UniqueCount += 1;
 
-                uint itemCount = (uint)sharedStringTable.ChildElements.Count;
-                sharedStringTable.Count = itemCount;
-                sharedStringTable.UniqueCount = itemCount;
-
-                stringIndex = (itemCount-1).ToString();
+                stringIndex = (sharedStringTable.Count - 1).ToString();
                 documentContext.SharedStringTable.Add(text, stringIndex);
             }
 

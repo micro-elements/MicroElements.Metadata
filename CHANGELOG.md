@@ -1,3 +1,10 @@
+# 7.0.0-rc.3
+- Added FreezeMetadata and FreezeInstanceMetadata.
+- IPropertyContainer.ParentSource makes nullable, and read only. SetParentPropertySource is removed
+- Added GetHierarchy, Flatten methods for IPropertyContainer
+- ToReadOnly by default flattens input container
+- Optimization: Search uses internal property cache for some searches.
+
 # 7.0.0-rc.2
 - Added ThreadSafe ConcurrentMutablePropertyContainer, GetInstanceMetadata uses ConcurrentMutablePropertyContainer by default
 - OpenXml: GetOrAddSharedString optimized

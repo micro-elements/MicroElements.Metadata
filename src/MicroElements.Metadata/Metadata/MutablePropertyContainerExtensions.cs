@@ -14,20 +14,6 @@ namespace MicroElements.Metadata
     public static class MutablePropertyContainerExtensions
     {
         /// <summary>
-        /// Sets parent property source and returns the same changed propertyContainer.
-        /// </summary>
-        /// <param name="propertyContainer">MutablePropertyContainer.</param>
-        /// <param name="parentPropertySource">Parent property source.</param>
-        /// <returns>The same container with changed parent.</returns>
-        public static IMutablePropertyContainer WithParentPropertySource(this IMutablePropertyContainer propertyContainer, IPropertyContainer parentPropertySource)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            propertyContainer.SetParentPropertySource(parentPropertySource);
-            return propertyContainer;
-        }
-
-        /// <summary>
         /// Sets property value and returns the same container.
         /// </summary>
         /// <typeparam name="TContainer">Property container type.</typeparam>

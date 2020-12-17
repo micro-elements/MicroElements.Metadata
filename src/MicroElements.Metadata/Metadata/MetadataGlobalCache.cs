@@ -45,10 +45,34 @@ namespace MicroElements.Metadata
         {
             container.AssertArgumentNotNull(nameof(container));
 
-            if (instance != null)
-                MetadataCache.AddOrUpdate(instance, container);
+            if (instance == null)
+                return PropertyContainer.Empty;
+
+            MetadataCache.AddOrUpdate(instance, container);
 
             return container;
+        }
+
+        /// <summary>
+        /// Replaces <see cref="IMutablePropertyContainer"/> with read only version.
+        /// </summary>
+        /// <param name="instance">Source.</param>
+        /// <returns>Current instance metadata.</returns>
+        public static IPropertyContainer FreezeInstanceMetadata(this object? instance)
+        {
+            if (instance == null)
+                return PropertyContainer.Empty;
+
+            if (MetadataCache.TryGetValue(instance, out IPropertyContainer metadata))
+            {
+                if (metadata is IMutablePropertyContainer)
+                {
+                    var readOnlyMetadata = metadata.ToReadOnly(flattenHierarchy: true);
+                    SetInstanceMetadata(instance, readOnlyMetadata);
+                }
+            }
+
+            return metadata.GetInstanceMetadata();
         }
 
         /// <summary>

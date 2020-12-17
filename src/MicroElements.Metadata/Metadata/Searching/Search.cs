@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +14,7 @@ namespace MicroElements.Metadata
     [DebuggerStepThrough]
     public static class Search
     {
-        private static ISearchAlgorithm _algorithm = DefaultSearchAlgorithm.Instance;
+        private static ISearchAlgorithm? _algorithm = DefaultSearchAlgorithm.Instance;
 
         /// <summary>
         /// Gets or Sets default <see cref="ISearchAlgorithm"/> for all extension methods.
@@ -46,6 +47,17 @@ namespace MicroElements.Metadata
         public static readonly SearchOptions ExistingOnlyWithParent = SearchOptions.ExistingOnlyWithParent;
 
         /// <summary>
+        /// Cached properties for internal search use.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        private static class CachedProperty<T>
+        {
+            private static readonly ConcurrentDictionary<string, IProperty<T>> _propertyCache = new ConcurrentDictionary<string, IProperty<T>>();
+
+            public static IProperty<T> ByName(string name) => _propertyCache.GetOrAdd(name, n => new Property<T>(n));
+        }
+
+        /// <summary>
         /// Creates search condition by name or alias.
         /// </summary>
         /// <param name="name">Name to search.</param>
@@ -54,7 +66,7 @@ namespace MicroElements.Metadata
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias(string name, bool ignoreCase = false)
             => new SearchOptions(
-                searchProperty: new Property<UntypedSearch>(name),
+                searchProperty: CachedProperty<UntypedSearch>.ByName(name),
                 propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
@@ -67,7 +79,7 @@ namespace MicroElements.Metadata
         [DebuggerStepThrough]
         public static SearchOptions ByNameOrAlias<T>(string name, bool ignoreCase = false)
             => new SearchOptions(
-                searchProperty: new Property<T>(name),
+                searchProperty: CachedProperty<T>.ByName(name),
                 propertyComparer: PropertyComparer.ByNameOrAlias(ignoreCase));
 
         /// <summary>
@@ -80,7 +92,7 @@ namespace MicroElements.Metadata
         [DebuggerStepThrough]
         public static SearchOptions ByNameAndComparer<T>(string name, IEqualityComparer<IProperty> propertyComparer)
             => new SearchOptions(
-                searchProperty: new Property<T>(name),
+                searchProperty: CachedProperty<T>.ByName(name),
                 propertyComparer: propertyComparer);
 
         /// <summary>
@@ -106,7 +118,7 @@ namespace MicroElements.Metadata
         {
             return new SearchOptions(
                 searchProperty: property ?? searchOptions.SearchProperty,
-                propertyComparer: propertyComparer ?? searchOptions.PropertyComparer ?? PropertyComparer.DefaultEqualityComparer,
+                propertyComparer: propertyComparer ?? searchOptions.PropertyComparer,
                 searchInParent: searchInParent ?? searchOptions.SearchInParent,
                 calculateValue: calculateValue ?? searchOptions.CalculateValue,
                 useDefaultValue: useDefaultValue ?? searchOptions.UseDefaultValue,

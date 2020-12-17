@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -36,17 +37,70 @@ namespace MicroElements.Metadata
         /// Or returns the same container.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="flattenHierarchy">Flatten container hierarchy.</param>
         /// <returns><see cref="IPropertyContainer"/>.</returns>
-        public static IPropertyContainer ToReadOnly(this IPropertyContainer propertyContainer)
+        public static IPropertyContainer ToReadOnly(this IPropertyContainer propertyContainer, bool flattenHierarchy = true)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
             if (propertyContainer is IMutablePropertyContainer)
             {
+                if (flattenHierarchy && propertyContainer.ParentSource != null && propertyContainer.ParentSource.Count > 0)
+                {
+                    return propertyContainer
+                        .Flatten()
+                        .ToReadOnly(flattenHierarchy: false);
+                }
+
                 return new PropertyContainer(
                     sourceValues: propertyContainer.Properties,
                     parentPropertySource: propertyContainer.ParentSource,
                     searchOptions: propertyContainer.SearchOptions);
+            }
+
+            return propertyContainer;
+        }
+
+        /// <summary>
+        /// Gets container hierarchy from oldest parent to the current container.
+        /// </summary>
+        /// <param name="propertyContainer">Source container.</param>
+        /// <returns>Container hierarchy.</returns>
+        public static IReadOnlyCollection<IPropertyContainer> GetHierarchy(this IPropertyContainer propertyContainer)
+        {
+            var history = new Stack<IPropertyContainer>();
+            history.Push(propertyContainer);
+
+            IPropertyContainer current = propertyContainer;
+            while (current.ParentSource != null && current.ParentSource != PropertyContainer.Empty)
+            {
+                history.Push(current.ParentSource);
+                current = current.ParentSource;
+            }
+
+            return history;
+        }
+
+        /// <summary>
+        /// Flattens container hierarchy to single container (from oldest to current).
+        /// </summary>
+        /// <param name="propertyContainer">Source container.</param>
+        /// <returns>New container.</returns>
+        public static IPropertyContainer Flatten(this IPropertyContainer propertyContainer)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            if (propertyContainer.ParentSource != null && propertyContainer.ParentSource.Count > 0)
+            {
+                var merger = new MutablePropertyContainer(searchOptions: propertyContainer.SearchOptions);
+
+                var hierarchy = GetHierarchy(propertyContainer);
+                foreach (IPropertyContainer ancestor in hierarchy)
+                {
+                    merger.WithValues(ancestor, PropertyAddMode.Set);
+                }
+
+                return merger;
             }
 
             return propertyContainer;

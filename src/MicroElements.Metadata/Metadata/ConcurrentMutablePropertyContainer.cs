@@ -18,7 +18,7 @@ namespace MicroElements.Metadata
         private readonly MutablePropertyContainer _propertyContainer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MutablePropertyContainer"/> class.
+        /// Initializes a new instance of the <see cref="ConcurrentMutablePropertyContainer"/> class.
         /// </summary>
         /// <param name="sourceValues">Property values.</param>
         /// <param name="parentPropertySource">Parent property source.</param>
@@ -37,7 +37,7 @@ namespace MicroElements.Metadata
         #region IPropertyContainer
 
         /// <inheritdoc />
-        public IPropertyContainer ParentSource => _propertyContainer.ParentSource;
+        public IPropertyContainer? ParentSource => _propertyContainer.ParentSource;
 
         /// <inheritdoc />
         public IReadOnlyCollection<IPropertyValue> Properties => DoOnLock(() => _propertyContainer.Properties.ToList());
@@ -61,13 +61,6 @@ namespace MicroElements.Metadata
         #endregion
 
         #region Mutability
-
-        /// <summary>
-        /// Sets parent property container.
-        /// </summary>
-        /// <param name="parentPropertySource">Parent property container.</param>
-        public void SetParentPropertySource(IPropertyContainer? parentPropertySource) => 
-            DoOnLock(() => _propertyContainer.SetParentPropertySource(parentPropertySource));
 
         /// <inheritdoc />
         public IPropertyValue<T> SetValue<T>(IProperty<T> property, [AllowNull] T value, ValueSource? valueSource = default) =>

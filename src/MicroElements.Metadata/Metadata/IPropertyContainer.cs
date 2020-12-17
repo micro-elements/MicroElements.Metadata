@@ -12,9 +12,9 @@ namespace MicroElements.Metadata
     public interface IPropertyContainer : IReadOnlyCollection<IPropertyValue>, IMetadataProvider
     {
         /// <summary>
-        /// Gets parent property source.
+        /// Gets optional parent property source.
         /// </summary>
-        IPropertyContainer ParentSource { get; }
+        IPropertyContainer? ParentSource { get; }
 
         /// <summary>
         /// Gets properties with values.
@@ -32,12 +32,6 @@ namespace MicroElements.Metadata
     /// </summary>
     public interface IMutablePropertyContainer : IPropertyContainer
     {
-        /// <summary>
-        /// Sets parent property container.
-        /// </summary>
-        /// <param name="parentPropertySource">Parent property container.</param>
-        void SetParentPropertySource(IPropertyContainer? parentPropertySource);
-
         /// <summary>
         /// Sets value for property.
         /// </summary>

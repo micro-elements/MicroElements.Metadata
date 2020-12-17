@@ -244,11 +244,16 @@ namespace MicroElements.Reporting.Excel
                 DyDescent = 0.25D,
             };
 
-            ColumnContext CreateColumnContext(IPropertyRenderer renderer) =>
-                new ColumnContext(
+            ColumnContext CreateColumnContext(IPropertyRenderer renderer)
+            {
+                // FreezeMetadata for optimization
+                renderer.FreezeMetadata();
+
+                return new ColumnContext(
                     sheetContext,
                     renderer.GetMetadata<ExcelColumnMetadata>() ?? _defaultColumnMetadata,
                     renderer);
+            }
 
             sheetContext.Columns = sheetContext
                 .ReportRenderer

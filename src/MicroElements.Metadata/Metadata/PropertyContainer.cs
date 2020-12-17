@@ -55,7 +55,7 @@ namespace MicroElements.Metadata
         public int Count => _propertyContainer.Count;
 
         /// <inheritdoc />
-        public IPropertyContainer ParentSource => _propertyContainer.ParentSource;
+        public IPropertyContainer? ParentSource => _propertyContainer.ParentSource;
 
         /// <inheritdoc />
         public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer.Properties;

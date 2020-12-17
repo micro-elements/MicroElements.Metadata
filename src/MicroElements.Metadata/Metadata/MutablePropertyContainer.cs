@@ -27,7 +27,7 @@ namespace MicroElements.Metadata
             IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
-            ParentSource = parentPropertySource ?? PropertyContainer.Empty;
+            ParentSource = parentPropertySource;
             if (sourceValues != null)
                 _propertyValues.AddRange(sourceValues);
             _searchOptions = searchOptions ?? Search.Default;
@@ -39,7 +39,7 @@ namespace MicroElements.Metadata
         #region IPropertyContainer
 
         /// <inheritdoc />
-        public IPropertyContainer ParentSource { get; private set; }
+        public IPropertyContainer? ParentSource { get; }
 
         /// <inheritdoc />
         public IReadOnlyCollection<IPropertyValue> Properties => _propertyValues;
@@ -63,15 +63,6 @@ namespace MicroElements.Metadata
         #endregion
 
         #region Mutability
-
-        /// <summary>
-        /// Sets parent property container.
-        /// </summary>
-        /// <param name="parentPropertySource">Parent property container.</param>
-        public void SetParentPropertySource(IPropertyContainer? parentPropertySource)
-        {
-            ParentSource = parentPropertySource ?? PropertyContainer.Empty;
-        }
 
         /// <summary>
         /// Sets value for property.

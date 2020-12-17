@@ -15,6 +15,11 @@ namespace MicroElements.Metadata
         /// Gets metadata for current instance.
         /// </summary>
         IPropertyContainer Metadata => this.GetInstanceMetadata();
+
+        /// <summary>
+        /// Freeze metadata makes metadata readonly.
+        /// </summary>
+        void FreezeMetadata() => this.FreezeInstanceMetadata();
     }
 
     /// <summary>

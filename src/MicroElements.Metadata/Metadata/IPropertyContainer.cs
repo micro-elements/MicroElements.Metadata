@@ -55,6 +55,14 @@ namespace MicroElements.Metadata
         void Add(IPropertyValue propertyValue);
 
         /// <summary>
+        /// Removes property value for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="property">Property.</param>
+        /// <returns><see cref="IPropertyValue{T}"/> that was removed.</returns>
+        IPropertyValue<T>? RemoveValue<T>(IProperty<T> property);
+
+        /// <summary>
         /// Clears all property and values.
         /// </summary>
         void Clear();

@@ -8,16 +8,15 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
-using MicroElements.Metadata;
 using NodaTime;
 using NodaTime.Text;
 
-namespace MicroElements.Parsing
+namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 {
     /// <summary>
     /// Excel extensions.
     /// </summary>
-    public static class ExcelExtensions
+    public static class ExcelParsingExtensions
     {
         /// <summary>
         /// Gets sheet by name.
@@ -300,16 +299,16 @@ namespace MicroElements.Parsing
         /// </summary>
         public static string? GetCellValue(this ExcelElement<Cell> cell, string? nullValue = null)
         {
-            Cell cellData = cell.Data;
-            string cellValue = cellData.CellValue?.InnerText ?? nullValue;
-            string cellTextValue = null;
+            Cell? cellData = cell.Data;
+            string? cellValue = cellData?.CellValue?.InnerText ?? nullValue;
+            string? cellTextValue = null;
 
-            if (cellValue != null && cellData.DataType != null && cellData.DataType.Value == CellValues.SharedString)
+            if (cellValue != null && cellData?.DataType != null && cellData.DataType.Value == CellValues.SharedString)
             {
                 cellTextValue = cell.Doc.WorkbookPart.SharedStringTablePart.SharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText;
             }
 
-            if (cellTextValue == null && cellValue != null && cellData.DataType == null)
+            if (cellTextValue == null && cellValue != null && cellData?.DataType == null)
             {
                 var propertyParser = cell.GetMetadata<IPropertyParser>();
 
@@ -326,7 +325,7 @@ namespace MicroElements.Parsing
                         {
                             Prelude
                                 .ParseDouble(cellValue)
-                                .Map(FromExcelSerialDate)
+                                .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("yyyy-MM-dd"))
                                 .Match(s => cellTextValue = s, () => { });
                         }
@@ -342,7 +341,7 @@ namespace MicroElements.Parsing
                         {
                             Prelude
                                 .ParseDouble(cellValue)
-                                .Map(FromExcelSerialDate)
+                                .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("HH:mm:ss"))
                                 .Match(s => cellTextValue = s, () => { });
                         }
@@ -357,7 +356,7 @@ namespace MicroElements.Parsing
                         {
                             Prelude
                                 .ParseDouble(cellValue)
-                                .Map(FromExcelSerialDate)
+                                .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss"))
                                 .Match(s => cellTextValue = s, () => { });
                         }
@@ -366,18 +365,6 @@ namespace MicroElements.Parsing
             }
 
             return cellTextValue ?? cellValue;
-        }
-
-        /// <summary>
-        /// Source: https://stackoverflow.com/questions/727466/how-do-i-convert-an-excel-serial-date-number-to-a-net-datetime
-        /// </summary>
-        public static DateTime FromExcelSerialDate(double serialDate)
-        {
-            // NOTE: DateTime.FromOADate parses 1 as 1899-12-31. Correct value is 1900-01-01
-            // return DateTime.FromOADate(serialDate);
-            if (serialDate > 59)
-                serialDate -= 1; //Excel/Lotus 2/29/1900 bug
-            return new DateTime(1899, 12, 31).AddDays(serialDate);
         }
 
         /// <summary>

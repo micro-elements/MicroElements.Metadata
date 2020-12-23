@@ -4,9 +4,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Metadata;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Marker interface for excel metadata.

@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>MicroElements</RootNamespace>
+    <RootNamespace>MicroElements.Metadata</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

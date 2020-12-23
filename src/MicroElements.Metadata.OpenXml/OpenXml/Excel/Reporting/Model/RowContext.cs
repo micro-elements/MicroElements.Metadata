@@ -3,9 +3,8 @@
 
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Metadata;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Context for row customization.

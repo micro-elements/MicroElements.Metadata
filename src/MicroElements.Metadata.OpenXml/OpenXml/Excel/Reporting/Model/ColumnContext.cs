@@ -3,9 +3,8 @@
 
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
-using MicroElements.Metadata;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Context for column rendering.

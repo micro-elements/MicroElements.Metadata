@@ -2,10 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Metadata;
-using MicroElements.Reporting.Styling;
+using MicroElements.Metadata.OpenXml.Excel.Styling;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Extension methods for working with metadata.

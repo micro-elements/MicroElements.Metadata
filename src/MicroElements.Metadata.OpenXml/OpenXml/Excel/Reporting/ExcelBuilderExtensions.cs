@@ -8,14 +8,13 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
-using MicroElements.Metadata;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Extension methods for excel building.
     /// </summary>
-    public static class ExcelExtensions
+    public static class ExcelBuilderExtensions
     {
         /// <summary>
         /// Gets or creates OpenXml SheetViews.

@@ -3,10 +3,9 @@
 
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
-using MicroElements.Metadata;
-using MicroElements.Parsing;
+using MicroElements.Metadata.OpenXml.Excel.Parsing;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Context for cell rendering.

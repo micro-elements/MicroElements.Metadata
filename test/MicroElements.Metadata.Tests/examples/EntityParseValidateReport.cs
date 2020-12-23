@@ -5,8 +5,8 @@ using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using FluentAssertions;
 using MicroElements.Functional;
-using MicroElements.Parsing;
-using MicroElements.Reporting.Excel;
+using MicroElements.Metadata.OpenXml.Excel.Parsing;
+using MicroElements.Metadata.OpenXml.Excel.Reporting;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 using Xunit;
@@ -18,6 +18,7 @@ namespace MicroElements.Metadata.Tests.examples
         public class Entity
         {
             public DateTime CreatedAt { get; }
+
             public string Name { get; }
 
             public Entity(DateTime createdAt, string name)

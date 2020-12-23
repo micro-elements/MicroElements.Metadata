@@ -75,6 +75,10 @@ namespace MicroElements.Metadata
             DoOnLock(() => _propertyContainer.Add(propertyValue));
 
         /// <inheritdoc />
+        public IPropertyValue<T>? RemoveValue<T>(IProperty<T> property) =>
+            DoOnLock(() => _propertyContainer.RemoveValue(property));
+
+        /// <inheritdoc />
         public void Clear() =>
             DoOnLock(() => _propertyContainer.Clear());
 

@@ -3,7 +3,7 @@
 
 using DocumentFormat.OpenXml.Spreadsheet;
 
-namespace MicroElements.Parsing
+namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 {
     /// <summary>
     /// Represents header cell.

@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Linq;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Reporting.Excel;
+using FluentAssertions;
+using MicroElements.Functional;
+using MicroElements.Metadata.OpenXml.Excel;
+using MicroElements.Metadata.OpenXml.Excel.Reporting;
 using NodaTime;
 using NodaTime.Extensions;
 using Xunit;
@@ -63,15 +67,41 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
         {
             //new GeneratedClass().CreatePackage("build_excel2.xlsx");
         }
-    }
 
-    public static class ExcelProviderExtensions
-    {
-        public static TMetadataProvider SetExcelType<TMetadataProvider>(this TMetadataProvider metadataProvider, CellValues cellValues)
-            where TMetadataProvider : IMetadataProvider
+        [Fact]
+        public void date_types_serialization()
         {
-            metadataProvider.ConfigureMetadata<ExcelColumnMetadata>(metadata => metadata.SetValue(ExcelMetadata.DataType, cellValues));
-            return metadataProvider;
+            new LocalDate(1900, 01, 01).ToExcelSerialDateAsString().Should().Be("1");
+            new LocalDate(1900, 02, 28).ToExcelSerialDateAsString().Should().Be("59");
+            //new DateTime(1900, 02, 29).ToSerialDate().Should().Be("60"); // valid in excel but not valid in dotnet (Gregorian calendar has no this date)
+            new LocalDate(1900, 03, 01).ToExcelSerialDateAsString().Should().Be("61");
+            new LocalDate(2020, 12, 22).ToExcelSerialDateAsString().Should().Be("44187");
+            new LocalDateTime(2020, 12, 22, 12, 0,0).ToExcelSerialDateAsString().Should().Be("44187.5");
+            new DateTime(2020, 12, 22, 12, 0, 0).ToExcelSerialDateAsString().Should().Be("44187.5");
+
+            new LocalTime(12, 00, 00).ToExcelSerialDateAsString().Should().Be("0.5");
+            Duration.FromHours(36).ToExcelSerialDateAsString().Should().Be("1.5");
+
+            MapToSerialAndBack(new LocalDate(1900, 01, 01), dt => dt.ToLocalDateTime().Date);
+            MapToSerialAndBack(new LocalDate(1900, 02, 28), dt => dt.ToLocalDateTime().Date);
+            MapToSerialAndBack(new LocalDate(1900, 03, 01), dt => dt.ToLocalDateTime().Date);
+            MapToSerialAndBack(new LocalDate(2020, 12, 22), dt => dt.ToLocalDateTime().Date);
+
+            MapToSerialAndBack(new DateTime(2020, 12, 22), dt => dt);
+            MapToSerialAndBack(new DateTime(1900, 02, 28), dt => dt);
+            MapToSerialAndBack(new DateTime(1900, 03, 01), dt => dt);
+            MapToSerialAndBack(new DateTime(2020, 12, 22), dt => dt);
+        }
+
+        public void MapToSerialAndBack<T>(T initial, Func<DateTime, T> fromDateTime)
+        {
+            T restored = Prelude
+                .ParseDouble(initial.ToExcelSerialDateAsString())
+                .Map(d => d.FromExcelSerialDate())
+                .Map(fromDateTime)
+                .GetValueOrThrow();
+
+            restored.Should().Be(initial);
         }
     }
 }

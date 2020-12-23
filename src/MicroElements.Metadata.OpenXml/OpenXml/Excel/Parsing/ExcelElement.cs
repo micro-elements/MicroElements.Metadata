@@ -4,9 +4,8 @@
 using System.Diagnostics.CodeAnalysis;
 using DocumentFormat.OpenXml.Packaging;
 using MicroElements.Functional;
-using MicroElements.Metadata;
 
-namespace MicroElements.Parsing
+namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 {
     /// <summary>
     /// Represents OpenXml element wrapper with reference to OpenXml document.

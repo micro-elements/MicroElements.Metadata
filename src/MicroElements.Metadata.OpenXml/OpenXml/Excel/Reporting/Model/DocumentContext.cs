@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 using MicroElements.Functional;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Represents OpenXml document context.

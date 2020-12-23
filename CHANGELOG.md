@@ -1,3 +1,8 @@
+# 7.0.0-rc.4
+- OpenXml: Excel Serial Date support for reports
+- OpenXml: Big refactoring
+- OpenXml: Styling extensions refactored and added many useful methods
+
 # 7.0.0-rc.3
 - Added FreezeMetadata and FreezeInstanceMetadata.
 - IPropertyContainer.ParentSource makes nullable, and read only. SetParentPropertySource is removed

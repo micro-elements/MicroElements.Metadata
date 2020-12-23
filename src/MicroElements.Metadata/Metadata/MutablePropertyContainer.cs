@@ -112,6 +112,19 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
+        public IPropertyValue<T>? RemoveValue<T>(IProperty<T> property)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            IPropertyValue? propertyValue = this.GetPropertyValueUntyped(property);
+
+            if (propertyValue != null)
+                _propertyValues.Remove(propertyValue);
+
+            return (IPropertyValue<T>?)propertyValue;
+        }
+
+        /// <inheritdoc />
         public void Clear()
         {
             _propertyValues.Clear();

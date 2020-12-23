@@ -38,7 +38,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="configure">Action to configure renderer.</param>
         /// <returns>Returns the same renderer instance for chaining.</returns>
-        IPropertyRenderer Configure(Action<PropertyRendererOptions> configure);
+        IPropertyRenderer ConfigureRenderer(Action<PropertyRendererOptions> configure);
     }
 
     /// <summary>

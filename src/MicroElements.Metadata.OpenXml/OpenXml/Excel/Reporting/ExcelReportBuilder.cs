@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,8 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
-using MicroElements.Metadata;
-using MicroElements.Parsing;
+using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using NodaTime;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
 using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
@@ -22,7 +20,7 @@ using LeftBorder = DocumentFormat.OpenXml.Spreadsheet.LeftBorder;
 using RightBorder = DocumentFormat.OpenXml.Spreadsheet.RightBorder;
 using TopBorder = DocumentFormat.OpenXml.Spreadsheet.TopBorder;
 
-namespace MicroElements.Reporting.Excel
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Excel report builder.

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace MicroElements.Reporting.Styling
+namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
     /// <summary>
     /// Mark property with <see cref="FormatAttribute"/> to attach <see cref="ICellFormatProvider"/> to it.

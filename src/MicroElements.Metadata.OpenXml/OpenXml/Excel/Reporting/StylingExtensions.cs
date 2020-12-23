@@ -94,18 +94,18 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <summary>
         /// Configures Row.
         /// </summary>
-        /// <typeparam name="TPropertyRenderer">Property renderer type.</typeparam>
-        /// <param name="propertyRenderer">Property renderer.</param>
+        /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
+        /// <param name="metadataProvider">Metadata provider.</param>
         /// <param name="configureRow">Row customization action.</param>
         /// <param name="combineMode">Combine mode. Default: AppendToEnd.</param>
         /// <returns>The same renderer instance.</returns>
-        public static TPropertyRenderer ConfigureRow<TPropertyRenderer>(
-            this TPropertyRenderer propertyRenderer,
+        public static TMetadataProvider ConfigureRow<TMetadataProvider>(
+            this TMetadataProvider metadataProvider,
             Action<RowContext> configureRow,
             CombineMode combineMode = CombineMode.AppendToEnd)
-            where TPropertyRenderer : IPropertyRenderer
+            where TMetadataProvider : IReportRenderer
         {
-            return propertyRenderer.ConfigureMetadata<TPropertyRenderer, ExcelSheetMetadata>(
+            return metadataProvider.ConfigureMetadata<TMetadataProvider, ExcelSheetMetadata>(
                 metadata => metadata.WithCombinedConfigure(ExcelSheetMetadata.ConfigureRow, configureRow, combineMode));
         }
 

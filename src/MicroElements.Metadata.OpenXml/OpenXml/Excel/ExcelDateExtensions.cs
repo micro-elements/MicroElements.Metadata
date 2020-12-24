@@ -75,9 +75,9 @@ namespace MicroElements.Metadata.OpenXml.Excel
         /// </summary>
         /// <param name="valueUntyped">Boxed date related value.</param>
         /// <returns>Excel Serial Date as string.</returns>
-        public static string ToExcelSerialDateAsString(this object? valueUntyped)
+        public static string? ToExcelSerialDateAsString(this object? valueUntyped)
         {
-            return valueUntyped
+            return valueUntyped?
                 .ToExcelSerialDate()
                 .ToString(CultureInfo.InvariantCulture);
         }

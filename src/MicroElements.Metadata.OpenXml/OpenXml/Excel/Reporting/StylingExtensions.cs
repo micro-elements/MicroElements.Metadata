@@ -237,7 +237,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             where TPropertyRenderer : IPropertyRenderer
         {
             propertyRenderer
-                .SetExcelType(CellValues.Number)
+                //.SetExcelType(CellValues.Number)
                 .ConfigureRenderer(options => options.CustomRender = (property, container) =>
                 {
                     object? valueUntyped = container.GetValueUntyped(property);

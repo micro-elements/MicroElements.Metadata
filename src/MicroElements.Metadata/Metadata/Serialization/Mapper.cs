@@ -51,12 +51,13 @@ namespace MicroElements.Metadata.Serialization
 
     public class DefaultMapperSettings : IMapperSettings
     {
+        public static readonly DefaultMapperSettings Instance = new DefaultMapperSettings();
+
         /// <summary>
         /// Invariant format info. Uses '.' as decimal separator for floating point numbers.
         /// </summary>
         public static readonly NumberFormatInfo DefaultNumberFormatInfo = NumberFormatInfo.ReadOnly(
-            new NumberFormatInfo
-            {
+            new NumberFormatInfo {
                 NumberDecimalSeparator = ".",
             });
 
@@ -81,8 +82,7 @@ namespace MicroElements.Metadata.Serialization
         }
 
         public DefaultMapperSettings()
-        {
-        }
+        { }
 
         /// <inheritdoc />
         public string GetTypeName(Type type)
@@ -275,6 +275,12 @@ namespace MicroElements.Metadata.Serialization
                 Type = mapperSettings.GetTypeName(propertyValue.PropertyUntyped.Type),
                 Value = mapperSettings.SerializeValue(propertyValue.PropertyUntyped.Type, propertyValue.ValueUntyped)
             };
+        }
+
+        public static IPropertyContainer ToModel(this PropertyContainerContract contract, IMapperSettings mapperSettings)
+        {
+            var propertyValues = contract.Properties.NotNull().Select(valueContract => valueContract.ToModel(mapperSettings));
+            return new PropertyContainer(sourceValues: propertyValues);
         }
 
         public static IPropertyValue ToModel(this PropertyValueContract propertyValueContract, IMapperSettings mapperSettings, IMutableMessageList<Message>? messages = null)

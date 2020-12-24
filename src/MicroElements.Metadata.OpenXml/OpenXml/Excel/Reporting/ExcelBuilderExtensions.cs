@@ -354,6 +354,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetFontIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.Fonts == null)
+                return 0;
+
             return stylesheet.Fonts.ChildElements.OfType<Font>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -366,6 +369,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetFillIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.Fills == null)
+                return 0;
+
             return stylesheet.Fills.ChildElements.OfType<Fill>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -378,6 +384,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetBorderIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.Borders == null)
+                return 0;
+
             return stylesheet.Borders.ChildElements.OfType<Border>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -390,6 +399,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetNumberingFormatIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.NumberingFormats == null)
+                return 0;
+
             return stylesheet.NumberingFormats.ChildElements.OfType<NumberingFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -402,6 +414,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetNumberingFormatId(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.NumberingFormats == null)
+                return 0;
+
             return stylesheet
                 .NumberingFormats
                 .ChildElements
@@ -419,6 +434,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetCellStyleFormatIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.CellStyleFormats == null)
+                return 0;
+
             return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -431,6 +449,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetCellFormatIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.CellFormats == null)
+                return 0;
+
             return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -443,6 +464,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static uint GetCellStyleIndex(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.CellStyles == null)
+                return 0;
+
             return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
@@ -455,6 +479,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static CellFormat? TryGetCellFormat(this DocumentContext documentContext, string name)
         {
             Stylesheet stylesheet = documentContext.GetStylesheet();
+            if (stylesheet.CellFormats == null)
+                return null;
+
             CellFormat? cellFormat = stylesheet.CellFormats.ChildElements.OfType<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
             return cellFormat;
         }

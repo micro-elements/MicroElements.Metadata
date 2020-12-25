@@ -161,12 +161,12 @@ namespace MicroElements.Metadata.Tests.Serialization
             var contractJson = propertyContainerContract.ToJsonWithSystemTextJson();
 
             var json1 = propertyContainer.ToJsonWithSystemTextJson();
-            var container = JsonSerializer.Deserialize<PropertyContainer>(json1, new JsonSerializerOptions().ConfigureJsonOptions());
+            var container1 = JsonSerializer.Deserialize<PropertyContainer>(json1, new JsonSerializerOptions().ConfigureJsonOptions());
 
             var json2 = propertyContainer.ToJsonWithNewtonsoftJson();
             var container2 = json2.DeserializeWithNewtonsoftJson<IPropertyContainer>();
 
-            ObjectDiff objectDiff = MetadataComparer.GetDiff(container, container2);
+            ObjectDiff objectDiff = MetadataComparer.GetDiff(container1, container2);
             objectDiff.Diffs.Should().BeEmpty();
         }
     }

@@ -13,18 +13,25 @@ namespace MicroElements.Metadata.NewtonsoftJson
 {
     /// <summary>
     /// Serializes <see cref="IPropertyContainer"/> as ordinary object.
-    /// - Properties serializes as <c>"PropertyName": "PropertyValue"</c>.
+    /// - Properties serializes as <c>"PropertyName@type=typeName": "PropertyValue"</c>.
     /// - Values serializes according their converters.
     /// <example>
     /// {
-    ///     "@metadata.types": ["string", "int"],
     ///     "StringProperty": "Text",
-    ///     "IntProperty" : 42
+    ///     "IntProperty@type=int": 42
     /// }
     /// </example>
     /// </summary>
     public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
     {
+        public bool WriteTypeToName { get; set; } = true;
+
+        public string Separator { get; set; } = "@";
+
+        public string AltSeparator { get; set; } = ":";
+
+        public bool DoNotFail { get; set; } = true;
+
         /// <inheritdoc />
         public override IPropertyContainer ReadJson(
             JsonReader reader,
@@ -34,28 +41,12 @@ namespace MicroElements.Metadata.NewtonsoftJson
             JsonSerializer serializer)
         {
             var propertyContainer = new MutablePropertyContainer();
-            Type[]? types = null;
 
-            int propertyIndex = 0;
             while (reader.Read())
             {
                 if (reader.TokenType == JsonToken.PropertyName)
                 {
-                    string propertyName = (string)reader.Value;
-                    reader.Read();
-                    if (propertyName == "@metadata.types")
-                    {
-                        var typeNames = serializer.Deserialize<string[]>(reader);
-                        types = typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
-                    }
-                    else
-                    {
-                        Type propertyType = GetPropertyType(reader);
-                        object? propertyValue = serializer.Deserialize(reader, propertyType);
-                        IProperty property = Property.Create(propertyType, propertyName);
-                        propertyContainer.WithValueUntyped(property, propertyValue);
-                        propertyIndex++;
-                    }
+                    TryReadProperty();
                 }
                 else
                 {
@@ -63,30 +54,57 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 }
             }
 
-            Type GetPropertyType(JsonReader reader)
+            void TryReadProperty()
             {
-                if (types != null)
+                try
                 {
-                    if (propertyIndex >= types.Length)
-                        throw new Exception("@metadata.types out of bound");
-
-                    return types[propertyIndex];
+                    ReadProperty();
                 }
-                else
+                catch (Exception e)
                 {
-                    switch (reader.TokenType)
-                    {
-                        case JsonToken.String:
-                            return typeof(string);
-                        case JsonToken.Integer:
-                            return typeof(int);
-                        case JsonToken.Float:
-                            return typeof(double);
-                        case JsonToken.Boolean:
-                            return typeof(bool);
-                        default:
-                            return typeof(object);
-                    }
+                    if (!DoNotFail)
+                        throw;
+                }
+            }
+
+            void ReadProperty()
+            {
+                string propertyName = (string)reader.Value!;
+                reader.Read();
+
+                Type propertyType = null;
+
+                if (propertyName.Contains(Separator))
+                {
+                    ParseName(propertyName, Separator)
+                        .OrElse(ParseName(propertyName, AltSeparator))
+                        .MatchSome(result => (propertyName, propertyType) = result);
+                }
+
+                if (propertyType == null)
+                {
+                    propertyType = GetPropertyTypeFromToken(reader);
+                }
+
+                object? propertyValue = serializer.Deserialize(reader, propertyType);
+                IProperty property = Property.Create(propertyType, propertyName);
+                propertyContainer.WithValueUntyped(property, propertyValue);
+            }
+
+            Type GetPropertyTypeFromToken(JsonReader reader)
+            {
+                switch (reader.TokenType)
+                {
+                    case JsonToken.String:
+                        return typeof(string);
+                    case JsonToken.Integer:
+                        return typeof(int);
+                    case JsonToken.Float:
+                        return typeof(double);
+                    case JsonToken.Boolean:
+                        return typeof(bool);
+                    default:
+                        return typeof(object);
                 }
             }
 
@@ -94,6 +112,25 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 return propertyContainer;
 
             return new PropertyContainer(sourceValues: propertyContainer.Properties);
+        }
+
+        Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string separator)
+        {
+            string[] parts = fullPropertyName.Split(separator);
+            if (parts.Length > 1)
+            {
+                string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
+                if (typePart != null)
+                {
+                    string propertyName = parts[0];
+                    string typeAlias = typePart.Substring("type=".Length);
+                    Type propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
+                    if (propertyType != null)
+                        return (propertyName, propertyType);
+                }
+            }
+
+            return Option<(string, Type)>.None;
         }
 
         /// <inheritdoc />
@@ -105,17 +142,17 @@ namespace MicroElements.Metadata.NewtonsoftJson
             {
                 NamingStrategy? namingStrategy = (serializer.ContractResolver as DefaultContractResolver)?.NamingStrategy;
 
-                string[] types = value.Properties
-                    .Select(propertyValue => propertyValue.PropertyUntyped.Type)
-                    .Select(type => DefaultMapperSettings.TypeCache.GetAliasForType(type) ?? type.FullName)
-                    .ToArray();
-
-                writer.WritePropertyName("@metadata.types");
-                serializer.Serialize(writer, types);
-
                 foreach (IPropertyValue propertyValue in value.Properties)
                 {
                     string jsonPropertyName = namingStrategy?.GetPropertyName(propertyValue.PropertyUntyped.Name, false) ?? propertyValue.PropertyUntyped.Name;
+
+                    if (WriteTypeToName)
+                    {
+                        string typeAlias = DefaultMapperSettings.TypeCache.GetAliasForType(propertyValue.PropertyUntyped.Type) ?? propertyValue.PropertyUntyped.Type.FullName;
+                        if (typeAlias != "string")
+                            jsonPropertyName += $"{Separator}type={typeAlias}";
+                    }
+
                     writer.WritePropertyName(jsonPropertyName);
                     serializer.Serialize(writer, propertyValue.ValueUntyped, propertyValue.PropertyUntyped.Type);
                 }

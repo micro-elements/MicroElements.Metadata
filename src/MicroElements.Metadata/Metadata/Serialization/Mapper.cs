@@ -49,6 +49,9 @@ namespace MicroElements.Metadata.Serialization
 
     }
 
+    /// <summary>
+    /// Default metadata serializer settings.
+    /// </summary>
     public class DefaultMapperSettings : IMapperSettings
     {
         public static readonly DefaultMapperSettings Instance = new DefaultMapperSettings();
@@ -68,12 +71,20 @@ namespace MicroElements.Metadata.Serialization
             var typeRegistrations = Enumerable.Empty<TypeRegistration>()
                 .Concat(TypeCache.NumericTypesWithNullable.TypeSource.TypeRegistrations)
                 .Concat(TypeCache.NodaTimeTypes.Value.TypeSource.TypeRegistrations)
-                .Concat(new[] 
+                .Concat(new[]
                 {
                     new TypeRegistration(typeof(string), "string"),
                     new TypeRegistration(typeof(DateTime), "DateTime"),
                     new TypeRegistration(typeof(DateTime?), "DateTime?"),
                 })
+                .ToArray();
+
+            var arrayTypes = typeRegistrations
+                .Where(registration => !registration.Type.IsArray && registration.Alias != null)
+                .Select(registration => new TypeRegistration(registration.Type.MakeArrayType(), $"{registration.Alias}[]"));
+
+            typeRegistrations = typeRegistrations
+                .Concat(arrayTypes)
                 .ToArray();
 
             TypeCache = TypeCache.Create(

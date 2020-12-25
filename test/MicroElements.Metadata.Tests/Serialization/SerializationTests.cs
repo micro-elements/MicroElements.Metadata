@@ -131,8 +131,8 @@ namespace MicroElements.Metadata.Tests.Serialization
         [InlineData("DateTime", "2020-11-26T15:27:17", "DateTime")]
         [InlineData("DateTime", "null", "DateTime?")]
 
-        [InlineData("StringArray", "[a1, a2]", "System.String[]")]
-        [InlineData("IntArray", "[1, 2]", "System.Int32[]")]
+        [InlineData("StringArray", "[a1, a2]", "string[]")]
+        [InlineData("IntArray", "[1, 2]", "int[]")]
 
         public void DeserializeProperty(string name, string value, string type, string? type2 = null)
         {

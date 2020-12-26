@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using FluentAssertions;
@@ -11,6 +10,7 @@ using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.SystemTextJson;
 using Newtonsoft.Json;
 using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
 using Xunit;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -151,6 +151,8 @@ namespace MicroElements.Metadata.Tests.Serialization
             var propertyContainer = new MutablePropertyContainer()
                 .WithValue(TestMeta.StringProperty, "Text")
                 .WithValue(TestMeta.IntProperty, 42)
+                .WithValue(TestMeta.DoubleProperty, 10.2)
+                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
                 .WithValue(TestMeta.StringArray, new [] { "a1", "a2" })
                 .WithValue(TestMeta.IntArray, new[] { 1, 2 })
                 ;
@@ -176,6 +178,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options)
         {
             options.ConfigureJsonForPropertyContainers();
+            options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
             options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             options.WriteIndented = true;
@@ -186,8 +189,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static string ToJsonWithSystemTextJson<T>(this T entity)
         {
             JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
-            byte[] utf8Bytes = JsonSerializer.SerializeToUtf8Bytes(entity, jsonSerializerOptions);
-            return Encoding.UTF8.GetString(utf8Bytes);
+            return JsonSerializer.Serialize(entity, jsonSerializerOptions);
         }
 
         public static string ToJsonWithNewtonsoftJson<T>(this T entity)
@@ -207,6 +209,9 @@ namespace MicroElements.Metadata.Tests.Serialization
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");
+        public static readonly IProperty<double> DoubleProperty = new Property<double>("DoubleProperty");
+        public static readonly IProperty<LocalDate> DateProperty = new Property<LocalDate>("DateProperty");
+
         public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
         public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");
 

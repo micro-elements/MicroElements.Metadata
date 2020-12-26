@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata.Serialization;
-using MicroElements.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -24,13 +22,12 @@ namespace MicroElements.Metadata.NewtonsoftJson
     /// </summary>
     public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
     {
-        public bool WriteTypeToName { get; set; } = true;
+        public MetadataJsonSerializationOptions Options { get; }
 
-        public string Separator { get; set; } = "@";
-
-        public string AltSeparator { get; set; } = ":";
-
-        public bool DoNotFail { get; set; } = true;
+        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
+        {
+            Options = options ?? new MetadataJsonSerializationOptions();
+        }
 
         /// <inheritdoc />
         public override IPropertyContainer ReadJson(
@@ -40,6 +37,9 @@ namespace MicroElements.Metadata.NewtonsoftJson
             bool hasExistingValue,
             JsonSerializer serializer)
         {
+            IPropertySet? schema = null;
+            bool isPositional = false;
+            int propertyIndex = 0;
             var propertyContainer = new MutablePropertyContainer();
 
             while (reader.Read())
@@ -62,7 +62,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 }
                 catch (Exception e)
                 {
-                    if (!DoNotFail)
+                    if (!Options.DoNotFail)
                         throw;
                 }
             }
@@ -70,15 +70,45 @@ namespace MicroElements.Metadata.NewtonsoftJson
             void ReadProperty()
             {
                 string propertyName = (string)reader.Value!;
+                Type? propertyType = null;
+                IProperty? property = null;
+
+                // Advance reader to property value.
                 reader.Read();
 
-                Type propertyType = null;
-
-                if (propertyName.Contains(Separator))
+                // Compact schema presentation. Use for embedding to json.
+                if (propertyName == "$metadata.schema.compact")
                 {
-                    ParseName(propertyName, Separator)
-                        .OrElse(ParseName(propertyName, AltSeparator))
+                    var compactSchemaItems = serializer.Deserialize<string[]>(reader);
+                    schema = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
+                    return;
+                }
+
+                // Obsolete branch. Some json implementations can change property order so @metadata.types can be irrelevant...
+                if (propertyName == "@metadata.types")
+                {
+                    isPositional = true;
+                    var typeNames = serializer.Deserialize<string[]>(reader);
+                    schema = MetadataSchema.ParseMetadataTypes(typeNames);
+                    return;
+                }
+
+                // Obsolete branch. Use $metadata.schema.compact. Case: difficult to work with standard instruments.
+                if (propertyName.Contains(Options.Separator) || propertyName.Contains(Options.AltSeparator))
+                {
+                    MetadataSchema.ParseName(propertyName, Options.Separator)
+                        .OrElse(MetadataSchema.ParseName(propertyName, Options.AltSeparator))
                         .MatchSome(result => (propertyName, propertyType) = result);
+                }
+
+                if (propertyType == null && schema != null)
+                {
+                    if (isPositional)
+                        property = schema.GetFromSchema($"{propertyIndex}");
+                    else
+                        property = schema.GetFromSchema(propertyName);
+
+                    propertyType = property?.Type;
                 }
 
                 if (propertyType == null)
@@ -87,25 +117,10 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 }
 
                 object? propertyValue = serializer.Deserialize(reader, propertyType);
-                IProperty property = Property.Create(propertyType, propertyName);
+                property ??= Property.Create(propertyType, propertyName);
                 propertyContainer.WithValueUntyped(property, propertyValue);
-            }
 
-            Type GetPropertyTypeFromToken(JsonReader reader)
-            {
-                switch (reader.TokenType)
-                {
-                    case JsonToken.String:
-                        return typeof(string);
-                    case JsonToken.Integer:
-                        return typeof(int);
-                    case JsonToken.Float:
-                        return typeof(double);
-                    case JsonToken.Boolean:
-                        return typeof(bool);
-                    default:
-                        return typeof(object);
-                }
+                propertyIndex++;
             }
 
             if (objectType.IsAssignableTo<IMutablePropertyContainer>())
@@ -114,47 +129,62 @@ namespace MicroElements.Metadata.NewtonsoftJson
             return new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 
-        Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string separator)
+        private Type GetPropertyTypeFromToken(JsonReader reader)
         {
-            string[] parts = fullPropertyName.Split(separator);
-            if (parts.Length > 1)
+            switch (reader.TokenType)
             {
-                string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
-                if (typePart != null)
-                {
-                    string propertyName = parts[0];
-                    string typeAlias = typePart.Substring("type=".Length);
-                    Type propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
-                    if (propertyType != null)
-                        return (propertyName, propertyType);
-                }
+                case JsonToken.String:
+                    return typeof(string);
+                case JsonToken.Integer:
+                    return typeof(int);
+                case JsonToken.Float:
+                    return typeof(double);
+                case JsonToken.Boolean:
+                    return typeof(bool);
+                default:
+                    return typeof(object);
             }
-
-            return Option<(string, Type)>.None;
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, IPropertyContainer? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, IPropertyContainer? container, JsonSerializer serializer)
         {
             writer.WriteStartObject();
 
-            if (value != null && value.Properties.Count > 0)
+            if (container != null && container.Properties.Count > 0)
             {
-                NamingStrategy? namingStrategy = (serializer.ContractResolver as DefaultContractResolver)?.NamingStrategy;
+                NamingStrategy namingStrategy = (serializer.ContractResolver as DefaultContractResolver)?.NamingStrategy ?? new DefaultNamingStrategy();
 
-                foreach (IPropertyValue propertyValue in value.Properties)
+                if (Options.WriteSchemaCompact)
                 {
-                    string jsonPropertyName = namingStrategy?.GetPropertyName(propertyValue.PropertyUntyped.Name, false) ?? propertyValue.PropertyUntyped.Name;
+                    writer.WritePropertyName("$metadata.schema.compact");
+                    string[] compactSchema = MetadataSchema.GenerateCompactSchema(container, s => namingStrategy.GetPropertyName(s, false));
+                    serializer.Serialize(writer, compactSchema);
+                }
 
-                    if (WriteTypeToName)
+                foreach (IPropertyValue propertyValue in container.Properties)
+                {
+                    string jsonPropertyName = namingStrategy.GetPropertyName(propertyValue.PropertyUntyped.Name, false);
+                    Type propertyType = propertyValue.PropertyUntyped.Type;
+
+                    if (Options.WriteSchemaToPropertyName)
                     {
-                        string typeAlias = DefaultMapperSettings.TypeCache.GetAliasForType(propertyValue.PropertyUntyped.Type) ?? propertyValue.PropertyUntyped.Type.FullName;
+                        string typeAlias = DefaultMapperSettings.TypeCache.GetAliasForType(propertyType) ?? propertyType.FullName;
                         if (typeAlias != "string")
-                            jsonPropertyName += $"{Separator}type={typeAlias}";
+                            jsonPropertyName += $"{Options.Separator}type={typeAlias}";
                     }
 
+                    // PropertyName
                     writer.WritePropertyName(jsonPropertyName);
-                    serializer.Serialize(writer, propertyValue.ValueUntyped, propertyValue.PropertyUntyped.Type);
+
+                    if (Options.WriteArraysInOneRow && propertyType.IsArray)
+                        writer.Formatting = Formatting.None;
+
+                    // PropertyValue
+                    serializer.Serialize(writer, propertyValue.ValueUntyped, propertyType);
+
+                    // Restore formatting
+                    writer.Formatting = serializer.Formatting;
                 }
             }
 

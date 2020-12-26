@@ -25,7 +25,7 @@ namespace MicroElements.Metadata
         /// Initializes a new instance of the <see cref="PropertySet"/> class.
         /// </summary>
         /// <param name="properties">Property list.</param>
-        public PropertySet(params IProperty[] properties)
+        public PropertySet(params IProperty[]? properties)
         {
             if (properties != null && properties.Length > 0)
                 _properties.AddRange(properties);
@@ -35,7 +35,7 @@ namespace MicroElements.Metadata
         /// Initializes a new instance of the <see cref="PropertySet"/> class.
         /// </summary>
         /// <param name="properties">Property enumeration.</param>
-        public PropertySet(IEnumerable<IProperty> properties)
+        public PropertySet(IEnumerable<IProperty>? properties)
         {
             if (properties != null)
                 _properties.AddRange(properties);
@@ -44,6 +44,7 @@ namespace MicroElements.Metadata
 
     /// <summary>
     /// PropertySet implementation with enumerable from constructor.
+    /// Do not caches properties, enumerates in runtime.
     /// </summary>
     public sealed class PropertySetEnumerable : IPropertySet
     {

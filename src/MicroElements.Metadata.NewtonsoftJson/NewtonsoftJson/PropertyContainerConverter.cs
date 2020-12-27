@@ -11,22 +11,41 @@ namespace MicroElements.Metadata.NewtonsoftJson
 {
     /// <summary>
     /// Serializes <see cref="IPropertyContainer"/> as ordinary object.
-    /// - Properties serializes as <c>"PropertyName@type=typeName": "PropertyValue"</c>.
+    /// - Properties serializes as <c>"PropertyName": "PropertyValue"</c>.
     /// - Values serializes according their converters.
     /// <example>
     /// {
-    ///     "StringProperty": "Text",
-    ///     "IntProperty@type=int": 42
+    ///   "$metadata.schema.compact": [
+    ///     "StringProperty@type=string",
+    ///     "IntProperty@type=int",
+    ///     "DoubleProperty@type=double",
+    ///     "DateProperty@type=LocalDate",
+    ///     "StringArray@type=string[]",
+    ///     "IntArray@type=int[]"
+    ///   ],
+    ///   "StringProperty": "Text",
+    ///   "IntProperty": 42,
+    ///   "DoubleProperty": 10.2,
+    ///   "DateProperty": "2020-12-26",
+    ///   "StringArray":["a1","a2"],
+    ///   "IntArray":[1,2]
     /// }
     /// </example>
     /// </summary>
     public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
     {
+        /// <summary>
+        /// Gets metadata json serializer options.
+        /// </summary>
         public MetadataJsonSerializationOptions Options { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyContainerConverter"/> class.
+        /// </summary>
+        /// <param name="options">Metadata json serializer options.</param>
         public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
         {
-            Options = options ?? new MetadataJsonSerializationOptions();
+            Options = options.Copy();
         }
 
         /// <inheritdoc />
@@ -94,7 +113,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 }
 
                 // Obsolete branch. Use $metadata.schema.compact. Case: difficult to work with standard instruments.
-                if (propertyName.Contains(Options.Separator) || propertyName.Contains(Options.AltSeparator))
+                if (propertyName.Contains(Options.Separator) || (Options.AltSeparator != null && propertyName.Contains(Options.AltSeparator)))
                 {
                     MetadataSchema.ParseName(propertyName, Options.Separator)
                         .OrElse(MetadataSchema.ParseName(propertyName, Options.AltSeparator))

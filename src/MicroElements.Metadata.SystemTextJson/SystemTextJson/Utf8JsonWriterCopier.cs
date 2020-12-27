@@ -14,34 +14,49 @@ namespace MicroElements.Metadata.SystemTextJson
 {
     /// <summary>
     /// Helps to copy <see cref="Utf8JsonWriter"/> with other <see cref="JsonWriterOptions"/>.
-    /// This is not possible with public API.
+    /// This is not possible with public API so Reflection is used to copy writer internals.
+    /// See also: https://stackoverflow.com/questions/63376873/in-system-text-json-is-it-possible-to-specify-custom-indentation-rules.
+    /// Usage:
+    /// <code>
+    /// if (Options.WriteArraysInOneRow and propertyType.IsArray and writer.Options.Indented)
+    /// {
+    ///     // Create NotIndented writer
+    ///     Utf8JsonWriter writerCopy = writer.CloneNotIndented();
+    ///
+    ///     // Write array
+    ///     JsonSerializer.Serialize(writerCopy, array, options);
+    ///
+    ///     // Copy internal state back to writer
+    ///     writerCopy.CopyStateTo(writer);
+    /// }
+    /// </code>
     /// </summary>
     public static class Utf8JsonWriterCopier
     {
         private class Utf8JsonWriterReflection
         {
-            public readonly IReadOnlyCollection<string> FieldsToCopyNames = new[] { "_arrayBufferWriter", "_memory", "_inObject", "_tokenType", "_bitStack", "_currentDepth" };
+            private IReadOnlyCollection<string> FieldsToCopyNames { get; } = new[] { "_arrayBufferWriter", "_memory", "_inObject", "_tokenType", "_bitStack", "_currentDepth" };
 
-            public readonly IReadOnlyCollection<string> PropertiesToCopyNames = new[] { "BytesPending", "BytesCommitted" };
+            private IReadOnlyCollection<string> PropertiesToCopyNames { get; } = new[] { "BytesPending", "BytesCommitted" };
 
-            public FieldInfo[] Fields { get; }
+            private FieldInfo[] Fields { get; }
 
-            public PropertyInfo[] Properties { get; }
+            private PropertyInfo[] Properties { get; }
 
-            public FieldInfo OutputField { get; }
+            internal FieldInfo OutputField { get; }
 
-            public FieldInfo StreamField { get; }
+            internal FieldInfo StreamField { get; }
 
-            public FieldInfo[] FieldsToCopy { get; }
+            internal FieldInfo[] FieldsToCopy { get; }
 
-            public PropertyInfo[] PropertiesToCopy { get; }
+            internal PropertyInfo[] PropertiesToCopy { get; }
 
             public Utf8JsonWriterReflection()
             {
                 Fields = typeof(Utf8JsonWriter).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
                 Properties = typeof(Utf8JsonWriter).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                OutputField = Fields.FirstOrDefault(info => info.Name == "_output");
-                StreamField = Fields.FirstOrDefault(info => info.Name == "_stream");
+                OutputField = Fields.FirstOrDefault(info => info.Name == "_output")!;
+                StreamField = Fields.FirstOrDefault(info => info.Name == "_stream")!;
 
                 FieldsToCopy = FieldsToCopyNames
                     .Select(name => Fields.FirstOrDefault(info => info.Name == name))
@@ -69,6 +84,12 @@ namespace MicroElements.Metadata.SystemTextJson
 
         private static readonly Utf8JsonWriterReflection _reflectionCache = new Utf8JsonWriterReflection();
 
+        /// <summary>
+        /// Clones <see cref="Utf8JsonWriter"/> with new <see cref="JsonWriterOptions"/>.
+        /// </summary>
+        /// <param name="writer">Source writer.</param>
+        /// <param name="newOptions">Options to use in new writer.</param>
+        /// <returns>New copy of <see cref="Utf8JsonWriter"/> with new options.</returns>
         public static Utf8JsonWriter Clone(this Utf8JsonWriter writer, JsonWriterOptions newOptions)
         {
             _reflectionCache.AssertStateIsValid();
@@ -97,35 +118,55 @@ namespace MicroElements.Metadata.SystemTextJson
             return writerCopy;
         }
 
+        /// <summary>
+        /// Clones <see cref="Utf8JsonWriter"/> and sets <see cref="JsonWriterOptions.Indented"/> to false.
+        /// </summary>
+        /// <param name="writer">Source writer.</param>
+        /// <returns>New copy of <see cref="Utf8JsonWriter"/>.</returns>
         public static Utf8JsonWriter CloneNotIndented(this Utf8JsonWriter writer)
         {
-            JsonWriterOptions notIndented = writer.Options;
-            notIndented.Indented = false;
+            JsonWriterOptions newOptions = writer.Options;
+            newOptions.Indented = false;
 
-            return Clone(writer, notIndented);
+            return Clone(writer, newOptions);
         }
 
+        /// <summary>
+        /// Clones <see cref="Utf8JsonWriter"/> and sets <see cref="JsonWriterOptions.Indented"/> to true.
+        /// </summary>
+        /// <param name="writer">Source writer.</param>
+        /// <returns>New copy of <see cref="Utf8JsonWriter"/>.</returns>
         public static Utf8JsonWriter CloneIndented(this Utf8JsonWriter writer)
         {
-            JsonWriterOptions notIndented = writer.Options;
-            notIndented.Indented = true;
+            JsonWriterOptions newOptions = writer.Options;
+            newOptions.Indented = true;
 
-            return Clone(writer, notIndented);
+            return Clone(writer, newOptions);
         }
 
-        public static void CopyStateTo(this Utf8JsonWriter writer, Utf8JsonWriter writerCopy)
+        /// <summary>
+        /// Copies internal state of one writer to another.
+        /// </summary>
+        /// <param name="sourceWriter">Source writer.</param>
+        /// <param name="targetWriter">Target writer.</param>
+        public static void CopyStateTo(this Utf8JsonWriter sourceWriter, Utf8JsonWriter targetWriter)
         {
             foreach (var fieldInfo in _reflectionCache.FieldsToCopy)
             {
-                fieldInfo.SetValue(writerCopy, fieldInfo.GetValue(writer));
+                fieldInfo.SetValue(targetWriter, fieldInfo.GetValue(sourceWriter));
             }
 
             foreach (var propertyInfo in _reflectionCache.PropertiesToCopy)
             {
-                propertyInfo.SetValue(writerCopy, propertyInfo.GetValue(writer));
+                propertyInfo.SetValue(targetWriter, propertyInfo.GetValue(sourceWriter));
             }
         }
 
+        /// <summary>
+        /// Clones <see cref="JsonSerializerOptions"/>.
+        /// </summary>
+        /// <param name="options">Source options.</param>
+        /// <returns>New instance of <see cref="JsonSerializerOptions"/>.</returns>
         public static JsonSerializerOptions Clone(this JsonSerializerOptions options)
         {
             JsonSerializerOptions serializerOptions = new JsonSerializerOptions()
@@ -141,7 +182,6 @@ namespace MicroElements.Metadata.SystemTextJson
                 MaxDepth = options.MaxDepth,
                 PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive,
                 ReadCommentHandling = options.ReadCommentHandling,
-                Converters = { },
             };
 
             foreach (JsonConverter jsonConverter in options.Converters)

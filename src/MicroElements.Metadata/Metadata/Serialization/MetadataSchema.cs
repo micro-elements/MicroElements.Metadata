@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
@@ -6,6 +9,9 @@ using MicroElements.Shared;
 
 namespace MicroElements.Metadata.Serialization
 {
+    /// <summary>
+    /// Generation and parsing for metadata schemas.
+    /// </summary>
     public static class MetadataSchema
     {
         public static string[] GenerateCompactSchema(IPropertyContainer propertyContainer, Func<string, string> gatPropertyName, string separator = "@")
@@ -32,7 +38,8 @@ namespace MicroElements.Metadata.Serialization
             foreach (string compactSchemaItem in compactSchemaItems)
             {
                 IProperty? property = ParsePropertyInfo(compactSchemaItem, separator);
-                properties.Add(property);
+                if (property != null)
+                    properties.Add(property);
             }
 
             return new PropertySet(properties);
@@ -42,8 +49,6 @@ namespace MicroElements.Metadata.Serialization
         {
             if (typeNames == null)
                 return new PropertySet();
-
-            typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
 
             List<IProperty> properties = new List<IProperty>(typeNames.Length);
             int i = 0;
@@ -58,7 +63,7 @@ namespace MicroElements.Metadata.Serialization
             return new PropertySet(properties);
         }
 
-        public static IProperty ParsePropertyInfo(string fullPropertyName, string separator)
+        public static IProperty? ParsePropertyInfo(string fullPropertyName, string separator)
         {
             string[] parts = fullPropertyName.Split(separator);
             if (parts.Length > 1)
@@ -68,7 +73,7 @@ namespace MicroElements.Metadata.Serialization
                 {
                     string propertyName = parts[0];
                     string typeAlias = typePart.Substring("type=".Length);
-                    Type propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
+                    Type? propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
                     if (propertyType != null)
                         return Property.Create(propertyType, propertyName);
                 }
@@ -77,19 +82,22 @@ namespace MicroElements.Metadata.Serialization
             return null;
         }
 
-        public static Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string separator)
+        public static Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string? separator)
         {
-            string[] parts = fullPropertyName.Split(separator);
-            if (parts.Length > 1)
+            if (separator != null)
             {
-                string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
-                if (typePart != null)
+                string[] parts = fullPropertyName.Split(separator);
+                if (parts.Length > 1)
                 {
-                    string propertyName = parts[0];
-                    string typeAlias = typePart.Substring("type=".Length);
-                    Type propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
-                    if (propertyType != null)
-                        return (propertyName, propertyType);
+                    string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
+                    if (typePart != null)
+                    {
+                        string propertyName = parts[0];
+                        string typeAlias = typePart.Substring("type=".Length);
+                        Type propertyType = DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeAlias);
+                        if (propertyType != null)
+                            return (propertyName, propertyType);
+                    }
                 }
             }
 
@@ -109,21 +117,5 @@ namespace MicroElements.Metadata.Serialization
 
             return null;
         }
-    }
-
-    public class MetadataJsonSerializationOptions
-    {
-        public bool DoNotFail { get; set; } = true;
-
-        public bool WriteArraysInOneRow { get; set; } = true;
-
-        public bool WriteSchemaCompact { get; set; } = true;
-
-        public string Separator { get; set; } = "@";
-
-
-        public bool WriteSchemaToPropertyName { get; set; } = false;
-
-        public string AltSeparator { get; set; } = ":";
     }
 }

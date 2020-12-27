@@ -1,3 +1,8 @@
+# 7.0.0-rc.9
+- MetadataSchemaCompact
+- Json serializers unified
+- Json formating arrays in one string
+
 # 7.0.0-rc.4
 - OpenXml: Excel Serial Date support for reports
 - OpenXml: Big refactoring

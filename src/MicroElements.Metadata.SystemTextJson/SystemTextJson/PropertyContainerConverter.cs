@@ -15,19 +15,37 @@ namespace MicroElements.Metadata.SystemTextJson
     /// - Values serializes according their converters.
     /// <example>
     /// {
-    ///     "@metadata.types": ["string", "int"],
-    ///     "StringProperty": "Text",
-    ///     "IntProperty" : 42
+    ///   "$metadata.schema.compact": [
+    ///     "StringProperty@type=string",
+    ///     "IntProperty@type=int",
+    ///     "DoubleProperty@type=double",
+    ///     "DateProperty@type=LocalDate",
+    ///     "StringArray@type=string[]",
+    ///     "IntArray@type=int[]"
+    ///   ],
+    ///   "StringProperty": "Text",
+    ///   "IntProperty": 42,
+    ///   "DoubleProperty": 10.2,
+    ///   "DateProperty": "2020-12-26",
+    ///   "StringArray":["a1","a2"],
+    ///   "IntArray":[1,2]
     /// }
     /// </example>
     /// </summary>
     public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
     {
+        /// <summary>
+        /// Gets metadata json serializer options.
+        /// </summary>
         public MetadataJsonSerializationOptions Options { get; }
 
-        internal PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyContainerConverter"/> class.
+        /// </summary>
+        /// <param name="options">Metadata json serializer options.</param>
+        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
         {
-            Options = options ?? new MetadataJsonSerializationOptions();
+            Options = options.Copy();
         }
 
         /// <inheritdoc />
@@ -169,7 +187,7 @@ namespace MicroElements.Metadata.SystemTextJson
                         Utf8JsonWriter writerCopy = writer.CloneNotIndented();
 
                         // PropertyValue
-                        JsonSerializer.Serialize(writerCopy, propertyValue.ValueUntyped, options);
+                        JsonSerializer.Serialize(writerCopy, propertyValue.ValueUntyped, propertyType, options);
 
                         // Needs to copy internal state back to writer
                         writerCopy.CopyStateTo(writer);
@@ -177,7 +195,7 @@ namespace MicroElements.Metadata.SystemTextJson
                     else
                     {
                         // PropertyValue
-                        JsonSerializer.Serialize(writer, propertyValue.ValueUntyped, options);
+                        JsonSerializer.Serialize(writer, propertyValue.ValueUntyped, propertyType, options);
                     }
                 }
             }

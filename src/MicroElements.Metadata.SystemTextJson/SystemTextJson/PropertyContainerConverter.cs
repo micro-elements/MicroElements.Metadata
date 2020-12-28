@@ -91,6 +91,7 @@ namespace MicroElements.Metadata.SystemTextJson
             {
                 string propertyName = reader.GetString();
                 Type? propertyType = null;
+                bool autoDetected = false;
                 IProperty? property = null;
 
                 // Advance reader to property value.
@@ -126,9 +127,25 @@ namespace MicroElements.Metadata.SystemTextJson
                 if (propertyType == null)
                 {
                     propertyType = GetPropertyTypeFromToken(ref reader);
+                    autoDetected = true;
                 }
 
                 object? propertyValue = JsonSerializer.Deserialize(ref reader, propertyType, options);
+                if (autoDetected && propertyValue is decimal numeric)
+                {
+                    bool isInt = numeric % 1 == 0;
+                    if (isInt)
+                    {
+                        propertyType = typeof(int);
+                        propertyValue = (int)numeric;
+                    }
+                    else
+                    {
+                        propertyType = typeof(double);
+                        propertyValue = (double)numeric;
+                    }
+                }
+
                 property ??= Property.Create(propertyType, propertyName);
                 propertyContainer.WithValueUntyped(property, propertyValue);
 

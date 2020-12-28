@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using DocumentFormat.OpenXml.Spreadsheet;
 using FluentAssertions;
 using MicroElements.Functional;
@@ -18,6 +17,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             public static readonly IProperty<string> Name = new Property<string>("Name");
             public static readonly IProperty<int> Age = new Property<int>("Age");
             public static readonly IProperty<LocalDate> Date = new Property<LocalDate>("Date");
+            public static readonly IProperty<LocalDate> SerialDate = new Property<LocalDate>("SerialDate");
         }
 
         public class Sheet1Report : ReportProvider
@@ -27,7 +27,8 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             {
                 Add(Sheet1Meta.Name).SetExcelType(CellValues.SharedString);
                 Add(Sheet1Meta.Age).SetExcelType(CellValues.Number);
-                Add(Sheet1Meta.Date).SetExcelType(CellValues.Date).SetFormat("yyyy-MM-dd");
+                Add(Sheet1Meta.Date).SetDateIsoFormat();
+                Add(Sheet1Meta.SerialDate).SetDateSerialFormat();
             }
         }
 
@@ -59,6 +60,25 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
                 .Create("build_excel.xlsx", documentMetadata)
                 .AddReportSheet(new Sheet1Report("Sheet1"), rows)
                 .AddReportSheet(new Sheet1Report("Sheet2").SetMetadata(transposed), rows)
+                .SaveAndClose();
+        }
+
+        [Fact]
+        public void build_excel_with_nulls()
+        {
+            IPropertyContainer[] rows =
+            {
+                new MutablePropertyContainer(),
+            };
+
+            var documentMetadata = new ExcelDocumentMetadata()
+                    .WithValue(ExcelMetadata.DataType, CellValues.SharedString)
+                    .WithValue(ExcelMetadata.FreezeTopRow, true)
+                    .WithValue(ExcelMetadata.ColumnWidth, 14);
+
+            ExcelReportBuilder
+                .Create("build_excel.xlsx", documentMetadata)
+                .AddReportSheet(new Sheet1Report("Sheet1"), rows)
                 .SaveAndClose();
         }
 

@@ -1,3 +1,7 @@
+# 7.0.0-rc.10
+- Fix Render dates as serial for null value
+- Fix SetFormat render for null value
+
 # 7.0.0-rc.9
 - MetadataSchemaCompact
 - Json serializers unified

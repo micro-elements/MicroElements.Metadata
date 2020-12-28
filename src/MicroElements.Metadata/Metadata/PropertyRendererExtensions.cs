@@ -120,7 +120,8 @@ namespace MicroElements.Metadata
                 string format,
                 IFormatProvider? formatProvider)
             {
-                object? valueUntyped = container.GetPropertyValueUntyped(property, options.SearchOptions)?.ValueUntyped;
+                SearchOptions searchOptions = options.SearchOptions ?? container.SearchOptions.UseDefaultValue(false).ReturnNull();
+                object? valueUntyped = container.GetValueUntyped(property, searchOptions);
 
                 if (valueUntyped == null)
                 {

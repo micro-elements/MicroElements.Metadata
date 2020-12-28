@@ -240,7 +240,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 .SetExcelType(CellValues.Number)
                 .ConfigureRenderer(options => options.CustomRender = (property, container) =>
                 {
-                    object? valueUntyped = container.GetValueUntyped(property);
+                    object? valueUntyped = container.GetValueUntyped(property, container.SearchOptions.UseDefaultValue(false).ReturnNull());
                     return valueUntyped.ToExcelSerialDateAsString();
                 })
                 .ConfigureCell(context => context.ApplyStyleToCell(registeredStyleName));

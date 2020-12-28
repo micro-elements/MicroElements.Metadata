@@ -85,6 +85,14 @@ namespace MicroElements.Metadata.SystemTextJson
         private static readonly Utf8JsonWriterReflection _reflectionCache = new Utf8JsonWriterReflection();
 
         /// <summary>
+        /// Checks that reflection API is valid.
+        /// </summary>
+        public static void AssertReflectionStateIsValid()
+        {
+            _reflectionCache.AssertStateIsValid();
+        }
+
+        /// <summary>
         /// Clones <see cref="Utf8JsonWriter"/> with new <see cref="JsonWriterOptions"/>.
         /// </summary>
         /// <param name="writer">Source writer.</param>
@@ -92,7 +100,7 @@ namespace MicroElements.Metadata.SystemTextJson
         /// <returns>New copy of <see cref="Utf8JsonWriter"/> with new options.</returns>
         public static Utf8JsonWriter Clone(this Utf8JsonWriter writer, JsonWriterOptions newOptions)
         {
-            _reflectionCache.AssertStateIsValid();
+            AssertReflectionStateIsValid();
 
             Utf8JsonWriter writerCopy;
 

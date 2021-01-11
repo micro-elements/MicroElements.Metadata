@@ -1,8 +1,10 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Text.Json;
+using MicroElements.Metadata.Serialization;
 
 namespace MicroElements.Metadata.SystemTextJson
 {
@@ -15,12 +17,26 @@ namespace MicroElements.Metadata.SystemTextJson
         /// Configures <see cref="JsonSerializerOptions"/> to serialize <see cref="IPropertyContainer"/>.
         /// </summary>
         /// <param name="options"><see cref="JsonSerializerOptions"/> instance.</param>
+        /// <param name="configureMetadataJson">Configure Metadata Json serialization.</param>
         /// <returns>The same options.</returns>
-        public static JsonSerializerOptions ConfigureJsonForPropertyContainers(this JsonSerializerOptions options)
+        public static JsonSerializerOptions ConfigureJsonForPropertyContainers(
+            this JsonSerializerOptions options,
+            Action<MetadataJsonSerializationOptions>? configureMetadataJson = null)
         {
             bool added = options.Converters.FirstOrDefault(converter => converter.GetType() == typeof(PropertyContainerConverter)) != null;
             if (!added)
-                options.Converters.Add(new PropertyContainerConverter());
+            {
+                MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null;
+
+                if (configureMetadataJson != null)
+                {
+                    metadataJsonSerializationOptions = new MetadataJsonSerializationOptions();
+                    configureMetadataJson(metadataJsonSerializationOptions);
+                }
+
+                options.Converters.Add(new PropertyContainerConverter(metadataJsonSerializationOptions));
+            }
+
             return options;
         }
 
@@ -29,10 +45,13 @@ namespace MicroElements.Metadata.SystemTextJson
         /// Configures <see cref="JsonSerializerOptions"/> to serialize <see cref="IPropertyContainer"/>.
         /// </summary>
         /// <param name="options"><see cref="JsonSerializerOptions"/> instance.</param>
+        /// <param name="configureMetadataJson">Configure Metadata Json serialization.</param>
         /// <returns>The same options.</returns>
-        public static JsonSerializerOptions ConfigureForMetadata(this JsonSerializerOptions options)
+        public static JsonSerializerOptions ConfigureForMetadata(
+            this JsonSerializerOptions options,
+            Action<MetadataJsonSerializationOptions>? configureMetadataJson = null)
         {
-            return options.ConfigureJsonForPropertyContainers();
+            return options.ConfigureJsonForPropertyContainers(configureMetadataJson);
         }
     }
 }

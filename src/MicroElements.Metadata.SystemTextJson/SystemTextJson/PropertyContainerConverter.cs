@@ -55,18 +55,18 @@ namespace MicroElements.Metadata.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override IPropertyContainer Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IPropertyContainer Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions options)
         {
             IPropertySet? schema = null;
             bool isPositional = false;
             int propertyIndex = 0;
             var propertyContainer = new MutablePropertyContainer();
 
-            while (reader.Read())
+            while (utf8JsonReader.Read())
             {
-                if (reader.TokenType == JsonTokenType.PropertyName)
+                if (utf8JsonReader.TokenType == JsonTokenType.PropertyName)
                 {
-                    TryReadProperty(ref reader);
+                    TryReadProperty(ref utf8JsonReader);
                 }
                 else
                 {
@@ -158,22 +158,6 @@ namespace MicroElements.Metadata.SystemTextJson
             return new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 
-        private Type GetPropertyTypeFromToken(ref Utf8JsonReader reader)
-        {
-            switch (reader.TokenType)
-            {
-                case JsonTokenType.String:
-                    return typeof(string);
-                case JsonTokenType.Number:
-                    return typeof(decimal);
-                case JsonTokenType.True:
-                case JsonTokenType.False:
-                    return typeof(bool);
-                default:
-                    return typeof(object);
-            }
-        }
-
         /// <inheritdoc />
         public override void Write(Utf8JsonWriter writer, IPropertyContainer container, JsonSerializerOptions options)
         {
@@ -218,6 +202,22 @@ namespace MicroElements.Metadata.SystemTextJson
             }
 
             writer.WriteEndObject();
+        }
+
+        private Type GetPropertyTypeFromToken(ref Utf8JsonReader reader)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.String:
+                    return typeof(string);
+                case JsonTokenType.Number:
+                    return typeof(decimal);
+                case JsonTokenType.True:
+                case JsonTokenType.False:
+                    return typeof(bool);
+                default:
+                    return typeof(object);
+            }
         }
     }
 }

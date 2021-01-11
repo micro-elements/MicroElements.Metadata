@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.Swashbuckle;
 using MicroElements.Metadata.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,24 +20,30 @@ namespace MicroElements.Metadata.AspNetCore
     {
         /// <summary>
         /// <para>1. Configures <see cref="JsonSerializerOptions"/> to serialize <see cref="IPropertyContainer"/>.</para>
-        /// <para>2. Configures AspNetCore <see cref="JsonOptions.JsonSerializerOptions"/> to serialize <see cref="IPropertyContainer"/>.</para>
+        /// <para>2. Configures AspNetCore <see cref="JsonSerializerOptions"/> to serialize <see cref="IPropertyContainer"/>.</para>
         /// <para>3. Configures swagger to properly generate schema for <see cref="IPropertyContainer"/>.
         ///    - By default uses Microsoft.AspNetCore.Mvc.JsonOptions registered in AspNetCore but allows to configure manually.
         ///    - Uses <see cref="PropertySetAttribute"/> to determine <see cref="IPropertySet"/> for schema.
         ///    - Uses <see cref="IKnownPropertySet{TPropertySet}"/> to determine <see cref="IPropertySet"/> for schema.</para>
         /// </summary>
         /// <param name="services">Source services.</param>
+        /// <param name="configureMetadataJson">Configure Metadata Json serialization.</param>
         /// <param name="configureSwaggerOptions">Allows to configure <see cref="PropertyContainerSchemaFilterOptions"/>.</param>
         /// <returns>The same <paramref name="services"/> instance.</returns>
         public static IServiceCollection AddMetadata(
             this IServiceCollection services,
+            Action<MetadataJsonSerializationOptions>? configureMetadataJson = null,
             Action<PropertyContainerSchemaFilterOptions>? configureSwaggerOptions = null)
         {
+            // Configure Metadata Json serialization
+            configureMetadataJson ??= options => { };
+            services.Configure<MetadataJsonSerializationOptions>(configureMetadataJson);
+
             // Allows to serialize property containers
-            services.Configure<JsonSerializerOptions>(options => options.ConfigureJsonForPropertyContainers());
+            services.Configure<JsonSerializerOptions>(options => options.ConfigureJsonForPropertyContainers(configureMetadataJson));
 
             // Configures serialization for AspNetCore
-            services.ConfigureJsonOptionsForAspNetCore(options => options.ConfigureJsonForPropertyContainers());
+            services.ConfigureJsonOptionsForAspNetCore(options => options.ConfigureJsonForPropertyContainers(configureMetadataJson));
 
             // Allows to use property containers in swagger
             services.ConfigureSwaggerForPropertyContainers(configureSwaggerOptions);

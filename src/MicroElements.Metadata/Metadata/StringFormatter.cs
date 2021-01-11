@@ -23,10 +23,12 @@ namespace MicroElements.Metadata
             if (value is string stringValue)
                 return stringValue;
 
-            if (value.GetType().FullName == "NodaTime.LocalDate" && value is IFormattable localDate)
+            Type type = value.GetType();
+
+            if (type.FullName == "NodaTime.LocalDate" && value is IFormattable localDate)
                 return localDate.ToString("yyyy-MM-dd", null);
 
-            if ((value.GetType().FullName == "NodaTime.LocalDateTime" || value is DateTime) && value is IFormattable localDateTime)
+            if ((type.FullName == "NodaTime.LocalDateTime" || value is DateTime) && value is IFormattable localDateTime)
                 return localDateTime.ToString("yyyy-MM-ddTHH:mm:ss.FFF", null);
 
             return Functional.StringFormatter.DefaultFormatValue(value);

@@ -17,6 +17,8 @@ namespace MicroElements.Metadata.Schema
 
     public interface ISchema : IPropertySet
     {
+        //string Id { get; }// add Description etc
+
         IProperty AddProperty(IProperty property);
 
         IProperty? GetProperty(string name);

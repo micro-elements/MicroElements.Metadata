@@ -6,6 +6,7 @@ using System.Xml;
 using System.Xml.Linq;
 using FluentAssertions;
 using MicroElements.Metadata.Schema;
+using MicroElements.Metadata.Xml;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -39,7 +40,8 @@ namespace MicroElements.Metadata.Tests
             public static readonly IProperty<string> FirstName = new Property<string>("FirstName");
             public static readonly IProperty<string> LastName = new Property<string>("LastName");
             public static readonly IProperty<IPropertyContainer> Address = new Property<IPropertyContainer>("Address")
-                .SetSchema(new AddressSchema().ToSchema());
+                .SetSchema(new AddressSchema())
+                .WithDescription("Address");
         }
 
         public class AddressSchema : StaticPropertySet

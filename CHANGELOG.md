@@ -1,9 +1,13 @@
+# 7.0.0-rc.12
+- XmlParser usability improved
+
 # 7.0.0-rc.11
 - Performance optimizations in some hot pathes (property creation, searching)
 - Added IStaticPropertySet and StaticPropertySet that has auto implemented GetProperties
 - Added ISchema that extends IPropertySet (subject for future changes)
 - Added IHasSchema metadata that can be attached to properties and property containers
 - Added IMetadata interface
+- Added XmlParser that parses xml to IPropertyContainer (new package MicroElements.Metadata.Xml)
 
 # 7.0.0-rc.10
 - Fix Render dates as serial for null value

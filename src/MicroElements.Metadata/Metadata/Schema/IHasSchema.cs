@@ -59,6 +59,17 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
+        /// Sets schema for <paramref name="propertyContainer"/>.
+        /// </summary>
+        /// <param name="propertyContainer">Target property container.</param>
+        /// <param name="schema">Schema.</param>
+        /// <returns>The same instance.</returns>
+        public static IPropertyContainer SetSchema(this IPropertyContainer propertyContainer, IPropertySet schema)
+        {
+            return propertyContainer.SetSchema(schema.ToSchema());
+        }
+
+        /// <summary>
         /// Sets schema for <paramref name="property"/>.
         /// </summary>
         /// <typeparam name="TProperty">Property type.</typeparam>
@@ -75,16 +86,42 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
+        /// Sets schema for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="TProperty">Property type.</typeparam>
+        /// <param name="property">Target property.</param>
+        /// <param name="schema">Schema.</param>
+        /// <returns>The same instance.</returns>
+        public static TProperty SetSchema<TProperty>(this TProperty property, IPropertySet schema)
+            where TProperty : IProperty
+        {
+            return property.SetSchema(schema.ToSchema());
+        }
+
+        /// <summary>
         /// Gets optional <see cref="IHasSchema"/> metadata.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
         /// <returns>Optional <see cref="IHasSchema"/>.</returns>
         [Pure]
-        public static IHasSchema? GetSchema(this IPropertyContainer propertyContainer)
+        public static IHasSchema? GetHasSchema(this IPropertyContainer propertyContainer)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
             return propertyContainer.GetMetadata<IHasSchema>();
+        }
+
+        /// <summary>
+        /// Gets optional <see cref="ISchema"/> from <see cref="IHasSchema"/> metadata.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>Optional <see cref="ISchema"/>.</returns>
+        [Pure]
+        public static ISchema? GetSchema(this IPropertyContainer propertyContainer)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            return propertyContainer.GetHasSchema()?.Schema;
         }
 
         /// <summary>
@@ -93,13 +130,32 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="IHasSchema"/>.</returns>
         [Pure]
-        public static IHasSchema? GetSchema(this IProperty property)
+        public static IHasSchema? GetHasSchema(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
             return property.GetMetadata<IHasSchema>();
         }
 
+        /// <summary>
+        /// Gets optional <see cref="ISchema"/> from <see cref="IHasSchema"/> metadata.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <returns>Optional <see cref="ISchema"/>.</returns>
+        [Pure]
+        public static ISchema? GetSchema(this IProperty property)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return property.GetHasSchema()?.Schema;
+        }
+
+        /// <summary>
+        /// Gets or adds schema to property.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <param name="factory">Schema factory.</param>
+        /// <returns>Schema attached to property.</returns>
         public static ISchema GetOrAddSchema(this IProperty property, Func<ISchema>? factory = null)
         {
             property.AssertArgumentNotNull(nameof(property));

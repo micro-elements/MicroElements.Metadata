@@ -1,40 +1,103 @@
-﻿using System;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Xml;
 using System.Xml.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Xml
 {
-    public class XmlParser
+    /// <summary>
+    /// Parses xml to <see cref="IPropertyContainer"/>.
+    /// </summary>
+    public static class XmlParser
     {
         public class XmlParseInfo
         {
             public bool IsFromSchema { get; set; } = true;
         }
 
-        public static IPropertyContainer ParseXmlDocument(XDocument document, ISchema schema)
+        public class Settings
         {
+            public Func<XElement, string>? GetElementName { get; set; }
+        }
+
+        /// <summary>
+        /// Gets full element name from root parent to current element.
+        /// Example: "A.B.C".
+        /// </summary>
+        /// <param name="element">Source element.</param>
+        /// <param name="delimeter">Optional delimeter.</param>
+        /// <returns>Full element name.</returns>
+        public static string GetFullName(this XElement element, string delimeter = ".")
+        {
+            string name = element.Name.LocalName;
+
+            XElement? parent = element.Parent;
+            while (parent != null)
+            {
+                name = parent.Name.LocalName + delimeter + name;
+                parent = parent.Parent;
+            }
+
+            return name;
+        }
+
+        /// <summary>
+        /// Parses xml document to <see cref="IPropertyContainer"/>.
+        /// </summary>
+        /// <param name="document">Xml document.</param>
+        /// <param name="schema">Optional schema.</param>
+        /// <param name="settings">Optional parse settings.</param>
+        /// <returns><see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer ParseToContainer(
+            this XDocument document,
+            ISchema? schema = null,
+            Settings? settings = null)
+        {
+            return ParseXmlDocument(document, schema, settings);
+        }
+
+        /// <summary>
+        /// Parses xml document to <see cref="IPropertyContainer"/>.
+        /// </summary>
+        /// <param name="document">Xml document.</param>
+        /// <param name="schema">Optional schema.</param>
+        /// <param name="settings">Optional parse settings.</param>
+        /// <returns><see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer ParseXmlDocument(
+            XDocument document,
+            ISchema? schema = null,
+            Settings? settings = null)
+        {
+            document.AssertArgumentNotNull(nameof(document));
+
             var container = new MutablePropertyContainer();
 
             XElement? rootElement = document.Root;
             if (rootElement != null && rootElement.HasElements)
             {
+                schema ??= new Schema.Schema();
+                settings ??= new Settings();
+
                 foreach (XElement propertyElement in rootElement.Elements())
                 {
-                    IProperty? property = schema.GetProperty(propertyElement.Name.LocalName);
+                    string propertyName = settings.GetElementName?.Invoke(propertyElement) ?? propertyElement.Name.LocalName;
+                    IProperty? property = schema.GetProperty(propertyName);
 
                     if (propertyElement.HasElements)
                     {
                         ISchema propertySchema = property?.GetOrAddSchema() ?? new Schema.Schema();
 
-                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertySchema);
+                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertySchema, settings);
                         if (internalObject != null && internalObject.Count > 0)
                         {
                             internalObject.SetSchema(propertySchema);
                             if (property == null)
                             {
-                                property = schema.AddProperty(new Property<IPropertyContainer>(propertyElement.Name.LocalName)
+                                property = schema.AddProperty(new Property<IPropertyContainer>(propertyName)
                                     .ConfigureMetadata<IProperty, XmlParseInfo>(info => info.IsFromSchema = false))
                                     .SetSchema(propertySchema);
                             }
@@ -45,7 +108,7 @@ namespace MicroElements.Metadata
                     {
                         if (property == null)
                         {
-                            property = schema.AddProperty(new Property<string>(propertyElement.Name.LocalName)
+                            property = schema.AddProperty(new Property<string>(propertyName)
                                 .ConfigureMetadata<IProperty, XmlParseInfo>(info => info.IsFromSchema = false));
                         }
 
@@ -58,7 +121,7 @@ namespace MicroElements.Metadata
             return container;
         }
 
-        public static IPropertyContainer? ParseXmlElement(XElement objectElement, ISchema objectSchema)
+        public static IPropertyContainer? ParseXmlElement(XElement objectElement, ISchema objectSchema, Settings settings)
         {
             if (objectElement.HasElements)
             {
@@ -66,15 +129,16 @@ namespace MicroElements.Metadata
 
                 foreach (XElement propertyElement in objectElement.Elements())
                 {
-                    IProperty? property = objectSchema.GetProperty(propertyElement.Name.LocalName);
+                    string propertyName = settings.GetElementName?.Invoke(propertyElement) ?? propertyElement.Name.LocalName;
+                    IProperty? property = objectSchema.GetProperty(propertyName);
 
                     if (property != null)
                     {
                         // Property has schema in metadata.
-                        if (property.Type.IsAssignableTo<IPropertyContainer>() && property.GetSchema() is { } hasSchema)
+                        if (property.Type.IsAssignableTo<IPropertyContainer>() && property.GetHasSchema() is { } hasSchema)
                         {
                             ISchema propertySchema = hasSchema.Schema.ToSchema();
-                            var compositeValue = ParseXmlElement(propertyElement, propertySchema);
+                            var compositeValue = ParseXmlElement(propertyElement, propertySchema, settings);
                             container.Add(PropertyValue.Create(property, compositeValue));
 
                             continue;
@@ -84,13 +148,13 @@ namespace MicroElements.Metadata
                     if (propertyElement.HasElements)
                     {
                         ISchema propertyInternalSchema = property?.GetOrAddSchema() ?? new Schema.Schema();
-                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema);
+                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings);
                         if (internalObject != null && internalObject.Count > 0)
                         {
                             internalObject.SetSchema(propertyInternalSchema);
                             if (property == null)
                             {
-                                property = objectSchema.AddProperty(new Property<IPropertyContainer>(propertyElement.Name.LocalName)
+                                property = objectSchema.AddProperty(new Property<IPropertyContainer>(propertyName)
                                     .ConfigureMetadata<IProperty, XmlParseInfo>(info => info.IsFromSchema = false))
                                     .SetSchema(propertyInternalSchema);
                             }
@@ -101,7 +165,7 @@ namespace MicroElements.Metadata
                     {
                         if (property == null)
                         {
-                            property = objectSchema.AddProperty(new Property<string>(propertyElement.Name.LocalName)
+                            property = objectSchema.AddProperty(new Property<string>(propertyName)
                                 .ConfigureMetadata<IProperty, XmlParseInfo>(info => info.IsFromSchema = false));
                         }
                         container.Add(PropertyValue.Create(property, propertyElement.Value));
@@ -114,6 +178,9 @@ namespace MicroElements.Metadata
             return null;
         }
 
+        /// <summary>
+        /// Alternative version with XmlReader.
+        /// </summary>
         public static object? ReadXmlElement(XmlReader xmlReader, ISchema schema)
         {
             int rootDepth = xmlReader.Depth;
@@ -138,7 +205,7 @@ namespace MicroElements.Metadata
                     if (property != null)
                     {
                         // Property has schema in metadata.
-                        if (property.Type.IsAssignableTo<IPropertyContainer>() && property.GetSchema() is { } hasSchema)
+                        if (property.Type.IsAssignableTo<IPropertyContainer>() && property.GetHasSchema() is { } hasSchema)
                         {
                             ISchema propertySchema = hasSchema.Schema.ToSchema();
                             var compositeValue = ReadXmlElement(xmlReader, propertySchema);

@@ -92,7 +92,8 @@ namespace MicroElements.Metadata
 
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
-                mutablePropertyContainer.SetValue(new Property<TMetadata>(metadataName), data);
+                IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
+                mutablePropertyContainer.SetValue(metadataProperty, data);
             }
 
             return metadataProvider;

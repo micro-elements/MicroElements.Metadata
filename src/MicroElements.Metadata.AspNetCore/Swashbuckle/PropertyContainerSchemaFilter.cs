@@ -42,19 +42,15 @@ namespace MicroElements.Metadata.Swashbuckle
                 schema.Items = null;
                 schema.Properties = new Dictionary<string, OpenApiSchema>();
 
-                PropertySetAttribute? propertySetAttribute = context.MemberInfo?.GetCustomAttribute<PropertySetAttribute>();
-                IPropertySet? propertySet = propertySetAttribute?.GetPropertySet();
+                IPropertySet? propertySet = null;
+
+                // Get by provided attribute [PropertySet].
+                propertySet = context.MemberInfo?.GetCustomAttribute<PropertySetAttribute>()?.GetPropertySet();
 
                 if (propertySet == null)
                 {
-                    Type? hasPropertySetType = context.Type
-                        .GetInterfaces()
-                        .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IKnownPropertySet<>));
-                    Type? propertySetType = hasPropertySetType
-                        ?.GenericTypeArguments
-                        .First();
-                    if (propertySetType != null)
-                        propertySet = PropertySetEvaluator.GetPropertySet(type: propertySetType);
+                    // Get by IKnownPropertySet
+                    propertySet = context.Type.GetSchemaByKnownPropertySet();
                 }
 
                 if (propertySet != null)

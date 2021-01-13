@@ -58,7 +58,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents value source.
     /// </summary>
-    public sealed class ValueSource : ValueObject
+    public sealed class ValueSource
     {
         /// <summary>
         /// Value is not set.
@@ -94,11 +94,17 @@ namespace MicroElements.Metadata
             SourceName = sourceName.AssertArgumentNotNull(nameof(sourceName));
         }
 
+        private bool Equals(ValueSource other) => SourceName == other.SourceName;
+
         /// <inheritdoc />
-        public override IEnumerable<object> GetEqualityComponents()
-        {
-            yield return SourceName;
-        }
+        public override bool Equals(object? obj) => ReferenceEquals(this, obj) || (obj is ValueSource other && Equals(other));
+
+        /// <inheritdoc />
+        public override int GetHashCode() => SourceName.GetHashCode();
+
+        public static bool operator ==(ValueSource? left, ValueSource? right) => Equals(left, right);
+
+        public static bool operator !=(ValueSource? left, ValueSource? right) => !Equals(left, right);
     }
 
     /// <summary>
@@ -125,8 +131,16 @@ namespace MicroElements.Metadata
             if (value == null && propertyType.CanNotAcceptNull())
                 throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
 
-            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
             ValueSource source = valueSource ?? ValueSource.Defined;
+
+            // Most popular cases:
+            if (propertyType == typeof(string))
+                return new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
+            if (propertyType == typeof(IPropertyContainer))
+                return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
+
+            // Reflection construction. TODO: cache by type
+            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
             IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
             return propertyValue;
         }

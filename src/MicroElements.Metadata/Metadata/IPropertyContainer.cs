@@ -67,4 +67,13 @@ namespace MicroElements.Metadata
         /// </summary>
         void Clear();
     }
+
+    public interface IPropertyContainer<TSchema> : IPropertyContainer, IKnownPropertySet<TSchema>, IPropertySet
+        where TSchema : IPropertySet, new()
+    {
+        TSchema Schema { get; }
+
+        /// <inheritdoc />
+        IEnumerable<IProperty> IPropertySet.GetProperties() => Schema.GetProperties();
+    }
 }

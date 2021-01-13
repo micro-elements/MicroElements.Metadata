@@ -48,6 +48,11 @@ namespace MicroElements.Metadata
             return search.ReturnNotDefined ? PropertyValue.Create(property, property.Type.GetDefaultValue(), ValueSource.NotDefined) : null;
         }
 
+        private static readonly SearchOptions _fastSearchOptions = default(SearchOptions)
+            .WithPropertyComparer(PropertyComparer.ByReferenceComparer)
+            .UseDefaultValue(false)
+            .ReturnNull();
+
         /// <inheritdoc />
         public IPropertyValue<T>? GetPropertyValue<T>(
             IPropertyContainer propertyContainer,
@@ -60,10 +65,7 @@ namespace MicroElements.Metadata
             SearchOptions search = searchOptions ?? propertyContainer.SearchOptions;
 
             // Base search by ByReferenceComparer.
-            IPropertyValue? propertyValue = SearchPropertyValueUntyped(propertyContainer, property, search
-                .WithPropertyComparer(PropertyComparer.ByReferenceComparer)
-                .UseDefaultValue(false)
-                .ReturnNull());
+            IPropertyValue? propertyValue = SearchPropertyValueUntyped(propertyContainer, property, _fastSearchOptions);
 
             // Good job - return result!
             if (propertyValue != null)

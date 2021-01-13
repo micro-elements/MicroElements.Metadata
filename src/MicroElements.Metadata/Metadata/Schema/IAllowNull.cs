@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
@@ -15,7 +14,8 @@ namespace MicroElements.Metadata.Schema
     /// Describes whether the property can accept null value.
     /// It's an equivalent of JsonSchema nullable.
     /// </summary>
-    public interface IAllowNull
+    [MetadataUsage(ValidOn = MetadataTargets.Property)]
+    public interface IAllowNull : IMetadata
     {
         /// <summary>
         /// Gets a value indicating whether the property can accept null value.
@@ -63,7 +63,6 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowNull">Value indicating that property can contain null value.</param>
         /// <returns>The same property.</returns>
-        [Pure]
         public static IProperty<T> SetAllowNull<T>(this IProperty<T> property, bool allowNull = true)
         {
             property.AssertArgumentNotNull(nameof(property));
@@ -78,7 +77,6 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
-        [Pure]
         public static IProperty<T> SetNullable<T>(this IProperty<T> property)
         {
             property.AssertArgumentNotNull(nameof(property));
@@ -91,7 +89,6 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
-        [Pure]
         public static IProperty<T> SetNotNull<T>(this IProperty<T> property)
         {
             property.AssertArgumentNotNull(nameof(property));

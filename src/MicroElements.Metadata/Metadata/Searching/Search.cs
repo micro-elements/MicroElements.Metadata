@@ -50,7 +50,7 @@ namespace MicroElements.Metadata
         /// Cached properties for internal search use.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
-        private static class CachedProperty<T>
+        internal static class CachedProperty<T>
         {
             private static readonly ConcurrentDictionary<string, IProperty<T>> _propertyCache = new ConcurrentDictionary<string, IProperty<T>>();
 

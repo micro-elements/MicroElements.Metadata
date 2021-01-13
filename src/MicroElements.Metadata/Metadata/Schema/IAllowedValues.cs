@@ -17,7 +17,8 @@ namespace MicroElements.Metadata.Schema
     /// Describes allowed values that can be accepted by property.
     /// It's an equivalent of JsonSchema enum.
     /// </summary>
-    public interface IAllowedValues
+    [MetadataUsage(ValidOn = MetadataTargets.Property)]
+    public interface IAllowedValues : IMetadata
     {
         /// <summary>
         /// Gets all possible values that can be accepted by property.
@@ -75,7 +76,6 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        [Pure]
         public static IProperty<T> WithAllowedValues<T>(this IProperty<T> property, params T[] allowedValues)
         {
             property.AssertArgumentNotNull(nameof(property));
@@ -91,7 +91,6 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        [Pure]
         public static IProperty<T> WithAllowedValues<T>(this IProperty<T> property, IAllowedValues<T> allowedValues)
         {
             property.AssertArgumentNotNull(nameof(property));

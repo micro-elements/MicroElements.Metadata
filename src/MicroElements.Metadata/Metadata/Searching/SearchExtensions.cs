@@ -73,9 +73,6 @@ namespace MicroElements.Metadata
 
             static IPropertyValue? GetPropertyValueUntypedFull(IPropertyContainer propertyContainer, IProperty property, SearchOptions? search)
             {
-                propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-                property.AssertArgumentNotNull(nameof(property));
-
                 static IPropertyValue? GetPropertyValueAdapter<T>(IPropertyContainer pc, IProperty p, SearchOptions? s) => pc.GetPropertyValue((IProperty<T>)p, s);
                 var getPropertyValue = CodeCompiler.CachedCompiledFunc<IPropertyContainer, IProperty, SearchOptions?, IPropertyValue?>(property.Type, "GetPropertyValue", GetPropertyValueAdapter<CodeCompiler.GenericType>);
                 return getPropertyValue(propertyContainer, property, search);

@@ -19,7 +19,7 @@ namespace MicroElements.Validation
         /// <returns><see cref="ValidationMessageOptions"/>.</returns>
         public static ValidationMessageOptions GetValidationMessageOptions(this IValidationRule validationRule)
         {
-            return validationRule.GetMetadata<ValidationMessageOptions>(defaultValue: ValidationMessageOptions.Default);
+            return validationRule.GetMetadata<ValidationMessageOptions>(defaultValue: ValidationMessageOptions.Default)!;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace MicroElements.Validation
         /// <param name="validationRule">Validation rule to customize.</param>
         /// <param name="messageFormat">Default message format.</param>
         /// <returns>The same validation rule.</returns>
-        public static TValidationRule SetDefaultMessageFormat<TValidationRule>(this TValidationRule validationRule, string messageFormat)
+        public static TValidationRule SetDefaultMessageFormat<TValidationRule>(this TValidationRule validationRule, string? messageFormat)
             where TValidationRule : IValidationRule
         {
             validationRule.ConfigureValidationMessageOptions(options => options.SetDefaultMessageFormat(messageFormat));
@@ -75,7 +75,7 @@ namespace MicroElements.Validation
         /// <param name="propertyContainer">Property container that holds value.</param>
         /// <param name="messageFormat">Optional message format.</param>
         /// <returns>Configured message.</returns>
-        public static Message GetConfiguredMessage(this IValidationRule validationRule, IPropertyValue propertyValue, IPropertyContainer propertyContainer, string messageFormat = null)
+        public static Message GetConfiguredMessage(this IValidationRule validationRule, IPropertyValue propertyValue, IPropertyContainer propertyContainer, string? messageFormat = null)
         {
             return validationRule.GetValidationMessageOptions().GetConfiguredMessage(propertyValue, propertyContainer, messageFormat);
         }

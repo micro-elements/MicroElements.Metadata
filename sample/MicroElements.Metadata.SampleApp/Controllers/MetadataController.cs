@@ -88,7 +88,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
 
         public static IProperty<string> Sex = new Property<string>("Sex")
             .WithDescription("Person sex")
-            .WithAllowedValues("Male", "Female");
+            .SetAllowedValues("Male", "Female");
 
         public static IProperty<int> Age = new Property<int>("Age")
             .WithDescription("Person age in years.");

@@ -19,6 +19,9 @@ namespace MicroElements.Metadata
         public string SourceName { get; }
 
         /// <inheritdoc />
+        public IProperty TargetPropertyUntyped => TargetProperty;
+
+        /// <inheritdoc />
         public IValueParser<T> ValueParser { get; }
 
         /// <inheritdoc />

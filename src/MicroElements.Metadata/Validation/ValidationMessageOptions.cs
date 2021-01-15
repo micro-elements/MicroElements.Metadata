@@ -38,9 +38,9 @@ namespace MicroElements.Validation
         /// Sets default message format.
         /// </summary>
         /// <param name="defaultMessageFormat">Default message format.</param>
-        public void SetDefaultMessageFormat(string defaultMessageFormat)
+        public void SetDefaultMessageFormat(string? defaultMessageFormat = null)
         {
-            MessageFormat = defaultMessageFormat;
+            MessageFormat = defaultMessageFormat ?? DefaultMessageFormat;
         }
 
         /// <summary>

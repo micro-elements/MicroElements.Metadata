@@ -76,7 +76,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> WithAllowedValues<T>(this IProperty<T> property, params T[] allowedValues)
+        public static IProperty<T> SetAllowedValues<T>(this IProperty<T> property, params T[] allowedValues)
         {
             property.AssertArgumentNotNull(nameof(property));
             allowedValues.AssertArgumentNotNull(nameof(allowedValues));
@@ -91,7 +91,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> WithAllowedValues<T>(this IProperty<T> property, IAllowedValues<T> allowedValues)
+        public static IProperty<T> SetAllowedValues<T>(this IProperty<T> property, IAllowedValues<T> allowedValues)
         {
             property.AssertArgumentNotNull(nameof(property));
             allowedValues.AssertArgumentNotNull(nameof(allowedValues));
@@ -166,7 +166,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Checks that property value is in allowed values list.
         /// If <paramref name="allowedValues"/> is not set, then <see cref="SchemaExtensions.GetAllowedValues{T}"/> will be used.
-        /// Set allowed values for property with <see cref="SchemaExtensions.WithAllowedValues{T}(IProperty{T},T[])"/>.
+        /// Set allowed values for property with <see cref="SchemaExtensions.SetAllowedValues{T}"/>.
         /// </summary>
         /// <typeparam name="T">Value type.</typeparam>
         /// <param name="property">Property to check.</param>
@@ -180,7 +180,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Checks that property value is in allowed values list.
         /// If <paramref name="allowedValues"/> is not set, then <see cref="SchemaExtensions.GetAllowedValues{T}"/> will be used.
-        /// Set allowed values for property with <see cref="SchemaExtensions.WithAllowedValues{T}(IProperty{T},T[])"/>.
+        /// Set allowed values for property with <see cref="SchemaExtensions.SetAllowedValues{T}"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>

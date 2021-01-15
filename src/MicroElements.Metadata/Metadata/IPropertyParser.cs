@@ -19,6 +19,11 @@ namespace MicroElements.Metadata
         /// Gets target property type.
         /// </summary>
         Type TargetType { get; }
+
+        /// <summary>
+        /// Gets target property.
+        /// </summary>
+        IProperty TargetPropertyUntyped { get; }
     }
 
     /// <summary>

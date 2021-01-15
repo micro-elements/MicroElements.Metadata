@@ -12,6 +12,11 @@ namespace MicroElements.Metadata
     public interface IValueParser
     {
         /// <summary>
+        /// Gets the target type.
+        /// </summary>
+        Type Type { get; }
+
+        /// <summary>
         /// Parses string value to target type.
         /// </summary>
         /// <param name="source">Source value.</param>
@@ -39,6 +44,9 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Value type.</typeparam>
     public abstract class ValueParserBase<T> : IValueParser<T>
     {
+        /// <inheritdoc />
+        public Type Type => typeof(T);
+
         /// <inheritdoc />
         public abstract Option<T> Parse(string source);
 

@@ -34,7 +34,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="property">Property to check.</param>
         /// <param name="defaultMessageFormat">Default message format for validation message.</param>
-        protected BasePropertyRule(IProperty<T> property, string defaultMessageFormat)
+        protected BasePropertyRule(IProperty<T> property, string? defaultMessageFormat = null)
         {
             Property = property.AssertArgumentNotNull(nameof(property));
             this.SetDefaultMessageFormat(defaultMessageFormat);

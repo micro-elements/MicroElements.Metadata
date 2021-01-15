@@ -1,3 +1,11 @@
+# 7.0.0-rc.13
+- Added XmlParser using ISchema
+- Added Parsers for types and properties
+- Added XmlParserSettings.ParserRules and PropertyComparer
+- Added ability to attach validation rules to IProperty
+- IStringMinLength and IStringMaxLength metadata and validations
+- Validation default message format optionality
+
 # 7.0.0-rc.12
 - XmlParser usability improved
 

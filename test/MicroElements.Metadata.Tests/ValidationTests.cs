@@ -16,7 +16,7 @@ namespace MicroElements.Metadata.Tests
         public static IProperty<int?> NullableInt = new Property<int?>("NullableInt");
 
         public static IProperty<string> Sex = new Property<string>("Sex")
-            .WithAllowedValues("Male", "Female");
+            .SetAllowedValues("Male", "Female");
 
         [Fact]
         public void validate()
@@ -109,6 +109,39 @@ namespace MicroElements.Metadata.Tests
             messages.Should().HaveCount(1);
 
             messages[0].FormattedMessage.Should().Be("Age should not have default value 0.");
+        }
+
+
+        [Fact]
+        public void validate_string_length()
+        {
+            IProperty<string> Name = new Property<string>("Name");
+
+            IEnumerable<IValidationRule> Rules()
+            {
+                yield return new MinLengthValidationRule(Name, new StringMinLength(3));
+                yield return new MaxLengthValidationRule(Name, new StringMaxLength(4));
+            }
+
+            var container = new MutablePropertyContainer()
+                .WithValue(Name, "12345678");
+
+            var messages = container.Validate(Rules().Cached()).ToList();
+            messages.Should().HaveCount(1);
+            messages[0].FormattedMessage.Should().Be("value '12345678' is too long (length: 8, maxLength: 4)");
+
+            container = new MutablePropertyContainer()
+                .WithValue(Name, "12");
+
+            messages = container.Validate(Rules().Cached()).ToList();
+            messages.Should().HaveCount(1);
+            messages[0].FormattedMessage.Should().Be("value '12' is too short (length: 2, minLength: 3)");
+
+            container = new MutablePropertyContainer()
+                .WithValue(Name, "1234");
+
+            messages = container.Validate(Rules().Cached()).ToList();
+            messages.Should().HaveCount(0);
         }
     }
 }

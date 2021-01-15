@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -62,6 +63,9 @@ namespace MicroElements.Metadata
             Examples = examples.AssertArgumentNotNull(nameof(examples));
             Calculator = calculator;
         }
+
+        /// <inheritdoc />
+        public IPropertyContainer Metadata => this.GetInstanceMetadata();
 
         /// <inheritdoc />
         public string Name { get; }
@@ -124,13 +128,15 @@ namespace MicroElements.Metadata
         {
             source.AssertArgumentNotNull(nameof(source));
 
-            return new Property<T>(
+            Property<T> property = new Property<T>(
                 name: name ?? source.Name,
                 alias: alias ?? source.Alias,
                 description: description ?? source.Description,
                 defaultValue: defaultValue ?? source.DefaultValue,
                 examples: examples ?? source.Examples,
                 calculator: calculator ?? source.Calculator);
+            source.CopyMetadataTo(property);
+            return property;
         }
 
         /// <summary>

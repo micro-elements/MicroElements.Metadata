@@ -99,6 +99,25 @@ namespace MicroElements.Metadata
             return metadataProvider;
         }
 
+
+        /// <summary>
+        /// Configures metadata with action. Can be called many times.
+        /// If metadata is not exists then it creates with default constructor.
+        /// </summary>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Target metadata provider.</param>
+        /// <param name="configureMetadata">Configure action.</param>
+        /// <param name="metadataName">Optional metadata name.</param>
+        /// <returns>The same metadataProvider.</returns>
+        public static IMetadataProvider ConfigureMetadata<TMetadata>(
+            this IMetadataProvider metadataProvider,
+            Action<TMetadata> configureMetadata,
+            string? metadataName = null)
+            where TMetadata : new()
+        {
+            return ConfigureMetadataInternal<TMetadata, TMetadata>(metadataProvider, configureMetadata, metadataName);
+        }
+
         /// <summary>
         /// Configures metadata with action. Can be called many times.
         /// If metadata is not exists then it creates with default constructor.
@@ -116,7 +135,7 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
             where TMetadata : new()
         {
-            ConfigureMetadata<TMetadata>(metadataProvider, configureMetadata, metadataName);
+            ConfigureMetadataInternal<TMetadata, TMetadata>(metadataProvider, configureMetadata, metadataName);
 
             return metadataProvider;
         }
@@ -125,16 +144,40 @@ namespace MicroElements.Metadata
         /// Configures metadata with action. Can be called many times.
         /// If metadata is not exists then it creates with default constructor.
         /// </summary>
+        /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
+        /// <typeparam name="TMetadataInterface">Metadata interface type.</typeparam>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Target metadata provider.</param>
         /// <param name="configureMetadata">Configure action.</param>
         /// <param name="metadataName">Optional metadata name.</param>
         /// <returns>The same metadataProvider.</returns>
-        public static IMetadataProvider ConfigureMetadata<TMetadata>(
+        public static TMetadataProvider ConfigureMetadata<TMetadataProvider, TMetadataInterface, TMetadata>(
+            this TMetadataProvider metadataProvider,
+            Action<TMetadata> configureMetadata,
+            string? metadataName = null)
+            where TMetadataProvider : IMetadataProvider
+            where TMetadata : TMetadataInterface, new()
+        {
+            ConfigureMetadataInternal<TMetadataInterface, TMetadata>(metadataProvider, configureMetadata, metadataName);
+
+            return metadataProvider;
+        }
+
+        /// <summary>
+        /// Configures metadata with action. Can be called many times.
+        /// If metadata is not exists then it creates with default constructor.
+        /// </summary>
+        /// <typeparam name="TMetadataInterface">Metadata interface type.</typeparam>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Target metadata provider.</param>
+        /// <param name="configureMetadata">Configure action.</param>
+        /// <param name="metadataName">Optional metadata name.</param>
+        /// <returns>The same metadataProvider.</returns>
+        public static IMetadataProvider ConfigureMetadataInternal<TMetadataInterface, TMetadata>(
             this IMetadataProvider metadataProvider,
             Action<TMetadata> configureMetadata,
             string? metadataName = null)
-            where TMetadata : new()
+            where TMetadata : TMetadataInterface, new()
         {
             configureMetadata.AssertArgumentNotNull(nameof(configureMetadata));
 
@@ -145,7 +188,7 @@ namespace MicroElements.Metadata
                     {
                         var metadata = new TMetadata();
                         configureMetadata(metadata);
-                        metadataProvider.SetMetadata(metadataName, metadata);
+                        metadataProvider.SetMetadata(metadataName, (TMetadataInterface)metadata);
                     });
 
             return metadataProvider;

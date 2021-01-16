@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -27,5 +28,10 @@ namespace MicroElements.Metadata.Xml
         /// Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.
         /// </summary>
         public IEqualityComparer<IProperty> PropertyComparer { get; }
+
+        /// <summary>
+        /// Gets messages list.
+        /// </summary>
+        IMutableMessageList<Message> Messages { get; }
     }
 }

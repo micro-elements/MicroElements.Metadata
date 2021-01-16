@@ -141,7 +141,7 @@ namespace MicroElements.Metadata.Tests
   </Address>
 </Person>";
 
-            var container = XDocument.Parse(testXml).ParseToContainer();
+            var container = XDocument.Parse(testXml).ParseXmlToContainer();
             container.Should().NotBeNull();
 
             IPropertyValue[] values = container.Properties.ToArray();
@@ -179,8 +179,8 @@ namespace MicroElements.Metadata.Tests
 </Person>";
 
             IPropertyContainer? container = XDocument
-                .Parse(testXml)
-                .ParseToContainer(new PersonSchema().ToSchema(),
+                .Parse(testXml, LoadOptions.SetLineInfo)
+                .ParseXmlToContainer(new PersonSchema().ToSchema(),
                     new XmlParserSettings {ParserRules = XmlParser.CreateDefaultXmlParsersRules().ToList()});
             container.Should().NotBeNull();
 
@@ -211,7 +211,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void ReadXml2()
         {
-            if (!File.Exists(folder1))
+            if (!Directory.Exists(folder1))
                 return;
 
             List<IPropertyContainer> list = new List<IPropertyContainer>();
@@ -230,7 +230,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void ReadXml3()
         {
-            if (!File.Exists(folder1))
+            if (!Directory.Exists(folder1))
                 return;
 
             List<IPropertyContainer> list = new List<IPropertyContainer>();
@@ -240,10 +240,7 @@ namespace MicroElements.Metadata.Tests
             foreach (string file in Directory
                 .EnumerateFiles(folder1))
             {
-                string xml = File.ReadAllText(file);
-                XDocument xDocument = XDocument.Parse(xml);
-
-                var propertyContainer = XmlParser.ParseXmlDocument(xDocument, schema);
+                var propertyContainer = File.OpenRead(file).ParseXmlDocument(schema);
                 list.Add(propertyContainer);
             }
         }
@@ -252,7 +249,6 @@ namespace MicroElements.Metadata.Tests
         {
             string textDate = "2010-12-05";
             var parseResult = LocalDatePattern.Iso.Parse(textDate);
-
         }
     }
 }

@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Xml
 {
     /// <summary>
     /// Mutable setting for XmlParser.
     /// </summary>
-    public class XmlParserSettings : IXmlParserSettings
+    public class XmlParserSettings
     {
         /// <summary>
         /// Gets or sets function that evaluates property name for xml element.
@@ -27,6 +28,17 @@ namespace MicroElements.Metadata.Xml
         /// Optional property comparer for property related search.
         /// </summary>
         public IEqualityComparer<IProperty>? PropertyComparer { get; set; }
+
+        /// <summary>
+        /// Gets messages list.
+        /// </summary>
+        public IMutableMessageList<Message>? Messages { get; set; }
+
+        /// <summary>
+        /// Builds filled and valid <see cref="IXmlParserSettings"/>.
+        /// </summary>
+        /// <returns><see cref="IXmlParserSettings"/> instance.</returns>
+        public IXmlParserSettings Build() => new ReadOnlyXmlParserSettings(this);
     }
 
     /// <summary>
@@ -43,6 +55,9 @@ namespace MicroElements.Metadata.Xml
         /// <inheritdoc/>
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
+        /// <inheritdoc />
+        public IMutableMessageList<Message> Messages { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyXmlParserSettings"/> class.
         /// </summary>
@@ -54,6 +69,7 @@ namespace MicroElements.Metadata.Xml
             GetElementName = settings.GetElementName ?? XmlParser.GetElementNameDefault;
             ParserRules = settings.ParserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             PropertyComparer = settings.PropertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
+            Messages = settings.Messages ?? new MutableMessageList<Message>();
         }
     }
 }

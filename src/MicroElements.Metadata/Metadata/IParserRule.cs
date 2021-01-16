@@ -3,14 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Parser rule.
+    /// Parser rule attaches parser to type or property.
     /// Priority for search:
     /// 1. <see cref="TargetProperty"/>,
     /// 2. <see cref="TargetType"/>.
@@ -18,9 +17,9 @@ namespace MicroElements.Metadata
     public interface IParserRule
     {
         /// <summary>
-        /// Gets concrete property that should use <see cref="Parser"/>.
+        /// Gets text value parser.
         /// </summary>
-        IProperty? TargetProperty { get; }
+        IValueParser Parser { get; }
 
         /// <summary>
         /// Gets target type that <see cref="Parser"/> can parse.
@@ -28,22 +27,31 @@ namespace MicroElements.Metadata
         Type? TargetType { get; }
 
         /// <summary>
-        /// Gets value parser.
+        /// Gets concrete property that should use <see cref="Parser"/>.
         /// </summary>
-        IValueParser Parser { get; }
+        IProperty? TargetProperty { get; }
     }
 
+    /// <summary>
+    /// Parser rule attaches parser to type or property.
+    /// </summary>
     public class ParserRule : IParserRule
     {
         /// <inheritdoc />
-        public IProperty? TargetProperty { get; set; }
+        public IValueParser Parser { get; set; }
 
         /// <inheritdoc />
         public Type? TargetType { get; set; }
 
         /// <inheritdoc />
-        public IValueParser Parser { get; set; }
+        public IProperty? TargetProperty { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ParserRule"/> class.
+        /// </summary>
+        /// <param name="parser">Text parser.</param>
+        /// <param name="targetType">Optional target type.</param>
+        /// <param name="targetProperty">Optional target property.</param>
         public ParserRule(
             IValueParser parser,
             Type? targetType = null,
@@ -57,8 +65,6 @@ namespace MicroElements.Metadata
 
     public static class ParserRuleExtensions
     {
-
-
         public static IParserRule? GetParser(
             this IReadOnlyCollection<IParserRule> parserRules,
             IProperty property,
@@ -68,13 +74,27 @@ namespace MicroElements.Metadata
 
             if (parserRule == null)
             {
+                // Search by concrete property.
                 propertyComparer ??= PropertyComparer.ByReferenceComparer;
-                parserRule = parserRules.FirstOrDefault(rule => rule.TargetProperty != null && propertyComparer.Equals(rule.TargetProperty, property));
+                parserRule = parserRules
+                    .Where(rule => rule.TargetProperty != null)
+                    .FirstOrDefault(rule => propertyComparer.Equals(rule.TargetProperty!, property));
             }
 
             if (parserRule == null)
             {
-                parserRule = parserRules.FirstOrDefault(rule => rule.TargetType != null && property.Type == rule.TargetType);
+                // Search for type.
+                parserRule = parserRules
+                    .Where(rule => rule.TargetType != null)
+                    .FirstOrDefault(rule => rule.TargetType == property.Type);
+            }
+
+            bool searchNotTargetedParser = false;
+            if (parserRule == null && searchNotTargetedParser)
+            {
+                // Not targeted parser
+                parserRule = parserRules
+                    .FirstOrDefault(rule => rule.TargetType == null && rule.TargetProperty == null);
             }
 
             return parserRule;

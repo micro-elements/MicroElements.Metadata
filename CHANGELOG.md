@@ -1,3 +1,7 @@
+# 7.0.0-rc.14
+- Added Validation messages to IXmlParserSettings
+- XmlParser API extended
+
 # 7.0.0-rc.13
 - Added XmlParser using ISchema
 - Added Parsers for types and properties

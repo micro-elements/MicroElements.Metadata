@@ -36,17 +36,23 @@ namespace MicroElements.Metadata.Xml
 
         public static IEnumerable<IValueParser> CreateDefaultXmlParsers()
         {
+            yield return StringParser.Instance;
             yield return new ValueParser<int>(ParseInt);
             yield return new ValueParser<double>(ParseDouble);
             yield return new ValueParser<DateTime>(ParseDateTime);
         }
 
-        public static IEnumerable<IParserRule> CreateDefaultXmlParsersRules()
+        public static IEnumerable<IParserRule> ToParserRules(this IEnumerable<IValueParser> parsers)
         {
-            foreach (IValueParser valueParser in CreateDefaultXmlParsers())
+            foreach (IValueParser valueParser in parsers)
             {
                 yield return new ParserRule(valueParser, valueParser.Type);
             }
+        }
+
+        public static IEnumerable<IParserRule> CreateDefaultXmlParsersRules()
+        {
+            return CreateDefaultXmlParsers().ToParserRules();
         }
 
         public static Option<int> ParseInt(string text) => Prelude.ParseInt(text);

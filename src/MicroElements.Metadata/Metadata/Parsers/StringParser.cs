@@ -3,7 +3,7 @@
 
 using MicroElements.Functional;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Parsers
 {
     /// <summary>
     /// Default string parser.

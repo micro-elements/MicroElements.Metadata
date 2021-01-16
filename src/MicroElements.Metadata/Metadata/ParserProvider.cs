@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using MicroElements.Functional;
+using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata
 {

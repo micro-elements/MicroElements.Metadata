@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
 using MicroElements.Functional;
+using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -40,6 +41,9 @@ namespace MicroElements.Metadata.Xml
             yield return new ValueParser<int>(ParseInt);
             yield return new ValueParser<double>(ParseDouble);
             yield return new ValueParser<DateTime>(ParseDateTime);
+
+            yield return new ValueParser<int?>(ParseNullableInt);
+            yield return new ValueParser<double?>(ParseNullableDouble);
         }
 
         public static IEnumerable<IParserRule> ToParserRules(this IEnumerable<IValueParser> parsers)
@@ -59,17 +63,14 @@ namespace MicroElements.Metadata.Xml
 
         public static Option<double> ParseDouble(string text) => Prelude.ParseDouble(text, NumberStyles.Any, CultureInfo.InvariantCulture);
 
-
-        //public static Option<LocalDate> ParseLocalDate(string text)
-        //{
-        //    var parseResult = LocalDatePattern.Iso.Parse(text);
-        //    return parseResult.Success ? parseResult.Value : Option<LocalDate>.None;
-        //}
-
         public static Option<DateTime> ParseDateTime(string text)
         {
             var parseResult = DateTime.TryParse(text, out DateTime result);
             return parseResult ? result : Option<DateTime>.None;
         }
+
+        public static Option<int?> ParseNullableInt(string text) => ParseInt(text).MatchUnsafe(value => value, default(int?));
+
+        public static Option<double?> ParseNullableDouble(string text) => ParseDouble(text).MatchUnsafe(value => value, default(double?));
     }
 }

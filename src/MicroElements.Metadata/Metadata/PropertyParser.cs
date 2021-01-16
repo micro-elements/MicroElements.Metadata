@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.Functional;
+using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata
 {

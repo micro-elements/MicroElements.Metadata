@@ -30,6 +30,12 @@ namespace MicroElements.Metadata.Tests
             public string City { get; set; }
         }
 
+        public enum Sex
+        {
+            Male,
+            Female
+        }
+
         public class PersonSchema : StaticPropertySet
         {
             public static readonly IProperty<string> FirstName = new Property<string>("FirstName")
@@ -41,6 +47,8 @@ namespace MicroElements.Metadata.Tests
             public static readonly IProperty<string> LastName = new Property<string>("LastName")
                 .AddValidation(property => property.Required());
 
+            public static readonly IProperty<Sex> Sex = new Property<Sex>("Sex");
+
             public static readonly IProperty<IPropertyContainer> Address = new Property<IPropertyContainer>("Address")
                 .SetSchema(new AddressSchema())
                 .WithDescription("Address");
@@ -49,6 +57,8 @@ namespace MicroElements.Metadata.Tests
                 //.SetIsListOf(new AddressSchema())
                 .SetSchema(new AddressSchema())
                 .WithDescription("Addresses list ");
+
+
         }
 
         public class AddressSchema : StaticPropertySet
@@ -162,6 +172,7 @@ namespace MicroElements.Metadata.Tests
 <Person>
   <FirstName>Alex</FirstName>
   <LastName>Smith</LastName>
+  <Sex>Male</Sex>
   <Addresses>
     <Address>
       <City>NY</City>
@@ -188,11 +199,17 @@ namespace MicroElements.Metadata.Tests
             values[0].PropertyUntyped.Name.Should().Be("FirstName");
             values[0].PropertyUntyped.Type.Should().Be(typeof(string));
 
-            values[2].PropertyUntyped.Name.Should().Be("Addresses");
-            values[2].PropertyUntyped.Type.Should().Be(typeof(IPropertyContainer));
+            values[1].PropertyUntyped.Name.Should().Be("LastName");
+            values[1].PropertyUntyped.Type.Should().Be(typeof(string));
 
-            values[3].PropertyUntyped.Name.Should().Be("Address");
+            values[2].PropertyUntyped.Name.Should().Be("Sex");
+            values[2].PropertyUntyped.Type.Should().Be(typeof(Sex));
+
+            values[3].PropertyUntyped.Name.Should().Be("Addresses");
             values[3].PropertyUntyped.Type.Should().Be(typeof(IPropertyContainer));
+
+            values[4].PropertyUntyped.Name.Should().Be("Address");
+            values[4].PropertyUntyped.Type.Should().Be(typeof(IPropertyContainer));
 
             ISchema? addressSchema = container.GetSchema().GetProperty("Address").GetSchema();
             addressSchema.GetProperty("Zip").Type.Should().Be(typeof(int));

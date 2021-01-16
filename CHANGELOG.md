@@ -1,3 +1,7 @@
+# 7.0.0-rc.15
+- Added GetPropertiesNotFromSchema recursive search in children schemas
+
+
 # 7.0.0-rc.14
 - Added Validation messages to IXmlParserSettings
 - XmlParser API extended

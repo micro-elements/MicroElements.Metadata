@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata
 {
@@ -87,6 +87,15 @@ namespace MicroElements.Metadata
                 parserRule = parserRules
                     .Where(rule => rule.TargetType != null)
                     .FirstOrDefault(rule => rule.TargetType == property.Type);
+            }
+
+            if (parserRule == null)
+            {
+                // Enum support.
+                if (property.Type.IsEnum)
+                {
+                    parserRule = new ParserRule(new EnumUntypedParser(property.Type), property.Type);
+                }
             }
 
             bool searchNotTargetedParser = false;

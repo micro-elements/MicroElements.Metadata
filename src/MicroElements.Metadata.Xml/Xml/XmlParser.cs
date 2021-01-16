@@ -187,13 +187,13 @@ namespace MicroElements.Metadata.Xml
                             else
                             {
                                 settings.Messages.AddError(
-                                    $"Property {property.Name} was not parsed from string '{elementValue}'.{GetXmlLineInfo(propertyElement)}");
+                                    $"Property '{property.Name}' was not parsed from string '{elementValue}'.{GetXmlLineInfo(propertyElement)}");
                             }
                         }
                         else
                         {
                             settings.Messages.AddError(
-                                $"Property {property.Name} can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}");
+                                $"Property '{property.Name}' can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}");
                         }
                     }
                 }

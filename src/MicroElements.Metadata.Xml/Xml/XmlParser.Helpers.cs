@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Xml.Linq;
-using MicroElements.Functional;
-using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -30,47 +28,14 @@ namespace MicroElements.Metadata.Xml
             return name;
         }
 
-        public static string GetElementNameDefault(XElement element)
+        /// <summary>
+        /// Gets elements name as LocalName.
+        /// </summary>
+        /// <param name="element">Source element.</param>
+        /// <returns>Local element name.</returns>
+        public static string GetElementNameDefault(this XElement element)
         {
             return element.Name.LocalName;
         }
-
-        public static IEnumerable<IValueParser> CreateDefaultXmlParsers()
-        {
-            yield return StringParser.Instance;
-            yield return new ValueParser<int>(ParseInt);
-            yield return new ValueParser<double>(ParseDouble);
-            yield return new ValueParser<DateTime>(ParseDateTime);
-
-            yield return new ValueParser<int?>(ParseNullableInt);
-            yield return new ValueParser<double?>(ParseNullableDouble);
-        }
-
-        public static IEnumerable<IParserRule> ToParserRules(this IEnumerable<IValueParser> parsers)
-        {
-            foreach (IValueParser valueParser in parsers)
-            {
-                yield return new ParserRule(valueParser, valueParser.Type);
-            }
-        }
-
-        public static IEnumerable<IParserRule> CreateDefaultXmlParsersRules()
-        {
-            return CreateDefaultXmlParsers().ToParserRules();
-        }
-
-        public static Option<int> ParseInt(string text) => Prelude.ParseInt(text);
-
-        public static Option<double> ParseDouble(string text) => Prelude.ParseDouble(text, NumberStyles.Any, CultureInfo.InvariantCulture);
-
-        public static Option<DateTime> ParseDateTime(string text)
-        {
-            var parseResult = DateTime.TryParse(text, out DateTime result);
-            return parseResult ? result : Option<DateTime>.None;
-        }
-
-        public static Option<int?> ParseNullableInt(string text) => ParseInt(text).MatchUnsafe(value => value, default(int?));
-
-        public static Option<double?> ParseNullableDouble(string text) => ParseDouble(text).MatchUnsafe(value => value, default(double?));
     }
 }

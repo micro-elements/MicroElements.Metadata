@@ -8,7 +8,7 @@ namespace MicroElements.Metadata.Parsers
 {
     /// <summary>
     /// Enum parser.
-    /// Parses enum by name.
+    /// Parses enum by name or numeric value.
     /// </summary>
     public class EnumUntypedParser : ValueParserBase<object>
     {
@@ -26,7 +26,7 @@ namespace MicroElements.Metadata.Parsers
         /// <inheritdoc />
         public override Option<object> Parse(string source)
         {
-            if (Enum.TryParse(_enumType, source, true, out object result))
+            if (Enum.TryParse(_enumType, value: source, ignoreCase: true, out object result))
                 return result;
             return Option<object>.None;
         }

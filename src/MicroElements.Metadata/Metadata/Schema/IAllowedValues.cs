@@ -125,6 +125,70 @@ namespace MicroElements.Metadata.Schema
 
             return property.GetMetadata<IAllowedValues>();
         }
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static IProperty<TEnum> SetAllowedValuesFromEnum<TEnum>(this IProperty<TEnum> property)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            Type enumType = typeof(TEnum);
+
+            if (!enumType.IsEnum)
+                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
+
+            var values = (TEnum[])Enum.GetValues(enumType);
+
+            return property.SetAllowedValues(values);
+        }
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static IProperty<string> SetAllowedValuesFromEnum<TEnum>(this IProperty<string> property)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            Type enumType = typeof(TEnum);
+
+            if (!enumType.IsEnum)
+                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
+
+            string[] names = Enum.GetNames(enumType);
+
+            return property.SetAllowedValues(names);
+        }
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static IProperty<int> SetAllowedValuesFromEnum<TEnum>(this IProperty<int> property)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            Type enumType = typeof(TEnum);
+
+            if (!enumType.IsEnum)
+                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
+
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+            if (underlyingType != typeof(int))
+                throw new ArgumentException($"Enum type '{enumType}' should have int as UnderlyingType.");
+
+            var values = ((TEnum[])Enum.GetValues(enumType)).Cast<int>().ToArray();
+
+            return property.SetAllowedValues(values);
+        }
     }
 
     /// <summary>
@@ -166,7 +230,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Checks that property value is in allowed values list.
         /// If <paramref name="allowedValues"/> is not set, then <see cref="SchemaExtensions.GetAllowedValues{T}"/> will be used.
-        /// Set allowed values for property with <see cref="SchemaExtensions.SetAllowedValues{T}"/>.
+        /// Set allowed values for property with one of SetAllowedValues methods.
         /// </summary>
         /// <typeparam name="T">Value type.</typeparam>
         /// <param name="property">Property to check.</param>
@@ -180,7 +244,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Checks that property value is in allowed values list.
         /// If <paramref name="allowedValues"/> is not set, then <see cref="SchemaExtensions.GetAllowedValues{T}"/> will be used.
-        /// Set allowed values for property with <see cref="SchemaExtensions.SetAllowedValues{T}"/>.
+        /// Set allowed values for property with one of SetAllowedValues methods.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>

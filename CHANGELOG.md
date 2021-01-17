@@ -1,6 +1,9 @@
 # 7.0.0-rc.15
 - Added GetPropertiesNotFromSchema recursive search in children schemas
-
+- AllowedValues from enum
+- IXmlParserContext extracted
+- Parser cache added
+- Parsers moved to Parsers namespace
 
 # 7.0.0-rc.14
 - Added Validation messages to IXmlParserSettings

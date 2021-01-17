@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using MicroElements.Functional;
+using MicroElements.Metadata.Parsers;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.Xml
@@ -21,16 +22,18 @@ namespace MicroElements.Metadata.Xml
         /// <param name="stream">Stream with xml document.</param>
         /// <param name="schema">Optional schema.</param>
         /// <param name="settings">Optional parse settings.</param>
+        /// <param name="context">Optional parse context.</param>
         /// <param name="container">Target property container.</param>
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this Stream stream,
             ISchema? schema = null,
-            XmlParserSettings? settings = null,
+            IXmlParserSettings? settings = null,
+            IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
         {
             XDocument xDocument = XDocument.Load(stream, LoadOptions.SetLineInfo);
-            return ParseXmlDocument(xDocument, schema, settings, container);
+            return ParseXmlDocument(xDocument, schema, settings, context, container);
         }
 
         /// <summary>
@@ -39,16 +42,18 @@ namespace MicroElements.Metadata.Xml
         /// <param name="text">A string that contains Xml.</param>
         /// <param name="schema">Optional schema.</param>
         /// <param name="settings">Optional parse settings.</param>
+        /// <param name="context">Optional parse context.</param>
         /// <param name="container">Target property container.</param>
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this string text,
             ISchema? schema = null,
-            XmlParserSettings? settings = null,
+            IXmlParserSettings? settings = null,
+            IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
         {
             XDocument xDocument = XDocument.Parse(text, LoadOptions.SetLineInfo);
-            return ParseXmlDocument(xDocument, schema, settings, container);
+            return ParseXmlDocument(xDocument, schema, settings, context, container);
         }
 
         /// <summary>
@@ -57,35 +62,17 @@ namespace MicroElements.Metadata.Xml
         /// <param name="document">Xml document.</param>
         /// <param name="schema">Optional schema.</param>
         /// <param name="settings">Optional parse settings.</param>
+        /// <param name="context">Optional parse context.</param>
         /// <param name="container">Target property container.</param>
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this XDocument document,
             ISchema? schema = null,
-            XmlParserSettings? settings = null,
+            IXmlParserSettings? settings = null,
+            IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
         {
-            return ParseXmlDocument(document, schema, settings, container);
-        }
-
-        /// <summary>
-        /// Parses xml document to <see cref="IPropertyContainer"/>.
-        /// </summary>
-        /// <param name="stream">Stream with xml document.</param>
-        /// <param name="schema">Optional schema.</param>
-        /// <param name="settings">Optional parse settings.</param>
-        /// <param name="container">Target property container.</param>
-        /// <returns><see cref="IPropertyContainer"/> instance.</returns>
-        public static IPropertyContainer ParseXmlDocument(
-            this Stream stream,
-            ISchema? schema = null,
-            XmlParserSettings? settings = null,
-            IMutablePropertyContainer? container = null)
-        {
-            stream.AssertArgumentNotNull(nameof(stream));
-
-            XDocument xDocument = XDocument.Load(stream, LoadOptions.SetLineInfo);
-            return ParseXmlDocument(xDocument, schema, settings, container);
+            return ParseXmlDocument(document, schema, settings, context, container);
         }
 
         /// <summary>
@@ -99,7 +86,35 @@ namespace MicroElements.Metadata.Xml
         public static IPropertyContainer ParseXmlDocument(
             XDocument document,
             ISchema? schema = null,
-            XmlParserSettings? settings = null,
+            XmlParserSettingsBuilder? settings = null,
+            IMutablePropertyContainer? container = null)
+        {
+            settings ??= new XmlParserSettingsBuilder();
+            IXmlParserSettings parserSettings = new XmlParserSettings(settings);
+            IXmlParserContext parserContext = parserSettings.CreateContext(parserSettings);
+
+            return ParseXmlDocument(
+                document: document,
+                schema: schema,
+                settings: parserSettings,
+                context: parserContext,
+                container: container);
+        }
+
+        /// <summary>
+        /// Parses xml document to <see cref="IPropertyContainer"/>.
+        /// </summary>
+        /// <param name="document">Xml document.</param>
+        /// <param name="schema">Optional schema.</param>
+        /// <param name="settings">Optional parse settings.</param>
+        /// <param name="context">Optional parse context.</param>
+        /// <param name="container">Target property container.</param>
+        /// <returns><see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer ParseXmlDocument(
+            XDocument document,
+            ISchema? schema = null,
+            IXmlParserSettings? settings = null,
+            IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
         {
             document.AssertArgumentNotNull(nameof(document));
@@ -111,11 +126,11 @@ namespace MicroElements.Metadata.Xml
             {
                 schema ??= new Schema.Schema();
                 settings ??= new XmlParserSettings();
-                IXmlParserSettings parserSettings = new ReadOnlyXmlParserSettings(settings);
+                context ??= settings.CreateContext(settings);
 
                 container.SetSchema(schema);
 
-                ParseXmlElement(rootElement, schema, parserSettings, container);
+                ParseXmlElement(rootElement, schema, settings, context, container);
             }
 
             return container;
@@ -125,6 +140,7 @@ namespace MicroElements.Metadata.Xml
             XElement objectElement,
             ISchema objectSchema,
             IXmlParserSettings settings,
+            IXmlParserContext context,
             IMutablePropertyContainer? container = null)
         {
             if (objectElement.HasElements)
@@ -139,7 +155,7 @@ namespace MicroElements.Metadata.Xml
                     if (propertyElement.HasElements)
                     {
                         ISchema propertyInternalSchema = property?.GetOrAddSchema() ?? new Schema.Schema();
-                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings);
+                        IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings, context);
                         if (internalObject != null && internalObject.Count > 0)
                         {
                             internalObject.SetSchema(propertyInternalSchema);
@@ -160,7 +176,14 @@ namespace MicroElements.Metadata.Xml
                         if (property != null && property.Type == typeof(IPropertyContainer))
                         {
                             // Composite object, no value.
-                            // TODO: Can it be null?
+                            bool isNullAllowed = property.GetOrEvaluateAllowNull().IsNullAllowed;
+                            if (!isNullAllowed)
+                            {
+                                context.Messages.AddError(
+                                    $"Property '{property.Name}' can not be null but xml element has no value.{GetXmlLineInfo(propertyElement)}");
+                            }
+
+                            continue;
                         }
 
                         if (property == null)
@@ -170,14 +193,13 @@ namespace MicroElements.Metadata.Xml
                                     .SetIsNotFromSchema());
                         }
 
-                        // TODO: cache: property->parser
-                        IParserRule? parserRule = settings.ParserRules.GetParser(property);
-                        if (parserRule != null)
+                        IValueParser valueParser = GetParserCached(settings, context, property);
+                        if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;
 
                             // WARN: boxing
-                            Option<object> parseResult = parserRule.Parser.ParseUntyped(elementValue);
+                            Option<object> parseResult = valueParser.ParseUntyped(elementValue);
 
                             if (parseResult.IsSome)
                             {
@@ -186,13 +208,13 @@ namespace MicroElements.Metadata.Xml
                             }
                             else
                             {
-                                settings.Messages.AddError(
+                                context.Messages.AddError(
                                     $"Property '{property.Name}' was not parsed from string '{elementValue}'.{GetXmlLineInfo(propertyElement)}");
                             }
                         }
                         else
                         {
-                            settings.Messages.AddError(
+                            context.Messages.AddError(
                                 $"Property '{property.Name}' can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}");
                         }
                     }

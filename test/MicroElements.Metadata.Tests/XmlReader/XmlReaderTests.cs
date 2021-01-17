@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml;
+//using System.Xml;
 using System.Xml.Linq;
 using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
-using MicroElements.Metadata.Tests.examples;
 using MicroElements.Metadata.Xml;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
-using NodaTime;
 using NodaTime.Text;
 using Xunit;
 
@@ -32,6 +31,7 @@ namespace MicroElements.Metadata.Tests
 
         public enum Sex
         {
+            Unknown,
             Male,
             Female
         }
@@ -57,8 +57,6 @@ namespace MicroElements.Metadata.Tests
                 //.SetIsListOf(new AddressSchema())
                 .SetSchema(new AddressSchema())
                 .WithDescription("Addresses list ");
-
-
         }
 
         public class AddressSchema : StaticPropertySet
@@ -73,7 +71,7 @@ namespace MicroElements.Metadata.Tests
         {
             PersonSchema personSchema = new PersonSchema();
             var properties = personSchema.ToArray();
-            properties.Should().HaveCount(4);
+            properties.Should().HaveCount(5);
 
             AddressSchema addressSchema = new AddressSchema();
             var city = addressSchema.First();
@@ -95,7 +93,7 @@ namespace MicroElements.Metadata.Tests
 </Person>";
 
             ISchema personSchema = new PersonSchema().ToSchema();
-            var container = XmlParser.ParseXmlDocument(XDocument.Parse(testXml), personSchema);
+            var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
             container.GetSchema().Should().NotBeNull();
         }
 
@@ -112,7 +110,7 @@ namespace MicroElements.Metadata.Tests
 </Person>";
 
             ISchema personSchema = new PersonSchema().ToSchema();
-            var container = XmlParser.ParseXmlDocument(XDocument.Parse(testXml), personSchema);
+            var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
 
             var validationRules = personSchema.GetValidationRules().ToArray();
             var messages = container.Validate(validationRules).ToArray();
@@ -191,8 +189,7 @@ namespace MicroElements.Metadata.Tests
 
             IPropertyContainer? container = XDocument
                 .Parse(testXml, LoadOptions.SetLineInfo)
-                .ParseXmlToContainer(new PersonSchema().ToSchema(),
-                    new XmlParserSettings {ParserRules = XmlParser.CreateDefaultXmlParsersRules().ToList()});
+                .ParseXmlToContainer(new PersonSchema().ToSchema());
             container.Should().NotBeNull();
 
             IPropertyValue[] values = container.Properties.ToArray();
@@ -214,7 +211,7 @@ namespace MicroElements.Metadata.Tests
             ISchema? addressSchema = container.GetSchema().GetProperty("Address").GetSchema();
             addressSchema.GetProperty("Zip").Type.Should().Be(typeof(int));
 
-            var address = (values[3].ValueUntyped as IPropertyContainer).Properties.ToArray();
+            var address = (values[4].ValueUntyped as IPropertyContainer).Properties.ToArray();
             address[0].PropertyUntyped.Name.Should().Be("City");
             address[0].PropertyUntyped.Type.Should().Be(typeof(string));
 
@@ -238,7 +235,7 @@ namespace MicroElements.Metadata.Tests
             foreach (string file in Directory
                 .EnumerateFiles(folder1))
             {
-                XmlReader xmlReader = XmlReader.Create(File.OpenRead(file));
+                var xmlReader = System.Xml.XmlReader.Create(File.OpenRead(file));
                 var propertyContainer = XmlParser.ReadXmlElement(xmlReader, schema) as IPropertyContainer;
                 list.Add(propertyContainer);
             }
@@ -254,10 +251,23 @@ namespace MicroElements.Metadata.Tests
 
             var schema = new PropertySet().ToSchema();
 
+            var settingsBuilder = new XmlParserSettingsBuilder()
+            {
+                PropertyComparer = PropertyComparer.ByReferenceComparer,
+
+                Messages = new MutableMessageList<Message>(),
+                ParsersCache = new ConcurrentDictionary<IProperty, IValueParser>(comparer: PropertyComparer.ByReferenceComparer)
+            };
+
+            XmlParserSettings xmlParserSettings = new XmlParserSettings(settingsBuilder);
+            XmlParserContext xmlParserContext = new XmlParserContext(
+                parsersCache: new ConcurrentDictionary<IProperty, IValueParser>(
+                    comparer: PropertyComparer.ByReferenceComparer));
+
             foreach (string file in Directory
                 .EnumerateFiles(folder1))
             {
-                var propertyContainer = File.OpenRead(file).ParseXmlDocument(schema);
+                var propertyContainer = File.OpenRead(file).ParseXmlToContainer(schema, xmlParserSettings, xmlParserContext);
                 list.Add(propertyContainer);
             }
         }

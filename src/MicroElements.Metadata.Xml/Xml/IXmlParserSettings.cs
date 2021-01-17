@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -30,8 +29,8 @@ namespace MicroElements.Metadata.Xml
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
         /// <summary>
-        /// Gets messages list.
+        /// Get create context function.
         /// </summary>
-        IMutableMessageList<Message> Messages { get; }
+        public Func<IXmlParserSettings, IXmlParserContext> CreateContext { get; }
     }
 }

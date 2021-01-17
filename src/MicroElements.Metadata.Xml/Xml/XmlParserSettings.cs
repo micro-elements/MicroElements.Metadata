@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -10,41 +11,9 @@ using MicroElements.Functional;
 namespace MicroElements.Metadata.Xml
 {
     /// <summary>
-    /// Mutable setting for XmlParser.
+    /// ReadOnly initialized instance of <see cref="IXmlParserSettings"/>.
     /// </summary>
-    public class XmlParserSettings
-    {
-        /// <summary>
-        /// Gets or sets function that evaluates property name for xml element.
-        /// </summary>
-        public Func<XElement, string>? GetElementName { get; set; }
-
-        /// <summary>
-        /// Parsers and rules for parsers.
-        /// </summary>
-        public IReadOnlyCollection<IParserRule>? ParserRules { get; set; }
-
-        /// <summary>
-        /// Optional property comparer for property related search.
-        /// </summary>
-        public IEqualityComparer<IProperty>? PropertyComparer { get; set; }
-
-        /// <summary>
-        /// Gets messages list.
-        /// </summary>
-        public IMutableMessageList<Message>? Messages { get; set; }
-
-        /// <summary>
-        /// Builds filled and valid <see cref="IXmlParserSettings"/>.
-        /// </summary>
-        /// <returns><see cref="IXmlParserSettings"/> instance.</returns>
-        public IXmlParserSettings Build() => new ReadOnlyXmlParserSettings(this);
-    }
-
-    /// <summary>
-    /// ReadOnly builded version of <see cref="XmlParserSettings"/>.
-    /// </summary>
-    public class ReadOnlyXmlParserSettings : IXmlParserSettings
+    public class XmlParserSettings : IXmlParserSettings
     {
         /// <inheritdoc/>
         public Func<XElement, string> GetElementName { get; }
@@ -56,20 +25,27 @@ namespace MicroElements.Metadata.Xml
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
         /// <inheritdoc />
-        public IMutableMessageList<Message> Messages { get; }
+        public Func<IXmlParserSettings, IXmlParserContext> CreateContext { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyXmlParserSettings"/> class.
+        /// Initializes a new instance of the <see cref="XmlParserSettings"/> class.
         /// </summary>
         /// <param name="settings">Optional settings to build.</param>
-        public ReadOnlyXmlParserSettings(XmlParserSettings? settings)
+        public XmlParserSettings(XmlParserSettingsBuilder? settings = null)
         {
-            settings ??= new XmlParserSettings();
+            settings ??= new XmlParserSettingsBuilder();
 
             GetElementName = settings.GetElementName ?? XmlParser.GetElementNameDefault;
             ParserRules = settings.ParserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             PropertyComparer = settings.PropertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
-            Messages = settings.Messages ?? new MutableMessageList<Message>();
+            CreateContext = settings.CreateContext ?? (parserSettings => CreateXmlParserContext(parserSettings, settings));
+        }
+
+        private static XmlParserContext CreateXmlParserContext(IXmlParserSettings parserSettings, XmlParserSettingsBuilder settings)
+        {
+            return new XmlParserContext(
+                messages: settings.Messages ?? new MutableMessageList<Message>(),
+                parsersCache: settings.ParsersCache ?? new ConcurrentDictionary<IProperty, IValueParser>(comparer: parserSettings.PropertyComparer));
         }
     }
 }

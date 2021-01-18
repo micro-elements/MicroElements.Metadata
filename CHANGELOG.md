@@ -1,3 +1,8 @@
+# 7.0.0-rc.16
+- Added IXmlParserSettings reference to IXmlParserContext 
+- Added SchemaCache to IXmlParserContext
+- IHasSchema now can create new schema instances
+
 # 7.0.0-rc.15
 - Added GetPropertiesNotFromSchema recursive search in children schemas
 - AllowedValues from enum

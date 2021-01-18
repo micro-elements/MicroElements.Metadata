@@ -26,15 +26,23 @@ namespace MicroElements.Metadata.Schema
 
     public static partial class SchemaExtensions
     {
-        public static ISchema ToSchema(this IPropertySet propertySet) => new Schema(propertySet);
+        public static ISchema ToSchema(this IPropertySet propertySet)
+        {
+            if (propertySet is ISchema schema)
+            {
+                return schema;
+            }
+
+            return new MutableSchema(propertySet);
+        }
     }
 
-    public class Schema : ISchema
+    public class MutableSchema : ISchema
     {
         private readonly List<IProperty> _properties = new List<IProperty>();
         private readonly Dictionary<string, IProperty> _dictionary;
 
-        public Schema(IEnumerable<IProperty>? properties = null)
+        public MutableSchema(IEnumerable<IProperty>? properties = null)
         {
             if (properties != null)
             {

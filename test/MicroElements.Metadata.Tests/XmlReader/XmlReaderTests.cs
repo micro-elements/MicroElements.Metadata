@@ -251,23 +251,13 @@ namespace MicroElements.Metadata.Tests
 
             var schema = new PropertySet().ToSchema();
 
-            var settingsBuilder = new XmlParserSettingsBuilder()
-            {
-                PropertyComparer = PropertyComparer.ByReferenceComparer,
-
-                Messages = new MutableMessageList<Message>(),
-                ParsersCache = new ConcurrentDictionary<IProperty, IValueParser>(comparer: PropertyComparer.ByReferenceComparer)
-            };
-
-            XmlParserSettings xmlParserSettings = new XmlParserSettings(settingsBuilder);
-            XmlParserContext xmlParserContext = new XmlParserContext(
-                parsersCache: new ConcurrentDictionary<IProperty, IValueParser>(
-                    comparer: PropertyComparer.ByReferenceComparer));
+            IXmlParserSettings parserSettings = new XmlParserSettings();
+            IXmlParserContext parserContext = new XmlParserContext(parserSettings);
 
             foreach (string file in Directory
                 .EnumerateFiles(folder1))
             {
-                var propertyContainer = File.OpenRead(file).ParseXmlToContainer(schema, xmlParserSettings, xmlParserContext);
+                var propertyContainer = File.OpenRead(file).ParseXmlToContainer(schema, parserSettings, parserContext);
                 list.Add(propertyContainer);
             }
         }

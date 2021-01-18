@@ -27,10 +27,5 @@ namespace MicroElements.Metadata.Xml
         /// Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.
         /// </summary>
         public IEqualityComparer<IProperty> PropertyComparer { get; }
-
-        /// <summary>
-        /// Get create context function.
-        /// </summary>
-        public Func<IXmlParserSettings, IXmlParserContext> CreateContext { get; }
     }
 }

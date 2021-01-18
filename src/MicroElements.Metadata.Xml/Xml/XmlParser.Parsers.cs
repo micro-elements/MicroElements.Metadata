@@ -11,11 +11,6 @@ namespace MicroElements.Metadata.Xml
 {
     public static partial class XmlParser
     {
-        public static IValueParser GetParserCached(IXmlParserSettings settings, IXmlParserContext context, IProperty property)
-        {
-            return context.ParsersCache.GetOrAdd(property, p => settings.ParserRules.GetParserRule(p, settings.PropertyComparer)?.Parser ?? EmptyParser.Instance);
-        }
-
         public static IEnumerable<IValueParser> CreateDefaultXmlParsers()
         {
             yield return StringParser.Instance;

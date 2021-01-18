@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
@@ -81,32 +80,6 @@ namespace MicroElements.Metadata.Xml
         /// <param name="document">Xml document.</param>
         /// <param name="schema">Optional schema.</param>
         /// <param name="settings">Optional parse settings.</param>
-        /// <param name="container">Target property container.</param>
-        /// <returns><see cref="IPropertyContainer"/> instance.</returns>
-        public static IPropertyContainer ParseXmlDocument(
-            XDocument document,
-            ISchema? schema = null,
-            XmlParserSettingsBuilder? settings = null,
-            IMutablePropertyContainer? container = null)
-        {
-            settings ??= new XmlParserSettingsBuilder();
-            IXmlParserSettings parserSettings = new XmlParserSettings(settings);
-            IXmlParserContext parserContext = parserSettings.CreateContext(parserSettings);
-
-            return ParseXmlDocument(
-                document: document,
-                schema: schema,
-                settings: parserSettings,
-                context: parserContext,
-                container: container);
-        }
-
-        /// <summary>
-        /// Parses xml document to <see cref="IPropertyContainer"/>.
-        /// </summary>
-        /// <param name="document">Xml document.</param>
-        /// <param name="schema">Optional schema.</param>
-        /// <param name="settings">Optional parse settings.</param>
         /// <param name="context">Optional parse context.</param>
         /// <param name="container">Target property container.</param>
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
@@ -124,11 +97,12 @@ namespace MicroElements.Metadata.Xml
             XElement? rootElement = document.Root;
             if (rootElement != null && rootElement.HasElements)
             {
-                schema ??= new Schema.Schema();
+                schema ??= new MutableSchema();
                 settings ??= new XmlParserSettings();
-                context ??= settings.CreateContext(settings);
+                context ??= new XmlParserContext(settings);
 
                 container.SetSchema(schema);
+                container.SetMetadata(context);
 
                 ParseXmlElement(rootElement, schema, settings, context, container);
             }
@@ -154,7 +128,8 @@ namespace MicroElements.Metadata.Xml
 
                     if (propertyElement.HasElements)
                     {
-                        ISchema propertyInternalSchema = property?.GetOrAddSchema() ?? new Schema.Schema();
+                        ISchema propertyInternalSchema = context.GetOrAddSchema(property);
+
                         IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings, context);
                         if (internalObject != null && internalObject.Count > 0)
                         {
@@ -193,7 +168,7 @@ namespace MicroElements.Metadata.Xml
                                     .SetIsNotFromSchema());
                         }
 
-                        IValueParser valueParser = GetParserCached(settings, context, property);
+                        IValueParser valueParser = context.GetParserCached(property);
                         if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;
@@ -240,13 +215,21 @@ namespace MicroElements.Metadata.Xml
         /// <summary>
         /// Alternative version with XmlReader.
         /// </summary>
-        public static object? ReadXmlElement(XmlReader xmlReader, ISchema schema)
+        public static object? ReadXmlElement(
+            XmlReader xmlReader,
+            ISchema? schema = null,
+            IXmlParserSettings? settings = null,
+            IXmlParserContext? context = null)
         {
             int rootDepth = xmlReader.Depth;
             string? elementName = null;
 
             MutablePropertyContainer? container = null;
             IProperty? property = null;
+
+            schema ??= new MutableSchema();
+            settings ??= new XmlParserSettings();
+            context ??= new XmlParserContext(settings);
 
             while (xmlReader.Read())
             {
@@ -257,44 +240,22 @@ namespace MicroElements.Metadata.Xml
                         container = new MutablePropertyContainer();
                         container.SetSchema(schema);
                     }
-                    elementName = xmlReader.Name;
 
+                    elementName = xmlReader.Name;
                     property = schema.GetProperty(elementName);
 
                     if (property != null)
                     {
-                        // Property has schema in metadata.
-                        if (property.Type.IsAssignableTo<IPropertyContainer>() && property.GetHasSchema() is { } hasSchema)
-                        {
-                            ISchema propertySchema = hasSchema.Schema.ToSchema();
-                            var compositeValue = ReadXmlElement(xmlReader, propertySchema);
-                            container.Add(PropertyValue.Create(property, compositeValue));
-
-                            continue;
-                        }
-
-                        // Property type is IPropertySet
-                        if (property.Type.IsAssignableTo(typeof(IPropertySet)))
-                        {
-                            ISchema propertySchema = ((IPropertySet)Activator.CreateInstance(property.Type)!).ToSchema();
-                            var compositeValue = ReadXmlElement(xmlReader, propertySchema);
-                            container.Add(PropertyValue.Create(Property.Create(typeof(IPropertyContainer), property.Name), compositeValue));
-
-                            continue;
-                        }
-
-                        if (xmlReader.Depth > rootDepth)
-                        {
-                            var compositeValue = ReadXmlElement(xmlReader, schema);
-                            container.Add(PropertyValue.Create(property, compositeValue));
-                        }
+                        ISchema propertySchema = context.GetOrAddSchema(property);
+                        var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
+                        container.Add(PropertyValue.Create(property, compositeValue));
                     }
                     else if (xmlReader.Depth > rootDepth)
                     {
-                        ISchema propertySchema = property?.GetOrAddSchema() ?? new Schema.Schema();
+                        ISchema propertySchema = context.GetOrAddSchema(property);
+                        var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
 
-                        var compositeValue = ReadXmlElement(xmlReader, propertySchema);
-                        if(compositeValue is IPropertyContainer internalObject)
+                        if (compositeValue is IPropertyContainer internalObject)
                         {
                             property = Property
                                 .Create(typeof(IPropertyContainer), elementName)
@@ -325,7 +286,7 @@ namespace MicroElements.Metadata.Xml
                         return value;
                     }
                 }
-                else if(xmlReader.NodeType == XmlNodeType.EndElement)
+                else if (xmlReader.NodeType == XmlNodeType.EndElement)
                 {
                     break;
                 }

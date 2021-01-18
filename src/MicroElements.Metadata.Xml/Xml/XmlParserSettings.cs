@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -24,28 +22,20 @@ namespace MicroElements.Metadata.Xml
         /// <inheritdoc/>
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
-        /// <inheritdoc />
-        public Func<IXmlParserSettings, IXmlParserContext> CreateContext { get; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlParserSettings"/> class.
         /// </summary>
-        /// <param name="settings">Optional settings to build.</param>
-        public XmlParserSettings(XmlParserSettingsBuilder? settings = null)
+        /// <param name="getElementName">Function that evaluates property name for xml element.</param>
+        /// <param name="parserRules">Parsers and rules for parsers.</param>
+        /// <param name="propertyComparer">Property comparer for property related search. Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.</param>
+        public XmlParserSettings(
+            Func<XElement, string>? getElementName = null,
+            IReadOnlyCollection<IParserRule>? parserRules = null,
+            IEqualityComparer<IProperty>? propertyComparer = null)
         {
-            settings ??= new XmlParserSettingsBuilder();
-
-            GetElementName = settings.GetElementName ?? XmlParser.GetElementNameDefault;
-            ParserRules = settings.ParserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
-            PropertyComparer = settings.PropertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
-            CreateContext = settings.CreateContext ?? (parserSettings => CreateXmlParserContext(parserSettings, settings));
-        }
-
-        private static XmlParserContext CreateXmlParserContext(IXmlParserSettings parserSettings, XmlParserSettingsBuilder settings)
-        {
-            return new XmlParserContext(
-                messages: settings.Messages ?? new MutableMessageList<Message>(),
-                parsersCache: settings.ParsersCache ?? new ConcurrentDictionary<IProperty, IValueParser>(comparer: parserSettings.PropertyComparer));
+            GetElementName = getElementName ?? XmlParser.GetElementNameDefault;
+            ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
+            PropertyComparer = propertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
         }
     }
 }

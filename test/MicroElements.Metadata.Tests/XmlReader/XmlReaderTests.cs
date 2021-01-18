@@ -1,8 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-//using System.Xml;
 using System.Xml.Linq;
 using FluentAssertions;
 using MicroElements.Functional;
@@ -259,6 +257,39 @@ namespace MicroElements.Metadata.Tests
             {
                 var propertyContainer = File.OpenRead(file).ParseXmlToContainer(schema, parserSettings, parserContext);
                 list.Add(propertyContainer);
+            }
+        }
+
+        [Fact]
+        public void EnumParsingRules()
+        {
+            IXmlParserSettings parserSettings = new XmlParserSettings();
+
+            Property<Sex> enumProp = new Property<Sex>("Sex");
+            var enumParser = parserSettings.ParserRules.GetParserRule(enumProp).Parser as IValueParser;
+            enumParser.Should().NotBeNull();
+
+            CheckValue(enumProp, enumParser, "Male", true, Sex.Male);
+            CheckValue(enumProp, enumParser, "???", false, null);
+            CheckValue(enumProp, enumParser, null, false, null);
+
+            Property<Sex?> nullableEnumProp = new Property<Sex?>("OptionalSex");
+            var nullableEnumParser = parserSettings.ParserRules.GetParserRule(nullableEnumProp).Parser as IValueParser;
+            nullableEnumParser.Should().NotBeNull();
+
+            CheckValue(nullableEnumProp, nullableEnumParser, "Male", true, Sex.Male);
+            CheckValue(nullableEnumProp, nullableEnumParser, "???", false, null);
+            CheckValue(nullableEnumProp, nullableEnumParser, null, true, null);
+
+            void CheckValue(IProperty property, IValueParser valueParser, string value, bool shouldBeSuccess, object shouldBeValue)
+            {
+                var parseResult = valueParser.ParseUntyped(value);
+                parseResult.IsSuccess.Should().Be(shouldBeSuccess);
+                if (shouldBeSuccess)
+                {
+                    IPropertyValue propertyValue = PropertyValue.Create(property, parseResult.ValueUntyped);
+                    propertyValue.ValueUntyped.Should().Be(shouldBeValue);
+                }
             }
         }
 

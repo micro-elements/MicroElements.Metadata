@@ -172,13 +172,11 @@ namespace MicroElements.Metadata.Xml
                         if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;
+                            IParseResult parseResult = valueParser.ParseUntyped(elementValue);
 
-                            // WARN: boxing
-                            Option<object> parseResult = valueParser.ParseUntyped(elementValue);
-
-                            if (parseResult.IsSome)
+                            if (parseResult.IsSuccess)
                             {
-                                object? parsedValue = parseResult!.GetValueOrDefault();
+                                object? parsedValue = parseResult.ValueUntyped;
                                 container.Add(PropertyValue.Create(property, parsedValue));
                             }
                             else

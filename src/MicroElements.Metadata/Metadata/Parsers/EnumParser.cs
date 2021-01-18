@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Parsers
 {
@@ -14,11 +13,11 @@ namespace MicroElements.Metadata.Parsers
     public class EnumParser<TEnum> : ValueParserBase<TEnum>
     {
         /// <inheritdoc />
-        public override Option<TEnum> Parse(string source)
+        public override ParseResult<TEnum> Parse(string? source)
         {
             if (Enum.TryParse(typeof(TEnum), value: source, ignoreCase: true, out object result))
-                return (TEnum)result;
-            return Option<TEnum>.None;
+                return ParseResult.Success((TEnum)result);
+            return ParseResult<TEnum>.Failed;
         }
     }
 }

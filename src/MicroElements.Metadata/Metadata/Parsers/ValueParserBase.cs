@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Parsers
 {
@@ -12,16 +11,15 @@ namespace MicroElements.Metadata.Parsers
     /// <typeparam name="T">Value type.</typeparam>
     public abstract class ValueParserBase<T> : IValueParser<T>
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets target value type.
+        /// </summary>
         public Type Type => typeof(T);
 
         /// <inheritdoc />
-        public abstract Option<T> Parse(string source);
+        public abstract ParseResult<T> Parse(string? source);
 
         /// <inheritdoc />
-        public Option<object> ParseUntyped(string source)
-        {
-            return Parse(source).MatchUntyped(Prelude.Some, () => Option<object>.None);
-        }
+        public IParseResult ParseUntyped(string? source) => Parse(source);
     }
 }

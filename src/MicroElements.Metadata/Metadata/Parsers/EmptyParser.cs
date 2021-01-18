@@ -21,7 +21,7 @@ namespace MicroElements.Metadata.Parsers
         public Type Type => typeof(object);
 
         /// <inheritdoc />
-        public Option<object> ParseUntyped(string source) => Option<object>.None;
+        public IParseResult ParseUntyped(string? source) => ParseResult<object>.Failed;
 
         private EmptyParser()
         {

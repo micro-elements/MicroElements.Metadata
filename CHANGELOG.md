@@ -1,3 +1,7 @@
+# 7.0.0-rc.17
+- IValueParser moved to ParseResult instead of Option because Option doesnot support valid null values and error message
+- Nullable enums supported
+
 # 7.0.0-rc.16
 - Added IXmlParserSettings reference to IXmlParserContext 
 - Added SchemaCache to IXmlParserContext

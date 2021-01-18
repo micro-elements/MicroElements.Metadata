@@ -1,8 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.Functional;
-
 namespace MicroElements.Metadata.Parsers
 {
     /// <summary>
@@ -16,6 +14,6 @@ namespace MicroElements.Metadata.Parsers
         public static readonly StringParser Instance = new StringParser();
 
         /// <inheritdoc />
-        public override Option<string> Parse(string source) => source;
+        public override ParseResult<string> Parse(string? source) => ParseResult.Success(source!);
     }
 }

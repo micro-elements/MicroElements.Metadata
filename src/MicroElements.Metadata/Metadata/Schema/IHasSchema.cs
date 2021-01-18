@@ -155,7 +155,7 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="TSchema">Schema type.</typeparam>
         /// <param name="property">Target property.</param>
         /// <returns>The same instance.</returns>
-        public static IProperty SetSchema<TSchema>(this IProperty property)
+        public static IProperty<IPropertyContainer> SetSchema<TSchema>(this IProperty<IPropertyContainer> property)
             where TSchema : IPropertySet, new()
         {
             property.AssertArgumentNotNull(nameof(property));

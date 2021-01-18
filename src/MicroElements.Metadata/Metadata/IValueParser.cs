@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -21,7 +20,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="source">Source value.</param>
         /// <returns>Parse result.</returns>
-        Option<object> ParseUntyped(string source);
+        IParseResult ParseUntyped(string? source);
     }
 
     /// <summary>
@@ -35,6 +34,6 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="source">Source value.</param>
         /// <returns>Parse result.</returns>
-        Option<T> Parse(string source);
+        ParseResult<T> Parse(string? source);
     }
 }

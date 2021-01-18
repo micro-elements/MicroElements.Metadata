@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Parsers
 {
@@ -13,22 +12,29 @@ namespace MicroElements.Metadata.Parsers
     public class EnumUntypedParser : ValueParserBase<object>
     {
         private readonly Type _enumType;
+        private readonly bool _allowNull;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnumUntypedParser"/> class.
         /// </summary>
         /// <param name="enumType">Enum type.</param>
-        public EnumUntypedParser(Type enumType)
+        /// <param name="allowNull">Allow null value.</param>
+        public EnumUntypedParser(Type enumType, bool allowNull = false)
         {
             _enumType = enumType;
+            _allowNull = allowNull;
         }
 
         /// <inheritdoc />
-        public override Option<object> Parse(string source)
+        public override ParseResult<object> Parse(string? source)
         {
+            if (source == null && _allowNull)
+                return ParseResult.Success<object>(null);
+
             if (Enum.TryParse(_enumType, value: source, ignoreCase: true, out object result))
-                return result;
-            return Option<object>.None;
+                return ParseResult.Success<object>(result);
+
+            return ParseResult<object>.Failed;
         }
     }
 }

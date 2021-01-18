@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
+using MicroElements.Functional;
 using MicroElements.Metadata.Parsers;
 using MicroElements.Metadata.Schema;
 
@@ -12,6 +14,31 @@ namespace MicroElements.Metadata.Xml
     /// </summary>
     public static class XmlParserContextExtensions
     {
+        /// <summary>
+        /// Copies input <paramref name="context"/> with possible changes.
+        /// </summary>
+        /// <param name="context">Source parser context.</param>
+        /// <param name="parserSettings">Optional parser settings.</param>
+        /// <param name="messages">Optional message list.</param>
+        /// <param name="parsersCache">Optional parsers cache.</param>
+        /// <param name="schemaCache">Optional schemas cache.</param>
+        /// <returns>New <see cref="IXmlParserContext"/> instance.</returns>
+        public static IXmlParserContext With(
+            this IXmlParserContext context,
+            IXmlParserSettings? parserSettings = null,
+            IMutableMessageList<Message>? messages = null,
+            ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
+            ConcurrentDictionary<IProperty, ISchema>? schemaCache = null)
+        {
+            context.AssertArgumentNotNull(nameof(context));
+
+            return new XmlParserContext(
+                parserSettings: parserSettings ?? context.ParserSettings,
+                messages: messages ?? context.Messages,
+                parsersCache: parsersCache ?? context.ParsersCache,
+                schemaCache: schemaCache ?? context.SchemaCache);
+        }
+
         /// <summary>
         /// Gets parser from context cache or <see cref="IXmlParserSettings.ParserRules"/>.
         /// </summary>

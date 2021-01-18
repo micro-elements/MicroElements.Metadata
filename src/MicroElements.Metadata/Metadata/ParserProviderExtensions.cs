@@ -26,7 +26,8 @@ namespace MicroElements.Metadata
             var propertyValues = parserProvider
                 .GetParsers()
                 .Select(parser => parser.ParseRowUntyped(sourceRow))
-                .SelectMany(propertyValue => propertyValue)
+                .Where(result => result.IsSuccess)
+                .Select(result => result.Value)
                 .ToList();
 
             return propertyValues;

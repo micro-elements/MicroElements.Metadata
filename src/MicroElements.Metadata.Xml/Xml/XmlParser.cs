@@ -97,9 +97,9 @@ namespace MicroElements.Metadata.Xml
             XElement? rootElement = document.Root;
             if (rootElement != null && rootElement.HasElements)
             {
-                schema ??= new MutableSchema();
                 settings ??= new XmlParserSettings();
-                context ??= new XmlParserContext(settings);
+                context ??= new XmlParserContext(settings, schema);
+                schema ??= context.Schema;
 
                 container.SetSchema(schema);
                 container.SetMetadata(context);
@@ -225,9 +225,9 @@ namespace MicroElements.Metadata.Xml
             MutablePropertyContainer? container = null;
             IProperty? property = null;
 
-            schema ??= new MutableSchema();
             settings ??= new XmlParserSettings();
-            context ??= new XmlParserContext(settings);
+            context ??= new XmlParserContext(settings, schema);
+            schema ??= context.Schema;
 
             while (xmlReader.Read())
             {
@@ -237,6 +237,7 @@ namespace MicroElements.Metadata.Xml
                     {
                         container = new MutablePropertyContainer();
                         container.SetSchema(schema);
+                        container.SetMetadata(context);
                     }
 
                     elementName = xmlReader.Name;

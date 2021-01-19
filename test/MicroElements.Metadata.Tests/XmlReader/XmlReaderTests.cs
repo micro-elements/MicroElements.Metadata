@@ -248,9 +248,8 @@ namespace MicroElements.Metadata.Tests
             List<IPropertyContainer> list = new List<IPropertyContainer>();
 
             var schema = new PropertySet().ToSchema();
-
             IXmlParserSettings parserSettings = new XmlParserSettings();
-            IXmlParserContext parserContext = new XmlParserContext(parserSettings);
+            IXmlParserContext parserContext = new XmlParserContext(parserSettings, schema);
 
             foreach (string file in Directory
                 .EnumerateFiles(folder1))

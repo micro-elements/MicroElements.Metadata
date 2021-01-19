@@ -1,20 +1,33 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MicroElements.Metadata.Schema
 {
+    // TODO: Schema functional will be extended next releases!
+
     internal interface ISchemaRegistry
     {
-        public void Add(string id, object schema);
+        public void Add(string schemaId, ISchema schema);
 
-        public object Get(string id);
+        public void Add(IProperty property, ISchema schema);
 
-        public IReadOnlyCollection<object> Schemas { get; }
+        public ISchema Get(string schemaId);
+
+        public ISchema Get(IProperty property);
+
+        public IReadOnlyCollection<ISchema> Schemas { get; }
+
+        public ConcurrentDictionary<IProperty, ISchema> SchemaCache { get; }
     }
 
+    /// <summary>
+    /// Represents schema for <see cref="IPropertyContainer"/>.
+    /// Contains properties, constraints and validation rules.
+    /// </summary>
     public interface ISchema : IPropertySet
     {
         //string Id { get; }// add Description etc

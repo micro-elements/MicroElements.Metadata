@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -104,6 +105,136 @@ namespace MicroElements.Metadata
             }
 
             return propertyContainer;
+        }
+
+        /// <summary>
+        /// Merges <see cref="IPropertyContainer"/> objects to single <see cref="IPropertyContainer"/>.
+        /// </summary>
+        /// <param name="containers">Source objects.</param>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer Merge(this IEnumerable<IPropertyContainer?>? containers, PropertyAddMode mergeMode = PropertyAddMode.Set)
+        {
+            MutablePropertyContainer? merger = null;
+
+            if (containers != null)
+            {
+                foreach (var container in containers)
+                {
+                    if (container != null)
+                    {
+                        if (merger == null)
+                        {
+                            merger = new MutablePropertyContainer(
+                                sourceValues: container,
+                                searchOptions: container.SearchOptions);
+                            continue;
+                        }
+
+                        merger.WithValues(container, mergeMode);
+                    }
+                }
+            }
+
+            return merger ?? PropertyContainer.Empty;
+        }
+
+        /// <summary>
+        /// Merges composite properties to one container.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <param name="properties">Properties to merge.</param>
+        /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer MergeProperties(
+            this IPropertyContainer propertyContainer,
+            PropertyAddMode mergeMode = PropertyAddMode.Set,
+            params IProperty<IPropertyContainer>[]? properties)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            return properties
+                .NotNull()
+                .Select(property => propertyContainer.GetValue(property))
+                .Merge(mergeMode);
+        }
+
+        /// <summary>
+        /// Gets list items for property that implemented as <see cref="IPropertyContainer"/> list.
+        /// Example:
+        /// <code>
+        /// - Source: IPropertyContainer
+        ///   - ListProperty: IPropertyContainer
+        ///     - ListItem: IPropertyContainer
+        ///     - ListItem: IPropertyContainer
+        /// </code>
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="listProperty">List property.</param>
+        /// <returns>ListItem enumeration.</returns>
+        public static IEnumerable<IPropertyContainer> GetListItems(
+            this IPropertyContainer propertyContainer,
+            IProperty<IPropertyContainer> listProperty)
+        {
+            IPropertyContainer list = propertyContainer.GetValue(listProperty) ?? PropertyContainer.Empty;
+            return list
+                .Select(pv => pv.ValueUntyped as IPropertyContainer)
+                .Where(container => container != null)!;
+        }
+
+        /// <summary>
+        /// Gets list items for property <paramref name="listProperty"/>.
+        /// Then enriches each list item with common values from <paramref name="commonValues"/>.
+        /// </summary>
+        /// <param name="containers">Source container.</param>
+        /// <param name="listProperty">List property.</param>
+        /// <param name="commonValues">Property that contains common values for each list item.</param>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <returns>List items enriched with values from <paramref name="commonValues"/>.</returns>
+        public static IEnumerable<IPropertyContainer> GetListItemsEnriched(
+            this IEnumerable<IPropertyContainer> containers,
+            IProperty<IPropertyContainer> listProperty,
+            IProperty<IPropertyContainer> commonValues,
+            PropertyAddMode mergeMode = PropertyAddMode.Set)
+        {
+            var joinedItems = containers
+                .Select(container => new
+                {
+                    List = container.GetListItems(listProperty),
+                    Common = container.GetValue(commonValues),
+                })
+                .SelectMany(a => a.List.Select(listItem => PropertyContainer.Merge(mergeMode, a.Common, listItem)));
+
+            return joinedItems;
+        }
+
+        /// <summary>
+        /// Gets list items for property <paramref name="listProperty"/>.
+        /// Then enriches each list item with common values from <paramref name="commonValues1"/> and <paramref name="commonValues2"/>.
+        /// </summary>
+        /// <param name="containers">Source container.</param>
+        /// <param name="listProperty">List property.</param>
+        /// <param name="commonValues1">First property that contains common values for each list item.</param>
+        /// <param name="commonValues2">Second property that contains common values for each list item.</param>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <returns>List items enriched with values from <paramref name="commonValues1"/> and <paramref name="commonValues2"/>.</returns>
+        public static IEnumerable<IPropertyContainer> GetListItemsEnriched(
+            this IEnumerable<IPropertyContainer> containers,
+            IProperty<IPropertyContainer> listProperty,
+            IProperty<IPropertyContainer> commonValues1,
+            IProperty<IPropertyContainer> commonValues2,
+            PropertyAddMode mergeMode = PropertyAddMode.Set)
+        {
+            var joinedItems = containers
+                .Select(container => new
+                {
+                    List = container.GetListItems(listProperty),
+                    Common1 = container.GetValue(commonValues1),
+                    Common2 = container.GetValue(commonValues2),
+                })
+                .SelectMany(a => a.List.Select(listItem => PropertyContainer.Merge(mergeMode, a.Common1, a.Common2, listItem)));
+
+            return joinedItems;
         }
     }
 }

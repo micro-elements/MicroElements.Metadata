@@ -18,6 +18,11 @@ namespace MicroElements.Metadata.Xml
         IXmlParserSettings ParserSettings { get; }
 
         /// <summary>
+        /// Gets schema to use for parsing.
+        /// </summary>
+        ISchema Schema { get; }
+
+        /// <summary>
         /// Gets messages list.
         /// </summary>
         IMutableMessageList<Message> Messages { get; }
@@ -42,6 +47,9 @@ namespace MicroElements.Metadata.Xml
         public IXmlParserSettings ParserSettings { get; }
 
         /// <inheritdoc />
+        public ISchema Schema { get; }
+
+        /// <inheritdoc />
         public IMutableMessageList<Message> Messages { get; }
 
         /// <inheritdoc />
@@ -54,11 +62,13 @@ namespace MicroElements.Metadata.Xml
         /// Initializes a new instance of the <see cref="XmlParserContext"/> class.
         /// </summary>
         /// <param name="parserSettings">Parser settings.</param>
+        /// <param name="schema">Schema to use for parsing.</param>
         /// <param name="messages">Optional message list.</param>
         /// <param name="parsersCache">Optional parsers cache.</param>
         /// <param name="schemaCache">Optional schemas cache.</param>
         public XmlParserContext(
             IXmlParserSettings parserSettings,
+            ISchema? schema,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
             ConcurrentDictionary<IProperty, ISchema>? schemaCache = null)
@@ -66,6 +76,8 @@ namespace MicroElements.Metadata.Xml
             parserSettings.AssertArgumentNotNull(nameof(parserSettings));
 
             ParserSettings = parserSettings;
+            Schema = schema ?? new MutableSchema();
+
             Messages = messages ?? new MutableMessageList<Message>();
             ParsersCache = parsersCache ?? new ConcurrentDictionary<IProperty, IValueParser>(comparer: parserSettings.PropertyComparer);
             SchemaCache = schemaCache ?? new ConcurrentDictionary<IProperty, ISchema>(comparer: parserSettings.PropertyComparer);

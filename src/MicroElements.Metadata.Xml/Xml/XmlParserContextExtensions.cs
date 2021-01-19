@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using MicroElements.Functional;
 using MicroElements.Metadata.Parsers;
 using MicroElements.Metadata.Schema;
@@ -19,6 +20,7 @@ namespace MicroElements.Metadata.Xml
         /// </summary>
         /// <param name="context">Source parser context.</param>
         /// <param name="parserSettings">Optional parser settings.</param>
+        /// <param name="schema">Optional schema.</param>
         /// <param name="messages">Optional message list.</param>
         /// <param name="parsersCache">Optional parsers cache.</param>
         /// <param name="schemaCache">Optional schemas cache.</param>
@@ -26,6 +28,7 @@ namespace MicroElements.Metadata.Xml
         public static IXmlParserContext With(
             this IXmlParserContext context,
             IXmlParserSettings? parserSettings = null,
+            ISchema? schema = null,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
             ConcurrentDictionary<IProperty, ISchema>? schemaCache = null)
@@ -34,6 +37,7 @@ namespace MicroElements.Metadata.Xml
 
             return new XmlParserContext(
                 parserSettings: parserSettings ?? context.ParserSettings,
+                schema: schema ?? context.Schema,
                 messages: messages ?? context.Messages,
                 parsersCache: parsersCache ?? context.ParsersCache,
                 schemaCache: schemaCache ?? context.SchemaCache);
@@ -64,6 +68,53 @@ namespace MicroElements.Metadata.Xml
                 return factory?.Invoke() ?? new MutableSchema();
 
             return context.SchemaCache.GetOrAdd(property, p => p.GetOrAddSchema(factory));
+        }
+
+        /// <summary>
+        /// Gets schema for property.
+        /// If property is null then returns null.
+        /// </summary>
+        /// <param name="context">Parser context.</param>
+        /// <param name="property">Source property.</param>
+        /// <returns>Optional schema attached to property.</returns>
+        public static ISchema? GetSchema(this IXmlParserContext context, IProperty? property)
+        {
+            if (property == null)
+                return null;
+
+            context.SchemaCache.TryGetValue(property, out var schema);
+            return schema;
+        }
+
+        /// <summary>
+        /// Gets properties that was not created from schema.
+        /// </summary>
+        /// <param name="parserContext">Source parser context.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="recursive">Recursive search in children schemas.</param>
+        /// <returns>Properties that was not created from schema.</returns>
+        public static IEnumerable<IProperty> GetPropertiesNotFromSchema(this IXmlParserContext parserContext, ISchema? schema = null, bool recursive = true)
+        {
+            // Use root schema.
+            schema ??= parserContext.Schema;
+
+            IEnumerable<IProperty> properties = schema.GetProperties();
+            foreach (IProperty property in properties)
+            {
+                if (property.GetIsNotFromSchema())
+                    yield return property;
+
+                if (recursive)
+                {
+                    if (parserContext.GetSchema(property) is { } subSchema)
+                    {
+                        foreach (IProperty subProperty in parserContext.GetPropertiesNotFromSchema(subSchema, recursive))
+                        {
+                            yield return subProperty;
+                        }
+                    }
+                }
+            }
         }
     }
 }

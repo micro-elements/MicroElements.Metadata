@@ -1,3 +1,8 @@
+# 7.0.0-rc.18
+- Many useful PropertyContainerExtensions: Merge, MergeProperties, GetListItems, GetListItemsEnriched
+- ISchema added to IXmlParserContext
+- Added GetPropertiesNotFromSchema that works with IXmlParserContext
+
 # 7.0.0-rc.17
 - IValueParser moved to ParseResult instead of Option because Option doesnot support valid null values and error message
 - Nullable enums supported

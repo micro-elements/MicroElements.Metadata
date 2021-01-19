@@ -10,13 +10,8 @@ namespace MicroElements.Metadata
     /// <summary>
     /// ReadOnly property container.
     /// </summary>
-    public class PropertyContainer : IPropertyContainer
+    public partial class PropertyContainer : IPropertyContainer
     {
-        /// <summary>
-        /// Empty property container singleton instance.
-        /// </summary>
-        public static readonly IPropertyContainer Empty = new PropertyContainer();
-
         /// <summary>
         /// Real data holder.
         /// </summary>
@@ -75,6 +70,28 @@ namespace MicroElements.Metadata
         protected T GetValue<T>(IProperty<T> property, SearchOptions? search = null)
         {
             return SearchExtensions.GetValue(this, property, search);
+        }
+    }
+
+    /// <summary>
+    /// Static PropertyContainer staff.
+    /// </summary>
+    public partial class PropertyContainer
+    {
+        /// <summary>
+        /// Empty property container singleton instance.
+        /// </summary>
+        public static readonly IPropertyContainer Empty = new PropertyContainer();
+
+        /// <summary>
+        /// Merges <paramref name="propertyContainers"/>.
+        /// </summary>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <param name="propertyContainers">Containers to merge with initial.</param>
+        /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer Merge(PropertyAddMode mergeMode, params IPropertyContainer?[]? propertyContainers)
+        {
+            return propertyContainers.Merge(mergeMode);
         }
     }
 }

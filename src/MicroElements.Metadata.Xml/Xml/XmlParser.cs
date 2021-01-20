@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata.Parsers;
 using MicroElements.Metadata.Schema;
+using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -144,6 +146,9 @@ namespace MicroElements.Metadata.Xml
                             }
 
                             container.Add(PropertyValue.Create(property, internalObject));
+
+                            // Validate property.
+                            ValidateProperty(context, container, property, propertyElement);
                         }
                     }
                     else
@@ -172,23 +177,31 @@ namespace MicroElements.Metadata.Xml
                         if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;
+
+                            // Parse value.
                             IParseResult parseResult = valueParser.ParseUntyped(elementValue);
 
                             if (parseResult.IsSuccess)
                             {
+                                // Add property to container.
                                 object? parsedValue = parseResult.ValueUntyped;
                                 container.Add(PropertyValue.Create(property, parsedValue));
+
+                                // Validate property.
+                                ValidateProperty(context, container, property, propertyElement);
                             }
                             else
                             {
-                                context.Messages.AddError(
-                                    $"Property '{property.Name}' was not parsed from string '{elementValue}'.{GetXmlLineInfo(propertyElement)}");
+                                string? parseResultErrorMessage = parseResult.Error?.FormattedMessage;
+                                string parseResultError = parseResultErrorMessage != null ? $" Error: '{parseResultErrorMessage}'." : string.Empty;
+                                string errorMessage = $"Property '{property.Name}' failed to parse from string '{elementValue}'.{parseResultError}{GetXmlLineInfo(propertyElement)}";
+                                context.Messages.AddError(errorMessage);
                             }
                         }
                         else
                         {
-                            context.Messages.AddError(
-                                $"Property '{property.Name}' can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}");
+                            string errorMessage = $"Property '{property.Name}' can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}";
+                            context.Messages.AddError(errorMessage);
                         }
                     }
                 }
@@ -197,6 +210,25 @@ namespace MicroElements.Metadata.Xml
             }
 
             return null;
+        }
+
+        private static void ValidateProperty(
+            IXmlParserContext context,
+            IMutablePropertyContainer container,
+            IProperty property,
+            XElement propertyElement)
+        {
+            if (context.ParserSettings.ValidateOnParse)
+            {
+                var validationRules = context.GetValidatorsCached(property);
+                if (validationRules.Rules.Count > 0)
+                {
+                    container
+                        .Validate(validationRules.Rules)
+                        .Select(message => message.WithText(message.OriginalMessage + GetXmlLineInfo(propertyElement)))
+                        .Iterate(message => context.Messages.Add(message));
+                }
+            }
         }
 
         private static string GetXmlLineInfo(this XElement element)

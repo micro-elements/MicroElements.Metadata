@@ -15,13 +15,12 @@ namespace MicroElements.Metadata.Schema
     public interface IPropertyValidationRules : IMetadata
     {
         /// <summary>
-        /// Adds rule to property.
+        /// Gets the property.
         /// </summary>
-        /// <param name="validationRule">Rule to add.</param>
-        void AddRule(IValidationRule validationRule);
+        IProperty Property { get; }
 
         /// <summary>
-        /// Gets rules.
+        /// Gets property validation rules.
         /// </summary>
         IReadOnlyCollection<IValidationRule> Rules { get; }
     }
@@ -31,16 +30,22 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     public class PropertyValidationRules : IPropertyValidationRules
     {
-        private readonly List<IValidationRule> _rules = new List<IValidationRule>();
+        /// <inheritdoc />
+        public IProperty Property { get; }
 
         /// <inheritdoc/>
-        public void AddRule(IValidationRule validationRule)
+        public IReadOnlyCollection<IValidationRule> Rules { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyValidationRules"/> class.
+        /// </summary>
+        /// <param name="property">Property.</param>
+        /// <param name="validationRules">Validation rules for property.</param>
+        public PropertyValidationRules(IProperty property, IReadOnlyCollection<IValidationRule>? validationRules = null)
         {
-            _rules.Add(validationRule);
+            Property = property.AssertArgumentNotNull(nameof(property));
+            Rules = validationRules ?? Array.Empty<IValidationRule>();
         }
-
-        /// <inheritdoc/>
-        public IReadOnlyCollection<IValidationRule> Rules => _rules;
     }
 
     /// <summary>
@@ -60,12 +65,29 @@ namespace MicroElements.Metadata.Schema
             property.AssertArgumentNotNull(nameof(property));
             validation.AssertArgumentNotNull(nameof(validation));
 
-            return property.ConfigureMetadata<IProperty<T>, IPropertyValidationRules, PropertyValidationRules>(
-                propertyValidation =>
+            return property.ConfigureMetadata<IProperty<T>, IPropertyValidationRules>(
+                createMetadata: CreatePropertyValidationRules,
+                configureMetadata: propertyValidation =>
                 {
                     IValidationRule<T> validationRule = validation(property);
-                    propertyValidation.AddRule(validationRule);
+                    return propertyValidation.AddRule(validationRule);
                 });
+        }
+
+        /// <summary>
+        /// Adds untyped validation to property metadata <see cref="IPropertyValidationRules"/>.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <param name="validationRule">Validation rule.</param>
+        /// <returns>The same property.</returns>
+        public static IProperty AddValidation(this IProperty property, IValidationRule validationRule)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            validationRule.AssertArgumentNotNull(nameof(validationRule));
+
+            return property.ConfigureMetadata<IProperty, IPropertyValidationRules>(
+                createMetadata: CreatePropertyValidationRules,
+                configureMetadata: propertyValidation => propertyValidation.AddRule(validationRule));
         }
 
         /// <summary>
@@ -82,25 +104,9 @@ namespace MicroElements.Metadata.Schema
             validation.AssertArgumentNotNull(nameof(validation));
 
             IValidationRule<T> validationRule = validation(property);
-            PropertyValidationRules validationRules = new PropertyValidationRules();
-            validationRules.AddRule(validationRule);
+            IPropertyValidationRules validationRules = new PropertyValidationRules(property, new[] { validationRule });
 
             return property.SetMetadata<IProperty<T>, IPropertyValidationRules>(validationRules);
-        }
-
-        /// <summary>
-        /// Adds untyped validation to property metadata <see cref="IPropertyValidationRules"/>.
-        /// </summary>
-        /// <param name="property">Source property.</param>
-        /// <param name="validationRule">Validation rule.</param>
-        /// <returns>The same property.</returns>
-        public static IProperty AddUntypedValidation(this IProperty property, IValidationRule validationRule)
-        {
-            property.AssertArgumentNotNull(nameof(property));
-            validationRule.AssertArgumentNotNull(nameof(validationRule));
-
-            return property.ConfigureMetadata<IProperty, IPropertyValidationRules, PropertyValidationRules>(
-                validation => validation.AddRule(validationRule));
         }
 
         /// <summary>
@@ -126,6 +132,16 @@ namespace MicroElements.Metadata.Schema
             schema.AssertArgumentNotNull(nameof(schema));
 
             return schema.GetProperties().SelectMany(property => property.GetValidationRules());
+        }
+
+        private static IPropertyValidationRules CreatePropertyValidationRules(IProperty property)
+        {
+            return new PropertyValidationRules(property);
+        }
+
+        private static IPropertyValidationRules AddRule(this IPropertyValidationRules propertyValidationRules, IValidationRule validationRule)
+        {
+            return new PropertyValidationRules(propertyValidationRules.Property, propertyValidationRules.Rules.Append(validationRule).ToArray());
         }
     }
 }

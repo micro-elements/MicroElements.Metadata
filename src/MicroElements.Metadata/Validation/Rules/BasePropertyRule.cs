@@ -27,7 +27,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="value">Property value.</param>
         /// <param name="propertyContainer">Property container that holds value.</param>
         /// <returns>True if value is valid.</returns>
-        protected abstract bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer);
+        protected abstract bool IsValid([AllowNull] T value, IPropertyContainer propertyContainer);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasePropertyRule{T}"/> class.

@@ -36,6 +36,11 @@ namespace MicroElements.Metadata.Xml
         /// Gets schema cache.
         /// </summary>
         ConcurrentDictionary<IProperty, ISchema> SchemaCache { get; }
+
+        /// <summary>
+        /// Gets validators cache.
+        /// </summary>
+        ConcurrentDictionary<IProperty, IPropertyValidationRules> ValidatorsCache { get; }
     }
 
     /// <summary>
@@ -58,6 +63,9 @@ namespace MicroElements.Metadata.Xml
         /// <inheritdoc />
         public ConcurrentDictionary<IProperty, ISchema> SchemaCache { get; }
 
+        /// <inheritdoc />
+        public ConcurrentDictionary<IProperty, IPropertyValidationRules> ValidatorsCache { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlParserContext"/> class.
         /// </summary>
@@ -66,12 +74,14 @@ namespace MicroElements.Metadata.Xml
         /// <param name="messages">Optional message list.</param>
         /// <param name="parsersCache">Optional parsers cache.</param>
         /// <param name="schemaCache">Optional schemas cache.</param>
+        /// <param name="validatorsCache">Optional validators cache.</param>
         public XmlParserContext(
             IXmlParserSettings parserSettings,
             ISchema? schema,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
-            ConcurrentDictionary<IProperty, ISchema>? schemaCache = null)
+            ConcurrentDictionary<IProperty, ISchema>? schemaCache = null,
+            ConcurrentDictionary<IProperty, IPropertyValidationRules>? validatorsCache = null)
         {
             parserSettings.AssertArgumentNotNull(nameof(parserSettings));
 
@@ -79,8 +89,10 @@ namespace MicroElements.Metadata.Xml
             Schema = schema ?? new MutableSchema();
 
             Messages = messages ?? new MutableMessageList<Message>();
+
             ParsersCache = parsersCache ?? new ConcurrentDictionary<IProperty, IValueParser>(comparer: parserSettings.PropertyComparer);
             SchemaCache = schemaCache ?? new ConcurrentDictionary<IProperty, ISchema>(comparer: parserSettings.PropertyComparer);
+            ValidatorsCache = validatorsCache ?? new ConcurrentDictionary<IProperty, IPropertyValidationRules>(comparer: parserSettings.PropertyComparer);
         }
     }
 }

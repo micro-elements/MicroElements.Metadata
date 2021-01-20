@@ -7,17 +7,26 @@ using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Validation.Rules
 {
-    public class MaxLengthValidationRule : BasePropertyRule<string>
+    /// <summary>
+    /// Validation rule based on property metadata <see cref="IStringMaxLength"/>.
+    /// Checks that string length aligns with the maximum allowed length.
+    /// </summary>
+    public class StringMaxLengthValidationRule : BasePropertyRule<string>
     {
         private readonly IStringMaxLength? _maxLength;
 
-        public MaxLengthValidationRule(IProperty<string> property, IStringMaxLength? maxLength = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StringMaxLengthValidationRule"/> class.
+        /// </summary>
+        /// <param name="property">Property to check.</param>
+        /// <param name="maxLength">Maximum allowed length for string values.</param>
+        public StringMaxLengthValidationRule(IProperty<string> property, IStringMaxLength? maxLength = null)
             : base(property)
         {
             _maxLength = maxLength ?? property.GetMetadata<IStringMaxLength>();
             if (_maxLength != null && _maxLength.MaxLength.HasValue)
             {
-                this.SetDefaultMessageFormat("value '{value}' is too long (length: {length}, maxLength: {maxLength})");
+                this.SetDefaultMessageFormat("Value '{value}' is too long (length: {length}, maxLength: {maxLength})");
                 this.ConfigureMessage((message, value, pc) =>
                     message
                         .WithProperty("length", GetLength(value.ValueUntyped as string))

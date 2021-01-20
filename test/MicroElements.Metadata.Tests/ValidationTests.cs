@@ -119,8 +119,8 @@ namespace MicroElements.Metadata.Tests
 
             IEnumerable<IValidationRule> Rules()
             {
-                yield return new MinLengthValidationRule(Name, new StringMinLength(3));
-                yield return new MaxLengthValidationRule(Name, new StringMaxLength(4));
+                yield return new StringMinLengthValidationRule(Name, new StringMinLength(3));
+                yield return new StringMaxLengthValidationRule(Name, new StringMaxLength(4));
             }
 
             var container = new MutablePropertyContainer()
@@ -128,14 +128,14 @@ namespace MicroElements.Metadata.Tests
 
             var messages = container.Validate(Rules().Cached()).ToList();
             messages.Should().HaveCount(1);
-            messages[0].FormattedMessage.Should().Be("value '12345678' is too long (length: 8, maxLength: 4)");
+            messages[0].FormattedMessage.Should().Be("Value '12345678' is too long (length: 8, maxLength: 4)");
 
             container = new MutablePropertyContainer()
                 .WithValue(Name, "12");
 
             messages = container.Validate(Rules().Cached()).ToList();
             messages.Should().HaveCount(1);
-            messages[0].FormattedMessage.Should().Be("value '12' is too short (length: 2, minLength: 3)");
+            messages[0].FormattedMessage.Should().Be("Value '12' is too short (length: 2, minLength: 3)");
 
             container = new MutablePropertyContainer()
                 .WithValue(Name, "1234");

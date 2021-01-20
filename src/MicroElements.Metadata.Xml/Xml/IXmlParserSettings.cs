@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using MicroElements.Validation.Rules;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -15,17 +16,27 @@ namespace MicroElements.Metadata.Xml
         /// <summary>
         /// Gets function that evaluates property name for xml element.
         /// </summary>
-        public Func<XElement, string> GetElementName { get; }
+        Func<XElement, string> GetElementName { get; }
 
         /// <summary>
         /// Gets parsers and rules for parsers.
         /// </summary>
-        public IReadOnlyCollection<IParserRule> ParserRules { get; }
+        IReadOnlyCollection<IParserRule> ParserRules { get; }
 
         /// <summary>
         /// Gets property comparer for property related search.
         /// Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.
         /// </summary>
-        public IEqualityComparer<IProperty> PropertyComparer { get; }
+        IEqualityComparer<IProperty> PropertyComparer { get; }
+
+        /// <summary>
+        /// Gets validation factory.
+        /// </summary>
+        IValidationProvider ValidationProvider { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether property value should be validated on parse.
+        /// </summary>
+        bool ValidateOnParse { get; }
     }
 }

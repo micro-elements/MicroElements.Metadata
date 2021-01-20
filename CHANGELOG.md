@@ -1,3 +1,7 @@
+# 7.0.0-rc.19
+- Validation for XmlParser
+- ConfigureMetadata now supports thread safe ReadOnly metadata creation and configuration
+
 # 7.0.0-rc.18
 - Many useful PropertyContainerExtensions: Merge, MergeProperties, GetListItems, GetListItemsEnriched
 - ISchema added to IXmlParserContext

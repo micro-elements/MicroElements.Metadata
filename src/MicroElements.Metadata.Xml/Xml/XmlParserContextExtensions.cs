@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata.Parsers;
 using MicroElements.Metadata.Schema;
+using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -24,6 +26,7 @@ namespace MicroElements.Metadata.Xml
         /// <param name="messages">Optional message list.</param>
         /// <param name="parsersCache">Optional parsers cache.</param>
         /// <param name="schemaCache">Optional schemas cache.</param>
+        /// <param name="validatorsCache">Optional validators cache.</param>
         /// <returns>New <see cref="IXmlParserContext"/> instance.</returns>
         public static IXmlParserContext With(
             this IXmlParserContext context,
@@ -31,7 +34,8 @@ namespace MicroElements.Metadata.Xml
             ISchema? schema = null,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
-            ConcurrentDictionary<IProperty, ISchema>? schemaCache = null)
+            ConcurrentDictionary<IProperty, ISchema>? schemaCache = null,
+            ConcurrentDictionary<IProperty, IPropertyValidationRules>? validatorsCache = null)
         {
             context.AssertArgumentNotNull(nameof(context));
 
@@ -40,7 +44,8 @@ namespace MicroElements.Metadata.Xml
                 schema: schema ?? context.Schema,
                 messages: messages ?? context.Messages,
                 parsersCache: parsersCache ?? context.ParsersCache,
-                schemaCache: schemaCache ?? context.SchemaCache);
+                schemaCache: schemaCache ?? context.SchemaCache,
+                validatorsCache: validatorsCache ?? context.ValidatorsCache);
         }
 
         /// <summary>
@@ -52,6 +57,23 @@ namespace MicroElements.Metadata.Xml
         public static IValueParser GetParserCached(this IXmlParserContext context, IProperty property)
         {
             return context.ParsersCache.GetOrAdd(property, p => context.ParserSettings.ParserRules.GetParserRule(p, context.ParserSettings.PropertyComparer)?.Parser ?? EmptyParser.Instance);
+        }
+
+        /// <summary>
+        /// Gets validation rules for property.
+        /// </summary>
+        /// <param name="context">Parser context.</param>
+        /// <param name="property">Source property.</param>
+        /// <returns>Validation rules for property.</returns>
+        public static IPropertyValidationRules GetValidatorsCached(this IXmlParserContext context, IProperty property)
+        {
+            IPropertyValidationRules GetValidationRules(IProperty property)
+            {
+                IValidationRule[] validationRules = context.ParserSettings.ValidationProvider.GetValidationRules(property).ToArray();
+                return new PropertyValidationRules(property, validationRules);
+            }
+
+            return context.ValidatorsCache.GetOrAdd(property, GetValidationRules);
         }
 
         /// <summary>

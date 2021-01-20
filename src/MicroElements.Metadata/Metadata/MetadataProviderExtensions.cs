@@ -99,6 +99,20 @@ namespace MicroElements.Metadata
             return metadataProvider;
         }
 
+        /// <summary>
+        /// Converts configure action to configure function.
+        /// </summary>
+        /// <typeparam name="T">Value type.</typeparam>
+        /// <param name="configureAction">Source configure action.</param>
+        /// <returns>Result configure function.</returns>
+        public static Func<T, T> ToConfigureFunc<T>(this Action<T> configureAction)
+        {
+            return arg =>
+            {
+                configureAction(arg);
+                return arg;
+            };
+        }
 
         /// <summary>
         /// Configures metadata with action. Can be called many times.
@@ -115,7 +129,10 @@ namespace MicroElements.Metadata
             string? metadataName = null)
             where TMetadata : new()
         {
-            return ConfigureMetadataInternal<TMetadata, TMetadata>(metadataProvider, configureMetadata, metadataName);
+            return metadataProvider.ConfigureMetadata<IMetadataProvider, TMetadata>(
+                createMetadata: provider => new TMetadata(),
+                configureMetadata: configureMetadata.ToConfigureFunc(),
+                metadataName: metadataName);
         }
 
         /// <summary>
@@ -135,9 +152,10 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
             where TMetadata : new()
         {
-            ConfigureMetadataInternal<TMetadata, TMetadata>(metadataProvider, configureMetadata, metadataName);
-
-            return metadataProvider;
+            return metadataProvider.ConfigureMetadata<TMetadataProvider, TMetadata>(
+                createMetadata: provider => new TMetadata(),
+                configureMetadata: configureMetadata.ToConfigureFunc(),
+                metadataName: metadataName);
         }
 
         /// <summary>
@@ -158,38 +176,55 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
             where TMetadata : TMetadataInterface, new()
         {
-            ConfigureMetadataInternal<TMetadataInterface, TMetadata>(metadataProvider, configureMetadata, metadataName);
-
-            return metadataProvider;
+            return metadataProvider.ConfigureMetadata<TMetadataProvider, TMetadataInterface>(
+                createMetadata: provider => new TMetadata(),
+                configureMetadata: metadata =>
+                {
+                    configureMetadata((TMetadata)metadata);
+                    return metadata;
+                },
+                metadataName: metadataName);
         }
 
         /// <summary>
         /// Configures metadata with action. Can be called many times.
         /// If metadata is not exists then it creates with default constructor.
         /// </summary>
-        /// <typeparam name="TMetadataInterface">Metadata interface type.</typeparam>
+        /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Target metadata provider.</param>
-        /// <param name="configureMetadata">Configure action.</param>
+        /// <param name="createMetadata">Metadata factory function.</param>
+        /// <param name="configureMetadata">Metadata configure action.</param>
         /// <param name="metadataName">Optional metadata name.</param>
         /// <returns>The same metadataProvider.</returns>
-        public static IMetadataProvider ConfigureMetadataInternal<TMetadataInterface, TMetadata>(
-            this IMetadataProvider metadataProvider,
-            Action<TMetadata> configureMetadata,
+        public static TMetadataProvider ConfigureMetadata<TMetadataProvider, TMetadata>(
+            this TMetadataProvider metadataProvider,
+            Func<TMetadataProvider, TMetadata> createMetadata,
+            Func<TMetadata, TMetadata> configureMetadata,
             string? metadataName = null)
-            where TMetadata : TMetadataInterface, new()
+            where TMetadataProvider : IMetadataProvider
         {
+            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
+            createMetadata.AssertArgumentNotNull(nameof(createMetadata));
             configureMetadata.AssertArgumentNotNull(nameof(configureMetadata));
 
-            metadataProvider.GetMetadataAsOption<TMetadata>(metadataName)
-                .Match(
-                    some: configureMetadata,
-                    none: () =>
-                    {
-                        var metadata = new TMetadata();
-                        configureMetadata(metadata);
-                        metadataProvider.SetMetadata(metadataName, (TMetadataInterface)metadata);
-                    });
+            lock (metadataProvider)
+            {
+                bool isJustCreated = false;
+
+                TMetadata metadata = metadataProvider.GetMetadata<TMetadata>(metadataName);
+
+                if (metadata.IsNull())
+                {
+                    metadata = createMetadata(metadataProvider);
+                    isJustCreated = true;
+                }
+
+                TMetadata metadataNew = configureMetadata(metadata);
+
+                if (isJustCreated || !ReferenceEquals(metadataNew, metadata))
+                    metadataProvider.SetMetadata(metadataName, metadataNew);
+            }
 
             return metadataProvider;
         }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using MicroElements.Validation.Rules;
 
 namespace MicroElements.Metadata.Xml
 {
@@ -22,20 +23,33 @@ namespace MicroElements.Metadata.Xml
         /// <inheritdoc/>
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
+        /// <inheritdoc />
+        public IValidationProvider ValidationProvider { get; }
+
+        /// <inheritdoc />
+        public bool ValidateOnParse { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlParserSettings"/> class.
         /// </summary>
         /// <param name="getElementName">Function that evaluates property name for xml element.</param>
         /// <param name="parserRules">Parsers and rules for parsers.</param>
         /// <param name="propertyComparer">Property comparer for property related search. Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.</param>
+        /// <param name="validationFactory">Validation factory to create validation rules.</param>
+        /// <param name="validateOnParse">Properties should be validated on parse.</param>
         public XmlParserSettings(
             Func<XElement, string>? getElementName = null,
             IReadOnlyCollection<IParserRule>? parserRules = null,
-            IEqualityComparer<IProperty>? propertyComparer = null)
+            IEqualityComparer<IProperty>? propertyComparer = null,
+            IValidationProvider? validationFactory = null,
+            bool validateOnParse = false)
         {
             GetElementName = getElementName ?? XmlParser.GetElementNameDefault;
             ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             PropertyComparer = propertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
+
+            ValidationProvider = validationFactory ?? Validation.Rules.ValidationProvider.Instance;
+            ValidateOnParse = validateOnParse;
         }
     }
 }

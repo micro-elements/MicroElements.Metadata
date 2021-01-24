@@ -7,30 +7,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
-using MicroElements.Shared;
+using MicroElements.Metadata.Formatters;
 
 namespace MicroElements.Metadata.Serialization
 {
     /// <summary>
     /// Metadata serializer settings.
     /// </summary>
-    public interface IMapperSettings
+    public interface IMapperSettings : ITypeMapper
     {
-        /// <summary>
-        /// Gets type name.
-        /// </summary>
-        /// <param name="type">Source type.</param>
-        /// <returns>Type name.</returns>
-        string GetTypeName(Type type);
-
-        /// <summary>
-        /// Gets type by name.
-        /// It should work with all type names generated with <see cref="GetTypeName"/>.
-        /// </summary>
-        /// <param name="typeName">Type name.</param>
-        /// <returns>Type.</returns>
-        Type GetTypeByName(string typeName);
-
         /// <summary>
         /// Serializes value to string.
         /// </summary>
@@ -40,13 +25,12 @@ namespace MicroElements.Metadata.Serialization
         string? SerializeValue(Type type, object? value);
 
         /// <summary>
-        /// 
+        /// Deserializes value from string.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="text"></param>
-        /// <returns></returns>
+        /// <param name="type">Target type.</param>
+        /// <param name="text">Source text.</param>
+        /// <returns>Parse result.</returns>
         Result<object?, Message> DeserializeValue(Type type, string? text);
-
     }
 
     /// <summary>
@@ -56,90 +40,41 @@ namespace MicroElements.Metadata.Serialization
     {
         public static readonly DefaultMapperSettings Instance = new DefaultMapperSettings();
 
+        private readonly ITypeMapper _typeMapper;
+        private readonly IValueFormatter _valueFormatter;
+
         /// <summary>
         /// Invariant format info. Uses '.' as decimal separator for floating point numbers.
         /// </summary>
-        public static readonly NumberFormatInfo DefaultNumberFormatInfo = NumberFormatInfo.ReadOnly(
+        private static readonly NumberFormatInfo _defaultNumberFormatInfo = NumberFormatInfo.ReadOnly(
             new NumberFormatInfo {
                 NumberDecimalSeparator = ".",
             });
 
-        public static TypeCache TypeCache { get; }
-
-        static DefaultMapperSettings()
+        public DefaultMapperSettings(
+            ITypeMapper? typeMapper = null,
+            IValueFormatter? valueFormatter = null)
         {
-            var typeRegistrations = Enumerable.Empty<TypeRegistration>()
-                .Concat(TypeCache.NumericTypesWithNullable.TypeSource.TypeRegistrations)
-                .Concat(TypeCache.NodaTimeTypes.Value.TypeSource.TypeRegistrations)
-                .Concat(new[]
-                {
-                    new TypeRegistration(typeof(string), "string"),
-                    new TypeRegistration(typeof(DateTime), "DateTime"),
-                    new TypeRegistration(typeof(DateTime?), "DateTime?"),
-                })
-                .ToArray();
-
-            var arrayTypes = typeRegistrations
-                .Where(registration => !registration.Type.IsArray && registration.Alias != null)
-                .Select(registration => new TypeRegistration(registration.Type.MakeArrayType(), $"{registration.Alias}[]"));
-
-            typeRegistrations = typeRegistrations
-                .Concat(arrayTypes)
-                .ToArray();
-
-            TypeCache = TypeCache.Create(
-                AssemblySource.Default,
-                TypeSource.Empty.With(typeRegistrations: typeRegistrations));
+            _typeMapper = typeMapper ?? DefaultTypeMapper.Instance;
+            _valueFormatter = valueFormatter ?? Formatter.DefaultToStringFormatter;
         }
-
-        public DefaultMapperSettings()
-        { }
 
         /// <inheritdoc />
         public string GetTypeName(Type type)
         {
-            return TypeCache.GetAliasForType(type) ?? type.FullName;
+            return _typeMapper.GetTypeName(type);
         }
 
         /// <inheritdoc />
-        public Type GetTypeByName(string typeName)
+        public Type? GetTypeByName(string typeName)
         {
-            return TypeCache.GetByAliasOrFullName(typeName);
+            return _typeMapper.GetTypeByName(typeName);
         }
 
         /// <inheritdoc />
         public string? SerializeValue(Type type, object? value)
         {
-            if (value == null)
-                return "null";
-
-            if (value is string stringValue)
-                return stringValue;
-
-            if (value is double doubleNumber)
-                return doubleNumber.ToString(DefaultNumberFormatInfo);
-
-            if (value is float floatNumber)
-                return floatNumber.ToString(DefaultNumberFormatInfo);
-
-            if (value is decimal decimalNumber)
-                return decimalNumber.ToString(DefaultNumberFormatInfo);
-
-            if (value is DateTime dateTime)
-                return dateTime == dateTime.Date ? $"{dateTime:yyyy-MM-dd}" : $"{dateTime:yyyy-MM-ddTHH:mm:ss}";
-
-            string typeFullName = type.FullName;
-
-            if (typeFullName == "NodaTime.LocalDate" && value is IFormattable localDate)
-                return localDate.ToString("yyyy-MM-dd", null);
-
-            if (typeFullName == "NodaTime.LocalDateTime" && value is IFormattable localDateTime)
-                return localDateTime.ToString("yyyy-MM-ddTHH:mm:ss", null);
-
-            if (value is ICollection collection)
-                return collection.FormatAsTuple(startSymbol: "[", endSymbol: "]");
-
-            return $"{value}";
+            return _valueFormatter.Format(value, type);
         }
 
         /// <inheritdoc />
@@ -165,7 +100,7 @@ namespace MicroElements.Metadata.Serialization
 
             if (type == typeof(double) || type == typeof(double?))
             {
-                if (double.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
+                if (double.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
                     return result;
 
                 return ReturnWithError();
@@ -173,7 +108,7 @@ namespace MicroElements.Metadata.Serialization
 
             if (type == typeof(int) || type == typeof(int?))
             {
-                if (int.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
+                if (int.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
                     return result;
 
                 return ReturnWithError();
@@ -181,7 +116,7 @@ namespace MicroElements.Metadata.Serialization
 
             if (type == typeof(float) || type == typeof(float?))
             {
-                if (float.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
+                if (float.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
                     return result;
 
                 return ReturnWithError();
@@ -189,7 +124,7 @@ namespace MicroElements.Metadata.Serialization
 
             if (type == typeof(decimal) || type == typeof(decimal?))
             {
-                if (decimal.TryParse(text, NumberStyles.Number, DefaultNumberFormatInfo, out var result))
+                if (decimal.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
                     return result;
 
                 return ReturnWithError();

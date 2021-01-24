@@ -5,6 +5,7 @@ using System.Text.Json;
 using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.Formatters;
 using MicroElements.Metadata.NewtonsoftJson;
 using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.SystemTextJson;
@@ -30,7 +31,34 @@ namespace MicroElements.Metadata.Tests.Serialization
             SerializeValue<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
         }
 
-        public string? SerializeValue<T>(T value) => 
+        [Fact]
+        public void FormatValueTest2()
+        {
+            SerializeValue2<string>(null).Should().Be(null);
+            SerializeValue2<string>("text").Should().Be("text");
+            SerializeValue2<int>(42).Should().Be("42");
+            SerializeValue2<double>(42.7).Should().Be("42.7");
+            SerializeValue2<LocalDate>(new LocalDate(2020, 11, 26)).Should().Be("2020-11-26");
+            SerializeValue2<LocalDateTime>(new LocalDateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
+            SerializeValue2<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
+        }
+
+        [Fact]
+        public void FormatValueTest3()
+        {
+            SerializeValue2<string>(null).Should().Be(null);
+            SerializeValue2<string>("text").Should().Be("text");
+            SerializeValue2<int>(42).Should().Be("42");
+            SerializeValue2<double>(42.7).Should().Be("42.7");
+            SerializeValue2<LocalDate>(new LocalDate(2020, 11, 26)).Should().Be("2020-11-26");
+            SerializeValue2<LocalDateTime>(new LocalDateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
+            SerializeValue2<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
+        }
+
+        public string? SerializeValue2<T>(T value) =>
+            Formatter.DefaultToStringFormatter.Format(value, typeof(T));
+
+        public string? SerializeValue<T>(T value) =>
             new DefaultMapperSettings().SerializeValue(typeof(T), value);
 
         public object? DeserializeValue<T>(string text) => 
@@ -152,6 +180,7 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .WithValue(TestMeta.StringProperty, "Text")
                 .WithValue(TestMeta.IntProperty, 42)
                 .WithValue(TestMeta.DoubleProperty, 10.2)
+                .WithValue(TestMeta.NullableIntProperty, null)
                 .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
                 .WithValue(TestMeta.StringArray, new [] { "a1", "a2" })
                 .WithValue(TestMeta.IntArray, new[] { 1, 2 })
@@ -170,6 +199,31 @@ namespace MicroElements.Metadata.Tests.Serialization
 
             ObjectDiff objectDiff = MetadataComparer.GetDiff(container1, container2);
             objectDiff.Diffs.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void FormatDateTime()
+        {
+            DateTimeIsoFormatter.Instance
+                .Format(new DateTime(2021, 01, 23))
+                .Should().Be("2021-01-23");
+
+            DateTimeIsoFormatter.Instance
+                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123))
+                .Should().Be("2021-01-23T17:15:49");
+
+            new FormattableFormatter(type => type == typeof(DateTime), "s")
+                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
+                .Should().Be("2021-01-23T17:15:49");
+
+            Formatter.DefaultToStringFormatter
+                .Format(new LocalDate(2021, 01, 23))
+                .Should().Be("2021-01-23");
+
+            Formatter.DefaultToStringFormatter
+                .Format(new LocalDateTime(2021, 01, 23, 17, 15, 49, 123))
+                .Should().Be("2021-01-23T17:15:49");
+
         }
     }
 
@@ -209,6 +263,7 @@ namespace MicroElements.Metadata.Tests.Serialization
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");
+        public static readonly IProperty<int?> NullableIntProperty = new Property<int?>("NullableIntProperty");
         public static readonly IProperty<double> DoubleProperty = new Property<double>("DoubleProperty");
         public static readonly IProperty<LocalDate> DateProperty = new Property<LocalDate>("DateProperty");
 

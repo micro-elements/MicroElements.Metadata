@@ -188,7 +188,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                     if (Options.WriteSchemaToPropertyName)
                     {
-                        string typeAlias = DefaultMapperSettings.TypeCache.GetAliasForType(propertyType) ?? propertyType.FullName;
+                        string typeAlias = DefaultMapperSettings.Instance.GetTypeName(propertyType);
                         if (typeAlias != "string")
                             jsonPropertyName += $"{Options.Separator}type={typeAlias}";
                     }

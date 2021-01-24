@@ -40,6 +40,11 @@ namespace MicroElements.Metadata
     public readonly struct ParseResult<T> : IParseResult
     {
         /// <summary>
+        /// Gets Success result with default value for type.
+        /// </summary>
+        public static ParseResult<T> Default { get; } = ParseResult.Success<T>(default);
+
+        /// <summary>
         /// Gets default Failed result for type.
         /// </summary>
         public static ParseResult<T> Failed { get; } = ParseResult.Failed<T>();
@@ -82,6 +87,13 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class ParseResult
     {
+        /// <summary>
+        /// Gets Success result with default value for type.
+        /// </summary>
+        /// <typeparam name="T">Value type.</typeparam>
+        /// <returns>Success result with default value for type.</returns>
+        public static ParseResult<T> Default<T>() => ParseResult<T>.Default;
+
         /// <summary>
         /// Creates <see cref="ParseResult{T}"/> is Success state.
         /// </summary>

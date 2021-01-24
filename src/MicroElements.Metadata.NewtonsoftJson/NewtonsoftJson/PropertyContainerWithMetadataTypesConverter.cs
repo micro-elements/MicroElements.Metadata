@@ -43,7 +43,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     if (propertyName == "@metadata.types")
                     {
                         var typeNames = serializer.Deserialize<string[]>(reader);
-                        types = typeNames.Select(typeName => DefaultMapperSettings.TypeCache.GetByAliasOrFullName(typeName)).ToArray();
+                        types = typeNames.Select(typeName => DefaultMapperSettings.Instance.GetTypeByName(typeName)).ToArray();
                     }
                     else
                     {
@@ -109,7 +109,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                 string[] types = value.Properties
                     .Select(propertyValue => propertyValue.PropertyUntyped.Type)
-                    .Select(type => DefaultMapperSettings.TypeCache.GetAliasForType(type) ?? type.FullName)
+                    .Select(type => DefaultMapperSettings.Instance.GetTypeName(type))
                     .ToArray();
 
                 writer.WritePropertyName("@metadata.types");

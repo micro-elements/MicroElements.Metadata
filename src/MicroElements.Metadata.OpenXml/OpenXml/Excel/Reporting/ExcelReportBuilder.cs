@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -315,15 +316,22 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 // DATA ROWS
                 foreach (var dataRow in dataRows)
                 {
-                    // Create cells and row
-                    var valueCells = columns.Select(columnContext => ConstructCell(columnContext, dataRow, callCustomize: false)).ToArray();
-                    Row excelRow = new Row(valueCells.Select(context => context.Cell));
+                    // Create cells
+                    CellContext[] cellContexts = new CellContext[columns.Count];
+                    for (var i = 0; i < columns.Count; i++)
+                    {
+                        var columnContext = columns[i];
+                        cellContexts[i] = ConstructCell(columnContext, dataRow, callCustomize: false);
+                    }
+
+                    // Create row
+                    Row excelRow = new Row(cellContexts.Select(context => context.Cell));
 
                     // Customize row
-                    configureRow?.Invoke(new RowContext(valueCells, excelRow, dataRow));
+                    configureRow?.Invoke(new RowContext(cellContexts, excelRow, dataRow));
 
                     // Customize cells
-                    foreach (CellContext cellContext in valueCells)
+                    foreach (CellContext cellContext in cellContexts)
                     {
                         var configureCell = ExcelCellMetadata.ConfigureCell.GetFirstDefinedValue(
                             cellContext.CellMetadata,

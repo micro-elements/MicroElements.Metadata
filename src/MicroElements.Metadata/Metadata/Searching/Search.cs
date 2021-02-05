@@ -163,7 +163,7 @@ namespace MicroElements.Metadata
         /// <returns>New <see cref="SearchOptions"/> instance.</returns>
         [DebuggerStepThrough]
         public static SearchOptions UseDefaultValue(this in SearchOptions searchOptions, bool useDefaultValue = true)
-            => searchOptions.With(useDefaultValue: useDefaultValue);
+            => useDefaultValue != searchOptions.UseDefaultValue ? searchOptions.With(useDefaultValue: useDefaultValue) : searchOptions;
 
         /// <summary>
         /// <inheritdoc cref="SearchOptions.ReturnNotDefined"/>
@@ -173,7 +173,7 @@ namespace MicroElements.Metadata
         /// <returns>New <see cref="SearchOptions"/> instance.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ReturnNotDefined(this in SearchOptions searchOptions, bool returnNotDefined = true)
-            => searchOptions.With(returnNotDefined: returnNotDefined);
+            => searchOptions.ReturnNotDefined != returnNotDefined ? searchOptions.With(returnNotDefined: returnNotDefined) : searchOptions;
 
         /// <summary>
         /// Returns null if property was not found.
@@ -182,6 +182,6 @@ namespace MicroElements.Metadata
         /// <returns>New <see cref="SearchOptions"/> instance.</returns>
         [DebuggerStepThrough]
         public static SearchOptions ReturnNull(this in SearchOptions searchOptions)
-            => searchOptions.With(returnNotDefined: false);
+            => searchOptions.ReturnNotDefined ? searchOptions.With(returnNotDefined: false) : searchOptions;
     }
 }

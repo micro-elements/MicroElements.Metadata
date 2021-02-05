@@ -9,7 +9,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Default search algorithm.
     /// </summary>
-    public class DefaultSearchAlgorithm : ISearchAlgorithm
+    public sealed class DefaultSearchAlgorithm : ISearchAlgorithm
     {
         /// <summary>
         /// Static instance of default search algorithm.
@@ -67,8 +67,10 @@ namespace MicroElements.Metadata
             IProperty<T> property,
             SearchOptions? searchOptions = default)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            if (propertyContainer == null)
+                throw new ArgumentNullException(nameof(propertyContainer));
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
 
             SearchOptions search = searchOptions ?? propertyContainer.SearchOptions;
 

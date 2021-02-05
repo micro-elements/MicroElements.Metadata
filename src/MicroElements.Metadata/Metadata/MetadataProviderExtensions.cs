@@ -41,7 +41,8 @@ namespace MicroElements.Metadata
             this IMetadataProvider metadataProvider,
             string? metadataName = null)
         {
-            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
+            if (metadataProvider == null)
+                throw new ArgumentNullException(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
             var metadata = metadataProvider.GetMetadata();

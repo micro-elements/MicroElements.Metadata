@@ -1,3 +1,6 @@
+# 7.0.0-rc.20
+- Performance optimization for metadata search
+
 # 7.0.0-rc.19
 - Validation for XmlParser
 - ConfigureMetadata now supports thread safe ReadOnly metadata creation and configuration

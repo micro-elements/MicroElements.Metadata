@@ -88,8 +88,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     return propertyValue.Value;
             }
 
-            IPropertyContainer source = source1 ?? source2 ?? source3 ?? source4 ?? PropertyContainer.Empty;
-            return source.GetValue(property);
+            return property.DefaultValue();
         }
     }
 

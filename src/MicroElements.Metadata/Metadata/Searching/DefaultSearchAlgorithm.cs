@@ -1,7 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
+using System;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -22,15 +22,23 @@ namespace MicroElements.Metadata
             IProperty property,
             SearchOptions? searchOptions = null)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            if (propertyContainer == null)
+                throw new ArgumentNullException(nameof(propertyContainer));
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
 
             SearchOptions search = searchOptions ?? propertyContainer.SearchOptions;
 
             // Search property by EqualityComparer
-            IPropertyValue? propertyValue = propertyContainer
-                .Properties
-                .FirstOrDefault(pv => search.PropertyComparer.Equals(pv.PropertyUntyped, property));
+            IPropertyValue? propertyValue = null;
+            foreach (var pv in propertyContainer.Properties)
+            {
+                if (search.PropertyComparer.Equals(pv.PropertyUntyped, property))
+                {
+                    propertyValue = pv;
+                    break;
+                }
+            }
 
             // Good try! Return
             if (propertyValue != null)

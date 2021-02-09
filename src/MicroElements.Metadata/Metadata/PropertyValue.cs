@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
@@ -111,6 +110,8 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class PropertyValue
     {
+        private static readonly IPropertyValueFactory _propertyValueFactory = new PropertyValueFactory();
+
         /// <summary>
         /// Creates new instance if <see cref="IPropertyValue"/>.
         /// </summary>
@@ -120,28 +121,7 @@ namespace MicroElements.Metadata
         /// <returns>Created property value.</returns>
         public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
-            property.AssertArgumentNotNull(nameof(property));
-
-            Type propertyType = property.Type;
-
-            if (value != null && !value.IsAssignableTo(propertyType))
-                throw new InvalidOperationException($"Value type {value.GetType()} should be the assignable to property type {propertyType}.");
-
-            if (value == null && propertyType.CanNotAcceptNull())
-                throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
-
-            ValueSource source = valueSource ?? ValueSource.Defined;
-
-            // Most popular cases:
-            if (propertyType == typeof(string))
-                return new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
-            if (propertyType == typeof(IPropertyContainer))
-                return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
-
-            // Reflection construction. TODO: cache by type
-            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
-            IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
-            return propertyValue;
+            return _propertyValueFactory.Create(property, value, valueSource);
         }
     }
 }

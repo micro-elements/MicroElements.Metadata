@@ -13,7 +13,7 @@ namespace MicroElements.Metadata.Xml
     {
         public static IEnumerable<IValueParser> CreateDefaultXmlParsers()
         {
-            yield return StringParser.Instance;
+            yield return CachedStringParser.Instance;
 
             yield return new ValueParser<int>(ParseInt);
             yield return new ValueParser<double>(ParseDouble);

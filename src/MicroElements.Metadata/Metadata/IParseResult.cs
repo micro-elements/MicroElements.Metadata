@@ -40,6 +40,11 @@ namespace MicroElements.Metadata
     public readonly struct ParseResult<T> : IParseResult
     {
         /// <summary>
+        /// Gets Empty Success result for type.
+        /// </summary>
+        public static ParseResult<T> Empty { get; } = ParseResult.Success<T>(default);
+
+        /// <summary>
         /// Gets default Failed result for type.
         /// </summary>
         public static ParseResult<T> Failed { get; } = ParseResult.Failed<T>();

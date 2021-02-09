@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -324,7 +325,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                         else
                         {
                             Prelude
-                                .ParseDouble(cellValue)
+                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
                                 .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("yyyy-MM-dd"))
                                 .Match(s => cellTextValue = s, () => { });
@@ -340,7 +341,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                         else
                         {
                             Prelude
-                                .ParseDouble(cellValue)
+                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
                                 .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("HH:mm:ss"))
                                 .Match(s => cellTextValue = s, () => { });
@@ -355,7 +356,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                         else
                         {
                             Prelude
-                                .ParseDouble(cellValue)
+                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
                                 .Map(d => d.FromExcelSerialDate())
                                 .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss"))
                                 .Match(s => cellTextValue = s, () => { });

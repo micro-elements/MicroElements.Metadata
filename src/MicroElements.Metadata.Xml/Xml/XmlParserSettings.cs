@@ -24,6 +24,9 @@ namespace MicroElements.Metadata.Xml
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
         /// <inheritdoc />
+        public IPropertyValueFactory PropertyValueFactory { get; }
+
+        /// <inheritdoc />
         public IValidationProvider ValidationProvider { get; }
 
         /// <inheritdoc />
@@ -35,18 +38,21 @@ namespace MicroElements.Metadata.Xml
         /// <param name="getElementName">Function that evaluates property name for xml element.</param>
         /// <param name="parserRules">Parsers and rules for parsers.</param>
         /// <param name="propertyComparer">Property comparer for property related search. Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.</param>
+        /// <param name="propertyValueFactory"><see cref="IPropertyValue"/> factory. Default: <see cref="CachedPropertyValueFactory"/>.</param>
         /// <param name="validationFactory">Validation factory to create validation rules.</param>
         /// <param name="validateOnParse">Properties should be validated on parse.</param>
         public XmlParserSettings(
             Func<XElement, string>? getElementName = null,
             IReadOnlyCollection<IParserRule>? parserRules = null,
             IEqualityComparer<IProperty>? propertyComparer = null,
+            IPropertyValueFactory? propertyValueFactory = null,
             IValidationProvider? validationFactory = null,
             bool validateOnParse = false)
         {
             GetElementName = getElementName ?? XmlParser.GetElementNameDefault;
             ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             PropertyComparer = propertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
+            PropertyValueFactory = propertyValueFactory ?? new CachedPropertyValueFactory(new PropertyValueFactory(), PropertyComparer);
 
             ValidationProvider = validationFactory ?? Validation.Rules.ValidationProvider.Instance;
             ValidateOnParse = validateOnParse;

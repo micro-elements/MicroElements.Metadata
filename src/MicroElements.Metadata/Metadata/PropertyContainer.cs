@@ -81,7 +81,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Empty property container singleton instance.
         /// </summary>
-        public static readonly IPropertyContainer Empty = new PropertyContainer();
+        public static readonly IPropertyContainer Empty = new PropertyContainer(searchOptions: SearchOptions.ExistingOnly);
 
         /// <summary>
         /// Merges <paramref name="propertyContainers"/>.

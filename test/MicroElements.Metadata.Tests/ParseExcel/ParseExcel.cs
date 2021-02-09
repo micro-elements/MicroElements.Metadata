@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -42,9 +43,9 @@ namespace MicroElements.Metadata.Tests.ParseExcel
 
             public int? ParseOptionalInt(string text) => Prelude.ParseInt(text).MatchUnsafe(value => value, default(int?));
 
-            public double ParseDouble(string text) => double.Parse(text);
+            public double ParseDouble(string text) => double.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture);
 
-            public double? ParseOptionalDouble(string text) => Prelude.ParseDouble(text).MatchUnsafe(value => value, default(double?));
+            public double? ParseOptionalDouble(string text) => Prelude.ParseDouble(text, NumberStyles.Any, CultureInfo.InvariantCulture).MatchUnsafe(value => value, default(double?));
 
             public LocalDate ParseLocalDate(string text) => LocalDatePattern.Iso.Parse(text).Value;
 

@@ -22,7 +22,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         [Fact]
         public void FormatValueTest()
         {
-            SerializeValue<string>(null).Should().Be("null");
+            SerializeValue<string>(null).Should().Be(null);
             SerializeValue<string>("text").Should().Be("text");
             SerializeValue<int>(42).Should().Be("42");
             SerializeValue<double>(42.7).Should().Be("42.7");

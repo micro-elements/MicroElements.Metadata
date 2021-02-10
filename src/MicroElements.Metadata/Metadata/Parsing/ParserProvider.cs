@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Metadata.Parsers;
 
 namespace MicroElements.Metadata.Parsing
 {
@@ -11,7 +10,7 @@ namespace MicroElements.Metadata.Parsing
         public static IEnumerable<IValueParser> CreateDefaultParsers()
         {
             // String.
-            yield return StringParser.Instance;
+            yield return StringParser.Default;
 
             // Numeric types.
             yield return Parser.ByteParser;

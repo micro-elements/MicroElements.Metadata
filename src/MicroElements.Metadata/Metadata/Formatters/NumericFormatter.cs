@@ -5,6 +5,9 @@ using System.Globalization;
 
 namespace MicroElements.Metadata.Formatters
 {
+    /// <summary>
+    /// <see cref="float"/> formatter.
+    /// </summary>
     public class FloatFormatter : IValueFormatter<float>
     {
         /// <summary>
@@ -16,6 +19,9 @@ namespace MicroElements.Metadata.Formatters
         public string Format(float value) => value.ToString(NumberFormatInfo.InvariantInfo);
     }
 
+    /// <summary>
+    /// <see cref="double"/> formatter.
+    /// </summary>
     public class DoubleFormatter : IValueFormatter<double>
     {
         /// <summary>
@@ -27,6 +33,9 @@ namespace MicroElements.Metadata.Formatters
         public string Format(double value) => value.ToString(NumberFormatInfo.InvariantInfo);
     }
 
+    /// <summary>
+    /// <see cref="decimal"/> formatter.
+    /// </summary>
     public class DecimalFormatter : IValueFormatter<decimal>
     {
         /// <summary>

@@ -14,22 +14,21 @@ namespace MicroElements.Metadata.Formatters
     {
         private readonly string _typeMatch;
         private readonly Func<Type, bool> _canFormat;
-        private readonly string _format;
+        private readonly string? _format;
         private readonly IFormatProvider? _formatProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FormattableFormatter"/> class.
         /// </summary>
         /// <param name="canFormat">Function that determines whether this formatter can format the specified object type.</param>
-        /// <param name="format">Format.</param>
+        /// <param name="format">Optional format.</param>
         /// <param name="formatProvider">Optional format provider.</param>
         public FormattableFormatter(
             Expression<Func<Type, bool>> canFormat,
-            string format,
+            string? format = null,
             IFormatProvider? formatProvider = null)
         {
             canFormat.AssertArgumentNotNull(nameof(canFormat));
-            format.AssertArgumentNotNull(nameof(format));
 
             _typeMatch = canFormat.Body.ToString();
             _canFormat = canFormat.Compile();
@@ -37,13 +36,18 @@ namespace MicroElements.Metadata.Formatters
             _formatProvider = formatProvider;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FormattableFormatter"/> class.
+        /// </summary>
+        /// <param name="fullTypeName">Full type name that the formatter can format.</param>
+        /// <param name="format">Optional format.</param>
+        /// <param name="formatProvider">Optional format provider.</param>
         public FormattableFormatter(
             string fullTypeName,
-            string format,
+            string? format = null,
             IFormatProvider? formatProvider = null)
         {
             fullTypeName.AssertArgumentNotNull(nameof(fullTypeName));
-            format.AssertArgumentNotNull(nameof(format));
 
             _typeMatch = $"type == {fullTypeName}";
             _canFormat = type => type.FullName == fullTypeName;
@@ -51,13 +55,18 @@ namespace MicroElements.Metadata.Formatters
             _formatProvider = formatProvider;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FormattableFormatter"/> class.
+        /// </summary>
+        /// <param name="type">The type that the formatter can format.</param>
+        /// <param name="format">Optional format.</param>
+        /// <param name="formatProvider">Optional format provider.</param>
         public FormattableFormatter(
             Type type,
-            string format,
+            string? format = null,
             IFormatProvider? formatProvider = null)
         {
             type.AssertArgumentNotNull(nameof(type));
-            format.AssertArgumentNotNull(nameof(format));
 
             _typeMatch = $"type == {type.FullName}";
             _canFormat = t => t == type;

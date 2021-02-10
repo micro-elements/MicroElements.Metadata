@@ -52,25 +52,24 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public IPropertyRenderer ConfigureRenderer(Action<PropertyRendererOptions> configure)
         {
-            if (configure != null)
-            {
-                var rendererOptions =
-                    new PropertyRendererOptions(PropertyUntyped)
-                    {
-                        TargetName = TargetName,
-                        SearchOptions = SearchOptions,
-                        NullValue = NullValue,
-                        CustomRender = CustomRender,
-                    };
-                configure(rendererOptions);
+            configure = configure ?? throw new ArgumentNullException(nameof(configure));
 
-                TargetName = rendererOptions.TargetName ?? TargetName;
-                SearchOptions = rendererOptions.SearchOptions ?? SearchOptions;
-                NullValue = rendererOptions.NullValue ?? NullValue;
-                CustomRender = rendererOptions.CustomRender ?? CustomRender;
+            PropertyRendererOptions? rendererOptions =
+                new PropertyRendererOptions(PropertyUntyped)
+                {
+                    TargetName = TargetName,
+                    SearchOptions = SearchOptions,
+                    NullValue = NullValue,
+                    CustomRender = CustomRender,
+                };
+            configure(rendererOptions);
 
-                rendererOptions.AfterConfigure?.Invoke(this);
-            }
+            TargetName = rendererOptions.TargetName ?? TargetName;
+            SearchOptions = rendererOptions.SearchOptions ?? SearchOptions;
+            NullValue = rendererOptions.NullValue ?? NullValue;
+            CustomRender = rendererOptions.CustomRender ?? CustomRender;
+
+            rendererOptions.AfterConfigure?.Invoke(this);
 
             return this;
         }

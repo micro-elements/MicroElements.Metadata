@@ -29,9 +29,6 @@ namespace MicroElements.Metadata.Formatters
             {
                 yield return nodaTimeFormatter;
             }
-
-            // Default ToString
-            yield return DefaultToStringFormatter.Instance;
         }
     }
 }

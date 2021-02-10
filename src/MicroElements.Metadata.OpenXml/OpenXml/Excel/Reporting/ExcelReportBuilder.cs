@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,6 +27,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
     /// </summary>
     public class ExcelReportBuilder
     {
+        private readonly IReportBuilderSettings _settings;
         private readonly ExcelDocumentMetadata _documentMetadata;
         private readonly DocumentContext _documentContext;
 
@@ -39,10 +39,15 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// </summary>
         /// <param name="document">Excel document.</param>
         /// <param name="documentMetadata">Default excel document metadata.</param>
-        public ExcelReportBuilder(SpreadsheetDocument document, ExcelDocumentMetadata documentMetadata)
+        /// <param name="settings">Optional report builder settings.</param>
+        public ExcelReportBuilder(
+            SpreadsheetDocument document,
+            ExcelDocumentMetadata? documentMetadata,
+            IReportBuilderSettings? settings)
         {
             _documentMetadata = documentMetadata ?? new ExcelDocumentMetadata();
             _documentContext = InitDocument(document.AssertArgumentNotNull(nameof(document)));
+            _settings = settings ?? new ReportBuilderSettings();
         }
 
         /// <summary>
@@ -50,13 +55,17 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// </summary>
         /// <param name="outFilePath">Output file name.</param>
         /// <param name="documentMetadata">Default excel document metadata.</param>
+        /// <param name="settings">Optional report builder settings.</param>
         /// <returns>Builder instance.</returns>
-        public static ExcelReportBuilder Create(string outFilePath, ExcelDocumentMetadata documentMetadata = null)
+        public static ExcelReportBuilder Create(
+            string outFilePath,
+            ExcelDocumentMetadata? documentMetadata = null,
+            IReportBuilderSettings? settings = null)
         {
             outFilePath.AssertArgumentNotNull(nameof(outFilePath));
 
             SpreadsheetDocument document = SpreadsheetDocument.Create(outFilePath, SpreadsheetDocumentType.Workbook);
-            var builder = new ExcelReportBuilder(document, documentMetadata);
+            var builder = new ExcelReportBuilder(document, documentMetadata, settings);
             return builder;
         }
 
@@ -65,13 +74,17 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// </summary>
         /// <param name="targetStream">Output stream.</param>
         /// <param name="documentMetadata">Default excel document metadata.</param>
+        /// <param name="settings">Optional report builder settings.</param>
         /// <returns>Builder instance.</returns>
-        public static ExcelReportBuilder Create(Stream targetStream, ExcelDocumentMetadata documentMetadata = null)
+        public static ExcelReportBuilder Create(
+            Stream targetStream,
+            ExcelDocumentMetadata? documentMetadata = null,
+            IReportBuilderSettings? settings = null)
         {
             targetStream.AssertArgumentNotNull(nameof(targetStream));
 
             SpreadsheetDocument document = SpreadsheetDocument.Create(targetStream, SpreadsheetDocumentType.Workbook);
-            var builder = new ExcelReportBuilder(document, documentMetadata);
+            var builder = new ExcelReportBuilder(document, documentMetadata, settings);
             return builder;
         }
 
@@ -417,20 +430,12 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             string? cellText = value;
 
             if (dataType == CellValues.SharedString && string.IsNullOrEmpty(cellText))
-            {
                 dataType = CellValues.String;
-            }
 
             if (dataType == CellValues.SharedString)
-            {
                 cellText = _documentContext.GetOrAddSharedString(value);
-            }
 
-            Cell cell = new Cell
-            {
-                CellValue = new CellValue(cellText),
-                DataType = new EnumValue<CellValues>(dataType),
-            };
+            Cell cell = _settings.CellFactory.CreateCell(cellText, dataType);
 
             return cell;
         }
@@ -455,7 +460,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         private CellContext ConstructCell(ColumnContext columnContext, IPropertyContainer source, bool callCustomize = true)
         {
             var propertyRenderer = columnContext.PropertyRenderer;
+
+            // Render value
             string? textValue = propertyRenderer.Render(source);
+            textValue = textValue != null ? _settings.StringProvider.GetString(textValue) : null;
 
             var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
 

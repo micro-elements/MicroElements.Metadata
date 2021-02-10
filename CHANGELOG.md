@@ -1,8 +1,10 @@
-# 7.0.0-rc.22
+# 7.0.0-rc.23
 - Performance optimization for metadata search
 - IPropertyValueFactory, CachedPropertyValueFactory
 - XmlParser: IPropertyValueFactory added to IXmlParserSettings
 - CachedStringParser and InernedStringParser
+- Caches in ExcelBuilder
+- Complex value Formatting based on IValueFormatter
 
 # 7.0.0-rc.19
 - Validation for XmlParser

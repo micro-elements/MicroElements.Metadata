@@ -15,41 +15,25 @@ namespace MicroElements.Metadata.Formatters
     public class CompositeFormatter : IValueFormatter, IValueFormatterProvider
     {
         private readonly IReadOnlyCollection<IValueFormatter> _formatters;
-        private readonly ConcurrentDictionary<Type, IValueFormatter> _formattersCache = new ConcurrentDictionary<Type, IValueFormatter>();
+        private readonly ConcurrentDictionary<Type, IValueFormatter> _formattersCache = new ();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeFormatter"/> class.
         /// </summary>
-        /// <param name="formatterProvider">Formatters.</param>
-        public CompositeFormatter(IValueFormatterProvider formatterProvider)
+        /// <param name="formatters">Optional formatters.</param>
+        public CompositeFormatter(IEnumerable<IValueFormatter>? formatters = null)
         {
-            formatterProvider.AssertArgumentNotNull(nameof(formatterProvider));
-
-            _formatters = formatterProvider.GetFormatters().ToArray();
-        }
-
-        public CompositeFormatter(IEnumerable<IValueFormatter> formatters)
-        {
-            formatters.AssertArgumentNotNull(nameof(formatters));
-
-            _formatters = formatters.ToArray();
-        }
-
-        public CompositeFormatter(params IValueFormatter[] formatters)
-        {
-            formatters.AssertArgumentNotNull(nameof(formatters));
-
-            _formatters = formatters.ToArray();
+            _formatters = formatters?.ToArray() ?? Array.Empty<IValueFormatter>();
         }
 
         /// <inheritdoc />
-        public IEnumerable<IValueFormatter> GetFormatters()
-        {
-            return _formatters;
-        }
+        public IEnumerable<IValueFormatter> GetFormatters() => _formatters;
 
         /// <inheritdoc />
-        public bool CanFormat(Type valueType) => true;
+        public bool CanFormat(Type valueType)
+        {
+            return _formatters.Any(formatter => formatter.CanFormat(valueType));
+        }
 
         /// <inheritdoc />
         public string? Format(object? value, Type valueType)
@@ -66,9 +50,65 @@ namespace MicroElements.Metadata.Formatters
         {
             IValueFormatter? valueFormatter = _formatters
                 .FirstOrDefault(formatter => formatter.CanFormat(valueType));
-            return valueFormatter ?? DefaultToStringFormatter.Instance;
+
+            if (valueFormatter is null && Nullable.GetUnderlyingType(valueType) is { } underlyingType)
+            {
+                valueFormatter = _formatters.FirstOrDefault(formatter => formatter.CanFormat(underlyingType));
+                if (valueFormatter != null)
+                {
+                    return new NullableFormatter(valueFormatter);
+                }
+            }
+
+            IValueFormatter? instance = valueFormatter;
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            return DefaultToStringFormatter.Instance;
+        }
+    }
+
+    /// <summary>
+    /// CompositeFormatter extensions.
+    /// </summary>
+    public static class CompositeFormatterExtensions
+    {
+        /// <summary>
+        /// Creates new <see cref="CompositeFormatter"/> with formatters added from <paramref name="formatters"/>.
+        /// </summary>
+        /// <param name="formatter">Source formatter.</param>
+        /// <param name="formatters">Formatters to add.</param>
+        /// <returns>New instance of <see cref="CompositeFormatter"/>.</returns>
+        public static CompositeFormatter With(this CompositeFormatter formatter, IEnumerable<IValueFormatter> formatters)
+        {
+            formatter.AssertArgumentNotNull(nameof(formatter));
+            formatters.AssertArgumentNotNull(nameof(formatters));
+
+            return new CompositeFormatter(formatter.GetFormatters().Concat(formatters));
         }
 
+        /// <summary>
+        /// Creates new <see cref="CompositeFormatter"/> with formatters added from <paramref name="formatterProvider"/>.
+        /// </summary>
+        /// <param name="formatter">Source formatter.</param>
+        /// <param name="formatterProvider">Formatters provider to add.</param>
+        /// <returns>New instance of <see cref="CompositeFormatter"/>.</returns>
+        public static CompositeFormatter With(this CompositeFormatter formatter, IValueFormatterProvider formatterProvider)
+        {
+            return formatter.With(formatterProvider.GetFormatters());
+        }
 
+        /// <summary>
+        /// Creates new <see cref="CompositeFormatter"/> with formatters added from <paramref name="formatters"/>.
+        /// </summary>
+        /// <param name="formatter">Source formatter.</param>
+        /// <param name="formatters">Formatters to add.</param>
+        /// <returns>New instance of <see cref="CompositeFormatter"/>.</returns>
+        public static CompositeFormatter With(this CompositeFormatter formatter, params IValueFormatter[] formatters)
+        {
+            return formatter.With((IEnumerable<IValueFormatter>)formatters);
+        }
     }
 }

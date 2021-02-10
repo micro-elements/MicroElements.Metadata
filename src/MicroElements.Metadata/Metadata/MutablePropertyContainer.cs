@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
+using MicroElements.Metadata.Formatters;
 
 namespace MicroElements.Metadata
 {
@@ -34,7 +35,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public override string ToString() => Properties.FormatAsTuple(formatValue: StringFormatter.FormatValue);
+        public override string ToString() => Formatter.FullRecursiveFormatter.TryFormat(Properties) ?? PropertyContainer.EmptyName;
 
         #region IPropertyContainer
 

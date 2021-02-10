@@ -1,9 +1,9 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
+using MicroElements.Metadata.Parsers;
 
-namespace MicroElements.Metadata.Parsers
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Default string parser.
@@ -13,40 +13,28 @@ namespace MicroElements.Metadata.Parsers
         /// <summary>
         /// Gets global static singleton.
         /// </summary>
-        public static StringParser Instance { get; } = new StringParser();
+        public static StringParser Default { get; } = new StringParser();
 
-        /// <inheritdoc />
-        public override ParseResult<string> Parse(string? source) => source == null ? ParseResult<string>.Empty : ParseResult.Success<string>(source);
-    }
-
-    /// <summary>
-    /// String parser that interns every string.
-    /// </summary>
-    public sealed class InternedStringParser : ValueParserBase<string>
-    {
         /// <summary>
-        /// Gets global static singleton.
+        /// Gets Interned string parser.
         /// </summary>
-        public static InternedStringParser Instance { get; } = new InternedStringParser();
+        public static StringParser Interned { get; } = new StringParser(new InterningStringProvider());
 
-        /// <inheritdoc />
-        public override ParseResult<string> Parse(string? source) => source == null ? ParseResult<string>.Empty : ParseResult.Success(string.Intern(source));
-    }
+        private readonly IStringProvider _stringProvider;
 
-    /// <summary>
-    /// String parser that caches every string.
-    /// </summary>
-    public sealed class CachedStringParser : ValueParserBase<string>
-    {
         /// <summary>
-        /// Gets global static singleton.
+        /// Initializes a new instance of the <see cref="StringParser"/> class.
         /// </summary>
-        public static CachedStringParser Instance { get; } = new CachedStringParser();
-
-        private readonly ConcurrentDictionary<string, string> _strings = new ConcurrentDictionary<string, string>();
+        /// <param name="stringProvider">Optional string provider.</param>
+        public StringParser(IStringProvider? stringProvider = null)
+        {
+            _stringProvider = stringProvider ?? new DefaultStringProvider();
+        }
 
         /// <inheritdoc />
-        public override ParseResult<string> Parse(string? source) =>
-            source == null ? ParseResult<string>.Empty : ParseResult.Success(_strings.GetOrAdd(source, s => s));
+        public override ParseResult<string> Parse(string? source)
+        {
+            return source == null ? ParseResult<string>.Empty : ParseResult.Success(_stringProvider.GetString(source));
+        }
     }
 }

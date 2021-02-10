@@ -56,7 +56,7 @@ namespace MicroElements.Metadata.Serialization
             IValueFormatter? valueFormatter = null)
         {
             _typeMapper = typeMapper ?? DefaultTypeMapper.Instance;
-            _valueFormatter = valueFormatter ?? Formatter.DefaultToStringFormatter;
+            _valueFormatter = valueFormatter ?? Formatter.FullToStringFormatter;
         }
 
         /// <inheritdoc />
@@ -80,7 +80,7 @@ namespace MicroElements.Metadata.Serialization
         /// <inheritdoc />
         public Result<object?, Message> DeserializeValue(Type type, string? text)
         {
-            if (text == "null")
+            if (text == null || text == "null")
                 return (object?)null;
 
             if (type == typeof(string))

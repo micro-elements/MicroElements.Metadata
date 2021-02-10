@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
+using MicroElements.Metadata.Formatters;
 
 namespace MicroElements.Metadata
 {
@@ -43,35 +43,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="value">Value to format.</param>
         /// <returns>Formatted string.</returns>
-        string? Format([AllowNull] T value);
-
-        /// <inheritdoc />
-        bool IValueFormatter.CanFormat(Type valueType)
-        {
-            return typeof(T).IsAssignableFrom(valueType);
-        }
-
-        /// <inheritdoc />
-        string? IValueFormatter.Format(object? value, Type valueType)
-        {
-            if (value is T valueTyped)
-                return Format(valueTyped);
-
-            if (value is null && ValueFormatter.TypeCache<T>.CanAcceptNull)
-                return Format(default);
-
-            return null;
-        }
-    }
-
-    public abstract class ValueFormatter<T> : IValueFormatter
-    {
-        /// <summary>
-        /// Formats <paramref name="value"/> to string.
-        /// </summary>
-        /// <param name="value">Value to format.</param>
-        /// <returns>Formatted string.</returns>
-        protected abstract string? Format([AllowNull] T value);
+        string? Format(T? value);
 
         /// <inheritdoc />
         bool IValueFormatter.CanFormat(Type valueType)
@@ -99,9 +71,16 @@ namespace MicroElements.Metadata
             public static bool CanAcceptNull { get; } = typeof(T).CanAcceptNull();
         }
 
-        public static string? Format<T>(this IValueFormatter formatter, [AllowNull] T value)
+        public static string? TryFormat<T>(this IValueFormatter formatter, T? value, Type? valueType = null)
         {
-            return formatter.Format(value, typeof(T));
+            try
+            {
+                return formatter.Format(value, valueType ?? typeof(T));
+            }
+            catch
+            {
+                return DefaultToStringFormatter.Instance.Format(value, valueType ?? typeof(T));
+            }
         }
     }
 }

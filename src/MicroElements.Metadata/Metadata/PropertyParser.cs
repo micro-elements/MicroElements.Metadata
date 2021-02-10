@@ -4,6 +4,7 @@
 using System;
 using MicroElements.Functional;
 using MicroElements.Metadata.Parsers;
+using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
 {
@@ -58,7 +59,7 @@ namespace MicroElements.Metadata
         /// <returns><see cref="PropertyParser{T}"/> of string.</returns>
         public static PropertyParser<string> Source(string sourceName)
         {
-            PropertyParser<string> propertyParser = new PropertyParser<string>(sourceName, StringParser.Instance, null);
+            PropertyParser<string> propertyParser = new PropertyParser<string>(sourceName, StringParser.Default, null);
             return propertyParser;
         }
     }

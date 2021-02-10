@@ -56,7 +56,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         public string? SerializeValue2<T>(T value) =>
-            Formatter.DefaultToStringFormatter.Format(value, typeof(T));
+            Formatter.FullToStringFormatter.Format(value, typeof(T));
 
         public string? SerializeValue<T>(T value) =>
             new DefaultMapperSettings().SerializeValue(typeof(T), value);
@@ -135,29 +135,29 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Theory]
-        [InlineData("NullString", "null", "string")]
+        [InlineData("NullString", null, "string")]
         [InlineData("Text", "text", "string")]
 
         [InlineData("IntValue", "42", "System.Int32", "int")]
         [InlineData("IntValue", "42", "int")]
         [InlineData("IntValue", "42", "int?")]
-        [InlineData("IntValue", "null", "int?")]
+        [InlineData("IntValue", null, "int?")]
 
         [InlineData("DoubleValue", "42.7", "double")]
         [InlineData("DoubleValue", "42.7", "double?")]
-        [InlineData("DoubleValue", "null", "double?")]
+        [InlineData("DoubleValue", null, "double?")]
 
         [InlineData("LocalDate", "2020-11-26", "NodaTime.LocalDate", "LocalDate")]
         [InlineData("LocalDate", "2020-11-26", "LocalDate")]
-        [InlineData("LocalDate", "null", "LocalDate?")]
+        [InlineData("LocalDate", null, "LocalDate?")]
 
         [InlineData("LocalDateTime", "2020-11-26T15:27:17", "NodaTime.LocalDateTime", "LocalDateTime")]
         [InlineData("LocalDateTime", "2020-11-26T15:27:17", "LocalDateTime")]
-        [InlineData("LocalDateTime", "null", "LocalDateTime?")]
+        [InlineData("LocalDateTime", null, "LocalDateTime?")]
 
         [InlineData("DateTime", "2020-11-26T15:27:17", "System.DateTime", "DateTime")]
         [InlineData("DateTime", "2020-11-26T15:27:17", "DateTime")]
-        [InlineData("DateTime", "null", "DateTime?")]
+        [InlineData("DateTime", null, "DateTime?")]
 
         [InlineData("StringArray", "[a1, a2]", "string[]")]
         [InlineData("IntArray", "[1, 2]", "int[]")]
@@ -216,14 +216,43 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
                 .Should().Be("2021-01-23T17:15:49");
 
-            Formatter.DefaultToStringFormatter
-                .Format(new LocalDate(2021, 01, 23))
+            Formatter.FullToStringFormatter
+                .TryFormat(new LocalDate(2021, 01, 23))
                 .Should().Be("2021-01-23");
 
-            Formatter.DefaultToStringFormatter
-                .Format(new LocalDateTime(2021, 01, 23, 17, 15, 49, 123))
+            Formatter.FullToStringFormatter
+                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 123))
                 .Should().Be("2021-01-23T17:15:49");
+        }
 
+        [Fact]
+        public void NullableIntegerFormatting()
+        {
+            double? number = 5.1;
+            object boxedNumber = number;
+            DefaultToStringFormatter.Instance
+                .Format(boxedNumber)
+                .Should().Be("5.1");
+
+            double? number2 = null;
+            object boxedNumber2 = number2;
+            DefaultToStringFormatter.Instance
+                .Format(boxedNumber2)
+                .Should().Be(null);
+        }
+
+        [Fact]
+        public void RecursiveFormatting()
+        {
+            List<KeyValuePair<string, object>> list = new List<KeyValuePair<string, object>>();
+
+            list.Add(new KeyValuePair<string, object>("Key1", new LocalDate(2021, 01, 23)));
+            list.Add(new KeyValuePair<string, object>("Key2", new []{"a1", "a2"}));
+            list.Add(new KeyValuePair<string, object>("Key3", ("Internal", 5)));
+
+            IValueFormatter fullToStringFormatter = Formatter.FullRecursiveFormatter;
+            string? formattedValue = fullToStringFormatter.TryFormat(list);
+            formattedValue.Should().Be("[(Key1: 2021-01-23), (Key2: [a1, a2]), (Key3: (Internal, 5))]");
         }
     }
 

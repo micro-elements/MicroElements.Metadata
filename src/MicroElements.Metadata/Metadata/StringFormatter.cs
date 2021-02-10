@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.Formatters;
 
 namespace MicroElements.Metadata
 {
@@ -19,6 +20,8 @@ namespace MicroElements.Metadata
         {
             if (value == null)
                 return "null";
+
+            return Formatter.FullRecursiveFormatter.TryFormat(value) ?? "null";
 
             if (value is string stringValue)
                 return stringValue;

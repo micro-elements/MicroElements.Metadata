@@ -12,6 +12,8 @@ namespace MicroElements.Metadata
     /// </summary>
     public partial class PropertyContainer : IPropertyContainer
     {
+        internal const string EmptyName = "Empty";
+
         /// <summary>
         /// Real data holder.
         /// </summary>
@@ -35,7 +37,7 @@ namespace MicroElements.Metadata
         public override string ToString()
         {
             if (ReferenceEquals(this, Empty))
-                return "Empty";
+                return EmptyName;
 
             return _propertyContainer.ToString();
         }

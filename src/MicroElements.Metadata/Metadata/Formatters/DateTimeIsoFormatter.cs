@@ -19,7 +19,7 @@ namespace MicroElements.Metadata.Formatters
         /// <inheritdoc />
         public string Format(DateTime dateTime)
         {
-            return dateTime.TimeOfDay.Ticks > 0 ? $"{dateTime:yyyy-MM-ddTHH:mm:ss}" : $"{dateTime:yyyy-MM-dd}";
+            return dateTime.TimeOfDay.Ticks > 0 ? $"{dateTime:yyyy-MM-ddTHH:mm:ss.FFF}" : $"{dateTime:yyyy-MM-dd}";
         }
     }
 }

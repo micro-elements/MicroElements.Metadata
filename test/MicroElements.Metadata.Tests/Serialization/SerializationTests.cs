@@ -204,24 +204,42 @@ namespace MicroElements.Metadata.Tests.Serialization
         [Fact]
         public void FormatDateTime()
         {
+            // Sortable
+            new FormattableFormatter(type => type == typeof(DateTime), "s")
+                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
+                .Should().Be("2021-01-23T17:15:49");
+
             DateTimeIsoFormatter.Instance
                 .Format(new DateTime(2021, 01, 23))
                 .Should().Be("2021-01-23");
 
             DateTimeIsoFormatter.Instance
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123))
+                .Should().Be("2021-01-23T17:15:49.123");
+
+            DateTimeIsoFormatter.Instance
+                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 10))
+                .Should().Be("2021-01-23T17:15:49.01");
+
+            DateTimeIsoFormatter.Instance
+                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 000))
                 .Should().Be("2021-01-23T17:15:49");
 
-            new FormattableFormatter(type => type == typeof(DateTime), "s")
-                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
-                .Should().Be("2021-01-23T17:15:49");
 
-            Formatter.FullToStringFormatter
+            Formatter.FullRecursiveFormatter
                 .TryFormat(new LocalDate(2021, 01, 23))
                 .Should().Be("2021-01-23");
 
-            Formatter.FullToStringFormatter
+            Formatter.FullRecursiveFormatter
                 .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 123))
+                .Should().Be("2021-01-23T17:15:49.123");
+
+            Formatter.FullRecursiveFormatter
+                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 10))
+                .Should().Be("2021-01-23T17:15:49.01");
+
+            Formatter.FullRecursiveFormatter
+                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 000))
                 .Should().Be("2021-01-23T17:15:49");
         }
 

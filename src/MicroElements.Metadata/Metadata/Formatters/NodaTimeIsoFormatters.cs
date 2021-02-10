@@ -23,17 +23,17 @@ namespace MicroElements.Metadata.Formatters
         /// <summary>
         /// Formats LocalDateTime as yyyy-MM-ddTHH:mm:ss.
         /// </summary>
-        public static IValueFormatter LocalDateTimeFormatter { get; } = new FormattableFormatter("NodaTime.LocalDateTime", "yyyy-MM-ddTHH:mm:ss");
+        public static IValueFormatter LocalDateTimeFormatter { get; } = new FormattableFormatter("NodaTime.LocalDateTime", "yyyy-MM-ddTHH:mm:ss.FFF");
 
         /// <summary>
         /// Formats Duration as -H:mm:ss.FFFFFFFFF (without days).
         /// </summary>
-        public static IValueFormatter DurationFormatter { get; } = new FormattableFormatter("NodaTime.Duration", "-H:mm:ss.FFFFFFFFF");
+        public static IValueFormatter DurationFormatter { get; } = new FormattableFormatter("NodaTime.Duration", "-H:mm:ss.FFF");
 
         /// <summary>
         /// Formats Duration as -D:hh:mm:ss.FFFFFFFFF (with days).
         /// </summary>
-        public static IValueFormatter DurationWithDaysFormatter { get; } = new FormattableFormatter("NodaTime.Duration", "-D:hh:mm:ss.FFFFFFFFF");
+        public static IValueFormatter DurationWithDaysFormatter { get; } = new FormattableFormatter("NodaTime.Duration", "-D:hh:mm:ss.FFF");
 
         /// <inheritdoc />
         public IEnumerable<IValueFormatter> GetFormatters()

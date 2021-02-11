@@ -10,7 +10,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
     /// <summary>
     /// Context for cell rendering.
     /// </summary>
-    public class CellContext
+    public readonly struct CellContext
     {
         /// <summary>
         /// Gets ColumnContext for this cell.

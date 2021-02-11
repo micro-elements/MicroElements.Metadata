@@ -344,8 +344,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     configureRow?.Invoke(new RowContext(cellContexts, excelRow, dataRow));
 
                     // Customize cells
-                    foreach (CellContext cellContext in cellContexts)
+                    for (var i = 0; i < columns.Count; i++)
                     {
+                        CellContext cellContext = cellContexts[i];
                         var configureCell = ExcelCellMetadata.ConfigureCell.GetFirstDefinedValue(
                             cellContext.CellMetadata,
                             cellContext.ColumnContext.ColumnMetadata,
@@ -475,7 +476,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 
             Cell cell = CreateCell(textValue, dataType);
 
-            if (dataType == CellValues.Date)
+            if (dataType == CellValues.Date && cell.StyleIndex == null)
             {
                 cell.StyleIndex = _documentContext.GetCellFormatIndex("Date");
 

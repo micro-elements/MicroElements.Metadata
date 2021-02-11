@@ -187,7 +187,7 @@ namespace MicroElements.Metadata.Tests
 
             IPropertyContainer? container = XDocument
                 .Parse(testXml, LoadOptions.SetLineInfo)
-                .ParseXmlToContainer(new PersonSchema().ToSchema());
+                .ParseXmlToContainer(new PersonSchema().ToSchema(), new XmlParserSettings());
             container.Should().NotBeNull();
 
             IPropertyValue[] values = container.Properties.ToArray();
@@ -247,12 +247,15 @@ namespace MicroElements.Metadata.Tests
 
             List<IPropertyContainer> list = new List<IPropertyContainer>();
 
+            IXmlParserSettings parserSettings = new XmlParserSettings(
+                propertyValueFactory: new PropertyValueFactory(),
+                getElementName: element => element.GetFullName());
+
             var schema = new PropertySet().ToSchema();
-            IXmlParserSettings parserSettings = new XmlParserSettings(propertyValueFactory: new PropertyValueFactory());
+
             IXmlParserContext parserContext = new XmlParserContext(parserSettings, schema);
 
-            foreach (string file in Directory
-                .EnumerateFiles(folder1))
+            foreach (string file in Directory.EnumerateFiles(folder1))
             {
                 var propertyContainer = File.OpenRead(file).ParseXmlToContainer(schema, parserSettings, parserContext);
                 list.Add(propertyContainer);

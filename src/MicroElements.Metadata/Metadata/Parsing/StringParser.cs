@@ -1,25 +1,13 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.Metadata.Parsers;
-
 namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
-    /// Default string parser.
+    /// String parser.
     /// </summary>
-    public sealed class StringParser : ValueParserBase<string>
+    public sealed partial class StringParser : ValueParserBase<string>
     {
-        /// <summary>
-        /// Gets global static singleton.
-        /// </summary>
-        public static StringParser Default { get; } = new StringParser();
-
-        /// <summary>
-        /// Gets Interned string parser.
-        /// </summary>
-        public static StringParser Interned { get; } = new StringParser(new InterningStringProvider());
-
         private readonly IStringProvider _stringProvider;
 
         /// <summary>
@@ -36,5 +24,28 @@ namespace MicroElements.Metadata.Parsing
         {
             return source == null ? ParseResult<string>.Empty : ParseResult.Success(_stringProvider.GetString(source));
         }
+    }
+
+    /// <summary>
+    /// String parser.
+    /// </summary>
+    public partial class StringParser
+    {
+        /// <summary>
+        /// Gets global static singleton.
+        /// </summary>
+        public static StringParser Default { get; } = new StringParser();
+
+        /// <summary>
+        /// Gets Interned string parser.
+        /// </summary>
+        public static StringParser Interned { get; } = new StringParser(new InterningStringProvider());
+
+        /// <summary>
+        /// Gets cached string provider.
+        /// </summary>
+        /// <param name="cachedStringProvider">Optional cached string provider.</param>
+        /// <returns>New <see cref="StringParser"/> instance.</returns>
+        public static StringParser Cached(CachedStringProvider? cachedStringProvider = null) => new StringParser(cachedStringProvider ?? new CachedStringProvider());
     }
 }

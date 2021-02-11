@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
-using MicroElements.Metadata.Parsers;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 using MicroElements.Validation;
 

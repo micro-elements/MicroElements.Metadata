@@ -7,7 +7,7 @@ using MicroElements.Functional;
 
 #pragma warning disable SA1118 // Parameter should not span multiple lines
 
-namespace MicroElements.Metadata.Parsers
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Value parser implementation with external func.

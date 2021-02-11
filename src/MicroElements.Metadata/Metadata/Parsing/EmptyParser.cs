@@ -4,7 +4,7 @@
 using System;
 using MicroElements.Functional;
 
-namespace MicroElements.Metadata.Parsers
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Empty parser is NullObject for <see cref="IValueParser"/>.

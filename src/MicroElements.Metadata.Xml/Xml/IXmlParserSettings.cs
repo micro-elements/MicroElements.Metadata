@@ -35,6 +35,11 @@ namespace MicroElements.Metadata.Xml
         IPropertyValueFactory PropertyValueFactory { get; }
 
         /// <summary>
+        /// Gets string provider to support string interning or caching for performance needs.
+        /// </summary>
+        IStringProvider StringProvider { get; }
+
+        /// <summary>
         /// Gets validation factory.
         /// </summary>
         IValidationProvider ValidationProvider { get; }

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace MicroElements.Metadata.Parsers
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Generic value parser base class.

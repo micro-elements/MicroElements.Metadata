@@ -6,7 +6,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using MicroElements.Functional;
-using MicroElements.Metadata.Parsers;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 using MicroElements.Validation;
 
@@ -125,7 +125,7 @@ namespace MicroElements.Metadata.Xml
 
                 foreach (XElement propertyElement in objectElement.Elements())
                 {
-                    string propertyName = settings.GetElementName(propertyElement);
+                    string propertyName = settings.StringProvider.GetString(settings.GetElementName(propertyElement));
                     IProperty? property = objectSchema.GetProperty(propertyName);
 
                     if (propertyElement.HasElements)

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -31,12 +32,28 @@ namespace MicroElements.Metadata
 
             // Search property by EqualityComparer
             IPropertyValue? propertyValue = null;
-            foreach (var pv in propertyContainer.Properties)
+            var properties = propertyContainer.Properties;
+            if (properties is IList<IPropertyValue> propertyValues)
             {
-                if (search.PropertyComparer.Equals(pv.PropertyUntyped, property))
+                // For is for performance reason here
+                for (int i = 0; i < propertyValues.Count; i++)
                 {
-                    propertyValue = pv;
-                    break;
+                    if (search.PropertyComparer.Equals(propertyValues[i].PropertyUntyped, property))
+                    {
+                        propertyValue = propertyValues[i];
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (IPropertyValue? pv in propertyContainer.Properties)
+                {
+                    if (search.PropertyComparer.Equals(pv.PropertyUntyped, property))
+                    {
+                        propertyValue = pv;
+                        break;
+                    }
                 }
             }
 

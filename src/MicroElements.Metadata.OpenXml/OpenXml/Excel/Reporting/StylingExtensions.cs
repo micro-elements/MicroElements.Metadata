@@ -359,6 +359,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 .Where(item => item != default)
                 .Distinct()
                 .ToArray()!;
+
             return cellFormatProviderTypes.Length > 0 ? excelMetadata.WithCombinedConfigure(
                     ExcelDocumentMetadata.ConfigureDocument,
                     context =>

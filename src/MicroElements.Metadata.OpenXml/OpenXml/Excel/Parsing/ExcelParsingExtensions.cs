@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -51,7 +52,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 var worksheet = worksheetPart.Worksheet;
                 var excelColumns = worksheet.GetFirstChild<Columns>();
                 var columns = excelColumns
-                    .Descendants<Column>()
+                    .GetChildren<Column>()
                     .Select(column => new ExcelElement<Column>(sheet.Doc, column));
                 return columns;
             }
@@ -73,7 +74,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 var worksheet = worksheetPart.Worksheet;
                 var sheetData = worksheet.GetFirstChild<SheetData>();
                 var rows = sheetData
-                    .Descendants<Row>()
+                    .GetChildren<Row>()
                     .Select(row => new ExcelElement<Row>(sheet.Doc, row));
                 return rows;
             }
@@ -191,12 +192,38 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         }
 
         /// <summary>
+        /// Gets OpenXmlElement children.
+        /// </summary>
+        /// <param name="container">Source element.</param>
+        /// <returns>Children enumeration.</returns>
+        [SuppressMessage("ReSharper", "RedundantAssignment", Justification = "GC hint.")]
+        [SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "GC hint.")]
+        public static IEnumerable<T> GetChildren<T>(this OpenXmlElement container)
+            where T : OpenXmlElement
+        {
+            if (container.HasChildren && container.FirstChild != null)
+            {
+                OpenXmlElement? element;
+                for (element = container.FirstChild; element != null; element = element.NextSibling())
+                {
+                    if (element is T child)
+                        yield return child;
+                }
+
+                // GC hint.
+                element = null;
+            }
+        }
+
+        /// <summary>
         /// Gets row cells.
         /// </summary>
         /// <param name="row">Source row.</param>
         /// <returns>Cells.</returns>
-        public static IEnumerable<Cell> GetRowCells(this Row row) =>
-            row.Descendants<Cell>();
+        public static IEnumerable<Cell> GetRowCells(this Row row)
+        {
+            return row.GetChildren<Cell>();
+        }
 
         /// <summary>
         /// Gets row cells as <see cref="HeaderCell"/>.
@@ -277,7 +304,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             var cellFormat = cell.GetCellFormat();
             if (cellFormat.NumberFormatId != 0)
             {
-                var elements = cell.Doc.WorkbookPart.WorkbookStylesPart.Stylesheet.NumberingFormats.Elements<NumberingFormat>().ToList();
+                var elements = cell.Doc.WorkbookPart.WorkbookStylesPart.Stylesheet.NumberingFormats.Elements<NumberingFormat>();
                 string format = elements.FirstOrDefault(i => i.NumberFormatId.Value == cellFormat.NumberFormatId.Value)?.FormatCode;
 
                 //Note: Look also: https://stackoverflow.com/questions/13176832/reading-a-date-from-xlsx-using-open-xml-sdk
@@ -448,12 +475,13 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             // Set row index
             row.RowIndex = (uint)rowIndex;
 
-            var rowCells = row.GetRowCells().ToArray();
-            for (int colIndexZeroBased = 0; colIndexZeroBased < rowCells.Length; colIndexZeroBased++)
+            int colIndexZeroBased = 0;
+            foreach (Cell rowCell in row.GetRowCells())
             {
                 // Set cell reference
                 var colIndex = zeroBased ? colIndexZeroBased : colIndexZeroBased + 1;
-                rowCells[colIndexZeroBased].CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
+                rowCell.CellReference = GetCellReference(colIndex, rowIndex, zeroBased: zeroBased);
+                colIndexZeroBased++;
             }
         }
 

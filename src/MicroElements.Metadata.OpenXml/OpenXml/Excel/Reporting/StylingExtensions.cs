@@ -409,7 +409,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <param name="applyStyleName">New style name.</param>
         /// <param name="mergeMode">Apply style.</param>
         /// <returns>Index of new style.</returns>
-        public static uint GetMergedStyleIndex(
+        public static UInt32Value GetMergedStyleIndex(
             this DocumentContext documentContext,
             UInt32Value? currentStyleIndex,
             string applyStyleName,
@@ -454,7 +454,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 mergedStyleIndex = documentContext.GetCellFormatIndex(applyStyleName);
             }
 
-            return mergedStyleIndex;
+            return documentContext.Cache.UInt32Value.GetOrAdd(mergedStyleIndex, value => new UInt32Value(value));
         }
 
         /// <summary>

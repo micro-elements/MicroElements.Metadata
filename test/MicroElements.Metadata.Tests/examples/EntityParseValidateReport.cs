@@ -26,6 +26,12 @@ namespace MicroElements.Metadata.Tests.examples
                 CreatedAt = createdAt;
                 Name = name;
             }
+
+            /// <inheritdoc />
+            public override string ToString()
+            {
+                return $"{nameof(CreatedAt)}: {CreatedAt:yyyy-MM-ddTHH:mm:ss.FFFFFFF}, {nameof(Name)}: {Name}";
+            }
         }
 
         public class EntityMeta : IPropertySet, IModelMapper<Entity>
@@ -86,7 +92,7 @@ namespace MicroElements.Metadata.Tests.examples
             public EntityReport(string reportName = "Entities")
                 : base(reportName)
             {
-                Add(EntityMeta.CreatedAt);
+                Add(EntityMeta.CreatedAt).SetDateSerialFormat();
                 Add(EntityMeta.Name);
             }
         }
@@ -123,16 +129,16 @@ namespace MicroElements.Metadata.Tests.examples
         public void UseCase()
         {
             // Trim DateTime to milliseconds because default DateTime render trimmed to milliseconds
-            DateTime NowTrimmed()
+            DateTime NowTrimmed(long trim)
             {
                 DateTime now = DateTime.Now;
-                return now.AddTicks(-(now.Ticks % TimeSpan.TicksPerMillisecond));
+                return now.AddTicks(-(now.Ticks % trim));
             }
 
             Entity[] entities = {
-                new Entity(NowTrimmed(), "Name1"),
-                new Entity(NowTrimmed(), "Name2"),
-                new Entity(NowTrimmed(), "Name3"),
+                new Entity(NowTrimmed(TimeSpan.TicksPerSecond), "Name1"),
+                new Entity(NowTrimmed(TimeSpan.TicksPerMillisecond), "Name2"),
+                new Entity(NowTrimmed(TimeSpan.TicksPerDay), "Name3"),
             };
 
             Stream excelStream = ReportToExcel(entities);

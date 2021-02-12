@@ -21,6 +21,20 @@ namespace MicroElements.Metadata.OpenXml.Excel
         public static readonly DateTime date_1899_12_31 = new DateTime(1899, 12, 31);
 
         /// <summary>
+        /// Excel date and time has millisecond precision.
+        /// Also: <see cref="DateTime.ToOADate"/> and <see cref="DateTime.FromOADate"/> has millisecond precision.
+        /// Also: Excel can hold only 15 digits: https://en.wikipedia.org/wiki/Numeric_precision_in_Microsoft_Excel.
+        /// </summary>
+        public static DateTime TrimToMillisecondPrecision(this in DateTime dateTime)
+        {
+            long overhead = dateTime.Ticks % TimeSpan.TicksPerMillisecond;
+            if (overhead > 0)
+                return dateTime.AddTicks(-overhead);
+
+            return dateTime;
+        }
+
+        /// <summary>
         /// Converts DateTime to Excel serial date (Days since 1900 year).
         /// It's an alternative for <see cref="DateTime.ToOADate"/> that fixes 1900 leap (not leap) year problem.
         /// </summary>
@@ -28,7 +42,7 @@ namespace MicroElements.Metadata.OpenXml.Excel
         /// <returns>Double time.</returns>
         public static double ToExcelSerialDate(this in DateTime dateTime)
         {
-            double excelSerialDate = (dateTime - date_1899_12_31).TotalDays;
+            double excelSerialDate = (dateTime.TrimToMillisecondPrecision() - date_1899_12_31).TotalDays;
             if (excelSerialDate > 59)
                 excelSerialDate += 1;
             return excelSerialDate;
@@ -44,7 +58,7 @@ namespace MicroElements.Metadata.OpenXml.Excel
             // NOTE: DateTime.FromOADate parses 1 as 1899-12-31. Correct value is 1900-01-01
             if (excelSerialDate > 59)
                 excelSerialDate -= 1; // Excel/Lotus 2/29/1900 bug
-            return date_1899_12_31.AddDays(excelSerialDate);
+            return date_1899_12_31.AddDays(excelSerialDate).TrimToMillisecondPrecision();
         }
 
         /// <summary>

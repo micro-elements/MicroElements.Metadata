@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using DocumentFormat.OpenXml.Spreadsheet;
 using FluentAssertions;
 using MicroElements.Functional;
@@ -111,6 +112,21 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
             MapToSerialAndBack(new DateTime(1900, 02, 28), dt => dt);
             MapToSerialAndBack(new DateTime(1900, 03, 01), dt => dt);
             MapToSerialAndBack(new DateTime(2020, 12, 22), dt => dt);
+        }
+
+        [Fact]
+        public void date_precision()
+        {
+            DateTime dateTime = new DateTime(2020, 12, 22, 12, 0, 0).AddTicks(1234567);
+            DateTime dateTimeTrimmed = dateTime.TrimToMillisecondPrecision();
+
+            dateTime.ToExcelSerialDateAsString().Should().Be("44187.500001423614");
+            dateTimeTrimmed.ToExcelSerialDateAsString().Should().Be("44187.500001423614");
+
+            dateTime.ToOADate().Should().Be(44187.500001423614);
+            DateTime.FromOADate(dateTime.ToOADate()).Should().Be(dateTimeTrimmed);
+
+            dateTime.ToExcelSerialDate().FromExcelSerialDate().Should().Be(dateTimeTrimmed);
         }
 
         public void MapToSerialAndBack<T>(T initial, Func<DateTime, T> fromDateTime)

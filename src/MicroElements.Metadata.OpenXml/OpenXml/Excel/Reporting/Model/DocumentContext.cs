@@ -1,7 +1,9 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using MicroElements.Functional;
 
@@ -28,9 +30,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public IExcelMetadata DocumentMetadata { get; }
 
         /// <summary>
-        /// Gets SharedStringTable for document.
+        /// Caches for document building process.
         /// </summary>
-        public IDictionary<string, string> SharedStringTable { get; } = new Dictionary<string, string>();
+        public DocumentBuilderCache Cache { get; } = new DocumentBuilderCache();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentContext"/> class.
@@ -45,5 +47,17 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             Document = document;
             DocumentMetadata = documentMetadata;
         }
+    }
+
+    public class DocumentBuilderCache
+    {
+        /// <summary>
+        /// Gets SharedStringTable for document.
+        /// </summary>
+        public ConcurrentDictionary<string, string> SharedStringTable { get; } = new ConcurrentDictionary<string, string>();
+
+        public ConcurrentDictionary<uint, UInt32Value> UInt32Value { get; } = new ConcurrentDictionary<uint, UInt32Value>();
+
+        public ConcurrentDictionary<string, StringValue> StringValue { get; } = new ConcurrentDictionary<string, StringValue>();
     }
 }

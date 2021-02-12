@@ -12,7 +12,10 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class MetadataGlobalCache
     {
-        private static ConditionalWeakTable<object, IPropertyContainer> MetadataCache { get; } = new ConditionalWeakTable<object, IPropertyContainer>();
+        /// <summary>
+        /// ConditionalWeakTable binds metadata to any object adn holds till the object is not GC collected.
+        /// </summary>
+        private static readonly ConditionalWeakTable<object, IPropertyContainer> _metadataCache = new ();
 
         /// <summary>
         /// Gets or creates metadata for <paramref name="instance"/>.
@@ -26,7 +29,7 @@ namespace MicroElements.Metadata
             if (instance == null)
                 return PropertyContainer.Empty;
 
-            if (!MetadataCache.TryGetValue(instance, out IPropertyContainer metadata))
+            if (!_metadataCache.TryGetValue(instance, out IPropertyContainer metadata))
             {
                 metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
                 instance.SetInstanceMetadata(metadata);
@@ -48,7 +51,7 @@ namespace MicroElements.Metadata
             if (instance == null)
                 return PropertyContainer.Empty;
 
-            MetadataCache.AddOrUpdate(instance, container);
+            _metadataCache.AddOrUpdate(instance, container);
 
             return container;
         }
@@ -63,7 +66,7 @@ namespace MicroElements.Metadata
             if (instance == null)
                 return PropertyContainer.Empty;
 
-            if (MetadataCache.TryGetValue(instance, out IPropertyContainer metadata))
+            if (_metadataCache.TryGetValue(instance, out IPropertyContainer metadata))
             {
                 if (metadata is IMutablePropertyContainer)
                 {

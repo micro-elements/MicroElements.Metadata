@@ -180,8 +180,12 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// </summary>
         /// <param name="reportRenderer">Report renderer.</param>
         /// <param name="reportRows">Report rows.</param>
+        /// <param name="fillCellReferences">Fill cell references after sheet builded.</param>
         /// <returns>Builder instance.</returns>
-        public ExcelReportBuilder AddReportSheet(IReportRenderer reportRenderer, IEnumerable<IPropertyContainer> reportRows)
+        public ExcelReportBuilder AddReportSheet(
+            IReportRenderer reportRenderer,
+            IEnumerable<IPropertyContainer> reportRows,
+            bool fillCellReferences = true)
         {
             reportRenderer.AssertArgumentNotNull(nameof(reportRenderer));
             reportRows.AssertArgumentNotNull(nameof(reportRows));
@@ -199,7 +203,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 
             AddSheetData(sheetContext, reportRows);
 
-            sheetContext.SheetElement.FillCellReferences(forceFill: true);
+            sheetContext.SheetElement.FillCellReferences(forceFill: fillCellReferences);
 
             // External customization
             var configureSheet = ExcelSheetMetadata.ConfigureSheet.GetFirstDefinedValue(
@@ -307,6 +311,25 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 
             sheetContext.SheetData = sheetData;
             sheetContext.Sheet = sheet;
+        }
+
+        public ExcelReportBuilder AddSheetDataTBD(
+            IReportRenderer reportRenderer,
+            IEnumerable<IPropertyContainer> reportRows,
+            bool fillCellReferences = true)
+        {
+            var sheetMetadata = reportRenderer.GetMetadata<ExcelSheetMetadata>() ?? _defaultSheetMetadata;
+
+            // FIND ALL PARTS!!!
+            WorkbookPart workbookPart = _documentContext.Document.WorkbookPart;
+
+            WorksheetPart worksheetPart = workbookPart.GetPartsOfType<WorksheetPart>().FirstOrDefault();
+            Sheets sheets = workbookPart.Workbook.Sheets;
+
+            var sheetContext = new SheetContext(_documentContext, worksheetPart, sheetMetadata, reportRenderer);
+            sheetContext.SheetData = new SheetData();
+
+            return this;
         }
 
         private void AddSheetData(
@@ -430,7 +453,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         {
             string? cellText = value;
 
-            if (dataType == CellValues.SharedString && string.IsNullOrEmpty(cellText))
+            // Null is not suitable value for SharedString
+            if (cellText == null && dataType == CellValues.SharedString)
                 dataType = CellValues.String;
 
             if (dataType == CellValues.SharedString)

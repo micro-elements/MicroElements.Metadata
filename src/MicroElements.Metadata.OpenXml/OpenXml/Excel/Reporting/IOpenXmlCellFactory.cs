@@ -7,11 +7,23 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
+    /// <summary>
+    /// OpenXml Cell factory.
+    /// </summary>
     public interface IOpenXmlCellFactory
     {
+        /// <summary>
+        /// Creates cell.
+        /// </summary>
+        /// <param name="cellText">Cell text.</param>
+        /// <param name="dataType">Data type.</param>
+        /// <returns>New cell instance.</returns>
         Cell CreateCell(string? cellText, CellValues dataType);
     }
 
+    /// <summary>
+    /// Default factory that creates cell on ordinary manner.
+    /// </summary>
     public class DefaultOpenXmlCellFactory : IOpenXmlCellFactory
     {
         /// <inheritdoc />
@@ -27,6 +39,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         }
     }
 
+    /// <summary>
+    /// Uses cached <see cref="EnumValue{T}"/> and <see cref="CellValue"/> to eliminate GC small object pressure.
+    /// HACK: <see cref="CellValue"/> is <see cref="OpenXmlElement"/> so <see cref="OpenXmlElement.Parent"/> will be set on add to cell. So we need to clear parent every type to reuse <see cref="CellValue"/>.
+    /// </summary>
     public class CachedOpenXmlCellFactory : IOpenXmlCellFactory
     {
         private class Cache
@@ -41,6 +57,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public Cell CreateCell(string? cellText, CellValues dataType)
         {
             CellValue? cellValue = null;
+            EnumValue<CellValues> dataTypeValue = null;
+
             if (cellText != null)
             {
                 cellValue = _cache.CellValues.GetOrAdd((cellText, dataType), tuple => new CellValue(tuple.Item1));
@@ -49,12 +67,15 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     // HACK: Parent has internal set
                     typeof(CellValue).GetProperty("Parent").SetValue(cellValue, null);
                 }
+
+                // Create only for not null values for more compact xml. (omits t="s")
+                dataTypeValue = _cache.EnumValues.GetOrAdd(dataType, values => new EnumValue<CellValues>(values));
             }
 
             Cell cell = new Cell
             {
                 CellValue = cellValue,
-                DataType = _cache.EnumValues.GetOrAdd(dataType, values => new EnumValue<CellValues>(values)),
+                DataType = dataTypeValue,
             };
 
             return cell;

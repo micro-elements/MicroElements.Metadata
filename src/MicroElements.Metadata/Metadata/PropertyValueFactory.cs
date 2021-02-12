@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -13,6 +15,8 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyValueFactory : IPropertyValueFactory
     {
+        private static ConcurrentDictionary<Type, Func<IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
+
         /// <inheritdoc/>
         public IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
@@ -34,10 +38,40 @@ namespace MicroElements.Metadata
             if (propertyType == typeof(IPropertyContainer))
                 return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
 
-            // Reflection construction. TODO: cache by type
-            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
-            IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
+            IPropertyValue propertyValue = _funcCache
+                .GetOrAdd(propertyType, type => (prop, val, valSource) => NewPropertyValue(type, prop, val, valSource))
+                .Invoke(property, value, valueSource);
+
+            //// Reflection construction. TODO: cache by type
+            //Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
+            //IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
             return propertyValue;
+        }
+
+        public static IPropertyValue NewPropertyValue(Type valueType, IProperty property, object value, ValueSource valueSource)
+        {
+            //Expression
+            return null;
+        }
+
+        public static Expression<Func<IProperty<T>, T, ValueSource, IPropertyValue<T>>> NewPropertyValue<T>()
+        {
+            Type valueType = typeof(T);
+            Type propertyType = typeof(IProperty<>).MakeGenericType(valueType);
+            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(valueType);
+
+            // ctor: PropertyValue(IProperty<T> property, [AllowNull] T value, ValueSource? source = null)
+            ParameterExpression propertyArg = Expression.Parameter(propertyType, "property");
+            ParameterExpression valueArg = Expression.Parameter(valueType, "value");
+            ParameterExpression sourceArg = Expression.Parameter(typeof(ValueSource), "source");
+
+            ConstructorInfo constructorInfo = propertyValueType.GetConstructor(new[] { propertyType, valueType, typeof(ValueSource) })!;
+
+            var newExpression = Expression.New(constructorInfo, propertyArg, valueArg, sourceArg);
+
+            //Expression.Convert(newExpression, )
+
+            return Expression.Lambda<Func<IProperty<T>, T, ValueSource, IPropertyValue<T>>>(newExpression, propertyArg, valueArg, sourceArg);
         }
     }
 

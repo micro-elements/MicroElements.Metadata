@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Schema
@@ -108,6 +110,16 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     public static partial class SchemaExtensions
     {
+        private static readonly ConditionalWeakTable<ISchema, IHasSchema> _schemasCache = new ();
+
+        private static IMetadataProvider SetSchemaInternal(this IMetadataProvider metadataProvider, ISchema schema)
+        {
+            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            return metadataProvider.SetMetadata(_schemasCache.GetValue(schema, sch => new HasSchema(sch)));
+        }
+
         /// <summary>
         /// Sets schema for <paramref name="propertyContainer"/>.
         /// </summary>
@@ -119,7 +131,7 @@ namespace MicroElements.Metadata.Schema
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return propertyContainer.SetMetadata((IHasSchema)new HasSchema(schema));
+            return (IPropertyContainer)propertyContainer.SetSchemaInternal(schema);
         }
 
         /// <summary>
@@ -146,7 +158,7 @@ namespace MicroElements.Metadata.Schema
             property.AssertArgumentNotNull(nameof(property));
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.SetMetadata((IHasSchema)new HasSchema(schema));
+            return (TProperty)property.SetSchemaInternal(schema);
         }
 
         /// <summary>

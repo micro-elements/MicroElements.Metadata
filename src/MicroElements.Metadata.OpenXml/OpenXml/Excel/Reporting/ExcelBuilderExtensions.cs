@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
+using MicroElements.Metadata.OpenXml.Excel.Parsing;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -110,7 +111,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         }
 
         /// <summary>
-        /// Gets or adds shared string anr returns its index.
+        /// Gets or adds shared string and returns its index.
         /// </summary>
         /// <param name="documentContext">Source document.</param>
         /// <param name="text">Text to add.</param>
@@ -120,7 +121,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (text == null)
                 return null;
 
-            if (!documentContext.SharedStringTable.TryGetValue(text, out string stringIndex))
+            if (!documentContext.Cache.SharedStringTable.TryGetValue(text, out string stringIndex))
             {
                 SharedStringTable sharedStringTable = documentContext.GetSharedStringTable();
 
@@ -130,7 +131,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 sharedStringTable.UniqueCount += 1;
 
                 stringIndex = (sharedStringTable.Count - 1).ToString();
-                documentContext.SharedStringTable.Add(text, stringIndex);
+                documentContext.Cache.SharedStringTable.TryAdd(text, stringIndex);
             }
 
             return stringIndex;
@@ -357,7 +358,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.Fonts == null)
                 return 0;
 
-            return stylesheet.Fonts.ChildElements.OfType<Font>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return stylesheet.Fonts.GetChildren<Font>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
         /// <summary>
@@ -372,7 +373,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.Fills == null)
                 return 0;
 
-            return stylesheet.Fills.ChildElements.OfType<Fill>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return stylesheet.Fills.GetChildren<Fill>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
         /// <summary>
@@ -387,7 +388,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.Borders == null)
                 return 0;
 
-            return stylesheet.Borders.ChildElements.OfType<Border>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return stylesheet.Borders.GetChildren<Border>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
         /// <summary>
@@ -402,7 +403,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.NumberingFormats == null)
                 return 0;
 
-            return stylesheet.NumberingFormats.ChildElements.OfType<NumberingFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return stylesheet.NumberingFormats.GetChildren<NumberingFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
         }
 
         /// <summary>
@@ -437,7 +438,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.CellStyleFormats == null)
                 return 0;
 
-            return stylesheet.CellStyleFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            var cellStyleFormatIndex = stylesheet.CellStyleFormats.GetChildren<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return cellStyleFormatIndex;
         }
 
         /// <summary>
@@ -452,7 +454,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.CellFormats == null)
                 return 0;
 
-            return stylesheet.CellFormats.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            var cellFormatIndex = stylesheet.CellFormats.GetChildren<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return cellFormatIndex;
         }
 
         /// <summary>
@@ -467,7 +470,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.CellStyles == null)
                 return 0;
 
-            return stylesheet.CellStyles.ChildElements.OfType<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            var cellStyleIndex = stylesheet.CellStyles.GetChildren<CellFormat>().UintIndexOrZero(item => item.GetStyleSheetName() == name);
+            return cellStyleIndex;
         }
 
         /// <summary>
@@ -482,7 +486,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             if (stylesheet.CellFormats == null)
                 return null;
 
-            CellFormat? cellFormat = stylesheet.CellFormats.ChildElements.OfType<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
+            CellFormat? cellFormat = stylesheet.CellFormats.GetChildren<CellFormat>().FirstOrDefault(item => item.GetStyleSheetName() == name);
             return cellFormat;
         }
 
@@ -518,9 +522,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         }
 
         internal static TElement? TryGetElementAt<TElement>(this OpenXmlCompositeElement element, int index)
-            where TElement : class
+            where TElement : OpenXmlElement
         {
-            return element.ChildElements.OfType<TElement>().Skip(index).FirstOrDefault();
+            return element.GetChildren<TElement>().Skip(index).FirstOrDefault();
         }
 
         internal static uint UintIndexOrZero<T>(this IEnumerable<T> source, Func<T, bool> predicate)

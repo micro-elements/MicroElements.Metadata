@@ -331,68 +331,80 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             string? cellValue = cellData?.CellValue?.InnerText ?? nullValue;
             string? cellTextValue = null;
 
-            if (cellValue != null && cellData?.DataType != null && cellData.DataType.Value == CellValues.SharedString)
+            if (cellData == null)
+                return cellValue;
+
+            CellValues? dataTypeValue = cellData.DataType?.Value;
+
+            if (cellValue != null && dataTypeValue == CellValues.SharedString)
             {
                 cellTextValue = cell.Doc.WorkbookPart.SharedStringTablePart.SharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText;
             }
 
-            if (cellTextValue == null && cellValue != null && cellData?.DataType == null)
+            if (cellTextValue == null && cellValue != null)
             {
                 var propertyParser = cell.GetMetadata<IPropertyParser>();
 
                 if (propertyParser != null)
-                {
-                    if (propertyParser.TargetType == typeof(LocalDate) || propertyParser.TargetType == typeof(LocalDate?))
-                    {
-                        var parseResult = LocalDatePattern.Iso.Parse(cellValue);
-                        if (parseResult.Success)
-                        {
-                            cellTextValue = cellValue;
-                        }
-                        else
-                        {
-                            Prelude
-                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
-                                .Map(d => d.FromExcelSerialDate())
-                                .Map(dt => dt.ToString("yyyy-MM-dd"))
-                                .Match(s => cellTextValue = s, () => { });
-                        }
-                    }
-                    else if (propertyParser.TargetType == typeof(LocalTime) || propertyParser.TargetType == typeof(LocalTime?))
-                    {
-                        var parseResult = LocalTimePattern.ExtendedIso.Parse(cellValue);
-                        if (parseResult.Success)
-                        {
-                            cellTextValue = cellValue;
-                        }
-                        else
-                        {
-                            Prelude
-                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
-                                .Map(d => d.FromExcelSerialDate())
-                                .Map(dt => dt.ToString("HH:mm:ss"))
-                                .Match(s => cellTextValue = s, () => { });
-                        }
-                    }
-                    else if (propertyParser.TargetType == typeof(DateTime) || propertyParser.TargetType == typeof(DateTime?))
-                    {
-                        if (DateTime.TryParse(cellValue, out _))
-                        {
-                            cellTextValue = cellValue;
-                        }
-                        else
-                        {
-                            Prelude
-                                .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
-                                .Map(d => d.FromExcelSerialDate())
-                                .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss"))
-                                .Match(s => cellTextValue = s, () => { });
-                        }
-                    }
-                }
+                    cellTextValue = TryParseAsDateType(cellValue, propertyParser.TargetType);
             }
 
             return cellTextValue ?? cellValue;
+        }
+
+        private static string? TryParseAsDateType(string cellValue, Type targetType)
+        {
+            string? cellTextValue = null;
+
+            if (targetType == typeof(LocalDate) || targetType == typeof(LocalDate?))
+            {
+                var parseResult = LocalDatePattern.Iso.Parse(cellValue);
+                if (parseResult.Success)
+                {
+                    cellTextValue = cellValue;
+                }
+                else
+                {
+                    Prelude
+                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                        .Map(d => d.FromExcelSerialDate())
+                        .Map(dt => dt.ToString("yyyy-MM-dd"))
+                        .Match(s => cellTextValue = s, () => { });
+                }
+            }
+            else if (targetType == typeof(LocalTime) || targetType == typeof(LocalTime?))
+            {
+                var parseResult = LocalTimePattern.ExtendedIso.Parse(cellValue);
+                if (parseResult.Success)
+                {
+                    cellTextValue = cellValue;
+                }
+                else
+                {
+                    Prelude
+                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                        .Map(d => d.FromExcelSerialDate())
+                        .Map(dt => dt.ToString("HH:mm:ss"))
+                        .Match(s => cellTextValue = s, () => { });
+                }
+            }
+            else if (targetType == typeof(DateTime) || targetType == typeof(DateTime?))
+            {
+                if (DateTime.TryParse(cellValue, out _))
+                {
+                    cellTextValue = cellValue;
+                }
+                else
+                {
+                    Prelude
+                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                        .Map(d => d.FromExcelSerialDate())
+                        .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.FFFFFFF"))
+                        .Match(s => cellTextValue = s, () => { });
+                }
+            }
+
+            return cellTextValue;
         }
 
         /// <summary>

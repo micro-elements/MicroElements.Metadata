@@ -15,7 +15,7 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyValueFactory : IPropertyValueFactory
     {
-        private static ConcurrentDictionary<Type, Func<IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
+        private static readonly ConcurrentDictionary<Type, Func<IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
 
         /// <inheritdoc/>
         public IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
@@ -34,44 +34,48 @@ namespace MicroElements.Metadata
 
             // Most popular cases:
             if (propertyType == typeof(string))
-                return new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
+                return (IPropertyValue)new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
             if (propertyType == typeof(IPropertyContainer))
                 return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
 
             IPropertyValue propertyValue = _funcCache
-                .GetOrAdd(propertyType, type => (prop, val, valSource) => NewPropertyValue(type, prop, val, valSource))
-                .Invoke(property, value, valueSource);
+                .GetOrAdd(propertyType, type => NewPropertyValue(type).Compile())
+                .Invoke(property, value!, valueSource!);
 
-            //// Reflection construction. TODO: cache by type
-            //Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(propertyType);
-            //IPropertyValue propertyValue = (IPropertyValue)Activator.CreateInstance(propertyValueType, property, value, source);
             return propertyValue;
         }
 
-        public static IPropertyValue NewPropertyValue(Type valueType, IProperty property, object value, ValueSource valueSource)
+        /// <summary>
+        /// Returns expression: <code><![CDATA[(property, value, source) => (new PropertyValue<T>((property As IProperty<T>), (value As T), source) As IPropertyValue)]]></code>.
+        /// </summary>
+        /// <param name="valueType">Value type.</param>
+        /// <returns>Expression.</returns>
+        public static Expression<Func<IProperty, object, ValueSource, IPropertyValue>> NewPropertyValue(Type valueType)
         {
-            //Expression
-            return null;
-        }
+            Type propertyGenericType = typeof(IProperty<>).MakeGenericType(valueType);
+            Type propertyValueGenericType = typeof(PropertyValue<>).MakeGenericType(valueType);
 
-        public static Expression<Func<IProperty<T>, T, ValueSource, IPropertyValue<T>>> NewPropertyValue<T>()
-        {
-            Type valueType = typeof(T);
-            Type propertyType = typeof(IProperty<>).MakeGenericType(valueType);
-            Type propertyValueType = typeof(PropertyValue<>).MakeGenericType(valueType);
-
-            // ctor: PropertyValue(IProperty<T> property, [AllowNull] T value, ValueSource? source = null)
-            ParameterExpression propertyArg = Expression.Parameter(propertyType, "property");
-            ParameterExpression valueArg = Expression.Parameter(valueType, "value");
+            ParameterExpression untypedPropertyArg = Expression.Parameter(typeof(IProperty), "property");
+            ParameterExpression untypedValueArg = Expression.Parameter(typeof(object), "value");
             ParameterExpression sourceArg = Expression.Parameter(typeof(ValueSource), "source");
 
-            ConstructorInfo constructorInfo = propertyValueType.GetConstructor(new[] { propertyType, valueType, typeof(ValueSource) })!;
+            var typedPropertyArg = Expression.Convert(untypedPropertyArg, propertyGenericType);
+            var typedValueArg = Expression.Convert(untypedValueArg, valueType);
 
-            var newExpression = Expression.New(constructorInfo, propertyArg, valueArg, sourceArg);
+            // ctor: PropertyValue(IProperty<T> property, T value, ValueSource source)
+            ConstructorInfo propertyValueConstructor = propertyValueGenericType.GetConstructor(new[] { propertyGenericType, valueType, typeof(ValueSource) })!;
 
-            //Expression.Convert(newExpression, )
+            // new PropertyValue(property as IProperty<T>, value as T, source)
+            var newPropertyValue = Expression.New(propertyValueConstructor, typedPropertyArg, typedValueArg, sourceArg);
 
-            return Expression.Lambda<Func<IProperty<T>, T, ValueSource, IPropertyValue<T>>>(newExpression, propertyArg, valueArg, sourceArg);
+            // new PropertyValue(property as IProperty<T>, value as T, source) as IPropertyValue
+            var castToPropertyValue = Expression.Convert(newPropertyValue, typeof(IPropertyValue));
+
+            // (property, value, source) => (new PropertyValue<T>((property As IProperty<T>), (value As T), source) As IPropertyValue)
+            var expression = Expression.Lambda<Func<IProperty, object, ValueSource, IPropertyValue>>(
+                castToPropertyValue, untypedPropertyArg, untypedValueArg, sourceArg);
+
+            return expression;
         }
     }
 
@@ -94,11 +98,11 @@ namespace MicroElements.Metadata
             }
         }
 
-        private sealed class PropertyValueKeyEqualityComparer : IEqualityComparer<PropertyValueKey>
+        private sealed class PropertyValueKeyComparer : IEqualityComparer<PropertyValueKey>
         {
             private readonly IEqualityComparer<IProperty> _propertyComparer;
 
-            public PropertyValueKeyEqualityComparer(IEqualityComparer<IProperty> propertyComparer)
+            public PropertyValueKeyComparer(IEqualityComparer<IProperty> propertyComparer)
             {
                 _propertyComparer = propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
             }
@@ -133,7 +137,7 @@ namespace MicroElements.Metadata
             propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
 
             _propertyValueFactory = propertyValueFactory;
-            _propertyValuesCache = new ConcurrentDictionary<PropertyValueKey, IPropertyValue>(new PropertyValueKeyEqualityComparer(propertyComparer));
+            _propertyValuesCache = new ConcurrentDictionary<PropertyValueKey, IPropertyValue>(new PropertyValueKeyComparer(propertyComparer));
         }
 
         /// <inheritdoc/>
@@ -142,6 +146,25 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
 
             return _propertyValuesCache.GetOrAdd(new PropertyValueKey(property, value, valueSource), _propertyValueFactory.Create(property, value, valueSource));
+        }
+    }
+
+    /// <summary>
+    /// Extensions for <see cref="IPropertyValueFactory"/>.
+    /// </summary>
+    public static class PropertyValueFactoryExtensions
+    {
+        /// <summary>
+        /// Creates factory that caches <see cref="IPropertyValue"/> for the same property and value pairs.
+        /// </summary>
+        /// <param name="propertyValueFactory">Factory.</param>
+        /// <param name="propertyComparer">Optional comparer. Default: <see cref="PropertyComparer.ByReferenceComparer"/>.</param>
+        /// <returns>New cached <see cref="IPropertyValueFactory"/>.</returns>
+        public static IPropertyValueFactory Cached(this IPropertyValueFactory propertyValueFactory, IEqualityComparer<IProperty>? propertyComparer = null)
+        {
+            propertyValueFactory.AssertArgumentNotNull(nameof(propertyValueFactory));
+
+            return new CachedPropertyValueFactory(propertyValueFactory, propertyComparer ?? PropertyComparer.ByReferenceComparer);
         }
     }
 }

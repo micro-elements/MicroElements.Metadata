@@ -8,7 +8,7 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void CreatePropertyValue()
         {
-            var expression = PropertyValueFactory.NewPropertyValue<string>();
+            var expression = PropertyValueFactory.NewPropertyValue(typeof(string));
             var factory = expression.Compile();
 
             IPropertyValue propertyValue = factory.Invoke(new Property<string>("Name"), "Alex", ValueSource.Defined);

@@ -58,7 +58,7 @@ namespace MicroElements.Metadata.Xml
             ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             StringProvider = stringProvider ?? new DefaultStringProvider();
             PropertyComparer = propertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
-            PropertyValueFactory = propertyValueFactory ?? new CachedPropertyValueFactory(new PropertyValueFactory(), PropertyComparer);
+            PropertyValueFactory = propertyValueFactory ?? new PropertyValueFactory().Cached(PropertyComparer);
 
             ValidationProvider = validationFactory ?? Validation.Rules.ValidationProvider.Instance;
             ValidateOnParse = validateOnParse;

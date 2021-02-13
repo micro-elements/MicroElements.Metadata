@@ -248,7 +248,7 @@ namespace MicroElements.Metadata.Tests
             List<IPropertyContainer> list = new List<IPropertyContainer>();
 
             IXmlParserSettings parserSettings = new XmlParserSettings(
-                propertyValueFactory: new PropertyValueFactory(),
+                propertyValueFactory: new PropertyValueFactory().Cached(),
                 getElementName: element => element.GetFullName());
 
             var schema = new PropertySet().ToSchema();

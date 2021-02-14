@@ -12,14 +12,22 @@ namespace MicroElements.Metadata
     public interface IMetadataProvider
     {
         /// <summary>
-        /// Gets metadata for current instance.
+        /// Gets metadata for the current instance.
         /// </summary>
-        IPropertyContainer Metadata => this.GetInstanceMetadata();
+        /// <param name="autoCreate">Should create metadata if it was not created before.</param>
+        /// <returns>Metadata for instance.</returns>
+        IPropertyContainer GetMetadata(bool autoCreate = true) => this.GetInstanceMetadata(autoCreate);
 
         /// <summary>
-        /// Freeze metadata makes metadata readonly.
+        /// Replaces metadata for the current instance.
         /// </summary>
-        void FreezeMetadata() => this.FreezeInstanceMetadata();
+        /// <param name="metadata">New metadata.</param>
+        void SetMetadata(IPropertyContainer metadata) => this.SetInstanceMetadata(metadata);
+
+        /// <summary>
+        /// Gets metadata for the current instance.
+        /// </summary>
+        IPropertyContainer Metadata => GetMetadata(autoCreate: true);
     }
 
     /// <summary>

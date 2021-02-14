@@ -17,6 +17,9 @@ namespace MicroElements.Metadata
         /// </summary>
         public static readonly ISearchAlgorithm Instance = new DefaultSearchAlgorithm();
 
+        private readonly IPropertyValueFactory _propertyValueFactory = PropertyValueFactory.Default;
+        private IPropertyValueFactoryProvider _factoryProvider = new PropertyValueFactoryProvider(comparer => PropertyValueFactory.Default);
+
         /// <inheritdoc />
         public IPropertyValue? SearchPropertyValueUntyped(
             IPropertyContainer propertyContainer,
@@ -102,7 +105,7 @@ namespace MicroElements.Metadata
             if (search.CalculateValue && property.Calculator != null)
             {
                 var calculationResult = property.Calculator.Calculate(propertyContainer, search);
-                var calculatedValue = new PropertyValue<T>(property, calculationResult.Value, calculationResult.ValueSource);
+                var calculatedValue = _propertyValueFactory.Create(property, calculationResult.Value, calculationResult.ValueSource);
 
                 if (calculatedValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)
                     calculatedValue = null;
@@ -121,10 +124,10 @@ namespace MicroElements.Metadata
 
             // Maybe default value?
             if (search.UseDefaultValue)
-                return new PropertyValue<T>(property, property.DefaultValue(), ValueSource.DefaultValue);
+                return _propertyValueFactory.Create(property, property.DefaultValue(), ValueSource.DefaultValue);
 
             // Return null or NotDefined
-            return search.ReturnNotDefined ? new PropertyValue<T>(property, default, ValueSource.NotDefined) : null;
+            return search.ReturnNotDefined ? _propertyValueFactory.Create(property, default, ValueSource.NotDefined) : null;
         }
     }
 }

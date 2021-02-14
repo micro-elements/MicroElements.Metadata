@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using MicroElements.Core;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -15,10 +16,23 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyValueFactory : IPropertyValueFactory
     {
+        /// <summary>
+        /// Gets default <see cref="IPropertyValue"/> factory instance.
+        /// </summary>
+        public static IPropertyValueFactory Default { get; } = new PropertyValueFactory();
+
         private static readonly ConcurrentDictionary<Type, Func<IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
 
+        /// <inheritdoc />
+        public IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return new PropertyValue<T>(property, value, valueSource);
+        }
+
         /// <inheritdoc/>
-        public IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
+        public IPropertyValue CreateUntyped(IProperty property, object? value, ValueSource? valueSource = null)
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -34,7 +48,8 @@ namespace MicroElements.Metadata
 
             // Most popular cases:
             if (propertyType == typeof(string))
-                return (IPropertyValue)new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
+                return new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
+
             if (propertyType == typeof(IPropertyContainer))
                 return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
 
@@ -84,21 +99,23 @@ namespace MicroElements.Metadata
     /// </summary>
     public class CachedPropertyValueFactory : IPropertyValueFactory
     {
-        private readonly struct PropertyValueKey
+        private readonly struct PropertyValueInfo
         {
             public readonly IProperty Property;
             public readonly object? Value;
             public readonly ValueSource? ValueSource;
+            public readonly IPropertyValueFactory PropertyValueFactory;
 
-            public PropertyValueKey(IProperty property, object? value, ValueSource? valueSource)
+            public PropertyValueInfo(IProperty property, object? value, ValueSource? valueSource, IPropertyValueFactory propertyValueFactory)
             {
                 Property = property;
                 Value = value;
                 ValueSource = valueSource;
+                PropertyValueFactory = propertyValueFactory;
             }
         }
 
-        private sealed class PropertyValueKeyComparer : IEqualityComparer<PropertyValueKey>
+        private sealed class PropertyValueKeyComparer : IEqualityComparer<PropertyValueInfo>
         {
             private readonly IEqualityComparer<IProperty> _propertyComparer;
 
@@ -108,19 +125,19 @@ namespace MicroElements.Metadata
             }
 
             /// <inheritdoc/>
-            public bool Equals(PropertyValueKey x, PropertyValueKey y)
+            public bool Equals(PropertyValueInfo x, PropertyValueInfo y)
             {
                 return _propertyComparer.Equals(x.Property, y.Property) && Equals(x.Value, y.Value) && Equals(x.ValueSource, y.ValueSource);
             }
 
             /// <inheritdoc/>
-            public int GetHashCode(PropertyValueKey obj)
+            public int GetHashCode(PropertyValueInfo obj)
             {
                 return HashCode.Combine(obj.Property, obj.Value, obj.ValueSource);
             }
         }
 
-        private readonly ConcurrentDictionary<PropertyValueKey, IPropertyValue> _propertyValuesCache;
+        private readonly ICache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
 
         private readonly IPropertyValueFactory _propertyValueFactory;
 
@@ -129,23 +146,55 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyValueFactory">Real factory.</param>
         /// <param name="propertyComparer">Property comparer.</param>
+        /// <param name="maxItemCount">Max item count in cache.</param>
         public CachedPropertyValueFactory(
             IPropertyValueFactory propertyValueFactory,
-            IEqualityComparer<IProperty> propertyComparer)
+            IEqualityComparer<IProperty> propertyComparer,
+            int? maxItemCount = null)
         {
             propertyValueFactory.AssertArgumentNotNull(nameof(propertyValueFactory));
             propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
 
             _propertyValueFactory = propertyValueFactory;
-            _propertyValuesCache = new ConcurrentDictionary<PropertyValueKey, IPropertyValue>(new PropertyValueKeyComparer(propertyComparer));
+
+            var propertyValueKeyComparer = new PropertyValueKeyComparer(propertyComparer);
+
+            if (maxItemCount == null)
+            {
+                // unlimited cache
+                _propertyValuesCache = new ConcurrentDictionaryAdapter<PropertyValueInfo, IPropertyValue>(new ConcurrentDictionary<PropertyValueInfo, IPropertyValue>(propertyValueKeyComparer));
+            }
+            else
+            {
+                // limited cache
+                _propertyValuesCache = new Core.TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.Value, propertyValueKeyComparer);
+            }
         }
 
-        /// <inheritdoc/>
-        public IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
+        /// <inheritdoc />
+        public IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return _propertyValuesCache.GetOrAdd(new PropertyValueKey(property, value, valueSource), _propertyValueFactory.Create(property, value, valueSource));
+            return (IPropertyValue<T>)_propertyValuesCache.GetOrAdd(new PropertyValueInfo(property, value, valueSource, _propertyValueFactory), propertyValueInfo => CreatePropertyValue<T>(propertyValueInfo));
+        }
+
+        /// <inheritdoc/>
+        public IPropertyValue CreateUntyped(IProperty property, object? value, ValueSource? valueSource = null)
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return _propertyValuesCache.GetOrAdd(new PropertyValueInfo(property, value, valueSource, _propertyValueFactory), propertyValueInfo => CreatePropertyValueUntyped(propertyValueInfo));
+        }
+
+        private static IPropertyValue<T> CreatePropertyValue<T>(in PropertyValueInfo info)
+        {
+            return info.PropertyValueFactory.Create((IProperty<T>)info.Property, (T)info.Value, info.ValueSource);
+        }
+
+        private static IPropertyValue CreatePropertyValueUntyped(in PropertyValueInfo info)
+        {
+            return info.PropertyValueFactory.CreateUntyped(info.Property, info.Value, info.ValueSource);
         }
     }
 
@@ -159,12 +208,16 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyValueFactory">Factory.</param>
         /// <param name="propertyComparer">Optional comparer. Default: <see cref="PropertyComparer.ByReferenceComparer"/>.</param>
+        /// <param name="maxItemCount">Max item count in cache.</param>
         /// <returns>New cached <see cref="IPropertyValueFactory"/>.</returns>
-        public static IPropertyValueFactory Cached(this IPropertyValueFactory propertyValueFactory, IEqualityComparer<IProperty>? propertyComparer = null)
+        public static IPropertyValueFactory Cached(this IPropertyValueFactory propertyValueFactory, IEqualityComparer<IProperty>? propertyComparer = null, int? maxItemCount = null)
         {
             propertyValueFactory.AssertArgumentNotNull(nameof(propertyValueFactory));
 
-            return new CachedPropertyValueFactory(propertyValueFactory, propertyComparer ?? PropertyComparer.ByReferenceComparer);
+            return new CachedPropertyValueFactory(
+                propertyValueFactory,
+                propertyComparer ?? PropertyComparer.ByReferenceComparer,
+                maxItemCount: maxItemCount);
         }
     }
 }

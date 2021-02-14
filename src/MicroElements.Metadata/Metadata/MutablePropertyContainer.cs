@@ -77,7 +77,7 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            var propertyValue = new PropertyValue<T>(property, value, valueSource);
+            var propertyValue = PropertyValueFactory.Default.Create(property, value, valueSource);
             SetValue(propertyValue);
             return propertyValue;
         }

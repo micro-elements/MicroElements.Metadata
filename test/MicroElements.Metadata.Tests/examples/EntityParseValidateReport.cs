@@ -97,12 +97,13 @@ namespace MicroElements.Metadata.Tests.examples
             }
         }
 
-        public Stream ReportToExcel(Entity[] entities)
+        public Stream ReportToExcel(Entity[] entities, IReportBuilderSettings? reportBuilderSettings)
         {
             var reportRows = entities.Select(entity => EntityMeta.Instance.ToContainer(entity));
 
             var excelStream = new MemoryStream();
-            ExcelReportBuilder.Create(excelStream)
+
+            ExcelReportBuilder.Create(excelStream, settings: reportBuilderSettings)
                 .AddReportSheet(new EntityReport("Entities"), reportRows)
                 .SaveAndClose();
 
@@ -141,12 +142,18 @@ namespace MicroElements.Metadata.Tests.examples
                 new Entity(NowTrimmed(TimeSpan.TicksPerDay), "Name3"),
             };
 
-            Stream excelStream = ReportToExcel(entities);
+            BuildExcelAndParseBack(null);
+            BuildExcelAndParseBack(new ReportBuilderSettings(cellFactory: new CachedOpenXmlCellFactory()));
 
-            Entity[] fromExcel = ParseExcel(excelStream);
+            void BuildExcelAndParseBack(IReportBuilderSettings? reportBuilderSettings)
+            {
+                Stream excelStream = ReportToExcel(entities, reportBuilderSettings);
 
-            fromExcel.Should().HaveCount(3);
-            fromExcel.Should().BeEquivalentTo(entities);
+                Entity[] fromExcel = ParseExcel(excelStream);
+
+                fromExcel.Should().HaveCount(3);
+                fromExcel.Should().BeEquivalentTo(entities);
+            }
         }
     }
 }

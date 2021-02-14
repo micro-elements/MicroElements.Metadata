@@ -1,3 +1,7 @@
+# 7.0.0-rc.27
+- IMetadataProvider changed API: added GetMetadata, SetMetadata
+- Reflection optimization
+
 # 7.0.0-rc.26
 - Performance optimization for metadata search
 - Performance optimization for excel building

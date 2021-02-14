@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
@@ -37,7 +38,7 @@ namespace MicroElements.Metadata
         /// <param name="source">The source for value.</param>
         public PropertyValue(IProperty<T> property, [AllowNull] T value, ValueSource? source = null)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            Property = property ?? throw new ArgumentNullException(nameof(property));
             Value = value;
             Source = source ?? ValueSource.Defined;
         }
@@ -121,7 +122,7 @@ namespace MicroElements.Metadata
         /// <returns>Created property value.</returns>
         public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
-            return _propertyValueFactory.Create(property, value, valueSource);
+            return _propertyValueFactory.CreateUntyped(property, value, valueSource);
         }
     }
 }

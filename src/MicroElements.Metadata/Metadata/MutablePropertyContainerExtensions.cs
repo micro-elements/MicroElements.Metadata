@@ -185,7 +185,7 @@ namespace MicroElements.Metadata
 
             var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
             if (propertyValue.IsNullOrNotDefined())
-                propertyContainer.SetValue(property, value);
+                propertyContainer.SetValue(property, value!);
         }
 
         /// <summary>
@@ -222,7 +222,6 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
         /// <param name="propertyValues">PropertyValue list.</param>
-        [Obsolete("Use AddValues, SetValues or WithValues")]
         public static void AddRange(this IMutablePropertyContainer propertyContainer, IEnumerable<IPropertyValue> propertyValues) =>
             AddValues(propertyContainer, propertyValues);
 

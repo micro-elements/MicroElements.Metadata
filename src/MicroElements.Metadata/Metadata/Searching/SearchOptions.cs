@@ -115,6 +115,20 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="SearchOptions"/> struct.
+        /// </summary>
+        /// <param name="other">Other options to use as prototype.</param>
+        public SearchOptions(in SearchOptions other)
+        {
+            _searchProperty = other.SearchProperty;
+            _propertyComparer = other.PropertyComparer;
+            _searchInParent = other.SearchInParent;
+            _calculateValue = other.CalculateValue;
+            _useDefaultValue = other.UseDefaultValue;
+            _returnNotDefined = other.ReturnNotDefined;
+        }
+
+        /// <summary>
         /// Returns true if options is default.
         /// </summary>
         /// <returns>True if options is default.</returns>

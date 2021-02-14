@@ -230,8 +230,7 @@ namespace MicroElements.Metadata.Tests
 
             var schema = new PropertySet().ToSchema();
 
-            foreach (string file in Directory
-                .EnumerateFiles(folder1))
+            foreach (string file in Directory.EnumerateFiles(folder1))
             {
                 var xmlReader = System.Xml.XmlReader.Create(File.OpenRead(file));
                 var propertyContainer = XmlParser.ReadXmlElement(xmlReader, schema) as IPropertyContainer;

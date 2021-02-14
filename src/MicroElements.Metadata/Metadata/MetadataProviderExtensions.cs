@@ -13,6 +13,19 @@ namespace MicroElements.Metadata
     public static class MetadataProviderExtensions
     {
         /// <summary>
+        /// Returns a value indicating whether the metadata provider has any metadata.
+        /// </summary>
+        /// <param name="metadataProvider">Source metadata provider.</param>
+        /// <returns>A value indicating whether the metadata provider has any metadata.</returns>
+        public static bool HasMetadata(this IMetadataProvider? metadataProvider)
+        {
+            if (metadataProvider == null)
+                return false;
+
+            return metadataProvider.GetMetadata(autoCreate: false).Count > 0;
+        }
+
+        /// <summary>
         /// Gets metadata of required type.
         /// </summary>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
@@ -26,8 +39,8 @@ namespace MicroElements.Metadata
             string? metadataName = null,
             [AllowNull] TMetadata defaultValue = default)
         {
-            return GetMetadataAsOption<TMetadata>(metadataProvider, metadataName)
-                .MatchUnsafe(metadata => metadata, defaultValue);
+            Option<TMetadata> metadata = GetMetadataAsOption<TMetadata>(metadataProvider, metadataName);
+            return metadata.IsSome ? (TMetadata)metadata : defaultValue;
         }
 
         /// <summary>
@@ -44,12 +57,14 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetMetadata();
+            var metadata = metadataProvider.GetMetadata(autoCreate: false);
+            if (metadata.Count == 0)
+                return Option<TMetadata>.None;
 
-            var propertyValue = metadata.GetPropertyValue<TMetadata>(Search
-                .ByNameAndComparer<TMetadata>(metadataName, MetadataProvider.DefaultMetadataComparer)
-                .ReturnNull());
+            SearchOptions metadataSearchOptions = Search.ExistingOnly
+                .UseSearchByNameAndComparer<TMetadata>(metadataName ?? typeof(TMetadata).FullName, MetadataProvider.DefaultMetadataComparer);
+
+            var propertyValue = metadata.GetPropertyValue<TMetadata>(metadataSearchOptions);
 
             if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
                 return propertyValue.Value;
@@ -253,7 +268,10 @@ namespace MicroElements.Metadata
         /// <returns>Metadata.</returns>
         public static IPropertyContainer AsReadOnly(this IMetadataProvider metadataProvider)
         {
-            return metadataProvider.GetMetadata();
+            if (metadataProvider == null)
+                throw new ArgumentNullException(nameof(metadataProvider));
+
+            return metadataProvider.GetMetadata(autoCreate: false);
         }
 
         /// <summary>
@@ -263,6 +281,9 @@ namespace MicroElements.Metadata
         /// <returns>Metadata.</returns>
         public static IMutablePropertyContainer AsMutable(this IMetadataProvider metadataProvider)
         {
+            if (metadataProvider == null)
+                throw new ArgumentNullException(nameof(metadataProvider));
+
             if (metadataProvider.Metadata is IMutablePropertyContainer container)
                 return container;
 
@@ -274,6 +295,25 @@ namespace MicroElements.Metadata
             }
 
             return metadataProvider.GetInstanceMetadata().ToMutable();
+        }
+
+        /// <summary>
+        /// Replaces <see cref="IMutablePropertyContainer"/> with read only version.
+        /// </summary>
+        /// <param name="metadataProvider">Source metadata provider.</param>
+        /// <returns>Current instance metadata.</returns>
+        public static IPropertyContainer FreezeMetadata(this IMetadataProvider metadataProvider)
+        {
+            if (metadataProvider == null)
+                throw new ArgumentNullException(nameof(metadataProvider));
+
+            if (metadataProvider.GetMetadata(autoCreate: false) is IMutablePropertyContainer metadata)
+            {
+                var readOnlyMetadata = metadata.ToReadOnly(flattenHierarchy: true);
+                metadata.SetMetadata(readOnlyMetadata);
+            }
+
+            return metadataProvider.GetMetadata(autoCreate: false);
         }
     }
 }

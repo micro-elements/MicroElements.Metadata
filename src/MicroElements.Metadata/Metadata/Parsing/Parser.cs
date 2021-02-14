@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace MicroElements.Metadata.Parsing
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "Ok.")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "Ok.")]
     public static class Parser
     {
         public static ParseResult<int> ParseInt(string? text) => text.Parse<int>(int.TryParse);

@@ -145,7 +145,7 @@ namespace MicroElements.Metadata.Xml
                                         .SetSchema(propertyInternalSchema));
                             }
 
-                            container.Add(settings.PropertyValueFactory.Create(property, internalObject));
+                            container.Add(settings.PropertyValueFactory.CreateUntyped(property, internalObject));
 
                             // Validate property.
                             ValidateProperty(context, container, property, propertyElement);
@@ -185,7 +185,7 @@ namespace MicroElements.Metadata.Xml
                             {
                                 // Add property to container.
                                 object? parsedValue = parseResult.ValueUntyped;
-                                container.Add(settings.PropertyValueFactory.Create(property, parsedValue));
+                                container.Add(settings.PropertyValueFactory.CreateUntyped(property, parsedValue));
 
                                 // Validate property.
                                 ValidateProperty(context, container, property, propertyElement);
@@ -279,7 +279,7 @@ namespace MicroElements.Metadata.Xml
                     {
                         ISchema propertySchema = context.GetOrAddSchema(property);
                         var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
-                        container.Add(settings.PropertyValueFactory.Create(property, compositeValue));
+                        container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                     }
                     else if (xmlReader.Depth > rootDepth)
                     {
@@ -292,13 +292,13 @@ namespace MicroElements.Metadata.Xml
                                 .Create(typeof(IPropertyContainer), elementName)
                                 .SetSchema(propertySchema);
                             schema.AddProperty(property);
-                            container.Add(settings.PropertyValueFactory.Create(property, internalObject));
+                            container.Add(settings.PropertyValueFactory.CreateUntyped(property, internalObject));
                         }
                         else
                         {
                             property = Property.Create(typeof(string), elementName);
                             schema.AddProperty(property);
-                            container.Add(settings.PropertyValueFactory.Create(property, compositeValue));
+                            container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                         }
                     }
                 }
@@ -309,7 +309,7 @@ namespace MicroElements.Metadata.Xml
                         property ??= schema.AddProperty(Property.Create(xmlReader.ValueType, elementName));
 
                         object value = xmlReader.ReadContentAs(property.Type, null);
-                        container.Add(settings.PropertyValueFactory.Create(property, value));
+                        container.Add(settings.PropertyValueFactory.CreateUntyped(property, value));
                     }
                     else
                     {

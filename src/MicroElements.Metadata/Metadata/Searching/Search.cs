@@ -96,10 +96,24 @@ namespace MicroElements.Metadata
                 propertyComparer: propertyComparer);
 
         /// <summary>
+        /// Creates search condition by type and name.
+        /// </summary>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="searchOptions">Source search options.</param>
+        /// <param name="name">Name to search.</param>
+        /// <param name="propertyComparer">Property comparer.</param>
+        /// <returns>SearchCondition.</returns>
+        [DebuggerStepThrough]
+        public static SearchOptions UseSearchByNameAndComparer<T>(this in SearchOptions searchOptions, string name, IEqualityComparer<IProperty> propertyComparer)
+            => searchOptions.With(
+                searchProperty: CachedProperty<T>.ByName(name),
+                propertyComparer: propertyComparer);
+
+        /// <summary>
         /// Copy with override one ore more fields.
         /// </summary>
         /// <param name="searchOptions"><see cref="SearchOptions"/> instance.</param>
-        /// <param name="property">Property to search.</param>
+        /// <param name="searchProperty">Property to search.</param>
         /// <param name="propertyComparer">Property comparer.</param>
         /// <param name="searchInParent">Do search in parent.</param>
         /// <param name="calculateValue">Calculate value if value was not found.</param>
@@ -109,7 +123,7 @@ namespace MicroElements.Metadata
         [DebuggerStepThrough]
         public static SearchOptions With(
             this in SearchOptions searchOptions,
-            IProperty? property = null,
+            IProperty? searchProperty = null,
             IEqualityComparer<IProperty>? propertyComparer = null,
             bool? searchInParent = null,
             bool? calculateValue = null,
@@ -117,7 +131,7 @@ namespace MicroElements.Metadata
             bool? returnNotDefined = null)
         {
             return new SearchOptions(
-                searchProperty: property ?? searchOptions.SearchProperty,
+                searchProperty: searchProperty ?? searchOptions.SearchProperty,
                 propertyComparer: propertyComparer ?? searchOptions.PropertyComparer,
                 searchInParent: searchInParent ?? searchOptions.SearchInParent,
                 calculateValue: calculateValue ?? searchOptions.CalculateValue,

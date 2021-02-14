@@ -23,19 +23,43 @@ namespace MicroElements.Metadata
         /// By default creates <see cref="IMutablePropertyContainer"/>.
         /// </summary>
         /// <param name="instance">Source.</param>
+        /// <param name="autoCreate">Should create metadata if it was not created before.</param>
         /// <returns>Metadata for instance.</returns>
-        public static IPropertyContainer GetInstanceMetadata(this object? instance)
+        public static IPropertyContainer GetInstanceMetadata(this object? instance, bool autoCreate = true)
         {
             if (instance == null)
                 return PropertyContainer.Empty;
 
             if (!_metadataCache.TryGetValue(instance, out IPropertyContainer metadata))
             {
-                metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
-                instance.SetInstanceMetadata(metadata);
+                if (autoCreate)
+                {
+                    metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
+                    instance.SetInstanceMetadata(metadata);
+                }
+                else
+                {
+                    metadata = PropertyContainer.Empty;
+                }
             }
 
             return metadata;
+        }
+
+        /// <summary>
+        /// Returns a value indicating whether the instance has any metadata.
+        /// </summary>
+        /// <param name="instance">Source.</param>
+        /// <returns>A value indicating whether the instance has any metadata.</returns>
+        public static bool HasInstanceMetadata(this object? instance)
+        {
+            if (instance == null)
+                return false;
+
+            if (_metadataCache.TryGetValue(instance, out IPropertyContainer metadata) && metadata != null && metadata.Count > 0)
+                return true;
+
+            return false;
         }
 
         /// <summary>
@@ -84,14 +108,15 @@ namespace MicroElements.Metadata
         /// Otherwise returns <see cref="GetInstanceMetadata"/>.
         /// </summary>
         /// <param name="instance">Source.</param>
+        /// <param name="autoCreate">Should create metadata if it was not created before.</param>
         /// <returns>Metadata for instance.</returns>
-        public static IPropertyContainer GetMetadata(this object? instance)
+        public static IPropertyContainer GetMetadata(this object? instance, bool autoCreate = true)
         {
             return instance switch
             {
                 null => PropertyContainer.Empty,
-                IMetadataProvider metadataProvider => metadataProvider.Metadata,
-                _ => instance.GetInstanceMetadata(),
+                IMetadataProvider metadataProvider => metadataProvider.GetMetadata(autoCreate),
+                _ => instance.GetInstanceMetadata(autoCreate),
             };
         }
 

@@ -1,7 +1,10 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
+using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -49,6 +52,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         {
             internal readonly ConcurrentDictionary<(string, CellValues), CellValue> CellValues = new ConcurrentDictionary<(string, CellValues), CellValue>();
             internal readonly ConcurrentDictionary<CellValues, EnumValue<CellValues>> EnumValues = new ConcurrentDictionary<CellValues, EnumValue<CellValues>>();
+
+            internal readonly Action<CellValue, OpenXmlElement> SetParent = ExpressionUtils.GetPropertySetter<CellValue, OpenXmlElement>(value => value.Parent);
         }
 
         private readonly Cache _cache = new Cache();
@@ -65,20 +70,45 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 if (cellValue.Parent != null)
                 {
                     // HACK: Parent has internal set
-                    typeof(CellValue).GetProperty("Parent").SetValue(cellValue, null);
+                    _cache.SetParent(cellValue, null!);
                 }
 
                 // Create only for not null values for more compact xml. (omits t="s")
                 dataTypeValue = _cache.EnumValues.GetOrAdd(dataType, values => new EnumValue<CellValues>(values));
             }
 
-            Cell cell = new Cell
+            // Example: <x:c t="str"><x:v>CellValue</x:v></x:c>
+            Cell cell = new Cell(cellValue)
             {
-                CellValue = cellValue,
                 DataType = dataTypeValue,
             };
 
             return cell;
+        }
+    }
+
+    public static class ExpressionUtils
+    {
+        /// <summary>
+        /// Convert a lambda expression for a getter into a setter
+        /// </summary>
+        public static Action<T, TProperty> GetPropertySetter<T, TProperty>(Expression<Func<T, TProperty>> expression)
+        {
+            var memberExpression = (MemberExpression)expression.Body;
+            var property = (PropertyInfo)memberExpression.Member;
+            var setMethod = property.GetSetMethod(nonPublic: true);
+
+            var parameterT = Expression.Parameter(typeof(T), "x");
+            var parameterTProperty = Expression.Parameter(typeof(TProperty), "y");
+
+            var setExpression =
+                Expression.Lambda<Action<T, TProperty>>(
+                    Expression.Call(parameterT, setMethod, parameterTProperty),
+                    parameterT,
+                    parameterTProperty
+                );
+
+            return setExpression.Compile();
         }
     }
 }

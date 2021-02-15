@@ -98,16 +98,6 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         [MaybeNull]
         public TOpenXmlElement Data { get; }
 
-        /// <inheritdoc />
-        public IPropertyContainer Metadata
-        {
-            get
-            {
-                // Get metadata bound to Data so its safe to copy struct value.
-                return Data?.GetInstanceMetadata() ?? PropertyContainer.Empty;
-            }
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelElementLight{TOpenXmlElement}"/> struct.
         /// </summary>

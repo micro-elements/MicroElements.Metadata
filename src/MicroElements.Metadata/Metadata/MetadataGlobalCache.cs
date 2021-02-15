@@ -99,25 +99,7 @@ namespace MicroElements.Metadata
                 }
             }
 
-            return metadata.GetInstanceMetadata();
-        }
-
-        /// <summary>
-        /// Gets metadata for <paramref name="instance"/>.
-        /// If instance is <see cref="IMetadataProvider"/> then <see cref="IMetadataProvider.Metadata"/> returns.
-        /// Otherwise returns <see cref="GetInstanceMetadata"/>.
-        /// </summary>
-        /// <param name="instance">Source.</param>
-        /// <param name="autoCreate">Should create metadata if it was not created before.</param>
-        /// <returns>Metadata for instance.</returns>
-        public static IPropertyContainer GetMetadata(this object? instance, bool autoCreate = true)
-        {
-            return instance switch
-            {
-                null => PropertyContainer.Empty,
-                IMetadataProvider metadataProvider => metadataProvider.GetMetadata(autoCreate),
-                _ => instance.GetInstanceMetadata(autoCreate),
-            };
+            return GetInstanceMetadata(metadata);
         }
 
         /// <summary>
@@ -129,39 +111,6 @@ namespace MicroElements.Metadata
         {
             instance.AssertArgumentNotNull(nameof(instance));
             return new MetadataProviderWrapper(instance);
-        }
-    }
-
-    /// <summary>
-    /// Represents <see cref="IMetadataProvider"/> wrapper for any object.
-    /// If object is <see cref="IMetadataProvider"/> then returns <see cref="IMetadataProvider.Metadata"/>,
-    /// otherwise returns <see cref="MetadataGlobalCache.GetInstanceMetadata"/>.
-    /// </summary>
-    public readonly struct MetadataProviderWrapper : IMetadataProvider
-    {
-        private readonly object _instance;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MetadataProviderWrapper"/> struct.
-        /// </summary>
-        /// <param name="instance">Object instance.</param>
-        public MetadataProviderWrapper(object instance)
-        {
-            instance.AssertArgumentNotNull(nameof(instance));
-            _instance = instance;
-        }
-
-        /// <inheritdoc />
-        public IPropertyContainer Metadata
-        {
-            get
-            {
-                return _instance switch
-                {
-                    IMetadataProvider metadataProvider => metadataProvider.Metadata,
-                    _ => _instance.GetInstanceMetadata(),
-                };
-            }
         }
     }
 }

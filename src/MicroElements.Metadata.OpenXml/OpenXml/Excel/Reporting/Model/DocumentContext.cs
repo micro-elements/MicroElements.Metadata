@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using MicroElements.Functional;
+using MicroElements.Metadata.OpenXml.Excel.Styling;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -59,5 +60,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public ConcurrentDictionary<uint, UInt32Value> UInt32Value { get; } = new ConcurrentDictionary<uint, UInt32Value>();
 
         public ConcurrentDictionary<string, StringValue> StringValue { get; } = new ConcurrentDictionary<string, StringValue>();
+
+        public ConcurrentDictionary<(int, string, MergeMode), UInt32Value> StyleMerge { get; } = new ConcurrentDictionary<(int, string, MergeMode), UInt32Value>();
     }
 }

@@ -24,7 +24,7 @@ namespace MicroElements.Metadata.Tests
             client.GetMetadata<int>("AttachedProperty").Should().Be(42);
 
             // Get metadata for client
-            IPropertyContainer metadata = ((IMetadataProvider) client).Metadata;
+            IPropertyContainer metadata = ((IMetadataProvider) client).GetInstanceMetadata();
             metadata.Properties.Count.Should().Be(2);
 
             // Default properties does not include Metadata from IMetadataProvider
@@ -94,6 +94,28 @@ namespace MicroElements.Metadata.Tests
             propertySet.Count().Should().Be(2);
             propertySet.Last().Name.Should().Be("prop2");
         }
+
+        [Fact]
+        public void MetadataWithUserImplementation()
+        {
+            Client2 client =
+                new Client2("Bill", new LocalDate(2000, 04, 25))
+                    .SetMetadata(new EntityMetadata("Database"))
+                    .SetMetadata("AttachedProperty", 42);
+
+            var entityMetadata = client.GetMetadata<EntityMetadata>();
+            entityMetadata.Should().NotBeNull();
+            entityMetadata.Source.Should().Be("Database");
+
+            client.GetMetadata<int>("AttachedProperty").Should().Be(42);
+
+            // Get metadata for client
+            IPropertyContainer metadata = client.Metadata;
+            metadata.Properties.Count.Should().Be(2);
+
+            IPropertyContainer propertyContainer = client.FreezeMetadata();
+            propertyContainer.Should().BeOfType<PropertyContainer>();
+        }
     }
 
     public class EntityMetadata
@@ -119,6 +141,21 @@ namespace MicroElements.Metadata.Tests
         public LocalDate BirthDate { get; }
 
         public Client(string name, LocalDate birthDate)
+        {
+            Name = name;
+            BirthDate = birthDate;
+        }
+    }
+
+    public class Client2 : IManualMetadataProvider
+    {
+        public IPropertyContainer Metadata { get; private set; } = new MutablePropertyContainer();
+
+        public string Name { get; }
+
+        public LocalDate BirthDate { get; }
+
+        public Client2(string name, LocalDate birthDate)
         {
             Name = name;
             BirthDate = birthDate;

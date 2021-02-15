@@ -3,10 +3,9 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq.Expressions;
-using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -84,31 +83,6 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             };
 
             return cell;
-        }
-    }
-
-    public static class ExpressionUtils
-    {
-        /// <summary>
-        /// Convert a lambda expression for a getter into a setter
-        /// </summary>
-        public static Action<T, TProperty> GetPropertySetter<T, TProperty>(Expression<Func<T, TProperty>> expression)
-        {
-            var memberExpression = (MemberExpression)expression.Body;
-            var property = (PropertyInfo)memberExpression.Member;
-            var setMethod = property.GetSetMethod(nonPublic: true);
-
-            var parameterT = Expression.Parameter(typeof(T), "x");
-            var parameterTProperty = Expression.Parameter(typeof(TProperty), "y");
-
-            var setExpression =
-                Expression.Lambda<Action<T, TProperty>>(
-                    Expression.Call(parameterT, setMethod, parameterTProperty),
-                    parameterT,
-                    parameterTProperty
-                );
-
-            return setExpression.Compile();
         }
     }
 }

@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents object that has metadata.
-    /// Has default interface implementation of <see cref="Metadata"/> as <see cref="MetadataGlobalCache.GetInstanceMetadata"/>.
     /// </summary>
     public interface IMetadataProvider
     {
@@ -16,18 +16,31 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="autoCreate">Should create metadata if it was not created before.</param>
         /// <returns>Metadata for instance.</returns>
-        IPropertyContainer GetMetadata(bool autoCreate = true) => this.GetInstanceMetadata(autoCreate);
+        IPropertyContainer GetInstanceMetadata(bool autoCreate = true) => MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate);
 
         /// <summary>
         /// Replaces metadata for the current instance.
         /// </summary>
         /// <param name="metadata">New metadata.</param>
-        void SetMetadata(IPropertyContainer metadata) => this.SetInstanceMetadata(metadata);
+        void SetInstanceMetadata(IPropertyContainer metadata) => MetadataGlobalCacheStorage.Instance.SetInstanceMetadata(this, metadata);
+    }
 
+    /// <summary>
+    /// <see cref="IMetadataProvider"/> that implemented with <see cref="Metadata"/> property.
+    /// </summary>
+    public interface IManualMetadataProvider : IMetadataProvider
+    {
         /// <summary>
-        /// Gets metadata for the current instance.
+        /// Gets or sets metadata for the current instance.
         /// </summary>
-        IPropertyContainer Metadata => GetMetadata(autoCreate: true);
+        IPropertyContainer Metadata { get; }
+
+        /// <inheritdoc />
+        IPropertyContainer IMetadataProvider.GetInstanceMetadata(bool autoCreate) => Metadata;
+
+        /// <inheritdoc />
+        void IMetadataProvider.SetInstanceMetadata(IPropertyContainer metadata) => ExpressionUtils
+            .GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata)).Invoke(this, metadata);
     }
 
     /// <summary>

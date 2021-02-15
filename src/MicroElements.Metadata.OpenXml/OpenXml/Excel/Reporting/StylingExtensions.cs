@@ -417,6 +417,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         {
             int styleIndex = (int)(currentStyleIndex?.Value ?? 0);
 
+            if (documentContext.Cache.StyleMerge.TryGetValue((styleIndex, applyStyleName, mergeMode), out var result))
+                return result;
+
             uint mergedStyleIndex;
             if (styleIndex != 0)
             {
@@ -454,7 +457,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 mergedStyleIndex = documentContext.GetCellFormatIndex(applyStyleName);
             }
 
-            return documentContext.Cache.UInt32Value.GetOrAdd(mergedStyleIndex, value => new UInt32Value(value));
+            result = documentContext.Cache.UInt32Value.GetOrAdd(mergedStyleIndex, value => new UInt32Value(value));
+            documentContext.Cache.StyleMerge.TryAdd((styleIndex, applyStyleName, mergeMode), result);
+            return result;
         }
 
         /// <summary>

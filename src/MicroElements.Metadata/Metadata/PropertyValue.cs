@@ -111,8 +111,6 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class PropertyValue
     {
-        private static readonly IPropertyValueFactory _propertyValueFactory = new PropertyValueFactory();
-
         /// <summary>
         /// Creates new instance if <see cref="IPropertyValue"/>.
         /// </summary>
@@ -122,7 +120,7 @@ namespace MicroElements.Metadata
         /// <returns>Created property value.</returns>
         public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
-            return _propertyValueFactory.CreateUntyped(property, value, valueSource);
+            return PropertyValueFactory.Default.CreateUntyped(property, value, valueSource);
         }
     }
 }

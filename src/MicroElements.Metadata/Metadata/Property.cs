@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using MicroElements.Functional;
@@ -13,6 +14,7 @@ namespace MicroElements.Metadata
     /// Represents property descriptor.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
+    [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
     public class Property<T> : IProperty<T>
     {
         /// <summary>
@@ -62,9 +64,6 @@ namespace MicroElements.Metadata
             Examples = examples.AssertArgumentNotNull(nameof(examples));
             Calculator = calculator;
         }
-
-        /// <inheritdoc />
-        public IPropertyContainer Metadata => this.GetInstanceMetadata();
 
         /// <inheritdoc />
         public string Name { get; }

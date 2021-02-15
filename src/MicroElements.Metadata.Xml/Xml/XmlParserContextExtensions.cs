@@ -56,7 +56,15 @@ namespace MicroElements.Metadata.Xml
         /// <returns>Parser.</returns>
         public static IValueParser GetParserCached(this IXmlParserContext context, IProperty property)
         {
-            return context.ParsersCache.GetOrAdd(property, p => context.ParserSettings.ParserRules.GetParserRule(p, context.ParserSettings.PropertyComparer)?.Parser ?? EmptyParser.Instance);
+            if (context.ParsersCache.TryGetValue(property, out IValueParser result))
+            {
+                return result;
+            }
+
+            result = context.ParserSettings.ParserRules.GetParserRule(property, context.ParserSettings.PropertyComparer)?.Parser ?? EmptyParser.Instance;
+            context.ParsersCache.TryAdd(property, result);
+
+            return result;
         }
 
         /// <summary>
@@ -67,13 +75,16 @@ namespace MicroElements.Metadata.Xml
         /// <returns>Validation rules for property.</returns>
         public static IPropertyValidationRules GetValidatorsCached(this IXmlParserContext context, IProperty property)
         {
-            IPropertyValidationRules GetValidationRules(IProperty property)
+            if (context.ValidatorsCache.TryGetValue(property, out IPropertyValidationRules result))
             {
-                IValidationRule[] validationRules = context.ParserSettings.ValidationProvider.GetValidationRules(property).ToArray();
-                return new PropertyValidationRules(property, validationRules);
+                return result;
             }
 
-            return context.ValidatorsCache.GetOrAdd(property, GetValidationRules);
+            IValidationRule[] validationRules = context.ParserSettings.ValidationProvider.GetValidationRules(property).ToArray();
+            result = new PropertyValidationRules(property, validationRules);
+            context.ValidatorsCache.TryAdd(property, result);
+
+            return result;
         }
 
         /// <summary>
@@ -89,7 +100,15 @@ namespace MicroElements.Metadata.Xml
             if (property == null)
                 return factory?.Invoke() ?? new MutableSchema();
 
-            return context.SchemaCache.GetOrAdd(property, p => p.GetOrAddSchema(factory));
+            if (context.SchemaCache.TryGetValue(property, out var result))
+            {
+                return result;
+            }
+
+            result = property.GetOrAddSchema(factory);
+            context.SchemaCache.TryAdd(property, result);
+
+            return result;
         }
 
         /// <summary>

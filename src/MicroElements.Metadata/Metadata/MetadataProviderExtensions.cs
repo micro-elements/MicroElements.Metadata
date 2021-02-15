@@ -22,7 +22,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 return false;
 
-            return metadataProvider.GetMetadata(autoCreate: false).Count > 0;
+            return metadataProvider.GetInstanceMetadata(autoCreate: false).Count > 0;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            var metadata = metadataProvider.GetMetadata(autoCreate: false);
+            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: false);
             if (metadata.Count == 0)
                 return Option<TMetadata>.None;
 
@@ -104,12 +104,23 @@ namespace MicroElements.Metadata
             where TMetadataProvider : IMetadataProvider
         {
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetMetadata();
+            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: true);
 
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
                 IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
                 mutablePropertyContainer.SetValue(metadataProperty, data);
+            }
+            else
+            {
+                bool allowRefreeze = false;
+                if (allowRefreeze)
+                {
+                    var mutable = metadata.AsMutable();
+                    IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
+                    mutable.SetValue(metadataProperty, data);
+                    metadataProvider.SetInstanceMetadata(mutable);
+                }
             }
 
             return metadataProvider;
@@ -255,8 +266,8 @@ namespace MicroElements.Metadata
         {
             if (source != null && target != null)
             {
-                IPropertyContainer sourceMetadata = source.AsMetadataProvider().Metadata;
-                IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().Metadata.ToMutable();
+                IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetInstanceMetadata(autoCreate: false);
+                IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
                 targetMetadata.SetValues(sourceMetadata.Properties);
             }
         }
@@ -271,7 +282,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            return metadataProvider.GetMetadata(autoCreate: false);
+            return metadataProvider.GetInstanceMetadata(autoCreate: false);
         }
 
         /// <summary>
@@ -284,17 +295,14 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            if (metadataProvider.Metadata is IMutablePropertyContainer container)
-                return container;
+            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: false);
 
-            if (metadataProvider.Metadata is { } readOnlyContainer)
-            {
-                MutablePropertyContainer mutablePropertyContainer = new MutablePropertyContainer(readOnlyContainer.Properties);
-                metadataProvider.SetInstanceMetadata(mutablePropertyContainer);
-                return mutablePropertyContainer;
-            }
+            if (metadata is IMutablePropertyContainer mutable)
+                return mutable;
 
-            return metadataProvider.GetInstanceMetadata().ToMutable();
+            var mutableFromReadOnly = new MutablePropertyContainer(metadata.Properties);
+            metadataProvider.SetInstanceMetadata(mutableFromReadOnly);
+            return mutableFromReadOnly;
         }
 
         /// <summary>
@@ -307,13 +315,13 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            if (metadataProvider.GetMetadata(autoCreate: false) is IMutablePropertyContainer metadata)
+            if (metadataProvider.GetInstanceMetadata(autoCreate: false) is IMutablePropertyContainer metadata)
             {
                 var readOnlyMetadata = metadata.ToReadOnly(flattenHierarchy: true);
-                metadata.SetMetadata(readOnlyMetadata);
+                metadataProvider.SetInstanceMetadata(readOnlyMetadata);
             }
 
-            return metadataProvider.GetMetadata(autoCreate: false);
+            return metadataProvider.GetInstanceMetadata(autoCreate: false);
         }
     }
 }

@@ -40,7 +40,16 @@ namespace MicroElements.Metadata
         public IPropertyContainer? ParentSource => _propertyContainer.ParentSource;
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IPropertyValue> Properties => DoOnLock(() => _propertyContainer.Properties.ToList());
+        public IReadOnlyCollection<IPropertyValue> Properties
+        {
+            get
+            {
+                lock (_syncRoot)
+                {
+                    return _propertyContainer.Properties.ToList();
+                }
+            }
+        }
 
         /// <inheritdoc />
         public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
@@ -56,7 +65,16 @@ namespace MicroElements.Metadata
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc />
-        public int Count => DoOnLock(() => _propertyContainer.Count);
+        public int Count
+        {
+            get
+            {
+                lock (_syncRoot)
+                {
+                    return _propertyContainer.Count;
+                }
+            }
+        }
 
         #endregion
 

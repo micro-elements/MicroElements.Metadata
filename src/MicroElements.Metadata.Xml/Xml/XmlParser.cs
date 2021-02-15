@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -223,10 +224,11 @@ namespace MicroElements.Metadata.Xml
                 var validationRules = context.GetValidatorsCached(property);
                 if (validationRules.Rules.Count > 0)
                 {
-                    container
-                        .Validate(validationRules.Rules)
-                        .Select(message => message.WithText(message.OriginalMessage + GetXmlLineInfo(propertyElement)))
-                        .Iterate(message => context.Messages.Add(message));
+                    IEnumerable<Message> messages = container.Validate(validationRules.Rules);
+                    foreach (Message message in messages)
+                    {
+                        context.Messages.Add(message.WithText($"{message.OriginalMessage}{GetXmlLineInfo(propertyElement)}"));
+                    }
                 }
             }
         }

@@ -136,7 +136,8 @@ namespace MicroElements.Metadata.Xml
                         IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings, context);
                         if (internalObject != null && internalObject.Count > 0)
                         {
-                            internalObject.SetSchema(propertyInternalSchema);
+                            if (settings.SetSchemaForObjects)
+                                internalObject.SetSchema(propertyInternalSchema);
 
                             if (property == null)
                             {
@@ -149,7 +150,8 @@ namespace MicroElements.Metadata.Xml
                             container.Add(settings.PropertyValueFactory.CreateUntyped(property, internalObject));
 
                             // Validate property.
-                            ValidateProperty(context, container, property, propertyElement);
+                            if (settings.ValidateOnParse)
+                                ValidateProperty(context, container, property, propertyElement);
                         }
                     }
                     else
@@ -189,7 +191,8 @@ namespace MicroElements.Metadata.Xml
                                 container.Add(settings.PropertyValueFactory.CreateUntyped(property, parsedValue));
 
                                 // Validate property.
-                                ValidateProperty(context, container, property, propertyElement);
+                                if (settings.ValidateOnParse)
+                                    ValidateProperty(context, container, property, propertyElement);
                             }
                             else
                             {
@@ -219,16 +222,13 @@ namespace MicroElements.Metadata.Xml
             IProperty property,
             XElement propertyElement)
         {
-            if (context.ParserSettings.ValidateOnParse)
+            var validationRules = context.GetValidatorsCached(property);
+            if (validationRules.Rules.Count > 0)
             {
-                var validationRules = context.GetValidatorsCached(property);
-                if (validationRules.Rules.Count > 0)
+                IEnumerable<Message> messages = container.Validate(validationRules.Rules);
+                foreach (Message message in messages)
                 {
-                    IEnumerable<Message> messages = container.Validate(validationRules.Rules);
-                    foreach (Message message in messages)
-                    {
-                        context.Messages.Add(message.WithText($"{message.OriginalMessage}{GetXmlLineInfo(propertyElement)}"));
-                    }
+                    context.Messages.Add(message.WithText(string.Join(message.OriginalMessage, GetXmlLineInfo(propertyElement))));
                 }
             }
         }

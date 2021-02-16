@@ -203,7 +203,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 
             AddSheetData(sheetContext, reportRows);
 
-            sheetContext.SheetElement.FillCellReferences(forceFill: fillCellReferences);
+            if (fillCellReferences)
+                sheetContext.SheetElement.FillCellReferences(forceFill: fillCellReferences);
 
             // External customization
             var configureSheet = ExcelSheetMetadata.ConfigureSheet.GetFirstDefinedValue(

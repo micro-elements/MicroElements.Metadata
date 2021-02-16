@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -21,6 +22,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Simple implementation for <see cref="IReportProvider"/>.
     /// </summary>
+    [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
     public class ReportProvider : IReportProvider
     {
         private readonly List<IPropertyRenderer> _renderers = new List<IPropertyRenderer>();

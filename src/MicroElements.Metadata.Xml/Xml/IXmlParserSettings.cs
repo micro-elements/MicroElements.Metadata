@@ -48,5 +48,10 @@ namespace MicroElements.Metadata.Xml
         /// Gets a value indicating whether property value should be validated on parse.
         /// </summary>
         bool ValidateOnParse { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether schema should be set for every object.
+        /// </summary>
+        bool SetSchemaForObjects { get; }
     }
 }

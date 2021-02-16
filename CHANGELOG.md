@@ -1,3 +1,7 @@
+# 7.0.0-rc.30
+- OpenXml: CellReferences optimizations
+- Some minor optimizations
+
 # 7.0.0-rc.27
 - IMetadataProvider changed API: added GetMetadata, SetMetadata
 - Reflection optimization

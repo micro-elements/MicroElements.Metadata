@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -67,19 +68,28 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <returns>Sheet rows.</returns>
         public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)
         {
+            return GetOpenXmlRows(sheet)
+                .Zip(Enumerable.Repeat(sheet, int.MaxValue), (row, sh) => new ExcelElement<Row>(sh.Doc, row));
+        }
+
+        /// <summary>
+        /// Gets rows from sheet.
+        /// </summary>
+        /// <param name="sheet">Source sheet.</param>
+        /// <returns>Sheet rows.</returns>
+        public static IEnumerable<Row> GetOpenXmlRows(this ExcelElement<Sheet> sheet)
+        {
             if (sheet.Data != null)
             {
                 string sheetId = sheet.Data.Id.Value;
                 var worksheetPart = (WorksheetPart)sheet.Doc.WorkbookPart.GetPartById(sheetId);
                 var worksheet = worksheetPart.Worksheet;
                 var sheetData = worksheet.GetFirstChild<SheetData>();
-                var rows = sheetData
-                    .GetChildren<Row>()
-                    .Select(row => new ExcelElement<Row>(sheet.Doc, row));
+                var rows = sheetData.GetChildren<Row>();
                 return rows;
             }
 
-            return Array.Empty<ExcelElement<Row>>();
+            return Array.Empty<Row>();
         }
 
         /// <summary>
@@ -93,16 +103,26 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         public static StringValue GetCellReference(int column, int row, bool zeroBased = true)
         {
             int columnIndex = zeroBased ? column : column - 1;
-            string columnName = GetColumnName(string.Empty, columnIndex);
+            string columnName = GetColumnName(columnIndex);
             int rowName = zeroBased ? row + 1 : row;
-            return new StringValue($"{columnName}{rowName}");
+            return new StringValue(string.Concat(columnName, rowName.ToString()));
+        }
 
-            static string GetColumnName(string prefix, int columnIndex = 0)
-            {
-                return columnIndex < 26
-                    ? $"{prefix}{(char)(65 + columnIndex)}"
-                    : GetColumnName(GetColumnName(prefix, ((columnIndex - (columnIndex % 26)) / 26) - 1), columnIndex % 26);
-            }
+        private static readonly ConcurrentDictionary<int, string> _columnIndexes = new ConcurrentDictionary<int, string>();
+
+        /// <summary>
+        /// Gets column index (cached).
+        /// </summary>
+        public static string GetColumnName(int columnIndex = 0)
+        {
+            return _columnIndexes.GetOrAdd(columnIndex, i => GetColumnName(string.Empty, i));
+        }
+
+        private static string GetColumnName(string prefix, int columnIndex = 0)
+        {
+            return columnIndex < 26
+                ? $"{prefix}{(char)(65 + columnIndex)}"
+                : GetColumnName(GetColumnName(prefix, ((columnIndex - (columnIndex % 26)) / 26) - 1), columnIndex % 26);
         }
 
         /// <summary>
@@ -453,7 +473,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             if (sheet.IsEmpty())
                 return false;
 
-            bool needFill = sheet.GetRows().FirstOrDefault()?.GetRowCells().FirstOrDefault()?.Data?.CellReference == null;
+            bool needFill = sheet.GetOpenXmlRows().FirstOrDefault()?.GetRowCells().FirstOrDefault()?.CellReference == null;
             return needFill;
         }
 
@@ -462,7 +482,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             if (forceFill || NeedFillCellReferences(sheet))
             {
                 sheet
-                    .GetRows()
+                    .GetOpenXmlRows()
                     .FillCellReferences(zeroBased: zeroBased)
                     .Iterate();
             }
@@ -470,10 +490,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             return sheet;
         }
 
-        public static IEnumerable<ExcelElement<Row>> FillCellReferences(this IEnumerable<ExcelElement<Row>> rows, bool zeroBased = false)
+        public static IEnumerable<Row> FillCellReferences(this IEnumerable<Row> rows, bool zeroBased = false)
         {
             int rowIndex = zeroBased ? 0 : 1;
-            foreach (ExcelElement<Row> row in rows)
+            foreach (Row row in rows)
             {
                 FillCellReferences(row, rowIndex, zeroBased: false);
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 
 namespace MicroElements.Metadata
 {
@@ -9,6 +10,7 @@ namespace MicroElements.Metadata
     /// Generic property renderer.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
+    [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
     public class PropertyRenderer<T> : IPropertyRenderer<T>
     {
         /// <inheritdoc />

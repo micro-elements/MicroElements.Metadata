@@ -35,6 +35,9 @@ namespace MicroElements.Metadata.Xml
         /// <inheritdoc />
         public bool ValidateOnParse { get; }
 
+        /// <inheritdoc />
+        public bool SetSchemaForObjects { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlParserSettings"/> class.
         /// </summary>
@@ -45,6 +48,7 @@ namespace MicroElements.Metadata.Xml
         /// <param name="propertyValueFactory"><see cref="IPropertyValue"/> factory. Default: <see cref="CachedPropertyValueFactory"/>.</param>
         /// <param name="validationFactory">Validation factory to create validation rules.</param>
         /// <param name="validateOnParse">Properties should be validated on parse.</param>
+        /// <param name="setSchemaForObjects">Schema should be set for every <see cref="IPropertyContainer"/> object.</param>
         public XmlParserSettings(
             Func<XElement, string>? getElementName = null,
             IReadOnlyCollection<IParserRule>? parserRules = null,
@@ -52,7 +56,8 @@ namespace MicroElements.Metadata.Xml
             IEqualityComparer<IProperty>? propertyComparer = null,
             IPropertyValueFactory? propertyValueFactory = null,
             IValidationProvider? validationFactory = null,
-            bool validateOnParse = false)
+            bool validateOnParse = false,
+            bool setSchemaForObjects = true)
         {
             GetElementName = getElementName ?? XmlParser.GetElementNameDefault;
             ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
@@ -62,6 +67,7 @@ namespace MicroElements.Metadata.Xml
 
             ValidationProvider = validationFactory ?? Validation.Rules.ValidationProvider.Instance;
             ValidateOnParse = validateOnParse;
+            SetSchemaForObjects = setSchemaForObjects;
         }
     }
 }

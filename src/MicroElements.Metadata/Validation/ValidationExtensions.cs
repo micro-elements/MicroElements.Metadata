@@ -22,8 +22,10 @@ namespace MicroElements.Validation
         /// <returns>Validation messages.</returns>
         public static IEnumerable<Message> Validate(this IPropertyContainer propertyContainer, IEnumerable<IValidationRule> validationRules)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            validationRules.AssertArgumentNotNull(nameof(validationRules));
+            if (propertyContainer == null)
+                throw new ArgumentNullException(nameof(propertyContainer));
+            if (validationRules == null)
+                throw new ArgumentNullException(nameof(validationRules));
 
             foreach (var rule in validationRules)
             {

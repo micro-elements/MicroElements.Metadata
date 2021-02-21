@@ -1,18 +1,20 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using System.Collections.Generic;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules
 {
     /// <summary>
     /// Checks that property value is not default.
+    /// Default value is property dependent.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class NotDefault<T> : BasePropertyRule<T>
+    public class NotDefault<T> : PropertyValidationRule<T>
     {
+        private readonly T _defaultValue;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NotDefault{T}"/> class.
         /// </summary>
@@ -20,12 +22,13 @@ namespace MicroElements.Validation.Rules
         public NotDefault(IProperty<T> property)
             : base(property, "{propertyName} should not have default value {value}.")
         {
+            _defaultValue = Property.DefaultValue();
         }
 
         /// <inheritdoc />
-        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(T? value)
         {
-            return !value.IsDefault();
+            return !EqualityComparer<T>.Default.Equals(value, _defaultValue);
         }
     }
 
@@ -53,7 +56,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="linker">Rule linker.</param>
         /// <returns>Combined validation rule.</returns>
         public static TValidationRule NotDefault<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker)
-            where TValidationRule : IValidationRule<T>
+            where TValidationRule : IPropertyValidationRule<T>
         {
             return linker.CombineWith(linker.FirstRule.Property.NotDefault());
         }

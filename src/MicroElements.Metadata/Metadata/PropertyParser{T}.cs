@@ -10,7 +10,7 @@ namespace MicroElements.Metadata
     /// Generic property parser.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class PropertyParser<T> : IPropertyParser<T>
+    public sealed class PropertyParser<T> : IPropertyParser<T>
     {
         /// <inheritdoc />
         public Type TargetType => typeof(T);

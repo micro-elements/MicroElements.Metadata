@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// Composite validation rule. Combines two rules.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class And<T> : IValidationRule<T>, ICompositeValidationRule
+    public class And<T> : IPropertyValidationRule<T>, ICompositeValidationRule
     {
         /// <inheritdoc/>
         public IProperty<T> Property { get; }
@@ -37,7 +37,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="rule1">First rule.</param>
         /// <param name="rule2">Second rule.</param>
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
-        public And(IValidationRule<T> rule1, IValidationRule<T> rule2, bool breakOnFirstError = false)
+        public And(IPropertyValidationRule<T> rule1, IPropertyValidationRule<T> rule2, bool breakOnFirstError = false)
         {
             FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
             LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
@@ -47,16 +47,16 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
+        public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            foreach (var message in FirstRule.Validate(propertyContainer))
+            foreach (var message in FirstRule.As<T>().Validate(propertyValue, propertyContainer))
             {
                 yield return message;
                 if (BreakOnFirstError)
                     yield break;
             }
 
-            foreach (var message in LastRule.Validate(propertyContainer))
+            foreach (var message in LastRule.As<T>().Validate(propertyValue, propertyContainer))
             {
                 yield return message;
                 if (BreakOnFirstError)
@@ -72,7 +72,7 @@ namespace MicroElements.Validation.Rules
     public class AndBuilder<T> : IValidationRuleLinker<T, And<T>>
     {
         /// <inheritdoc />
-        public IValidationRule<T> FirstRule { get; }
+        public IPropertyValidationRule<T> FirstRule { get; }
 
         /// <summary>
         /// Gets a value indicating whether rule should break on first error.
@@ -80,7 +80,7 @@ namespace MicroElements.Validation.Rules
         public bool BreakOnFirstError { get; }
 
         /// <inheritdoc />
-        public And<T> CombineWith(IValidationRule<T> nextRule)
+        public And<T> CombineWith(IPropertyValidationRule<T> nextRule)
         {
             nextRule.AssertArgumentNotNull(nameof(nextRule));
 
@@ -92,7 +92,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="firstRule">The first rule.</param>
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
-        public AndBuilder(IValidationRule<T> firstRule, bool breakOnFirstError = false)
+        public AndBuilder(IPropertyValidationRule<T> firstRule, bool breakOnFirstError = false)
         {
             FirstRule = firstRule.AssertArgumentNotNull(nameof(firstRule));
             BreakOnFirstError = breakOnFirstError;
@@ -111,7 +111,7 @@ namespace MicroElements.Validation.Rules
         /// <param name="rule1">The first rule.</param>
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
         /// <returns>Builder.</returns>
-        public static AndBuilder<T> And<T>(this IValidationRule<T> rule1, bool breakOnFirstError = false)
+        public static AndBuilder<T> And<T>(this IPropertyValidationRule<T> rule1, bool breakOnFirstError = false)
         {
             return new AndBuilder<T>(rule1, breakOnFirstError);
         }

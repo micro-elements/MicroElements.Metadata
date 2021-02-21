@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using MicroElements.Functional;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules
@@ -11,23 +12,34 @@ namespace MicroElements.Validation.Rules
     /// Checks that property value matches some condition.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class ShouldBe<T> : BasePropertyRule<T>
+    public class ShouldBe<T> : PropertyValidationRule<T>
     {
-        private readonly Func<T, bool> _isValid;
+        private readonly Func<T?, bool> _isValid;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ShouldBe{T}"/> class.
         /// </summary>
         /// <param name="property">Property to check.</param>
         /// <param name="isValid">Function that checks value is valid.</param>
-        public ShouldBe(IProperty<T> property, Func<T, bool> isValid)
-            : base(property, "{propertyName} it not matches ShouldBe condition.")
+        public ShouldBe(IProperty<T> property, Expression<Func<T?, bool>> isValid)
+            : base(property)
         {
-            _isValid = isValid;
+            isValid.AssertArgumentNotNull(nameof(isValid));
+
+            _isValid = isValid.Compile();
+
+            string condition = isValid.Body.ToString();
+            string valueName = isValid.Parameters[0].Name;
+
+            this.SetDefaultMessageFormat("{propertyName} should match expression: {condition} but {valueName} is '{value}'.");
+
+            this.ConfigureMessage(message => message
+                .WithProperty("condition", condition)
+                .WithProperty("valueName", valueName));
         }
 
         /// <inheritdoc />
-        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(T? value)
         {
             return _isValid(value);
         }
@@ -45,8 +57,10 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         /// <param name="isValid">Function that checks value is valid.</param>
         /// <returns><see cref="ShouldBe{T}"/> validation rule.</returns>
-        public static ShouldBe<T> ShouldBe<T>(this IProperty<T> property, Func<T, bool> isValid)
+        public static ShouldBe<T> ShouldBe<T>(this IProperty<T> property, Expression<Func<T?, bool>> isValid)
         {
+            isValid.AssertArgumentNotNull(nameof(isValid));
+
             return new ShouldBe<T>(property, isValid);
         }
 
@@ -58,8 +72,8 @@ namespace MicroElements.Validation.Rules
         /// <param name="linker">Rule linker.</param>
         /// <param name="isValid">Function that checks value is valid.</param>
         /// <returns>Combined validation rule.</returns>
-        public static TValidationRule ShouldBe<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, Func<T, bool> isValid)
-            where TValidationRule : IValidationRule<T>
+        public static TValidationRule ShouldBe<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, Expression<Func<T?, bool>> isValid)
+            where TValidationRule : IPropertyValidationRule<T>
         {
             return linker.CombineWith(linker.FirstRule.Property.ShouldBe(isValid));
         }

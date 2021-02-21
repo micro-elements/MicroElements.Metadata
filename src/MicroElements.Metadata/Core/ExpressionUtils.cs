@@ -34,7 +34,9 @@ namespace MicroElements.Core
         public static Action<object, TProperty> GetPropertySetter<TProperty>(Type instanceType, string propertyName)
         {
             var propertyInfo = instanceType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            var setMethod = propertyInfo.GetSetMethod(nonPublic: true);
+            MethodInfo? setMethod = propertyInfo?.GetSetMethod(nonPublic: true);
+            if (setMethod == null)
+                throw new InvalidOperationException($"Type {instanceType} should have writable property {propertyName}.");
 
             var parameterTProperty = Expression.Parameter(typeof(TProperty), "valueT");
 

@@ -32,7 +32,7 @@ namespace MicroElements.Validation
         /// <summary>
         /// Optional message configuration chain.
         /// </summary>
-        private readonly Lazy<List<Func<Message, IPropertyValue, IPropertyContainer, Message>>> _configureMessage = new Lazy<List<Func<Message, IPropertyValue, IPropertyContainer, Message>>>();
+        private readonly Lazy<List<Func<Message, IPropertyValue, IPropertyContainer, Message>>> _configureMessageChainLazy = new ();
 
         /// <summary>
         /// Sets default message format.
@@ -49,7 +49,7 @@ namespace MicroElements.Validation
         /// <param name="configureMessage">Configure message function.</param>
         public void ConfigureMessage(Func<Message, IPropertyValue, IPropertyContainer, Message> configureMessage)
         {
-            _configureMessage.Value.Add(configureMessage);
+            _configureMessageChainLazy.Value.Add(configureMessage);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace MicroElements.Validation
         /// <param name="configureMessage">Configure message function.</param>
         public void ConfigureMessage(Func<Message, Message> configureMessage)
         {
-            _configureMessage.Value.Add((message, propertyValue, container) => configureMessage(message));
+            _configureMessageChainLazy.Value.Add((message, propertyValue, container) => configureMessage(message));
         }
 
         /// <summary>
@@ -71,26 +71,27 @@ namespace MicroElements.Validation
         /// <param name="propertyContainer">Property container that holds value.</param>
         /// <param name="messageFormat">Optional message format.</param>
         /// <returns>Configured message.</returns>
-        public Message GetConfiguredMessage(IPropertyValue propertyValue, IPropertyContainer propertyContainer, string? messageFormat = null)
+        public Message GetConfiguredMessage(IPropertyValue? propertyValue, IPropertyContainer propertyContainer, string? messageFormat = null)
         {
-            KeyValuePair<string, object>[] properties = null;
+            KeyValuePair<string, object>[]? properties = null;
 
             if (propertyValue != null)
             {
+                IProperty property = propertyValue.PropertyUntyped;
                 properties = new[]
                 {
-                    new KeyValuePair<string, object>("propertyName", propertyValue.PropertyUntyped.Name),
-                    new KeyValuePair<string, object>("propertyType", propertyValue.PropertyUntyped.Type),
-                    new KeyValuePair<string, object>("propertyDescription", propertyValue.PropertyUntyped.Description),
+                    new KeyValuePair<string, object>("propertyName", property.Name),
+                    new KeyValuePair<string, object>("propertyType", property.Type),
+                    new KeyValuePair<string, object>("propertyDescription", property.Description),
                     new KeyValuePair<string, object>("value", propertyValue.ValueUntyped),
                 };
             }
 
             Message message = new Message(messageFormat ?? MessageFormat, MessageSeverity.Error, properties: properties);
 
-            if (_configureMessage != null && _configureMessage.IsValueCreated)
+            if (_configureMessageChainLazy.IsValueCreated)
             {
-                foreach (var configureMessage in _configureMessage.Value)
+                foreach (var configureMessage in _configureMessageChainLazy.Value)
                 {
                     message = configureMessage(message, propertyValue, propertyContainer);
                 }

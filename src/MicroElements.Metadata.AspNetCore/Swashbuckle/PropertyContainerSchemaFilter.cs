@@ -60,7 +60,7 @@ namespace MicroElements.Metadata.Swashbuckle
                         var propertySchema = context.SchemaGenerator.GenerateSchema(property.Type, context.SchemaRepository);
                         propertySchema.Description = property.Description ?? propertySchema.Description;
 
-                        if (property.GetOrEvaluateAllowNull() is { } allowNull)
+                        if (property.GetOrEvaluateNullability() is { } allowNull)
                         {
                             propertySchema.Nullable = allowNull.IsNullAllowed;
                         }

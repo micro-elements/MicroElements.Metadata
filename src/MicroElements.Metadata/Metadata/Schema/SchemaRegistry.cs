@@ -24,19 +24,6 @@ namespace MicroElements.Metadata.Schema
         public ConcurrentDictionary<IProperty, ISchema> SchemaCache { get; }
     }
 
-    /// <summary>
-    /// Represents schema for <see cref="IPropertyContainer"/>.
-    /// Contains properties, constraints and validation rules.
-    /// </summary>
-    public interface ISchema : IPropertySet
-    {
-        //string Id { get; }// add Description etc
-
-        IProperty AddProperty(IProperty property);
-
-        IProperty? GetProperty(string name);
-    }
-
     public static partial class SchemaExtensions
     {
         public static ISchema ToSchema(this IPropertySet propertySet)

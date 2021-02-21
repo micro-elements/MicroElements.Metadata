@@ -46,6 +46,7 @@ namespace MicroElements.Validation.Rules
             // Rule1 false; Rule2 false => false
             if (messages1.Length > 0 && messages2.Length > 0)
             {
+                // messages1.Length > 0 && messages2.Length > 0 => OR rule failed.
                 string message1 = messages1.Select(message => message.FormattedMessage).FormatAsTuple(startSymbol: "[", endSymbol: "]");
                 string message2 = messages2.Select(message => message.FormattedMessage).FormatAsTuple(startSymbol: "[", endSymbol: "]");
 
@@ -58,7 +59,7 @@ namespace MicroElements.Validation.Rules
     /// Composite validation rule. Combines two rules.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class Or<T> : IValidationRule<T>, ICompositeValidationRule
+    public class Or<T> : IPropertyValidationRule<T>, ICompositeValidationRule
     {
         /// <inheritdoc/>
         public IProperty<T> Property { get; }
@@ -78,7 +79,7 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="rule1">First rule.</param>
         /// <param name="rule2">Second rule.</param>
-        public Or(IValidationRule<T> rule1, IValidationRule<T> rule2)
+        public Or(IPropertyValidationRule<T> rule1, IPropertyValidationRule<T> rule2)
         {
             FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
             LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
@@ -87,10 +88,10 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
+        public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            Message[] messages1 = FirstRule.Validate(propertyContainer).ToArray();
-            Message[] messages2 = LastRule.Validate(propertyContainer).ToArray();
+            Message[] messages1 = ((IPropertyValidationRule<T>)FirstRule).Validate(propertyValue, propertyContainer).ToArray();
+            Message[] messages2 = ((IPropertyValidationRule<T>)LastRule).Validate(propertyValue, propertyContainer).ToArray();
 
             // Rule1 true; Rule2 true => true
             // Rule1 true; Rule2 false => true
@@ -113,10 +114,10 @@ namespace MicroElements.Validation.Rules
     public class OrBuilder<T> : IValidationRuleLinker<T, Or<T>>
     {
         /// <inheritdoc />
-        public IValidationRule<T> FirstRule { get; }
+        public IPropertyValidationRule<T> FirstRule { get; }
 
         /// <inheritdoc />
-        public Or<T> CombineWith(IValidationRule<T> nextRule)
+        public Or<T> CombineWith(IPropertyValidationRule<T> nextRule)
         {
             nextRule.AssertArgumentNotNull(nameof(nextRule));
 
@@ -127,7 +128,7 @@ namespace MicroElements.Validation.Rules
         /// Initializes a new instance of the <see cref="OrBuilder{T}"/> class.
         /// </summary>
         /// <param name="firstRule">The first rule.</param>
-        public OrBuilder(IValidationRule<T> firstRule)
+        public OrBuilder(IPropertyValidationRule<T> firstRule)
         {
             FirstRule = firstRule.AssertArgumentNotNull(nameof(firstRule));
         }
@@ -144,7 +145,7 @@ namespace MicroElements.Validation.Rules
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="rule1">The first rule.</param>
         /// <returns>Builder.</returns>
-        public static OrBuilder<T> Or<T>(this IValidationRule<T> rule1)
+        public static OrBuilder<T> Or<T>(this IPropertyValidationRule<T> rule1)
         {
             return new OrBuilder<T>(rule1);
         }

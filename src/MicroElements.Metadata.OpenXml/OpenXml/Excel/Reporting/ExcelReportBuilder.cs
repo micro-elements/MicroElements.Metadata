@@ -521,6 +521,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 customizeFunc?.Invoke(cellContext);
             }
 
+            // TODO: omit empty cells? or omit style if cell is empty
+            // Example of empty cell: <x:c r="N10052" s="2" />
+
             return cellContext;
         }
 

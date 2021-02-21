@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// Validation rule based on property metadata <see cref="IStringMaxLength"/>.
     /// Checks that string length aligns with the maximum allowed length.
     /// </summary>
-    public class StringMaxLengthValidationRule : BasePropertyRule<string>
+    public class StringMaxLengthValidationRule : PropertyValidationRule<string>
     {
         private readonly IStringMaxLength? _maxLength;
 
@@ -35,7 +35,7 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        protected override bool IsValid(string? value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(string? value)
         {
             if (_maxLength != null && _maxLength.MaxLength.HasValue)
             {

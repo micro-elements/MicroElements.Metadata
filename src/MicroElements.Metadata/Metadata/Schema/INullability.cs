@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using MicroElements.Functional;
 using MicroElements.Validation;
@@ -15,7 +14,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema nullable.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IAllowNull : IMetadata
+    public interface INullability : IMetadata
     {
         /// <summary>
         /// Gets a value indicating whether the property can accept null value.
@@ -26,12 +25,12 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Property allows null value.
     /// </summary>
-    public class AllowNull : IAllowNull
+    public class AllowNull : INullability
     {
         /// <summary>
         /// Gets global instance of <see cref="AllowNull"/>.
         /// </summary>
-        public static IAllowNull Instance { get; } = new AllowNull();
+        public static INullability Instance { get; } = new AllowNull();
 
         /// <inheritdoc />
         public bool IsNullAllowed => true;
@@ -40,12 +39,12 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Property does not allows null value.
     /// </summary>
-    public class DisallowNull : IAllowNull
+    public class DisallowNull : INullability
     {
         /// <summary>
         /// Gets global instance of <see cref="DisallowNull"/>.
         /// </summary>
-        public static IAllowNull Instance { get; } = new DisallowNull();
+        public static INullability Instance { get; } = new DisallowNull();
 
         /// <inheritdoc />
         public bool IsNullAllowed => false;
@@ -57,7 +56,7 @@ namespace MicroElements.Metadata.Schema
     public static partial class SchemaExtensions
     {
         /// <summary>
-        /// Sets <see cref="IAllowNull"/> metadata for property.
+        /// Sets <see cref="INullability"/> metadata for property.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
@@ -67,12 +66,12 @@ namespace MicroElements.Metadata.Schema
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            IAllowNull allowNullMetadata = allowNull ? AllowNull.Instance : DisallowNull.Instance;
+            INullability allowNullMetadata = allowNull ? AllowNull.Instance : DisallowNull.Instance;
             return property.SetMetadata(allowNullMetadata);
         }
 
         /// <summary>
-        /// Sets <see cref="IAllowNull"/> metadata to <see cref="AllowNull"/>.
+        /// Sets <see cref="INullability"/> metadata to <see cref="AllowNull"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
@@ -84,7 +83,7 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Sets <see cref="IAllowNull"/> metadata to <see cref="DisallowNull"/>.
+        /// Sets <see cref="INullability"/> metadata to <see cref="DisallowNull"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Source property.</param>
@@ -96,54 +95,89 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Gets optional <see cref="IAllowNull"/> metadata.
+        /// Gets optional <see cref="INullability"/> metadata.
         /// </summary>
         /// <param name="property">Source property.</param>
-        /// <returns>Optional <see cref="IAllowNull"/>.</returns>
+        /// <returns>Optional <see cref="INullability"/> metadata.</returns>
         [Pure]
-        public static IAllowNull? GetAllowNull(this IProperty property)
+        public static INullability? GetNullability(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetMetadata<IAllowNull>();
+            return property.GetMetadata<INullability>();
         }
 
         /// <summary>
-        /// Gets <see cref="IAllowNull"/> metadata.
-        /// If <see cref="IAllowNull"/> metadata is not set then it will be selected according property type can accept null or not.
+        /// Gets <see cref="INullability"/> metadata.
+        /// If <see cref="INullability"/> metadata is not set then it will be selected according property type can accept null or not.
         /// </summary>
         /// <param name="property">Source property.</param>
-        /// <returns>Optional <see cref="IAllowNull"/>.</returns>
+        /// <returns>Optional <see cref="INullability"/>.</returns>
         [Pure]
-        public static IAllowNull GetOrEvaluateAllowNull(this IProperty property)
+        public static INullability GetOrEvaluateNullability(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetAllowNull() ?? (property.Type.CanAcceptNull() ? AllowNull.Instance : DisallowNull.Instance);
+            return property.GetNullability() ?? (property.Type.CanAcceptNull() ? AllowNull.Instance : DisallowNull.Instance);
         }
     }
 
     /// <summary>
     /// Validation rule that checks property value is one of allowed values.
     /// </summary>
-    /// <typeparam name="T">Value type.</typeparam>
-    public class ShouldMatchNullability<T> : BasePropertyRule<T>
+    public class ShouldMatchNullability : PropertyValidationRule
     {
-        private readonly IAllowNull? _allowNull;
+        private readonly INullability? _allowNull;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShouldMatchNullability"/> class.
+        /// </summary>
+        /// <param name="property">Property to check.</param>
+        /// <param name="allowNull">Optional <see cref="INullability"/>.</param>
+        public ShouldMatchNullability(IProperty property, INullability? allowNull = null)
+            : base(property, "{propertyName} should not be null.")
+        {
+            _allowNull = allowNull ?? property.GetNullability();
+        }
+
+        /// <inheritdoc />
+        protected override bool IsValid(IPropertyValue propertyValue)
+        {
+            if (_allowNull != null)
+            {
+                // AllowNull    &  null => true
+                // AllowNull    & !null => true
+                // DisallowNull &  null => false
+                // DisallowNull & !null => true
+                bool isNotValid = propertyValue.ValueUntyped is null && !_allowNull.IsNullAllowed;
+                return !isNotValid;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Validation rule that checks property value is one of allowed values.
+    /// </summary>
+    /// <typeparam name="T">Property type.</typeparam>
+    public class ShouldMatchNullability<T> : PropertyValidationRule<T>
+    {
+        private readonly INullability? _allowNull;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ShouldMatchNullability{T}"/> class.
         /// </summary>
         /// <param name="property">Property to check.</param>
-        /// <param name="allowNull">Optional <see cref="IAllowNull"/>.</param>
-        public ShouldMatchNullability(IProperty<T> property, IAllowNull? allowNull = null)
+        /// <param name="allowNull">Optional <see cref="INullability"/>.</param>
+        public ShouldMatchNullability(IProperty<T> property, INullability? allowNull = null)
             : base(property, "{propertyName} should not be null.")
         {
-            _allowNull = allowNull ?? Property.GetAllowNull();
+            _allowNull = allowNull ?? Property.GetNullability();
         }
 
         /// <inheritdoc />
-        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(T? value)
         {
             if (_allowNull != null)
             {
@@ -165,27 +199,27 @@ namespace MicroElements.Metadata.Schema
     public static partial class ValidationExtensions
     {
         /// <summary>
-        /// Checks that property value nullability according <see cref="IAllowNull"/>.
+        /// Checks that property value nullability according <see cref="INullability"/>.
         /// </summary>
         /// <typeparam name="T">Value type.</typeparam>
         /// <param name="property">Property to check.</param>
-        /// <param name="allowNull">Optional <see cref="IAllowNull"/>.</param>
+        /// <param name="allowNull">Optional <see cref="INullability"/>.</param>
         /// <returns>Validation rule.</returns>
-        public static ShouldMatchNullability<T> ShouldMatchNullability<T>(this IProperty<T> property, IAllowNull? allowNull = null)
+        public static ShouldMatchNullability<T> ShouldMatchNullability<T>(this IProperty<T> property, INullability? allowNull = null)
         {
             return new ShouldMatchNullability<T>(property, allowNull);
         }
 
         /// <summary>
-        /// Checks that property value nullability according <see cref="IAllowNull"/>.
+        /// Checks that property value nullability according <see cref="INullability"/>.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>
         /// <param name="linker">Rule linker.</param>
-        /// <param name="allowNull">Optional <see cref="IAllowNull"/>.</param>
+        /// <param name="allowNull">Optional <see cref="INullability"/>.</param>
         /// <returns>Validation rule.</returns>
-        public static TValidationRule ShouldMatchNullability<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, IAllowNull? allowNull = null)
-            where TValidationRule : IValidationRule<T>
+        public static TValidationRule ShouldMatchNullability<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, INullability? allowNull = null)
+            where TValidationRule : IPropertyValidationRule<T>
         {
             return linker.CombineWith(ShouldMatchNullability(linker.FirstRule.Property, allowNull));
         }

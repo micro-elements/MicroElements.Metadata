@@ -103,6 +103,9 @@ namespace MicroElements.Metadata
             TMetadata data)
             where TMetadataProvider : IMetadataProvider
         {
+            if (metadataProvider == null)
+                throw new ArgumentNullException(nameof(metadataProvider));
+
             metadataName ??= typeof(TMetadata).FullName;
             var metadata = metadataProvider.GetInstanceMetadata(autoCreate: true);
 

@@ -54,13 +54,13 @@ namespace MicroElements.Metadata.Schema
     public static partial class SchemaExtensions
     {
         /// <summary>
-        /// Adds <see cref="IValidationRule{T}"/> to metadata <see cref="IPropertyValidationRules"/>.
+        /// Adds <see cref="IPropertyValidationRule{T}"/> to metadata <see cref="IPropertyValidationRules"/>.
         /// </summary>
         /// <typeparam name="T">Property value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="validation">Property validation.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> AddValidation<T>(this IProperty<T> property, Func<IProperty<T>, IValidationRule<T>> validation)
+        public static IProperty<T> AddValidation<T>(this IProperty<T> property, Func<IProperty<T>, IPropertyValidationRule<T>> validation)
         {
             property.AssertArgumentNotNull(nameof(property));
             validation.AssertArgumentNotNull(nameof(validation));
@@ -69,7 +69,7 @@ namespace MicroElements.Metadata.Schema
                 createMetadata: CreatePropertyValidationRules,
                 configureMetadata: propertyValidation =>
                 {
-                    IValidationRule<T> validationRule = validation(property);
+                    IPropertyValidationRule<T> validationRule = validation(property);
                     return propertyValidation.AddRule(validationRule);
                 });
         }
@@ -91,19 +91,19 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Sets <see cref="IValidationRule{T}"/>.
+        /// Sets <see cref="IPropertyValidationRule{T}"/>.
         /// Replaces property metadata <see cref="IPropertyValidationRules"/>.
         /// </summary>
         /// <typeparam name="T">Property value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <param name="validation">Property validation.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetValidation<T>(this IProperty<T> property, Func<IProperty<T>, IValidationRule<T>> validation)
+        public static IProperty<T> SetValidation<T>(this IProperty<T> property, Func<IProperty<T>, IPropertyValidationRule<T>> validation)
         {
             property.AssertArgumentNotNull(nameof(property));
             validation.AssertArgumentNotNull(nameof(validation));
 
-            IValidationRule<T> validationRule = validation(property);
+            IPropertyValidationRule<T> validationRule = validation(property);
             IPropertyValidationRules validationRules = new PropertyValidationRules(property, new[] { validationRule });
 
             return property.SetMetadata<IProperty<T>, IPropertyValidationRules>(validationRules);

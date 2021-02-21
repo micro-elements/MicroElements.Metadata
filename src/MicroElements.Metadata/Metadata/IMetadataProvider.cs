@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using MicroElements.Core;
 
@@ -16,7 +17,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="autoCreate">Should create metadata if it was not created before.</param>
         /// <returns>Metadata for instance.</returns>
-        IPropertyContainer GetInstanceMetadata(bool autoCreate = true) => MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate);
+        IPropertyContainer GetInstanceMetadata(bool autoCreate = false) => MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate);
 
         /// <summary>
         /// Replaces metadata for the current instance.
@@ -39,8 +40,11 @@ namespace MicroElements.Metadata
         IPropertyContainer IMetadataProvider.GetInstanceMetadata(bool autoCreate) => Metadata;
 
         /// <inheritdoc />
-        void IMetadataProvider.SetInstanceMetadata(IPropertyContainer metadata) => ExpressionUtils
-            .GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata)).Invoke(this, metadata);
+        void IMetadataProvider.SetInstanceMetadata(IPropertyContainer metadata)
+        {
+            Action<object, IPropertyContainer> propertySetter = ExpressionUtils.GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata));
+            propertySetter.Invoke(this, metadata);
+        }
     }
 
     /// <summary>

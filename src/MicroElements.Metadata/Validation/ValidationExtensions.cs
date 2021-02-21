@@ -27,11 +27,17 @@ namespace MicroElements.Validation
             if (validationRules == null)
                 throw new ArgumentNullException(nameof(validationRules));
 
-            foreach (var rule in validationRules)
+            foreach (var validationRule in validationRules)
             {
-                foreach (Message message in rule.Validate(propertyContainer))
+                IEnumerable<Message> validationMessages;
+                if (validationRule is IPropertyValidationRule propertyValidationRule)
+                    validationMessages = propertyValidationRule.Validate(propertyValue: null, propertyContainer: propertyContainer);
+                else
+                    validationMessages = validationRule.Validate(propertyContainer);
+
+                foreach (Message validationMessage in validationMessages)
                 {
-                    yield return message;
+                    yield return validationMessage;
                 }
             }
         }

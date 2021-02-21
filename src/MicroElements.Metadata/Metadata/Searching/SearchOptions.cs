@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace MicroElements.Metadata
 {
@@ -166,5 +167,26 @@ namespace MicroElements.Metadata
         /// <param name="right">Right options.</param>
         /// <returns>True if options are not equal.</returns>
         public static bool operator !=(SearchOptions left, SearchOptions right) => !left.Equals(right);
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if (_searchProperty != null)
+                stringBuilder.AppendFormat("SearchProperty({0}), ", _searchProperty);
+            if (_searchInParent != null)
+                stringBuilder.AppendFormat("SearchInParent({0}), ", _searchInParent);
+            if (_calculateValue != null)
+                stringBuilder.AppendFormat("CalculateValue({0}), ", _calculateValue);
+            if (_useDefaultValue != null)
+                stringBuilder.AppendFormat("UseDefaultValue({0}), ", _useDefaultValue);
+            if (ReturnNotDefined)
+                stringBuilder.AppendFormat("ReturnNotDefined()");
+            else
+                stringBuilder.AppendFormat("ReturnNull()");
+
+            return stringBuilder.ToString();
+        }
     }
 }

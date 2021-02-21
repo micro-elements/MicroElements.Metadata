@@ -24,8 +24,13 @@ namespace MicroElements.Metadata
             _instance = instance;
         }
 
+        /// <summary>
+        /// Gets instance metadata.
+        /// </summary>
+        public IPropertyContainer Metadata => GetInstanceMetadata(autoCreate: false);
+
         /// <inheritdoc />
-        public IPropertyContainer GetInstanceMetadata(bool autoCreate = true)
+        public IPropertyContainer GetInstanceMetadata(bool autoCreate = false)
         {
             return _instance switch
             {

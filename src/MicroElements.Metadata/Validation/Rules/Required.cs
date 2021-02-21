@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// Checks that property value exists and has not null value.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class Required<T> : IValidationRule<T>
+    public class Required<T> : IPropertyValidationRule<T>
     {
         /// <inheritdoc />
         public IProperty<T> Property { get; }
@@ -26,9 +26,9 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
+        public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
+            propertyValue ??= propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
 
             if (propertyValue == null)
                 yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "{propertyName} is marked as required but is not exists.");

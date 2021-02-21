@@ -1,8 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules
@@ -11,7 +9,7 @@ namespace MicroElements.Validation.Rules
     /// Checks that property value is not null.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class NotNull<T> : BasePropertyRule<T>
+    public class NotNull<T> : PropertyValidationRule<T>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NotNull{T}"/> class.
@@ -23,9 +21,9 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(T? value)
         {
-            return !value.IsNull();
+            return value is not null;
         }
     }
 
@@ -41,21 +39,8 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         /// <returns>NotNull validation rule.</returns>
         public static NotNull<T> NotNull<T>(this IProperty<T> property)
-            where T : class
         {
             return new NotNull<T>(property);
-        }
-
-        /// <summary>
-        /// Checks that property value is not null.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Property to check.</param>
-        /// <returns>NotNull validation rule.</returns>
-        public static NotNull<T?> NotNull<T>(this IProperty<T?> property)
-            where T : struct
-        {
-            return new NotNull<T?>(property);
         }
 
         /// <summary>
@@ -66,24 +51,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="linker">Rule linker.</param>
         /// <returns>Combined validation rule.</returns>
         public static TValidationRule NotNull<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker)
-            where TValidationRule : IValidationRule<T>
-            where T : class
+            where TValidationRule : IPropertyValidationRule<T>
         {
             return linker.CombineWith(new NotNull<T>(linker.FirstRule.Property));
-        }
-
-        /// <summary>
-        /// Checks that property value is not null.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <typeparam name="TValidationRule">Combined validation rule type.</typeparam>
-        /// <param name="linker">Rule linker.</param>
-        /// <returns>Combined validation rule.</returns>
-        public static TValidationRule NotNull<T, TValidationRule>(this IValidationRuleLinker<T?, TValidationRule> linker)
-            where TValidationRule : IValidationRule<T?>
-            where T : struct
-        {
-            return linker.CombineWith(new NotNull<T?>(linker.FirstRule.Property));
         }
     }
 }

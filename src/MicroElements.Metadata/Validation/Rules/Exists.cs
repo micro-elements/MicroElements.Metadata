@@ -11,10 +11,13 @@ namespace MicroElements.Validation.Rules
     /// Checks that target property is exists.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class Exists<T> : IValidationRule<T>
+    public class Exists<T> : IPropertyValidationRule<T>
     {
         /// <inheritdoc/>
         public IProperty<T> Property { get; }
+
+        /// <inheritdoc />
+        public SearchOptions? SearchOptions => Search.ExistingOnly.ReturnNotDefined();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Exists{T}"/> class.
@@ -22,18 +25,21 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         public Exists(IProperty<T> property)
         {
-            Property = property;
+            Property = property.AssertArgumentNotNull(nameof(property));
             this.SetDefaultMessageFormat("{propertyName} is not exists.");
         }
 
         /// <inheritdoc />
-        public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
+        public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue(Property, Search.ExistingOnly.ReturnNotDefined())!;
+            propertyValue ??= propertyContainer.GetPropertyValue(Property, SearchOptions)!;
 
             if (propertyValue.IsNullOrNotDefined())
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);
         }
+
+        /// <inheritdoc />
+        public override string ToString() => this.GetTypeName();
     }
 
     /// <summary>

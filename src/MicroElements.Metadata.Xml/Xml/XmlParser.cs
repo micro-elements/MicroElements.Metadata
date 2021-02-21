@@ -147,7 +147,8 @@ namespace MicroElements.Metadata.Xml
                                         .SetSchema(propertyInternalSchema));
                             }
 
-                            container.Add(settings.PropertyValueFactory.CreateUntyped(property, internalObject));
+                            IPropertyValue propertyValue = settings.PropertyValueFactory.CreateUntyped(property, internalObject);
+                            container.Add(propertyValue);
 
                             // Validate property.
                             if (settings.ValidateOnParse)
@@ -159,7 +160,7 @@ namespace MicroElements.Metadata.Xml
                         if (property != null && property.Type == typeof(IPropertyContainer))
                         {
                             // Composite object, no value.
-                            bool isNullAllowed = property.GetOrEvaluateAllowNull().IsNullAllowed;
+                            bool isNullAllowed = property.GetOrEvaluateNullability().IsNullAllowed;
                             if (!isNullAllowed)
                             {
                                 context.Messages.AddError(
@@ -188,7 +189,8 @@ namespace MicroElements.Metadata.Xml
                             {
                                 // Add property to container.
                                 object? parsedValue = parseResult.ValueUntyped;
-                                container.Add(settings.PropertyValueFactory.CreateUntyped(property, parsedValue));
+                                IPropertyValue propertyValue = settings.PropertyValueFactory.CreateUntyped(property, parsedValue);
+                                container.Add(propertyValue);
 
                                 // Validate property.
                                 if (settings.ValidateOnParse)

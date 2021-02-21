@@ -11,7 +11,7 @@ namespace MicroElements.Metadata
     /// Strong typed property and value.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public class PropertyValue<T> : IPropertyValue<T>
+    public sealed class PropertyValue<T> : IPropertyValue<T>
     {
         /// <inheritdoc />
         public IProperty<T> Property { get; }
@@ -104,6 +104,9 @@ namespace MicroElements.Metadata
         public static bool operator ==(ValueSource? left, ValueSource? right) => Equals(left, right);
 
         public static bool operator !=(ValueSource? left, ValueSource? right) => !Equals(left, right);
+
+        /// <inheritdoc />
+        public override string ToString() => SourceName;
     }
 
     /// <summary>
@@ -121,6 +124,16 @@ namespace MicroElements.Metadata
         public static IPropertyValue Create(IProperty property, object? value, ValueSource? valueSource = null)
         {
             return PropertyValueFactory.Default.CreateUntyped(property, value, valueSource);
+        }
+
+        public static IPropertyValue Default(IProperty property)
+        {
+            return PropertyValueFactory.Default.CreateUntyped(property, property.Type.GetDefaultValue(), ValueSource.DefaultValue);
+        }
+
+        public static IPropertyValue NotDefined(IProperty property)
+        {
+            return PropertyValueFactory.Default.CreateUntyped(property, property.Type.GetDefaultValue(), ValueSource.NotDefined);
         }
     }
 }

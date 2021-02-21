@@ -10,7 +10,7 @@ namespace MicroElements.Metadata
     /// Property calculator that accepts evaluate func in simple and full form.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public class PropertyCalculator<T> : IPropertyCalculator<T>
+    public sealed class PropertyCalculator<T> : IPropertyCalculator<T>
     {
         private readonly Func<IPropertyContainer, SearchOptions, T>? _calculateSimple;
         private readonly Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)>? _calculate;

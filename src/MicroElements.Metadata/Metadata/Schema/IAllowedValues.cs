@@ -195,7 +195,7 @@ namespace MicroElements.Metadata.Schema
     /// Validation rule that checks property value is one of allowed values.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public class OnlyAllowedValuesRule<T> : BasePropertyRule<T>
+    public class OnlyAllowedValuesRule<T> : PropertyValidationRule<T>
     {
         private readonly IAllowedValues<T>? _allowedValues;
 
@@ -211,7 +211,7 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
-        protected override bool IsValid([MaybeNull] T value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(T? value)
         {
             if (_allowedValues != null)
             {
@@ -252,7 +252,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="allowedValues">Optional <see cref="IAllowedValues{T}"/>.</param>
         /// <returns>Validation rule.</returns>
         public static TValidationRule OnlyAllowedValues<T, TValidationRule>(this IValidationRuleLinker<T, TValidationRule> linker, IAllowedValues<T>? allowedValues = null)
-            where TValidationRule : IValidationRule<T>
+            where TValidationRule : IPropertyValidationRule<T>
         {
             return linker.CombineWith(OnlyAllowedValues(linker.FirstRule.Property, allowedValues));
         }

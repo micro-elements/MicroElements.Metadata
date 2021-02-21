@@ -11,7 +11,7 @@ namespace MicroElements.Validation.Rules
     /// Validation rule based on property metadata <see cref="IStringMinLength"/>.
     /// Checks that string length aligns with the minimum allowed length.
     /// </summary>
-    public class StringMinLengthValidationRule : BasePropertyRule<string>
+    public class StringMinLengthValidationRule : PropertyValidationRule<string>
     {
         private readonly IStringMinLength? _minLength;
 
@@ -35,7 +35,7 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        protected override bool IsValid(string? value, IPropertyContainer propertyContainer)
+        protected override bool IsValid(string? value)
         {
             if (_minLength != null && _minLength.MinLength.HasValue)
             {

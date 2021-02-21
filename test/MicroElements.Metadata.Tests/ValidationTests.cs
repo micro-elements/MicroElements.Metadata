@@ -51,7 +51,8 @@ namespace MicroElements.Metadata.Tests
                 yield return Age.Exists();
             }
 
-            var messages = container.Validate(Rules().Cached()).ToList();
+            IValidator validator = Rules().Cached();
+            var messages = container.Validate(validator).ToList();
             messages.Should().HaveCount(1);
             messages[0].FormattedMessage.Should().Be("Age is not exists.");
         }
@@ -83,17 +84,74 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void validate_and()
         {
-            IEnumerable<IValidationRule> Rules()
+            // Using And
+            IEnumerable<IValidationRule> Rules1()
             {
                 yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}");
             }
 
-            var messages = new MutablePropertyContainer()
-                .WithValue(Age, 0).Validate(Rules().Cached()).ToList();
-            messages.Should().HaveCount(2);
+            // Not using And
+            IEnumerable<IValidationRule> Rules2()
+            {
+                yield return Age.NotDefault();
+                yield return Age.ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}");
+            }
 
-            messages[0].FormattedMessage.Should().Be("Age should not have default value 0.");
-            messages[1].FormattedMessage.Should().Be("Age should be over 18! but was 0");
+            Validate(Rules1());
+            Validate(Rules2());
+
+            void Validate(IEnumerable<IValidationRule> rules)
+            {
+                IValidator validator = rules.Cached();
+
+                var messages = new MutablePropertyContainer()
+                    .WithValue(Age, 0)
+                    .Validate(validator)
+                    .ToList();
+
+                messages.Should().HaveCount(2);
+
+                messages[0].FormattedMessage.Should().Be("Age should not have default value 0.");
+                messages[1].FormattedMessage.Should().Be("Age should be over 18! but was 0");
+            }
+        }
+
+        [Fact]
+        public void validate_or()
+        {
+            IEnumerable<IValidationRule> Rules()
+            {
+                yield return Sex.ShouldBe(value => value == "Male").Or().ShouldBe(value => value == "Female");
+            }
+
+            var messages = new MutablePropertyContainer()
+                .WithValue(Sex, "Other")
+                .Validate(Rules().Cached())
+                .ToList();
+
+            messages.Should().HaveCount(1);
+
+            messages[0].FormattedMessage.Should().Be("[Sex should match expression: (value == \"Male\") but value is 'Other'.] or [Sex should match expression: (value == \"Female\") but value is 'Other'.]");
+        }
+
+
+        [Fact]
+        public void validate_or_for_different_properties()
+        {
+            IEnumerable<IValidationRule> Rules()
+            {
+                yield return Name.NotNull().Or(Age.NotDefault());
+            }
+
+            var messages = new MutablePropertyContainer()
+                .WithValue(Name, null)
+                .WithValue(Age, 0)
+                .Validate(Rules().Cached())
+                .ToList();
+
+            messages.Should().HaveCount(1);
+
+            messages[0].FormattedMessage.Should().Be("[Name should not be null.] or [Age should not have default value 0.]");
         }
 
         [Fact]

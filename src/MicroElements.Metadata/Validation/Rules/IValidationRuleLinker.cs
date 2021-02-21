@@ -29,18 +29,18 @@ namespace MicroElements.Validation.Rules
     /// <typeparam name="T">Property type.</typeparam>
     /// <typeparam name="TValidationRule">Validation rule type.</typeparam>
     public interface IValidationRuleLinker<T, out TValidationRule>
-        where TValidationRule : IValidationRule<T>
+        where TValidationRule : IPropertyValidationRule<T>
     {
         /// <summary>
         /// Gets the first rule.
         /// </summary>
-        IValidationRule<T> FirstRule { get; }
+        IPropertyValidationRule<T> FirstRule { get; }
 
         /// <summary>
         /// Combines with next rule.
         /// </summary>
         /// <param name="nextRule">Next rule.</param>
         /// <returns>New combined validation rule.</returns>
-        TValidationRule CombineWith(IValidationRule<T> nextRule);
+        TValidationRule CombineWith(IPropertyValidationRule<T> nextRule);
     }
 }

@@ -109,7 +109,7 @@ namespace MicroElements.Metadata.Serialization
             var properties = propertySet.GetProperties();
             foreach (IProperty property in properties)
             {
-                if (property.IsMatchesByNameOrAlias(propertyName, ignoreCase: true))
+                if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                 {
                     return property;
                 }

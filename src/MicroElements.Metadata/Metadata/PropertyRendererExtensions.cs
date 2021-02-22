@@ -179,13 +179,17 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Sets <see cref="IPropertyRenderer.TargetName"/> from <see cref="IProperty.Alias"/>.
+        /// Sets <see cref="IPropertyRenderer.TargetName"/> from <see cref="IHasAlias.Alias"/>.
         /// </summary>
         /// <param name="renderer">Source renderer.</param>
         /// <returns>The same renderer for chaining.</returns>
         public static IPropertyRenderer SetNameFromAlias(this IPropertyRenderer renderer)
         {
-            return renderer.ConfigureRenderer(options => options.TargetName = options.PropertyUntyped.Alias);
+            return renderer.ConfigureRenderer(options =>
+            {
+                if (options.PropertyUntyped.GetAlias() is { } alias)
+                    options.TargetName = alias;
+            });
         }
     }
 }

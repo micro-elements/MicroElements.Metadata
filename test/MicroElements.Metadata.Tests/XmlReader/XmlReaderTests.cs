@@ -64,6 +64,26 @@ namespace MicroElements.Metadata.Tests
             public static IProperty<int> Zip { get; } = new Property<int>("Zip");
         }
 
+        public class SimpleTypeSchema : ISchemaNew<string>
+        {
+            /// <inheritdoc />
+            public IProperty<string> Definition { get; } = new Property<string>("Currency")
+                .WithDescription("Currency");
+
+
+            /// <inheritdoc />
+            public IPropertySet Properties { get; }
+
+            /// <inheritdoc />
+            public string Name { get; }
+
+            /// <inheritdoc />
+            public string? Description { get; }
+
+            /// <inheritdoc />
+            public string? Alias { get; }
+        }
+
         [Fact]
         public void ReflectionSchema()
         {

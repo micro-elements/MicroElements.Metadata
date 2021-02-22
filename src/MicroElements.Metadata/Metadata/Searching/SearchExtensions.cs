@@ -276,7 +276,7 @@ namespace MicroElements.Metadata
             if (property == null || name == null)
                 return false;
 
-            return name.Equals(property.Name, stringComparison) || name.Equals(property.Alias, stringComparison);
+            return name.Equals(property.Name, stringComparison) || name.Equals(property.GetAlias(), stringComparison);
         }
     }
 }

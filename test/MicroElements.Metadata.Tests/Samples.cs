@@ -33,7 +33,7 @@ namespace MicroElements.Metadata.Tests
             IProperty property = Property.Create(typeof(string), "StringSample").WithAliasUntyped("SampleAlias");
             property.Type.Should().Be(typeof(string));
             property.Name.Should().Be("StringSample");
-            property.Alias.Should().Be("SampleAlias");
+            property.GetAlias().Should().Be("SampleAlias");
         }
     }
 

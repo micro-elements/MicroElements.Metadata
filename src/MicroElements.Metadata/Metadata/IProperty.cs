@@ -26,18 +26,13 @@ namespace MicroElements.Metadata
         /// Gets property description.
         /// </summary>
         string? Description { get; }
-
-        /// <summary>
-        /// Gets alternative name for property.
-        /// </summary>
-        string? Alias { get; }
     }
 
     /// <summary>
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IProperty<T> : IProperty
+    public interface IProperty<T> : IProperty, IHasAlias
     {
         /// <summary>
         /// Gets default value for property.

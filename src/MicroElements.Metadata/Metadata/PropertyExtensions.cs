@@ -20,8 +20,8 @@ namespace MicroElements.Metadata
         public static IEnumerable<string> GetNameAndAliases(this IProperty property)
         {
             yield return property.Name;
-            if (property.Alias != null)
-                yield return property.Alias;
+            if (property.GetAlias() is { } alias)
+                yield return alias;
         }
 
         /// <summary>

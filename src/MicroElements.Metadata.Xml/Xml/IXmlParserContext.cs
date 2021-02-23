@@ -86,7 +86,7 @@ namespace MicroElements.Metadata.Xml
             parserSettings.AssertArgumentNotNull(nameof(parserSettings));
 
             ParserSettings = parserSettings;
-            Schema = schema ?? new MutableSchema();
+            Schema = schema ?? new MutableObjectSchema();
 
             Messages = messages ?? new MutableMessageList<Message>();
 

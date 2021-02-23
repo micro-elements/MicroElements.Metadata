@@ -1,7 +1,9 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -21,5 +23,25 @@ namespace MicroElements.Metadata
     {
         /// <inheritdoc />
         public IEnumerable<IProperty> GetProperties() => GetType().GetStaticProperties();
+    }
+
+    public interface IStaticSchema : IObjectSchemaProvider
+    {
+        /// <inheritdoc />
+        IObjectSchema IObjectSchemaProvider.GetObjectSchema()
+        {
+            var properties = GetType().GetStaticProperties();
+            return new MutableObjectSchema(properties);
+        }
+    }
+
+    public class StaticSchema : IObjectSchemaProvider
+    {
+        /// <inheritdoc />
+        public IObjectSchema GetObjectSchema()
+        {
+            var properties = GetType().GetStaticProperties();
+            return new MutableObjectSchema(properties);
+        }
     }
 }

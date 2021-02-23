@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -34,7 +35,7 @@ namespace MicroElements.Metadata.Tests
             Female
         }
 
-        public class PersonSchema : StaticPropertySet
+        public class PersonSchema : StaticSchema
         {
             public static readonly IProperty<string> FirstName = new Property<string>("FirstName")
                 .AddValidation(property => property
@@ -57,42 +58,34 @@ namespace MicroElements.Metadata.Tests
                 .WithDescription("Addresses list ");
         }
 
-        public class AddressSchema : StaticPropertySet
+        public class AddressSchema : StaticSchema
         {
             public static IProperty<string> City { get; } = new Property<string>("City");
 
             public static IProperty<int> Zip { get; } = new Property<int>("Zip");
         }
 
-        public class SimpleTypeSchema : ISchemaNew<string>
+        public class SimpleTypeSchema : ISchema
         {
-            /// <inheritdoc />
-            public IProperty<string> Definition { get; } = new Property<string>("Currency")
-                .WithDescription("Currency");
-
-
-            /// <inheritdoc />
-            public IPropertySet Properties { get; }
-
             /// <inheritdoc />
             public string Name { get; }
 
             /// <inheritdoc />
-            public string? Description { get; }
+            public Type Type { get; }
 
             /// <inheritdoc />
-            public string? Alias { get; }
+            public string? Description { get; }
         }
 
         [Fact]
         public void ReflectionSchema()
         {
             PersonSchema personSchema = new PersonSchema();
-            var properties = personSchema.ToArray();
+            var properties = personSchema.GetObjectSchema().GetProperties().ToArray();
             properties.Should().HaveCount(5);
 
             AddressSchema addressSchema = new AddressSchema();
-            var city = addressSchema.First();
+            var city = addressSchema.GetObjectSchema().GetProperties().First();
             city.Should().NotBeNull();
             city.Name.Should().Be("City");
             city.Type.Should().Be(typeof(string));
@@ -110,7 +103,7 @@ namespace MicroElements.Metadata.Tests
   <LastName>Smith</LastName>
 </Person>";
 
-            ISchema personSchema = new PersonSchema().ToSchema();
+            IObjectSchema personSchema = new PersonSchema().GetObjectSchema();
             var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
             container.GetSchema().Should().NotBeNull();
         }
@@ -127,7 +120,7 @@ namespace MicroElements.Metadata.Tests
   </Address>
 </Person>";
 
-            ISchema personSchema = new PersonSchema().ToSchema();
+            IObjectSchema personSchema = new PersonSchema().GetObjectSchema();
             var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
 
             var validationRules = personSchema.GetValidationRules().ToArray();
@@ -205,9 +198,11 @@ namespace MicroElements.Metadata.Tests
   </Address>
 </Person>";
 
+            IObjectSchema personSchema = new PersonSchema().GetObjectSchema();
+
             IPropertyContainer? container = XDocument
                 .Parse(testXml, LoadOptions.SetLineInfo)
-                .ParseXmlToContainer(new PersonSchema().ToSchema(), new XmlParserSettings());
+                .ParseXmlToContainer(personSchema, new XmlParserSettings());
             container.Should().NotBeNull();
 
             IPropertyValue[] values = container.Properties.ToArray();
@@ -226,7 +221,7 @@ namespace MicroElements.Metadata.Tests
             values[4].PropertyUntyped.Name.Should().Be("Address");
             values[4].PropertyUntyped.Type.Should().Be(typeof(IPropertyContainer));
 
-            ISchema? addressSchema = container.GetSchema().GetProperty("Address").GetSchema();
+            var addressSchema = container.GetSchema().GetProperty("Address").GetSchema().ToObjectSchema();
             addressSchema.GetProperty("Zip").Type.Should().Be(typeof(int));
 
             var address = (values[4].ValueUntyped as IPropertyContainer).Properties.ToArray();

@@ -31,7 +31,7 @@ namespace MicroElements.Metadata.Xml
         public static IXmlParserContext With(
             this IXmlParserContext context,
             IXmlParserSettings? parserSettings = null,
-            ISchema? schema = null,
+            Schema.IMutableObjectSchema? schema = null,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
             ConcurrentDictionary<IProperty, ISchema>? schemaCache = null,
@@ -98,7 +98,7 @@ namespace MicroElements.Metadata.Xml
         public static ISchema GetOrAddSchema(this IXmlParserContext context, IProperty? property, Func<ISchema>? factory = null)
         {
             if (property == null)
-                return factory?.Invoke() ?? new MutableSchema();
+                return factory?.Invoke() ?? new MutableObjectSchema();
 
             if (context.SchemaCache.TryGetValue(property, out var result))
             {

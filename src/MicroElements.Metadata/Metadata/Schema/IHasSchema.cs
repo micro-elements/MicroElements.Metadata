@@ -20,9 +20,9 @@ namespace MicroElements.Metadata.Schema
         ISchema Schema { get; }
 
         /// <summary>
-        /// Creates new instance of <see cref="ISchema"/>.
+        /// Creates new instance of <see cref="IMutableObjectSchema"/>.
         /// </summary>
-        /// <returns>New instance of <see cref="ISchema"/>.</returns>
+        /// <returns>New instance of <see cref="IMutableObjectSchema"/>.</returns>
         ISchema Create();
     }
 
@@ -52,15 +52,41 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Allows to attach schema to <see cref="IPropertyContainer"/>.
     /// </summary>
+    public class HasSchema2 : IHasSchema
+    {
+        private readonly ISchemaProvider _schemaProvider;
+
+        /// <inheritdoc />
+        public ISchema Schema { get; }
+
+        /// <inheritdoc />
+        public ISchema Create() => _schemaProvider.GetSchema();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HasSchema"/> class.
+        /// </summary>
+        /// <param name="schemaProvider">Schema for <see cref="IPropertyContainer"/>.</param>
+        public HasSchema2(ISchemaProvider schemaProvider)
+        {
+            schemaProvider.AssertArgumentNotNull(nameof(schemaProvider));
+
+            _schemaProvider = schemaProvider;
+            Schema = _schemaProvider.GetSchema();
+        }
+    }
+
+    /// <summary>
+    /// Allows to attach schema to <see cref="IPropertyContainer"/>.
+    /// </summary>
     /// <typeparam name="TSchema">Schema type.</typeparam>
     public class HasSchema<TSchema> : IHasSchema
-        where TSchema : IPropertySet, new()
+        where TSchema : ISchema, new()
     {
         /// <inheritdoc />
         public ISchema Schema { get; }
 
         /// <inheritdoc />
-        public ISchema Create() => new TSchema().ToSchema();
+        public ISchema Create() => new TSchema();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HasSchema{T}"/> class.
@@ -84,8 +110,8 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public ISchema Create()
         {
-            IPropertySet? propertySet = Activator.CreateInstance(SchemaType) as IPropertySet;
-            return propertySet!.ToSchema();
+            ISchema schema = (ISchema)Activator.CreateInstance(SchemaType);
+            return schema;
         }
 
         /// <summary>
@@ -96,8 +122,8 @@ namespace MicroElements.Metadata.Schema
         {
             schemaType.AssertArgumentNotNull(nameof(schemaType));
 
-            if (!schemaType.IsAssignableTo<IPropertySet>())
-                throw new ArgumentException($"Type {schemaType} should be {nameof(IPropertySet)} or {nameof(ISchema)}");
+            if (!schemaType.IsAssignableTo<ISchema>())
+                throw new ArgumentException($"Type {schemaType} should be {nameof(ISchema)}");
 
             SchemaType = schemaType;
             Schema = Create();
@@ -167,7 +193,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Target property.</param>
         /// <returns>The same instance.</returns>
         public static IProperty<IPropertyContainer> SetSchema<TSchema>(this IProperty<IPropertyContainer> property)
-            where TSchema : IPropertySet, new()
+            where TSchema : ISchema, new()
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -210,12 +236,15 @@ namespace MicroElements.Metadata.Schema
         /// </summary>
         /// <typeparam name="TProperty">Property type.</typeparam>
         /// <param name="property">Target property.</param>
-        /// <param name="schema">Schema.</param>
+        /// <param name="schema"><see cref="IHasSchema"/> metadata.</param>
         /// <returns>The same instance.</returns>
-        public static TProperty SetSchema<TProperty>(this TProperty property, IPropertySet schema)
+        public static TProperty SetSchema<TProperty>(this TProperty property, ISchemaProvider schema)
             where TProperty : IProperty
         {
-            return property.SetSchema(schema.ToSchema());
+            property.AssertArgumentNotNull(nameof(property));
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            return property.SetMetadata<TProperty, IHasSchema>(new HasSchema2(schema));
         }
 
         /// <summary>
@@ -232,16 +261,18 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Gets optional <see cref="ISchema"/> from <see cref="IHasSchema"/> metadata.
+        /// Gets optional <see cref="IMutableObjectSchema"/> from <see cref="IHasSchema"/> metadata.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
-        /// <returns>Optional <see cref="ISchema"/>.</returns>
+        /// <returns>Optional <see cref="IMutableObjectSchema"/>.</returns>
         [Pure]
-        public static ISchema? GetSchema(this IPropertyContainer propertyContainer)
+        public static IObjectSchema? GetSchema(this IPropertyContainer propertyContainer)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
-            return propertyContainer.GetHasSchema()?.Schema;
+            ISchema? schema = propertyContainer.GetHasSchema()?.Schema;
+
+            return schema?.ToObjectSchema();
         }
 
         /// <summary>
@@ -258,10 +289,10 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Gets optional <see cref="ISchema"/> from <see cref="IHasSchema"/> metadata.
+        /// Gets optional <see cref="IMutableObjectSchema"/> from <see cref="IHasSchema"/> metadata.
         /// </summary>
         /// <param name="property">Source property.</param>
-        /// <returns>Optional <see cref="ISchema"/>.</returns>
+        /// <returns>Optional <see cref="IMutableObjectSchema"/>.</returns>
         [Pure]
         public static ISchema? GetSchema(this IProperty property)
         {
@@ -285,7 +316,7 @@ namespace MicroElements.Metadata.Schema
             ISchema? schema = hasSchema?.Create();
             if (schema == null)
             {
-                schema = factory?.Invoke() ?? new MutableSchema();
+                schema = factory?.Invoke() ?? new MutableObjectSchema();
                 property.SetSchema(schema);
             }
 

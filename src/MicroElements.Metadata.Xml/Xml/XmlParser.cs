@@ -29,7 +29,7 @@ namespace MicroElements.Metadata.Xml
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this Stream stream,
-            ISchema? schema = null,
+            IObjectSchema? schema = null,
             IXmlParserSettings? settings = null,
             IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
@@ -49,7 +49,7 @@ namespace MicroElements.Metadata.Xml
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this string text,
-            ISchema? schema = null,
+            IObjectSchema? schema = null,
             IXmlParserSettings? settings = null,
             IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
@@ -69,7 +69,7 @@ namespace MicroElements.Metadata.Xml
         /// <returns><see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer ParseXmlToContainer(
             this XDocument document,
-            ISchema? schema = null,
+            IObjectSchema? schema = null,
             IXmlParserSettings? settings = null,
             IXmlParserContext? context = null,
             IMutablePropertyContainer? container = null)
@@ -107,7 +107,7 @@ namespace MicroElements.Metadata.Xml
                 container.SetSchema(schema);
                 container.SetMetadata(context);
 
-                ParseXmlElement(rootElement, schema, settings, context, container);
+                ParseXmlElement(rootElement, (IObjectSchema)schema, settings, context, container);
             }
 
             return container;
@@ -115,7 +115,7 @@ namespace MicroElements.Metadata.Xml
 
         private static IPropertyContainer? ParseXmlElement(
             XElement objectElement,
-            ISchema objectSchema,
+            IObjectSchema objectSchema,
             IXmlParserSettings settings,
             IXmlParserContext context,
             IMutablePropertyContainer? container = null)
@@ -126,12 +126,13 @@ namespace MicroElements.Metadata.Xml
 
                 foreach (XElement propertyElement in objectElement.Elements())
                 {
-                    string propertyName = settings.StringProvider.GetString(settings.GetElementName(propertyElement));
+                    string elementName = settings.GetElementName(propertyElement);
+                    string propertyName = settings.StringProvider.GetString(elementName);
                     IProperty? property = objectSchema.GetProperty(propertyName);
 
                     if (propertyElement.HasElements)
                     {
-                        ISchema propertyInternalSchema = context.GetOrAddSchema(property);
+                        IObjectSchema propertyInternalSchema = context.GetOrAddSchema(property).ToObjectSchema();
 
                         IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings, context);
                         if (internalObject != null && internalObject.Count > 0)
@@ -139,9 +140,9 @@ namespace MicroElements.Metadata.Xml
                             if (settings.SetSchemaForObjects)
                                 internalObject.SetSchema(propertyInternalSchema);
 
-                            if (property == null)
+                            if (property == null && objectSchema is IMutableObjectSchema mutableObjectSchema)
                             {
-                                property = objectSchema
+                                property = mutableObjectSchema
                                     .AddProperty(new Property<IPropertyContainer>(propertyName)
                                         .SetIsNotFromSchema()
                                         .SetSchema(propertyInternalSchema));
@@ -170,9 +171,9 @@ namespace MicroElements.Metadata.Xml
                             continue;
                         }
 
-                        if (property == null)
+                        if (property == null && objectSchema is IMutableObjectSchema mutableObjectSchema)
                         {
-                            property = objectSchema
+                            property = mutableObjectSchema
                                 .AddProperty(new Property<string>(propertyName)
                                     .SetIsNotFromSchema());
                         }
@@ -251,7 +252,7 @@ namespace MicroElements.Metadata.Xml
         /// </summary>
         public static object? ReadXmlElement(
             XmlReader xmlReader,
-            ISchema? schema = null,
+            IObjectSchema? schema = null,
             IXmlParserSettings? settings = null,
             IXmlParserContext? context = null)
         {
@@ -263,7 +264,8 @@ namespace MicroElements.Metadata.Xml
 
             settings ??= new XmlParserSettings();
             context ??= new XmlParserContext(settings, schema);
-            schema ??= context.Schema;
+            schema ??= (IObjectSchema)context.Schema;
+            IMutableObjectSchema mutableObjectSchema = schema.ToMutableObjectSchema();
 
             while (xmlReader.Read())
             {
@@ -281,13 +283,13 @@ namespace MicroElements.Metadata.Xml
 
                     if (property != null)
                     {
-                        ISchema propertySchema = context.GetOrAddSchema(property);
+                        var propertySchema = context.GetOrAddSchema(property).ToObjectSchema();
                         var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
                         container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                     }
                     else if (xmlReader.Depth > rootDepth)
                     {
-                        ISchema propertySchema = context.GetOrAddSchema(property);
+                        var propertySchema = context.GetOrAddSchema(property).ToObjectSchema();
                         var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
 
                         if (compositeValue is IPropertyContainer internalObject)
@@ -295,13 +297,13 @@ namespace MicroElements.Metadata.Xml
                             property = Property
                                 .Create(typeof(IPropertyContainer), elementName)
                                 .SetSchema(propertySchema);
-                            schema.AddProperty(property);
+                            mutableObjectSchema.AddProperty(property);
                             container.Add(settings.PropertyValueFactory.CreateUntyped(property, internalObject));
                         }
                         else
                         {
                             property = Property.Create(typeof(string), elementName);
-                            schema.AddProperty(property);
+                            mutableObjectSchema.AddProperty(property);
                             container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                         }
                     }
@@ -310,7 +312,7 @@ namespace MicroElements.Metadata.Xml
                 {
                     if (elementName != null && container != null)
                     {
-                        property ??= schema.AddProperty(Property.Create(xmlReader.ValueType, elementName));
+                        property ??= mutableObjectSchema.AddProperty(Property.Create(xmlReader.ValueType, elementName));
 
                         object value = xmlReader.ReadContentAs(property.Type, null);
                         container.Add(settings.PropertyValueFactory.CreateUntyped(property, value));

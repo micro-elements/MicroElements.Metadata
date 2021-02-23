@@ -9,4 +9,16 @@ namespace MicroElements.Metadata.Schema
     public interface IMetadata
     {
     }
+
+    /// <summary>
+    /// Marks immutable metadata.
+    /// Immutable objects can be cached and shared.
+    /// </summary>
+    public interface IImmutable
+    {
+    }
+
+    public interface IReadOnly
+    {
+    }
 }

@@ -14,8 +14,14 @@ namespace MicroElements.Metadata.Schema
     [Flags]
     public enum MetadataTargets
     {
-        Property = 1,
-        PropertyContainer = 2,
+        SimpleSchema = 1 << 0,
+        ObjectSchema = 1 << 1,
+        RootSchema = 1 << 2,
+
+        Property = 1 << 3,
+        PropertyContainer = 1 << 4,
+
+        AnySchema = SimpleSchema | ObjectSchema | RootSchema | Property,
 
         All = Property | PropertyContainer,
     }

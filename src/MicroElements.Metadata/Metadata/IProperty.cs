@@ -3,29 +3,15 @@
 
 using System;
 using System.Collections.Generic;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents property description.
-    /// Every object consist of many properties and we should map properties from different sources to one common model.
     /// </summary>
-    public interface IProperty : IMetadataProvider
+    public interface IProperty : ISchema
     {
-        /// <summary>
-        /// Gets property name.
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Gets property value type.
-        /// </summary>
-        Type Type { get; }
-
-        /// <summary>
-        /// Gets property description.
-        /// </summary>
-        string? Description { get; }
     }
 
     /// <summary>

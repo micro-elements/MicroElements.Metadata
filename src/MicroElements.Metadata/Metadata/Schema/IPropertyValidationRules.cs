@@ -134,6 +134,19 @@ namespace MicroElements.Metadata.Schema
             return schema.GetProperties().SelectMany(property => property.GetValidationRules());
         }
 
+        /// <summary>
+        /// Gets validation rules attached to properties in schema.
+        /// Rules are stored in <see cref="IPropertyValidationRules"/> metadata.
+        /// </summary>
+        /// <param name="schema">Source schema.</param>
+        /// <returns>Validation rules.</returns>
+        public static IEnumerable<IValidationRule> GetValidationRules(this ISchema schema)
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            return schema.GetProperties().SelectMany(property => property.GetValidationRules());
+        }
+
         private static IPropertyValidationRules CreatePropertyValidationRules(IProperty property)
         {
             return new PropertyValidationRules(property);

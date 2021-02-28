@@ -24,7 +24,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="instance">Source.</param>
         /// <param name="autoCreate">Should create metadata if it was not created before.</param>
-        /// <returns>Metadata for instance.</returns>
+        /// <returns>Metadata for instance or Empty metadata.</returns>
         public static IPropertyContainer GetInstanceMetadata(this object? instance, bool autoCreate = true)
         {
             if (instance == null)

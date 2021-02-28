@@ -32,7 +32,7 @@ namespace MicroElements.Metadata.Schema
                 return schema;
             }
 
-            return new MutableObjectSchema(propertySet);
+            return new MutableObjectSchema(name: propertySet.GetType().Name, properties: propertySet);
         }
     }
 }

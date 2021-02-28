@@ -24,6 +24,9 @@ namespace MicroElements.Metadata.Xml
         public IEqualityComparer<IProperty> PropertyComparer { get; }
 
         /// <inheritdoc />
+        public IPropertyFactory PropertyFactory { get; }
+
+        /// <inheritdoc />
         public IPropertyValueFactory PropertyValueFactory { get; }
 
         /// <inheritdoc />
@@ -45,6 +48,7 @@ namespace MicroElements.Metadata.Xml
         /// <param name="parserRules">Parsers and rules for parsers.</param>
         /// <param name="stringProvider">Optional string provider.</param>
         /// <param name="propertyComparer">Property comparer for property related search. Default value: <see cref="Metadata.PropertyComparer.ByReferenceComparer"/>.</param>
+        /// <param name="propertyFactory">Optional <seealso cref="IPropertyFactory"/>.</param>
         /// <param name="propertyValueFactory"><see cref="IPropertyValue"/> factory. Default: <see cref="CachedPropertyValueFactory"/>.</param>
         /// <param name="validationFactory">Validation factory to create validation rules.</param>
         /// <param name="validateOnParse">Properties should be validated on parse.</param>
@@ -54,6 +58,7 @@ namespace MicroElements.Metadata.Xml
             IReadOnlyCollection<IParserRule>? parserRules = null,
             IStringProvider? stringProvider = null,
             IEqualityComparer<IProperty>? propertyComparer = null,
+            IPropertyFactory? propertyFactory = null,
             IPropertyValueFactory? propertyValueFactory = null,
             IValidationProvider? validationFactory = null,
             bool validateOnParse = false,
@@ -63,6 +68,7 @@ namespace MicroElements.Metadata.Xml
             ParserRules = parserRules ?? XmlParser.CreateDefaultXmlParsersRules().ToArray();
             StringProvider = stringProvider ?? new DefaultStringProvider();
             PropertyComparer = propertyComparer ?? Metadata.PropertyComparer.ByReferenceComparer;
+            PropertyFactory = propertyFactory ?? Metadata.PropertyFactory.Default.Cached();
             PropertyValueFactory = propertyValueFactory ?? new PropertyValueFactory().Cached(PropertyComparer);
 
             ValidationProvider = validationFactory ?? Validation.Rules.ValidationProvider.Instance;

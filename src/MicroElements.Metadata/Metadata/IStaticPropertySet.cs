@@ -31,7 +31,7 @@ namespace MicroElements.Metadata
         IObjectSchema IObjectSchemaProvider.GetObjectSchema()
         {
             var properties = GetType().GetStaticProperties();
-            return new MutableObjectSchema(properties);
+            return new MutableObjectSchema(name: GetType().Name, properties: properties);
         }
     }
 
@@ -41,7 +41,7 @@ namespace MicroElements.Metadata
         public IObjectSchema GetObjectSchema()
         {
             var properties = GetType().GetStaticProperties();
-            return new MutableObjectSchema(properties);
+            return new MutableObjectSchema(name: GetType().Name, properties: properties);
         }
     }
 }

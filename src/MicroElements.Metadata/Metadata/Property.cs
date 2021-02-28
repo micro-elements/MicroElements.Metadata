@@ -144,9 +144,9 @@ namespace MicroElements.Metadata
         /// <param name="name">Property name.</param>
         /// <returns>Property.</returns>
         [Pure]
-        public static Property<T> Create<T>(string name)
+        public static IProperty<T> Create<T>(string name)
         {
-            return new Property<T>(name);
+            return PropertyFactory.Default.Create<T>(name);
         }
 
         /// <summary>
@@ -158,15 +158,7 @@ namespace MicroElements.Metadata
         [Pure]
         public static IProperty Create(Type type, string name)
         {
-            // Most popular cases:
-            if (type == typeof(string))
-                return new Property<string>(name);
-            if (type == typeof(IPropertyContainer))
-                return new Property<IPropertyContainer>(name);
-
-            // Reflection construction. TODO: cache by type
-            Type typedPropertyType = typeof(Property<>).MakeGenericType(type);
-            return (IProperty)Activator.CreateInstance(typedPropertyType, name);
+            return PropertyFactory.Default.Create(type, name);
         }
 
         /// <summary>

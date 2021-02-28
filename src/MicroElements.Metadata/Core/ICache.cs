@@ -47,7 +47,7 @@ namespace MicroElements.Core
 
     public class ConcurrentDictionaryAdapter<TKey, TValue> : ICache<TKey, TValue>
     {
-        private ConcurrentDictionary<TKey, TValue> _values;
+        private readonly ConcurrentDictionary<TKey, TValue> _values;
 
         public ConcurrentDictionaryAdapter(ConcurrentDictionary<TKey, TValue> values)
         {

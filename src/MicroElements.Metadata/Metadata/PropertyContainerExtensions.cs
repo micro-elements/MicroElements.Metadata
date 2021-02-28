@@ -110,10 +110,30 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Merges <see cref="IPropertyContainer"/> objects to single <see cref="IPropertyContainer"/>.
         /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="otherContainer">Container to merge to source container.</param>
+        /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
+        /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
+        public static IPropertyContainer Merge(
+            this IPropertyContainer propertyContainer,
+            IPropertyContainer otherContainer,
+            PropertyAddMode mergeMode = PropertyAddMode.Set)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            otherContainer.AssertArgumentNotNull(nameof(otherContainer));
+
+            return propertyContainer.ToMutable().WithValues(otherContainer, mergeMode);
+        }
+
+        /// <summary>
+        /// Merges <see cref="IPropertyContainer"/> objects to single <see cref="IPropertyContainer"/>.
+        /// </summary>
         /// <param name="containers">Source objects.</param>
         /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
         /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
-        public static IPropertyContainer Merge(this IEnumerable<IPropertyContainer?>? containers, PropertyAddMode mergeMode = PropertyAddMode.Set)
+        public static IPropertyContainer Merge(
+            this IEnumerable<IPropertyContainer?>? containers,
+            PropertyAddMode mergeMode = PropertyAddMode.Set)
         {
             MutablePropertyContainer? merger = null;
 

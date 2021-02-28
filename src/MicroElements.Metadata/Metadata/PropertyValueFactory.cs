@@ -21,7 +21,7 @@ namespace MicroElements.Metadata
         /// </summary>
         public static IPropertyValueFactory Default { get; } = new PropertyValueFactory();
 
-        private static readonly ConcurrentDictionary<Type, Func<IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
+        private static readonly ConcurrentDictionary<Type, Func<IPropertyValueFactory, IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
 
         /// <inheritdoc />
         public IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
@@ -44,51 +44,54 @@ namespace MicroElements.Metadata
             if (value == null && propertyType.CanNotAcceptNull())
                 throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
 
-            ValueSource source = valueSource ?? ValueSource.Defined;
-
             // Most popular cases:
             if (propertyType == typeof(string))
-                return new PropertyValue<string>((IProperty<string>)property, (string?)value, source);
+                return Create((IProperty<string>)property, (string?)value, valueSource);
 
             if (propertyType == typeof(IPropertyContainer))
-                return new PropertyValue<IPropertyContainer>((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, source);
+                return Create((IProperty<IPropertyContainer>)property, (IPropertyContainer?)value, valueSource);
 
+            // Calls this.Create<T>(property, value, valueSource)
             IPropertyValue propertyValue = _funcCache
-                .GetOrAdd(propertyType, type => NewPropertyValue(type).Compile())
-                .Invoke(property, value!, valueSource!);
+                .GetOrAdd(propertyType, type => CreatePropertyValue(type).Compile())
+                .Invoke(this, property, value!, valueSource!);
 
             return propertyValue;
         }
 
         /// <summary>
-        /// Returns expression: <code><![CDATA[(property, value, source) => (new PropertyValue<T>((property As IProperty<T>), (value As T), source) As IPropertyValue)]]></code>.
+        /// Returns expression: <code><![CDATA[(factory, property, value, source) => (new PropertyValue<T>(factory.Create<T>(property as IProperty<T>, value as T, source) as IPropertyValue)]]></code>.
         /// </summary>
         /// <param name="valueType">Value type.</param>
         /// <returns>Expression.</returns>
-        public static Expression<Func<IProperty, object, ValueSource, IPropertyValue>> NewPropertyValue(Type valueType)
+        public static Expression<Func<IPropertyValueFactory, IProperty, object, ValueSource, IPropertyValue>> CreatePropertyValue(Type valueType)
         {
-            Type propertyGenericType = typeof(IProperty<>).MakeGenericType(valueType);
-            Type propertyValueGenericType = typeof(PropertyValue<>).MakeGenericType(valueType);
+            // IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
+            MethodInfo? createPropertyMethod = typeof(IPropertyValueFactory).GetMethod(nameof(Create));
+            if (createPropertyMethod == null)
+                throw new InvalidOperationException($"Method {nameof(IPropertyValueFactory)}.{nameof(Create)} not found!");
+            MethodInfo createPropertyGeneric = createPropertyMethod.MakeGenericMethod(valueType);
 
+            ParameterExpression factoryParameter = Expression.Parameter(typeof(IPropertyValueFactory), "factory");
             ParameterExpression untypedPropertyArg = Expression.Parameter(typeof(IProperty), "property");
             ParameterExpression untypedValueArg = Expression.Parameter(typeof(object), "value");
             ParameterExpression sourceArg = Expression.Parameter(typeof(ValueSource), "source");
 
-            var typedPropertyArg = Expression.Convert(untypedPropertyArg, propertyGenericType);
+            // property as IProperty<T>
+            var typedPropertyArg = Expression.Convert(untypedPropertyArg, typeof(IProperty<>).MakeGenericType(valueType));
+
+            // value as T
             var typedValueArg = Expression.Convert(untypedValueArg, valueType);
 
-            // ctor: PropertyValue(IProperty<T> property, T value, ValueSource source)
-            ConstructorInfo propertyValueConstructor = propertyValueGenericType.GetConstructor(new[] { propertyGenericType, valueType, typeof(ValueSource) })!;
+            // factory.Create<T>(property as IProperty<T>, value as T, source)
+            var newPropertyValue = Expression.Call(factoryParameter, createPropertyGeneric, typedPropertyArg, typedValueArg, sourceArg);
 
-            // new PropertyValue(property as IProperty<T>, value as T, source)
-            var newPropertyValue = Expression.New(propertyValueConstructor, typedPropertyArg, typedValueArg, sourceArg);
-
-            // new PropertyValue(property as IProperty<T>, value as T, source) as IPropertyValue
+            // factory.Create<T>(property as IProperty<T>, value as T, source) as IPropertyValue
             var castToPropertyValue = Expression.Convert(newPropertyValue, typeof(IPropertyValue));
 
-            // (property, value, source) => (new PropertyValue<T>((property As IProperty<T>), (value As T), source) As IPropertyValue)
-            var expression = Expression.Lambda<Func<IProperty, object, ValueSource, IPropertyValue>>(
-                castToPropertyValue, untypedPropertyArg, untypedValueArg, sourceArg);
+            // (factory, property, value, source) => (new PropertyValue<T>(factory.Create<T>(property as IProperty<T>, value as T, source) as IPropertyValue)
+            var expression = Expression.Lambda<Func<IPropertyValueFactory, IProperty, object, ValueSource, IPropertyValue>>(
+                castToPropertyValue, factoryParameter, untypedPropertyArg, untypedValueArg, sourceArg);
 
             return expression;
         }

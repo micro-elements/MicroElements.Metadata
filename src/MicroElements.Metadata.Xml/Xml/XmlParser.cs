@@ -294,7 +294,7 @@ namespace MicroElements.Metadata.Xml
 
                         if (compositeValue is IPropertyContainer internalObject)
                         {
-                            property = Property
+                            property = settings.PropertyFactory
                                 .Create(typeof(IPropertyContainer), elementName)
                                 .SetSchema(propertySchema);
                             mutableObjectSchema.AddProperty(property);
@@ -302,7 +302,7 @@ namespace MicroElements.Metadata.Xml
                         }
                         else
                         {
-                            property = Property.Create(typeof(string), elementName);
+                            property = settings.PropertyFactory.Create(typeof(string), elementName);
                             mutableObjectSchema.AddProperty(property);
                             container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                         }
@@ -312,7 +312,7 @@ namespace MicroElements.Metadata.Xml
                 {
                     if (elementName != null && container != null)
                     {
-                        property ??= mutableObjectSchema.AddProperty(Property.Create(xmlReader.ValueType, elementName));
+                        property ??= mutableObjectSchema.AddProperty(settings.PropertyFactory.Create(xmlReader.ValueType, elementName));
 
                         object value = xmlReader.ReadContentAs(property.Type, null);
                         container.Add(settings.PropertyValueFactory.CreateUntyped(property, value));

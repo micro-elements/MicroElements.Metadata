@@ -53,8 +53,42 @@ namespace MicroElements.Metadata.Tests
             property.ShouldBeFilled();
         }
 
-        private static Property<int> CreateFilledProperty() => 
-            PropertyTestsExtensions.CreateFilledProperty();
+        [Fact]
+        public void property_factory()
+        {
+            PropertyFactory propertyFactory = new PropertyFactory();
+            IProperty property = propertyFactory.Create<int>("Test");
+            property.Type.Should().Be(typeof(int));
+            property.Name.Should().Be("Test");
+
+            property = propertyFactory.Create(typeof(int), "Test");
+            property.Type.Should().Be(typeof(int));
+            property.Name.Should().Be("Test");
+        }
+
+        [Fact]
+        public void property_factory_cached()
+        {
+            IPropertyFactory notCached = new PropertyFactory();
+            notCached.Create<string>("Test").Should().NotBeSameAs(notCached.Create<string>("Test"));
+
+            IPropertyFactory cached = new PropertyFactory().Cached();
+            cached.Create<string>("Test").Should().BeSameAs(cached.Create<string>("Test"));
+        }
+
+        [Fact]
+        public void PropertyValueFactory_CreateUntyped()
+        {
+            var factory = new PropertyValueFactory();
+
+            IPropertyValue propertyValue = factory.CreateUntyped(new Property<int>("Age"), 10, ValueSource.Defined);
+            propertyValue.Should().NotBeNull();
+            propertyValue.PropertyUntyped.Type.Should().Be(typeof(int));
+            propertyValue.PropertyUntyped.Name.Should().Be("Age");
+            propertyValue.ValueUntyped.Should().Be(10);
+        }
+
+        private static Property<int> CreateFilledProperty() => PropertyTestsExtensions.CreateFilledProperty();
     }
 
     internal static class PropertyTestsExtensions

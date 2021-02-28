@@ -128,8 +128,9 @@ namespace MicroElements.Metadata.Tests
             messages.Should().HaveCount(2);
             messages[0].FormattedMessage.Should().Be("FirstName length should be greater then 1 but was 1");
             messages[1].FormattedMessage.Should().Be("LastName is marked as required but is not exists.");
-
-            ISchema addressSchema = personSchema.GetProperty("Address")!.GetSchema()!;
+            
+            IObjectSchema addressSchema = personSchema.GetProperty("Address")!.GetSchema()!.ToObjectSchema();
+            addressSchema.Properties.Should().HaveCount(3);
 
             IProperty[] notFromSchema = addressSchema.GetPropertiesNotFromSchema().ToArray();
             notFromSchema.Should().HaveCount(1);

@@ -76,7 +76,7 @@ namespace MicroElements.Metadata.Schema
             if (schema is IMutableObjectSchema objectSchema)
                 return objectSchema;
 
-            return new MutableObjectSchema(schema.GetProperties());
+            return new MutableObjectSchema(name: schema.Name, properties: schema.GetProperties());
         }
 
         public static IObjectSchema ToObjectSchema(this ISchema schema)
@@ -84,7 +84,7 @@ namespace MicroElements.Metadata.Schema
             if (schema is IObjectSchema objectSchema)
                 return objectSchema;
 
-            return new MutableObjectSchema(schema.GetProperties());
+            return new MutableObjectSchema(name: schema.Name, properties: schema.GetProperties());
         }
 
     }

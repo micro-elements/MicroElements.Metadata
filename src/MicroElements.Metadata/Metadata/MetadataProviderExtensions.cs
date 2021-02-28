@@ -270,8 +270,11 @@ namespace MicroElements.Metadata
             if (source != null && target != null)
             {
                 IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetInstanceMetadata(autoCreate: false);
-                IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
-                targetMetadata.SetValues(sourceMetadata.Properties);
+                if (sourceMetadata.Count > 0)
+                {
+                    IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
+                    targetMetadata.SetValues(sourceMetadata.Properties);
+                }
             }
         }
 

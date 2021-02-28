@@ -27,8 +27,18 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public ISchemaCombinator? Combinator { get; }
 
-        public MutableObjectSchema(IEnumerable<IProperty>? properties = null)
+        public MutableObjectSchema(
+            string? name = null,
+            Type? type = null,
+            string? description = null,
+            IEnumerable<IProperty>? properties = null,
+            ISchemaCombinator? combinator = null)
         {
+            Name = name;
+            Type = type ?? typeof(IPropertyContainer);
+            Description = description;
+            Combinator = combinator;
+
             if (properties != null)
             {
                 _properties.AddRange(properties);
@@ -51,6 +61,12 @@ namespace MicroElements.Metadata.Schema
         {
             _dictionary.TryGetValue(name, out var value);
             return value;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Name}. Mutable, Count: {_properties.Count}}}";
         }
     }
 }

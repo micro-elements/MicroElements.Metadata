@@ -60,7 +60,7 @@ namespace MicroElements.Metadata.Schema
         public ISchema Schema { get; }
 
         /// <inheritdoc />
-        public ISchema Create() => _schemaProvider.GetSchema();
+        public ISchema Create() => Schema;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HasSchema"/> class.
@@ -244,7 +244,7 @@ namespace MicroElements.Metadata.Schema
             property.AssertArgumentNotNull(nameof(property));
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.SetMetadata<TProperty, IHasSchema>(new HasSchema2(schema));
+            return property.SetMetadata<TProperty, IHasSchema>(new HasSchema(schema.GetSchema()));
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace MicroElements.Metadata.Schema
             ISchema? schema = hasSchema?.Create();
             if (schema == null)
             {
-                schema = factory?.Invoke() ?? new MutableObjectSchema();
+                schema = factory?.Invoke() ?? new MutableObjectSchema(name: property.Name);
                 property.SetSchema(schema);
             }
 

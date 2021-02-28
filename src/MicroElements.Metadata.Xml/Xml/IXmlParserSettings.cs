@@ -30,6 +30,11 @@ namespace MicroElements.Metadata.Xml
         IEqualityComparer<IProperty> PropertyComparer { get; }
 
         /// <summary>
+        /// Gets factory for properties.
+        /// </summary>
+        IPropertyFactory PropertyFactory { get; }
+
+        /// <summary>
         /// Gets factory for property values.
         /// </summary>
         IPropertyValueFactory PropertyValueFactory { get; }

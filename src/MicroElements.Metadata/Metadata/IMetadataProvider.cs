@@ -17,13 +17,13 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="autoCreate">Should create metadata if it was not created before.</param>
         /// <returns>Metadata for instance.</returns>
-        IPropertyContainer GetInstanceMetadata(bool autoCreate = false) => MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate);
+        IPropertyContainer GetMetadataContainer(bool autoCreate = false) => MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate);
 
         /// <summary>
         /// Replaces metadata for the current instance.
         /// </summary>
         /// <param name="metadata">New metadata.</param>
-        void SetInstanceMetadata(IPropertyContainer metadata) => MetadataGlobalCacheStorage.Instance.SetInstanceMetadata(this, metadata);
+        void SetMetadataContainer(IPropertyContainer metadata) => MetadataGlobalCacheStorage.Instance.SetInstanceMetadata(this, metadata);
     }
 
     /// <summary>
@@ -32,15 +32,23 @@ namespace MicroElements.Metadata
     public interface IManualMetadataProvider : IMetadataProvider
     {
         /// <summary>
-        /// Gets or sets metadata for the current instance.
+        /// Gets metadata for the current instance.
         /// </summary>
         IPropertyContainer Metadata { get; }
 
         /// <inheritdoc />
-        IPropertyContainer IMetadataProvider.GetInstanceMetadata(bool autoCreate) => Metadata;
+        IPropertyContainer IMetadataProvider.GetMetadataContainer(bool autoCreate)
+        {
+            if (autoCreate && Metadata is null!)
+            {
+                SetMetadataContainer(MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate: true));
+            }
+
+            return Metadata ?? PropertyContainer.Empty;
+        }
 
         /// <inheritdoc />
-        void IMetadataProvider.SetInstanceMetadata(IPropertyContainer metadata)
+        void IMetadataProvider.SetMetadataContainer(IPropertyContainer metadata)
         {
             Action<object, IPropertyContainer> propertySetter = ExpressionUtils.GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata));
             propertySetter.Invoke(this, metadata);

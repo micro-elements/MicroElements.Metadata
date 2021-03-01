@@ -41,6 +41,9 @@ namespace MicroElements.Metadata.Schema
         ISchema GetSchema();
     }
 
+    /// <summary>
+    /// Provides object schema.
+    /// </summary>
     public interface IObjectSchemaProvider : ISchemaProvider
     {
         /// <inheritdoc />

@@ -24,7 +24,7 @@ namespace MicroElements.Validation.Rules
         public IEnumerable<IValidationRule> GetValidationRules(IProperty property)
         {
             IEnumerable<IMetadata> metadataObjects = property
-                .GetInstanceMetadata(autoCreate: false)
+                .GetMetadataContainer(autoCreate: false)
                 .Select(propertyValue => propertyValue.ValueUntyped)
                 .OfType<IMetadata>();
 

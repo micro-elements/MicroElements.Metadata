@@ -9,20 +9,20 @@ using MicroElements.Functional;
 namespace MicroElements.Metadata.Schema
 {
     /// <summary>
-    /// Allows to attach schema to <see cref="IPropertyContainer"/>.
+    /// Allows to attach schema to <see cref="IProperty"/> or <see cref="IPropertyContainer"/>.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.PropertyContainer | MetadataTargets.Property)]
     public interface IHasSchema : IMetadata
     {
         /// <summary>
-        /// Gets schema for <see cref="IPropertyContainer"/>.
+        /// Gets schema for <see cref="IProperty"/> or <see cref="IPropertyContainer"/>.
         /// </summary>
         ISchema Schema { get; }
 
         /// <summary>
-        /// Creates new instance of <see cref="IMutableObjectSchema"/>.
+        /// Creates new instance of <see cref="ISchema"/>.
         /// </summary>
-        /// <returns>New instance of <see cref="IMutableObjectSchema"/>.</returns>
+        /// <returns>New instance of <see cref="ISchema"/>.</returns>
         ISchema Create();
     }
 
@@ -52,7 +52,7 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Allows to attach schema to <see cref="IPropertyContainer"/>.
     /// </summary>
-    public class HasSchema2 : IHasSchema
+    public class HasSchemaProvider : IHasSchema
     {
         private readonly ISchemaProvider _schemaProvider;
 
@@ -60,18 +60,19 @@ namespace MicroElements.Metadata.Schema
         public ISchema Schema { get; }
 
         /// <inheritdoc />
-        public ISchema Create() => Schema;
+        public ISchema Create() => _schemaProvider.GetSchema();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HasSchema"/> class.
+        /// Initializes a new instance of the <see cref="HasSchemaProvider"/> class.
         /// </summary>
         /// <param name="schemaProvider">Schema for <see cref="IPropertyContainer"/>.</param>
-        public HasSchema2(ISchemaProvider schemaProvider)
+        public HasSchemaProvider(ISchemaProvider schemaProvider)
         {
             schemaProvider.AssertArgumentNotNull(nameof(schemaProvider));
 
             _schemaProvider = schemaProvider;
-            Schema = _schemaProvider.GetSchema();
+
+            Schema = Create();
         }
     }
 
@@ -91,7 +92,10 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Initializes a new instance of the <see cref="HasSchema{T}"/> class.
         /// </summary>
-        public HasSchema() => Schema = Create();
+        public HasSchema()
+        {
+            Schema = Create();
+        }
     }
 
     /// <summary>
@@ -142,77 +146,9 @@ namespace MicroElements.Metadata.Schema
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return metadataProvider.SetMetadata(_schemasCache.GetValue(schema, sch => new HasSchema(sch)));
-        }
-
-        /// <summary>
-        /// Sets schema for <paramref name="propertyContainer"/>.
-        /// </summary>
-        /// <param name="propertyContainer">Target property container.</param>
-        /// <param name="schema">Schema.</param>
-        /// <returns>The same instance.</returns>
-        public static IPropertyContainer SetSchema(this IPropertyContainer propertyContainer, ISchema schema)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            schema.AssertArgumentNotNull(nameof(schema));
-
-            return (IPropertyContainer)propertyContainer.SetSchemaInternal(schema);
-        }
-
-        /// <summary>
-        /// Sets schema for <paramref name="propertyContainer"/>.
-        /// </summary>
-        /// <param name="propertyContainer">Target property container.</param>
-        /// <param name="schema">Schema.</param>
-        /// <returns>The same instance.</returns>
-        public static IPropertyContainer SetSchema(this IPropertyContainer propertyContainer, IPropertySet schema)
-        {
-            return propertyContainer.SetSchema(schema.ToSchema());
-        }
-
-        /// <summary>
-        /// Sets schema for <paramref name="property"/>.
-        /// </summary>
-        /// <typeparam name="TProperty">Property type.</typeparam>
-        /// <param name="property">Target property.</param>
-        /// <param name="schema">Schema.</param>
-        /// <returns>The same instance.</returns>
-        public static TProperty SetSchema<TProperty>(this TProperty property, ISchema schema)
-            where TProperty : IProperty
-        {
-            property.AssertArgumentNotNull(nameof(property));
-            schema.AssertArgumentNotNull(nameof(schema));
-
-            return (TProperty)property.SetSchemaInternal(schema);
-        }
-
-        /// <summary>
-        /// Sets schema for <paramref name="property"/>.
-        /// </summary>
-        /// <typeparam name="TSchema">Schema type.</typeparam>
-        /// <param name="property">Target property.</param>
-        /// <returns>The same instance.</returns>
-        public static IProperty<IPropertyContainer> SetSchema<TSchema>(this IProperty<IPropertyContainer> property)
-            where TSchema : ISchema, new()
-        {
-            property.AssertArgumentNotNull(nameof(property));
-
-            return property.SetMetadata((IHasSchema)new HasSchema<TSchema>());
-        }
-
-        /// <summary>
-        /// Sets schema for <paramref name="property"/>.
-        /// </summary>
-        /// <typeparam name="TProperty">Property type.</typeparam>
-        /// <param name="property">Target property.</param>
-        /// <param name="schemaType">Schema type.</param>
-        /// <returns>The same instance.</returns>
-        public static TProperty SetSchema<TProperty>(this TProperty property, Type schemaType)
-            where TProperty : IProperty
-        {
-            property.AssertArgumentNotNull(nameof(property));
-
-            return property.SetMetadata((IHasSchema)new HasSchemaByType(schemaType));
+            // Caches IHasSchema by each schema instance.
+            IHasSchema hasSchema = _schemasCache.GetValue(schema, sch => new HasSchema(sch));
+            return metadataProvider.SetMetadata(hasSchema);
         }
 
         /// <summary>
@@ -236,15 +172,74 @@ namespace MicroElements.Metadata.Schema
         /// </summary>
         /// <typeparam name="TProperty">Property type.</typeparam>
         /// <param name="property">Target property.</param>
-        /// <param name="schema"><see cref="IHasSchema"/> metadata.</param>
+        /// <param name="schemaProvider">Schema provider.</param>
         /// <returns>The same instance.</returns>
-        public static TProperty SetSchema<TProperty>(this TProperty property, ISchemaProvider schema)
+        public static TProperty SetSchema<TProperty>(this TProperty property, ISchemaProvider schemaProvider)
+            where TProperty : IProperty
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            schemaProvider.AssertArgumentNotNull(nameof(schemaProvider));
+
+            return property.SetSchema(new HasSchemaProvider(schemaProvider));
+        }
+
+        /// <summary>
+        /// Sets schema for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="TSchemaProvider">Schema provider.</typeparam>
+        /// <param name="property">Target property.</param>
+        /// <returns>The same instance.</returns>
+        public static IProperty<IPropertyContainer> SetSchema<TSchemaProvider>(this IProperty<IPropertyContainer> property)
+            where TSchemaProvider : ISchemaProvider, new()
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return property.SetSchema(new TSchemaProvider());
+        }
+
+        /// <summary>
+        /// Sets schema for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="TProperty">Property type.</typeparam>
+        /// <param name="property">Target property.</param>
+        /// <param name="schema">Schema.</param>
+        /// <returns>The same instance.</returns>
+        public static TProperty SetSchema<TProperty>(this TProperty property, ISchema schema)
             where TProperty : IProperty
         {
             property.AssertArgumentNotNull(nameof(property));
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.SetMetadata<TProperty, IHasSchema>(new HasSchema(schema.GetSchema()));
+            return (TProperty)property.SetSchemaInternal(schema);
+        }
+
+        /// <summary>
+        /// Sets schema for <paramref name="propertyContainer"/>.
+        /// </summary>
+        /// <param name="propertyContainer">Target property container.</param>
+        /// <param name="schema">Schema.</param>
+        /// <returns>The same instance.</returns>
+        public static IPropertyContainer SetSchema(this IPropertyContainer propertyContainer, ISchema schema)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            return (IPropertyContainer)propertyContainer.SetSchemaInternal(schema);
+        }
+
+        /// <summary>
+        /// Sets schema for <paramref name="property"/>.
+        /// </summary>
+        /// <typeparam name="TProperty">Property type.</typeparam>
+        /// <param name="property">Target property.</param>
+        /// <param name="schemaType">Schema type.</param>
+        /// <returns>The same instance.</returns>
+        public static TProperty SetSchema<TProperty>(this TProperty property, Type schemaType)
+            where TProperty : IProperty
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            return property.SetMetadata((IHasSchema)new HasSchemaByType(schemaType));
         }
 
         /// <summary>
@@ -289,10 +284,10 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Gets optional <see cref="IMutableObjectSchema"/> from <see cref="IHasSchema"/> metadata.
+        /// Gets optional <see cref="ISchema"/> from <see cref="IHasSchema"/> metadata.
         /// </summary>
         /// <param name="property">Source property.</param>
-        /// <returns>Optional <see cref="IMutableObjectSchema"/>.</returns>
+        /// <returns>Optional <see cref="ISchema"/>.</returns>
         [Pure]
         public static ISchema? GetSchema(this IProperty property)
         {
@@ -302,25 +297,15 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Gets or adds schema to property.
+        /// Creates new schema instance for property if it has schema (has <see cref="IHasSchema"/> metadata).
         /// </summary>
         /// <param name="property">Source property.</param>
-        /// <param name="factory">Schema factory.</param>
-        /// <returns>Schema attached to property.</returns>
-        public static ISchema GetOrAddSchema(this IProperty property, Func<ISchema>? factory = null)
+        /// <returns>Optional <see cref="ISchema"/>.</returns>
+        public static ISchema? GetNewSchema(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            IHasSchema? hasSchema = property.GetMetadata<IHasSchema>();
-
-            ISchema? schema = hasSchema?.Create();
-            if (schema == null)
-            {
-                schema = factory?.Invoke() ?? new MutableObjectSchema(name: property.Name);
-                property.SetSchema(schema);
-            }
-
-            return schema;
+            return property.GetHasSchema()?.Create();
         }
     }
 }

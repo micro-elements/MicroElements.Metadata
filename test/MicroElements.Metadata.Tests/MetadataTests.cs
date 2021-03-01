@@ -24,7 +24,7 @@ namespace MicroElements.Metadata.Tests
             client.GetMetadata<int>("AttachedProperty").Should().Be(42);
 
             // Get metadata for client
-            IPropertyContainer metadata = ((IMetadataProvider) client).GetInstanceMetadata();
+            IPropertyContainer metadata = ((IMetadataProvider) client).GetMetadataContainer();
             metadata.Properties.Count.Should().Be(2);
 
             // Default properties does not include Metadata from IMetadataProvider

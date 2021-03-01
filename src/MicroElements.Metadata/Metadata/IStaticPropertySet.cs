@@ -25,6 +25,9 @@ namespace MicroElements.Metadata
         public IEnumerable<IProperty> GetProperties() => GetType().GetStaticProperties();
     }
 
+    /// <summary>
+    /// Static schema gets properties from static fields and properties.
+    /// </summary>
     public interface IStaticSchema : IObjectSchemaProvider
     {
         /// <inheritdoc />
@@ -35,6 +38,9 @@ namespace MicroElements.Metadata
         }
     }
 
+    /// <summary>
+    /// Static schema gets properties from static fields and properties.
+    /// </summary>
     public class StaticSchema : IObjectSchemaProvider
     {
         /// <inheritdoc />

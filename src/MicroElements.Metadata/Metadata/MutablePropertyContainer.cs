@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 using MicroElements.Metadata.Formatters;
@@ -12,6 +13,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents object that contains properties and values for these properties.
     /// </summary>
+    [DebuggerTypeProxy(typeof(PropertyContainerDebugView))]
     public class MutablePropertyContainer : IMutablePropertyContainer
     {
         private readonly List<IPropertyValue> _propertyValues = new List<IPropertyValue>();

@@ -38,14 +38,16 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public DocumentContext DocumentContext => ColumnContext.SheetContext.DocumentContext;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CellContext"/> class.
+        /// Initializes a new instance of the <see cref="CellContext"/> struct.
         /// </summary>
         /// <param name="columnContext">ColumnContext for this cell.</param>
         /// <param name="cellMetadata">Cell metadata.</param>
         /// <param name="cell">OpenXml cell.</param>
         public CellContext(ColumnContext columnContext, IExcelMetadata? cellMetadata, Cell cell)
         {
-            ColumnContext = columnContext.AssertArgumentNotNull(nameof(columnContext));
+            columnContext.AssertArgumentNotNull(nameof(columnContext));
+
+            ColumnContext = columnContext;
             CellMetadata = cellMetadata;
             Cell = cell;
         }

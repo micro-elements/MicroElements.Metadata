@@ -93,19 +93,24 @@ namespace MicroElements.Metadata.Xml
         /// </summary>
         /// <param name="context">Parser context.</param>
         /// <param name="property">Source property.</param>
-        /// <param name="factory">Schema factory.</param>
         /// <returns>Schema attached to property.</returns>
-        public static ISchema GetOrAddSchema(this IXmlParserContext context, IProperty? property, Func<ISchema>? factory = null)
+        public static ISchema GetOrCreateNewSchemaCached(this IXmlParserContext context, IProperty? property)
         {
             if (property == null)
-                return factory?.Invoke() ?? new MutableObjectSchema();
+                return new MutableObjectSchema();
 
             if (context.SchemaCache.TryGetValue(property, out var result))
             {
                 return result;
             }
 
-            result = property.GetOrAddSchema(factory);
+            result = property.GetNewSchema();
+            if (result == null)
+            {
+                result = new MutableObjectSchema(name: property.Name);
+                property.SetSchema(result);
+            }
+
             context.SchemaCache.TryAdd(property, result);
 
             return result;
@@ -156,6 +161,22 @@ namespace MicroElements.Metadata.Xml
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets properties that was not created from schema for the property.
+        /// </summary>
+        /// <param name="parserContext">Source parser context.</param>
+        /// <param name="property">Property to get schema..</param>
+        /// <param name="recursive">Recursive search in children schemas.</param>
+        /// <returns>Properties that was not created from schema.</returns>
+        public static IEnumerable<IProperty> GetPropertiesNotFromSchema(this IXmlParserContext parserContext, IProperty property, bool recursive = true)
+        {
+            ISchema? schema = parserContext.GetSchema(property);
+            if (schema == null)
+                return Array.Empty<IProperty>();
+
+            return parserContext.GetPropertiesNotFromSchema(schema, recursive: recursive);
         }
     }
 }

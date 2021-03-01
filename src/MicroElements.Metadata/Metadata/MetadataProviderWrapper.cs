@@ -7,7 +7,7 @@ namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents <see cref="IMetadataProvider"/> wrapper for any object.
-    /// If object is <see cref="IMetadataProvider"/> then returns <see cref="IMetadataProvider.GetInstanceMetadata"/>,
+    /// If object is <see cref="IMetadataProvider"/> then returns <see cref="IMetadataProvider.GetMetadataContainer"/>,
     /// otherwise returns <see cref="MetadataGlobalCache.GetInstanceMetadata"/>.
     /// </summary>
     public readonly struct MetadataProviderWrapper : IMetadataProvider
@@ -27,24 +27,24 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets instance metadata.
         /// </summary>
-        public IPropertyContainer Metadata => GetInstanceMetadata(autoCreate: false);
+        public IPropertyContainer Metadata => GetMetadataContainer(autoCreate: false);
 
         /// <inheritdoc />
-        public IPropertyContainer GetInstanceMetadata(bool autoCreate = false)
+        public IPropertyContainer GetMetadataContainer(bool autoCreate = false)
         {
             return _instance switch
             {
-                IMetadataProvider metadataProvider => metadataProvider.GetInstanceMetadata(autoCreate),
+                IMetadataProvider metadataProvider => metadataProvider.GetMetadataContainer(autoCreate),
                 _ => _instance.GetInstanceMetadata(autoCreate),
             };
         }
 
         /// <inheritdoc />
-        public void SetInstanceMetadata(IPropertyContainer metadata)
+        public void SetMetadataContainer(IPropertyContainer metadata)
         {
             if (_instance is IMetadataProvider metadataProvider)
             {
-                metadataProvider.SetInstanceMetadata(metadata);
+                metadataProvider.SetMetadataContainer(metadata);
                 return;
             }
 

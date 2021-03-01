@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -12,6 +13,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents object that contains properties and values for these properties.
     /// </summary>
+    [DebuggerTypeProxy(typeof(PropertyContainerDebugView))]
     public class ConcurrentMutablePropertyContainer : IMutablePropertyContainer
     {
         private readonly object _syncRoot = new object();

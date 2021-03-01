@@ -46,10 +46,11 @@ namespace MicroElements.Metadata.Tests
             public static readonly IProperty<string> LastName = new Property<string>("LastName")
                 .AddValidation(property => property.Required());
 
-            public static readonly IProperty<Sex> Sex = new Property<Sex>("Sex");
+            public static readonly IProperty<Sex> Sex = new Property<Sex>("Sex")
+                .SetSchema(new SimpleTypeSchema());
 
             public static readonly IProperty<IPropertyContainer> Address = new Property<IPropertyContainer>("Address")
-                .SetSchema(new AddressSchema())
+                .SetSchema<AddressSchema>()
                 .WithDescription("Address");
 
             public static readonly IProperty<IPropertyContainer> Addresses = new Property<IPropertyContainer>("Addresses")
@@ -122,6 +123,7 @@ namespace MicroElements.Metadata.Tests
 
             IObjectSchema personSchema = new PersonSchema().GetObjectSchema();
             var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
+            IXmlParserContext xmlParserContext = container.GetMetadata<IXmlParserContext>();
 
             var validationRules = personSchema.GetValidationRules().ToArray();
             var messages = container.Validate(validationRules).ToArray();
@@ -129,10 +131,13 @@ namespace MicroElements.Metadata.Tests
             messages[0].FormattedMessage.Should().Be("FirstName length should be greater then 1 but was 1");
             messages[1].FormattedMessage.Should().Be("LastName is marked as required but is not exists.");
             
-            IObjectSchema addressSchema = personSchema.GetProperty("Address")!.GetSchema()!.ToObjectSchema();
-            addressSchema.Properties.Should().HaveCount(3);
+            IObjectSchema addressSchemaStatic = personSchema.GetProperty("Address")!.GetSchema()!.ToObjectSchema();
+            addressSchemaStatic.Properties.Should().HaveCount(2);
 
-            IProperty[] notFromSchema = addressSchema.GetPropertiesNotFromSchema().ToArray();
+            IObjectSchema addressSchemaReal = xmlParserContext.GetSchema(personSchema.GetProperty("Address")).ToObjectSchema();
+            addressSchemaReal.Properties.Should().HaveCount(3);
+
+            IProperty[] notFromSchema = addressSchemaReal.GetPropertiesNotFromSchema().ToArray();
             notFromSchema.Should().HaveCount(1);
             notFromSchema[0].Name.Should().Be("Unknown");
             notFromSchema[0].Type.Should().Be(typeof(string));

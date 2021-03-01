@@ -60,32 +60,6 @@ namespace MicroElements.Metadata.Xml
         /// <param name="schema">Source schema.</param>
         /// <param name="recursive">Recursive search in children schemas.</param>
         /// <returns>Properties that was not created from schema.</returns>
-        public static IEnumerable<IProperty> GetPropertiesNotFromSchema(this IPropertySet schema, bool recursive = true)
-        {
-            IEnumerable<IProperty> properties = schema.GetProperties();
-            foreach (IProperty property in properties)
-            {
-                if (property.GetIsNotFromSchema())
-                    yield return property;
-                if (recursive)
-                {
-                    if (property.GetSchema() is { } subSchema)
-                    {
-                        foreach (IProperty subProperty in subSchema.GetPropertiesNotFromSchema(recursive))
-                        {
-                            yield return subProperty;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets properties that was not created from schema.
-        /// </summary>
-        /// <param name="schema">Source schema.</param>
-        /// <param name="recursive">Recursive search in children schemas.</param>
-        /// <returns>Properties that was not created from schema.</returns>
         public static IEnumerable<IProperty> GetPropertiesNotFromSchema(this ISchema schema, bool recursive = true)
         {
             IEnumerable<IProperty> properties = schema.GetProperties();

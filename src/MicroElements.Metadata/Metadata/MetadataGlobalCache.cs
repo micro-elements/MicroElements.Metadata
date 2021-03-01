@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
-using MicroElements.Functional;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata
 {

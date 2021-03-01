@@ -15,6 +15,6 @@ namespace MicroElements.Metadata
         public bool Equals(IProperty x, IProperty y) => ReferenceEquals(x, y);
 
         /// <inheritdoc/>
-        public int GetHashCode(IProperty obj) => HashCode.Combine(obj);
+        public int GetHashCode(IProperty obj) => obj.GetHashCode();
     }
 }

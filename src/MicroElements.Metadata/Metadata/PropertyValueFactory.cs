@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using MicroElements.Core;
-using MicroElements.Functional;
+
 
 namespace MicroElements.Metadata
 {
@@ -124,7 +124,9 @@ namespace MicroElements.Metadata
 
             public PropertyValueKeyComparer(IEqualityComparer<IProperty> propertyComparer)
             {
-                _propertyComparer = propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
+                propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
+
+                _propertyComparer = propertyComparer;
             }
 
             /// <inheritdoc/>

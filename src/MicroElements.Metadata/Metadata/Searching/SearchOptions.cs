@@ -133,7 +133,10 @@ namespace MicroElements.Metadata
         /// Returns true if options is default.
         /// </summary>
         /// <returns>True if options is default.</returns>
-        public bool IsDefault() => this == default;
+        public bool IsDefault()
+        {
+            return this == default || this == Default;
+        }
 
         /// <inheritdoc />
         public bool Equals(SearchOptions other) =>
@@ -173,6 +176,11 @@ namespace MicroElements.Metadata
         {
             StringBuilder stringBuilder = new StringBuilder();
 
+            if (IsDefault())
+                stringBuilder.AppendFormat("DefaultSearch: ");
+
+            if (_propertyComparer != null)
+                stringBuilder.AppendFormat("CompareBy({0}), ", _propertyComparer.GetType().Name);
             if (_searchProperty != null)
                 stringBuilder.AppendFormat("SearchProperty({0}), ", _searchProperty);
             if (_searchInParent != null)

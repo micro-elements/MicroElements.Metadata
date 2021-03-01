@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Metadata
@@ -10,6 +11,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// ReadOnly property container.
     /// </summary>
+    [DebuggerTypeProxy(typeof(PropertyContainerDebugView))]
     public partial class PropertyContainer : IPropertyContainer
     {
         internal const string EmptyName = "Empty";

@@ -22,7 +22,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 return false;
 
-            return metadataProvider.GetInstanceMetadata(autoCreate: false).Count > 0;
+            return metadataProvider.GetMetadataContainer(autoCreate: false).Count > 0;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: false);
+            var metadata = metadataProvider.GetMetadataContainer(autoCreate: false);
             if (metadata.Count == 0)
                 return Option<TMetadata>.None;
 
@@ -107,7 +107,7 @@ namespace MicroElements.Metadata
                 throw new ArgumentNullException(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: true);
+            var metadata = metadataProvider.GetMetadataContainer(autoCreate: true);
 
             if (metadata is IMutablePropertyContainer mutablePropertyContainer)
             {
@@ -122,7 +122,7 @@ namespace MicroElements.Metadata
                     var mutable = metadata.AsMutable();
                     IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
                     mutable.SetValue(metadataProperty, data);
-                    metadataProvider.SetInstanceMetadata(mutable);
+                    metadataProvider.SetMetadataContainer(mutable);
                 }
             }
 
@@ -269,7 +269,7 @@ namespace MicroElements.Metadata
         {
             if (source != null && target != null)
             {
-                IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetInstanceMetadata(autoCreate: false);
+                IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
                 if (sourceMetadata.Count > 0)
                 {
                     IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
@@ -288,7 +288,7 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            return metadataProvider.GetInstanceMetadata(autoCreate: false);
+            return metadataProvider.GetMetadataContainer(autoCreate: false);
         }
 
         /// <summary>
@@ -301,13 +301,13 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            var metadata = metadataProvider.GetInstanceMetadata(autoCreate: false);
+            var metadata = metadataProvider.GetMetadataContainer(autoCreate: false);
 
             if (metadata is IMutablePropertyContainer mutable)
                 return mutable;
 
             var mutableFromReadOnly = new MutablePropertyContainer(metadata.Properties);
-            metadataProvider.SetInstanceMetadata(mutableFromReadOnly);
+            metadataProvider.SetMetadataContainer(mutableFromReadOnly);
             return mutableFromReadOnly;
         }
 
@@ -321,13 +321,13 @@ namespace MicroElements.Metadata
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            if (metadataProvider.GetInstanceMetadata(autoCreate: false) is IMutablePropertyContainer metadata)
+            if (metadataProvider.GetMetadataContainer(autoCreate: false) is IMutablePropertyContainer metadata)
             {
                 var readOnlyMetadata = metadata.ToReadOnly(flattenHierarchy: true);
-                metadataProvider.SetInstanceMetadata(readOnlyMetadata);
+                metadataProvider.SetMetadataContainer(readOnlyMetadata);
             }
 
-            return metadataProvider.GetInstanceMetadata(autoCreate: false);
+            return metadataProvider.GetMetadataContainer(autoCreate: false);
         }
     }
 }

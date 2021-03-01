@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using MicroElements.Functional;
@@ -132,7 +131,7 @@ namespace MicroElements.Metadata.Xml
 
                     if (propertyElement.HasElements)
                     {
-                        IObjectSchema propertyInternalSchema = context.GetOrAddSchema(property).ToObjectSchema();
+                        IObjectSchema propertyInternalSchema = context.GetOrCreateNewSchemaCached(property).ToObjectSchema();
 
                         IPropertyContainer? internalObject = ParseXmlElement(propertyElement, propertyInternalSchema, settings, context);
                         if (internalObject != null && internalObject.Count > 0)
@@ -140,12 +139,16 @@ namespace MicroElements.Metadata.Xml
                             if (settings.SetSchemaForObjects)
                                 internalObject.SetSchema(propertyInternalSchema);
 
-                            if (property == null && objectSchema is IMutableObjectSchema mutableObjectSchema)
+                            if (property == null)
                             {
-                                property = mutableObjectSchema
-                                    .AddProperty(new Property<IPropertyContainer>(propertyName)
-                                        .SetIsNotFromSchema()
-                                        .SetSchema(propertyInternalSchema));
+                                property = new Property<IPropertyContainer>(propertyName)
+                                    .SetIsNotFromSchema()
+                                    .SetSchema(propertyInternalSchema);
+
+                                if (objectSchema is IMutableObjectSchema mutableObjectSchema)
+                                {
+                                    property = mutableObjectSchema.AddProperty(property);
+                                }
                             }
 
                             IPropertyValue propertyValue = settings.PropertyValueFactory.CreateUntyped(property, internalObject);
@@ -171,11 +174,15 @@ namespace MicroElements.Metadata.Xml
                             continue;
                         }
 
-                        if (property == null && objectSchema is IMutableObjectSchema mutableObjectSchema)
+                        if (property == null)
                         {
-                            property = mutableObjectSchema
-                                .AddProperty(new Property<string>(propertyName)
-                                    .SetIsNotFromSchema());
+                            property = new Property<string>(propertyName)
+                                .SetIsNotFromSchema();
+
+                            if (objectSchema is IMutableObjectSchema mutableObjectSchema)
+                            {
+                                property = mutableObjectSchema.AddProperty(property);
+                            }
                         }
 
                         IValueParser valueParser = context.GetParserCached(property);
@@ -283,13 +290,13 @@ namespace MicroElements.Metadata.Xml
 
                     if (property != null)
                     {
-                        var propertySchema = context.GetOrAddSchema(property).ToObjectSchema();
+                        var propertySchema = context.GetOrCreateNewSchemaCached(property).ToObjectSchema();
                         var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
                         container.Add(settings.PropertyValueFactory.CreateUntyped(property, compositeValue));
                     }
                     else if (xmlReader.Depth > rootDepth)
                     {
-                        var propertySchema = context.GetOrAddSchema(property).ToObjectSchema();
+                        var propertySchema = context.GetOrCreateNewSchemaCached(property).ToObjectSchema();
                         var compositeValue = ReadXmlElement(xmlReader, propertySchema, settings, context);
 
                         if (compositeValue is IPropertyContainer internalObject)

@@ -25,4 +25,11 @@ namespace MicroElements.Metadata.Schema
         /// </summary>
         string? Description { get; }
     }
+
+    /// <summary>
+    /// Represents base strong typed schema interface.
+    /// </summary>
+    public interface ISchema<T> : ISchema
+    {
+    }
 }

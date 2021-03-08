@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -28,7 +29,7 @@ namespace MicroElements.Metadata
         public IProperty<T> TargetProperty { get; private set; }
 
         /// <inheritdoc />
-        public Func<T>? DefaultValue { get; private set; }
+        public IDefaultValue<T>? DefaultValue { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
@@ -36,7 +37,7 @@ namespace MicroElements.Metadata
         /// <param name="sourceName">Source name.</param>
         /// <param name="valueParser">Value parser.</param>
         /// <param name="targetProperty">Target property.</param>
-        public PropertyParser(string sourceName, IValueParser<T> valueParser, IProperty<T>? targetProperty)
+        public PropertyParser(string? sourceName, IValueParser<T> valueParser, IProperty<T>? targetProperty)
         {
             SourceName = sourceName ?? $"Undefined_{Guid.NewGuid()}";
             ValueParser = valueParser.AssertArgumentNotNull(nameof(valueParser));
@@ -65,7 +66,7 @@ namespace MicroElements.Metadata
         /// <returns>The same instance.</returns>
         public PropertyParser<T> SetDefaultValue(T defaultValue)
         {
-            DefaultValue = () => defaultValue;
+            DefaultValue = new DefaultValue<T>(defaultValue);
             return this;
         }
     }

@@ -34,52 +34,33 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Sets <see cref="IRequired"/> metadata for property.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Source property.</param>
-        /// <returns>The same property.</returns>
-        public static IProperty<T> SetRequired<T>(this IProperty<T> property)
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="isRequired">Is property required or not.</param>
+        /// <returns>The same schema.</returns>
+        public static TSchema SetRequired<TSchema>(this TSchema schema, bool isRequired = true)
+            where TSchema : ISchema
         {
-            property.AssertArgumentNotNull(nameof(property));
+            schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.SetMetadata(Required.Instance);
+            if (isRequired)
+                schema.SetMetadata(Required.Instance);
+            else
+                schema.SetMetadata<TSchema, IRequired>(null, ValueSource.NotDefined);
+
+            return schema;
         }
 
         /// <summary>
         /// Gets optional <see cref="IRequired"/> metadata.
         /// </summary>
-        /// <param name="property">Source property.</param>
+        /// <param name="schema">Source property.</param>
         /// <returns>Optional <see cref="IRequired"/>.</returns>
-        public static IRequired? GetRequired(this IProperty property)
+        public static IRequired? GetRequired(this ISchema schema)
         {
-            property.AssertArgumentNotNull(nameof(property));
+            schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.GetMetadata<IRequired>();
+            return schema.GetMetadata<IRequired>();
         }
     }
-
-    [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface INotEmpty : IMetadata
-    {
-        // From FluentValidation
-        //protected override bool IsValid(PropertyValidatorContext context)
-        //{
-        //    switch (context.PropertyValue)
-        //    {
-        //        case null:
-        //        case string s when string.IsNullOrWhiteSpace(s):
-        //        case ICollection c when c.Count == 0:
-        //        case Array a when a.Length == 0:
-        //        case IEnumerable e when !e.Cast<object>().Any():
-        //            return false;
-        //    }
-        //    if (Equals(context.PropertyValue, _defaultValueForType))
-        //    {
-        //        return false;
-        //    }
-        //    return true;
-        //}
-    }
-
-    // FV_NotEmpty: NotNull | NotDefault | NotEmptyCollection
-    // NotNull->IAllowNull(false), NotDefault->IAllowDefault(false), NotEmptyCollection->IMinItems(>0)
 }

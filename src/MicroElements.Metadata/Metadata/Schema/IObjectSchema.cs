@@ -30,33 +30,6 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
-    /// Provides schema.
-    /// </summary>
-    public interface ISchemaProvider
-    {
-        /// <summary>
-        /// Gets schema instance.
-        /// </summary>
-        /// <returns>Schema instance.</returns>
-        ISchema GetSchema();
-    }
-
-    /// <summary>
-    /// Provides object schema.
-    /// </summary>
-    public interface IObjectSchemaProvider : ISchemaProvider
-    {
-        /// <inheritdoc />
-        ISchema ISchemaProvider.GetSchema() => GetObjectSchema();
-
-        /// <summary>
-        /// Gets schema instance.
-        /// </summary>
-        /// <returns>Schema instance.</returns>
-        IObjectSchema GetObjectSchema();
-    }
-
-    /// <summary>
     /// Schema extensions.
     /// </summary>
     public static partial class SchemaExtensions
@@ -89,7 +62,6 @@ namespace MicroElements.Metadata.Schema
 
             return new MutableObjectSchema(name: schema.Name, properties: schema.GetProperties());
         }
-
     }
 
     /// <summary>
@@ -108,10 +80,9 @@ namespace MicroElements.Metadata.Schema
       "$schema": "http://json-schema.org/draft-07/schema#",
       "$id": "http://example.com/product.schema.json",
 
-      "title": "Product", //IProperty. Name
-
-      "description": "A product from Acme's catalog", // IProperty.Description
-      "type": "object", // IProperty.Type
+      "title": "Product",
+      "description": "A product from Acme's catalog",
+      "type": "object",
 
       "properties": {
         "productId": {

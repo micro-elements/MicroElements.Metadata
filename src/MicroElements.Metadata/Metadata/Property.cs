@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -22,9 +22,6 @@ namespace MicroElements.Metadata
         /// </summary>
         public static readonly IProperty<T> Empty = new Property<T>(name: "empty");
 
-        [return: MaybeNull]
-        private static T GetDefaultValue() => default;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Property{T}"/> class.
         /// </summary>
@@ -32,9 +29,11 @@ namespace MicroElements.Metadata
         public Property(string name)
         {
             Name = name;
+
+            // other properties can be configured with method With
             Description = null;
             Alias = null;
-            DefaultValue = GetDefaultValue;
+            DefaultValue = DefaultValue<T>.Default;
             Examples = Array.Empty<T>();
             Calculator = null;
         }
@@ -53,11 +52,12 @@ namespace MicroElements.Metadata
             string name,
             string? description,
             string? alias,
-            Func<T> defaultValue,
+            IDefaultValue<T> defaultValue,
             IReadOnlyList<T> examples,
             IPropertyCalculator<T>? calculator)
         {
             Name = name;
+
             Description = description;
             Alias = alias;
             DefaultValue = defaultValue.AssertArgumentNotNull(nameof(defaultValue));
@@ -78,7 +78,7 @@ namespace MicroElements.Metadata
         public string? Alias { get; }
 
         /// <inheritdoc />
-        public Func<T> DefaultValue { get; }
+        public IDefaultValue<T> DefaultValue { get; }
 
         /// <inheritdoc />
         public IReadOnlyList<T> Examples { get; }
@@ -120,7 +120,7 @@ namespace MicroElements.Metadata
             string? name = null,
             string? description = null,
             string? alias = null,
-            Func<T>? defaultValue = null,
+            IDefaultValue<T>? defaultValue = null,
             IReadOnlyList<T>? examples = null,
             IPropertyCalculator<T>? calculator = null)
         {
@@ -276,9 +276,7 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            T GetConstValue() => constDefaultValue;
-
-            return property.With(defaultValue: GetConstValue);
+            return property.With(defaultValue: new DefaultValue<T>(constDefaultValue));
         }
 
         /// <summary>
@@ -293,7 +291,7 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.With(defaultValue: defaultValue);
+            return property.With(defaultValue: new DefaultValueLazy<T>(defaultValue));
         }
 
         /// <summary>

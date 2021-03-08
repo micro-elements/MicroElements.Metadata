@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using MicroElements.Metadata.Schema;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -99,7 +100,7 @@ namespace MicroElements.Metadata.Tests
             property.Alias.Should().BeNull();
             property.Examples.Should().NotBeNull().And.BeEmpty();
             property.DefaultValue.Should().NotBeNull();
-            property.DefaultValue().Should().Be(default(T));
+            property.DefaultValue.Value.Should().Be(default(T));
             property.Calculator.Should().BeNull();
         }
 
@@ -110,7 +111,7 @@ namespace MicroElements.Metadata.Tests
                 .With(name: "test")
                 .With(alias: "alias")
                 .With(description: "description")
-                .With(defaultValue: () => 1)
+                .With(defaultValue: new DefaultValueLazy<int>(() => 1))
                 .With(examples: new[] { 0, 1 })
                 .With(calculator: new PropertyCalculator<int>(container => 2));
             return property;
@@ -124,7 +125,7 @@ namespace MicroElements.Metadata.Tests
             property.Name.Should().Be(name);
             property.Alias.Should().Be(alias);
             property.Description.Should().Be("description");
-            property.DefaultValue().Should().Be(1);
+            property.DefaultValue.Value.Should().Be(1);
             property.Examples.Should().BeEquivalentTo(new[] {0, 1});
             property.Calculator.Should().NotBeNull();
         }

@@ -9,32 +9,41 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Formatting extensions.
     /// </summary>
-    internal static class StringFormatter
+    public static class StringFormatter
     {
         /// <summary>
         /// Default string formatting for most used types.
         /// </summary>
         /// <param name="value">Value to format.</param>
+        /// <param name="nullResultValue">Value to return if input value is null or formatted result is null.</param>
         /// <returns>Formatted string.</returns>
-        public static string FormatValue(this object? value)
+        public static string FormatValue(this object? value, string nullResultValue = "null")
         {
             if (value == null)
-                return "null";
+                return nullResultValue;
 
-            return Formatter.FullRecursiveFormatter.TryFormat(value) ?? "null";
+            return Formatter.FullRecursiveFormatter.TryFormat(value) ?? nullResultValue;
+        }
 
-            if (value is string stringValue)
-                return stringValue;
-
-            Type type = value.GetType();
-
-            if (type.FullName == "NodaTime.LocalDate" && value is IFormattable localDate)
-                return localDate.ToString("yyyy-MM-dd", null);
-
-            if ((type.FullName == "NodaTime.LocalDateTime" || value is DateTime) && value is IFormattable localDateTime)
-                return localDateTime.ToString("yyyy-MM-ddTHH:mm:ss.FFF", null);
-
-            return Functional.StringFormatter.DefaultFormatValue(value);
+        /// <summary>
+        /// Tries to format value with provided formatter.
+        /// In case of error default formatting will be used.
+        /// </summary>
+        /// <typeparam name="T">Value type.</typeparam>
+        /// <param name="formatter">Formatter.</param>
+        /// <param name="value">Value to format.</param>
+        /// <param name="valueType">Optional value type.</param>
+        /// <returns>Formatted string.</returns>
+        public static string? TryFormat<T>(this IValueFormatter formatter, T? value, Type? valueType = null)
+        {
+            try
+            {
+                return formatter.Format(value, valueType ?? typeof(T));
+            }
+            catch
+            {
+                return DefaultToStringFormatter.Instance.Format(value, valueType ?? typeof(T));
+            }
         }
     }
 }

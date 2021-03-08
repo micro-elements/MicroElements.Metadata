@@ -61,7 +61,7 @@ namespace MicroElements.Metadata
                 IPropertyParser<T> propertyParser = (IPropertyParser<T>)propertyParserUntyped;
                 if (propertyParser.DefaultValue != null)
                 {
-                    var defaultValue = propertyParser.DefaultValue();
+                    var defaultValue = propertyParser.DefaultValue.Value;
                     return ParseResult.Success<IPropertyValue>(new PropertyValue<T>(propertyParser.TargetProperty, defaultValue, ValueSource.DefaultValue));
                 }
 

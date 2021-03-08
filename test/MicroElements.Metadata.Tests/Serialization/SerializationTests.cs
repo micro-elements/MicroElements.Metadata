@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using FluentAssertions;
 using MicroElements.Functional;
+using MicroElements.Metadata;
 using MicroElements.Metadata.Diff;
 using MicroElements.Metadata.Formatters;
 using MicroElements.Metadata.NewtonsoftJson;

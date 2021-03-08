@@ -268,8 +268,8 @@ namespace MicroElements.Metadata
         /// <param name="ignoreCase">IgnoreCase flag.</param>
         /// <returns>compare result.</returns>
         public static bool IsMatchesByNameOrAlias(
-            [AllowNull] this IProperty property,
-            [AllowNull] string name,
+            this IProperty? property,
+            string? name,
             bool ignoreCase = false)
         {
             StringComparison stringComparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

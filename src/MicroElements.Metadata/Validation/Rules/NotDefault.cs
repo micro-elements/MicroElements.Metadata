@@ -13,7 +13,7 @@ namespace MicroElements.Validation.Rules
     /// <typeparam name="T">Property type.</typeparam>
     public class NotDefault<T> : PropertyValidationRule<T>
     {
-        private readonly T _defaultValue;
+        private readonly T? _defaultValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NotDefault{T}"/> class.
@@ -22,13 +22,14 @@ namespace MicroElements.Validation.Rules
         public NotDefault(IProperty<T> property)
             : base(property, "{propertyName} should not have default value {value}.")
         {
-            _defaultValue = Property.DefaultValue();
+            _defaultValue = Property.DefaultValue.Value;
         }
 
         /// <inheritdoc />
         protected override bool IsValid(T? value)
         {
-            return !EqualityComparer<T>.Default.Equals(value, _defaultValue);
+            bool equalsToDefaultValue = EqualityComparer<T>.Default.Equals(value, _defaultValue);
+            return equalsToDefaultValue is false;
         }
     }
 

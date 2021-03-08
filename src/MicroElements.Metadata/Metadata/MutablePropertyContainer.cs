@@ -75,7 +75,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to store.</param>
         /// <param name="valueSource">Value source.</param>
         /// <returns><see cref="IPropertyValue{T}"/> that holds value for property.</returns>
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, [AllowNull] T value, ValueSource? valueSource = default)
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T? value, ValueSource? valueSource = default)
         {
             property.AssertArgumentNotNull(nameof(property));
 

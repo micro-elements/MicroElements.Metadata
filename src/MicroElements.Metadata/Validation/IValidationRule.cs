@@ -67,10 +67,9 @@ namespace MicroElements.Validation
     {
         public static IPropertyValidationRule<T> As<T>(this IValidationRule validationRule) => (IPropertyValidationRule<T>)validationRule;
 
-        public static string GetTypeName(this IPropertyValidationRule validationRule) => $"{validationRule.GetType().GetTypeName()}({validationRule.PropertyUntyped})";
+        public static string GetValidatorName(this IPropertyValidationRule validationRule) => $"{validationRule.GetType().GetTypeName()}({validationRule.PropertyUntyped})";
 
         public static string GetTypeName(this Type type)
-
         {
             return GetFriendlyName(type);
             return DefaultMapperSettings.Instance.GetTypeName(type);

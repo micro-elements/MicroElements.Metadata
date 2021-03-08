@@ -11,14 +11,20 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
-    /// Marks immutable metadata.
-    /// Immutable objects can be cached and shared.
+    /// Marks metadata as ReadOnly.
+    /// - ReadOnly objects can have methods for object modification but modifications are prohibited.
+    /// - ReadOnly objects can be cached and shared with cautions (if object can not be modified outside).
     /// </summary>
-    public interface IImmutable
+    public interface IReadOnly
     {
     }
 
-    public interface IReadOnly
+    /// <summary>
+    /// Marks metadata as Immutable.
+    /// - Immutable objects has no methods for object modification.
+    /// - Immutable objects can be cached and shared.
+    /// </summary>
+    public interface IImmutable : IReadOnly
     {
     }
 }

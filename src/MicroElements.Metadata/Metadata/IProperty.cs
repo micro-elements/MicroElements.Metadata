@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using MicroElements.Metadata.Schema;
 
@@ -23,7 +22,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets default value for property.
         /// </summary>
-        Func<T> DefaultValue { get; }
+        IDefaultValue<T> DefaultValue { get; }
 
         /// <summary>
         /// Gets property value calculator.

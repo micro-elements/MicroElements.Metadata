@@ -83,7 +83,7 @@ namespace MicroElements.Metadata
         #region Mutability
 
         /// <inheritdoc />
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, [AllowNull] T value, ValueSource? valueSource = default) =>
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T? value, ValueSource? valueSource = default) =>
             DoOnLock(() => _propertyContainer.SetValue(property, value, valueSource));
 
         /// <inheritdoc />

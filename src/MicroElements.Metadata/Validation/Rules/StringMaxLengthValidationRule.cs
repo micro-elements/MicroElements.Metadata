@@ -24,20 +24,20 @@ namespace MicroElements.Validation.Rules
             : base(property)
         {
             _maxLength = maxLength ?? property.GetMetadata<IStringMaxLength>();
-            if (_maxLength != null && _maxLength.MaxLength.HasValue)
+            if (_maxLength != null)
             {
                 this.SetDefaultMessageFormat("Value '{value}' is too long (length: {length}, maxLength: {maxLength})");
                 this.ConfigureMessage((message, value, pc) =>
                     message
                         .WithProperty("length", GetLength(value.ValueUntyped as string))
-                        .WithProperty("maxLength", _maxLength.MaxLength.Value));
+                        .WithProperty("maxLength", _maxLength.MaxLength));
             }
         }
 
         /// <inheritdoc />
         protected override bool IsValid(string? value)
         {
-            if (_maxLength != null && _maxLength.MaxLength.HasValue)
+            if (_maxLength != null)
             {
                 int valueLength = GetLength(value);
                 return valueLength <= _maxLength.MaxLength;

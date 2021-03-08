@@ -88,7 +88,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     return propertyValue.Value;
             }
 
-            return property.DefaultValue();
+            return property.DefaultValue.Value;
         }
     }
 

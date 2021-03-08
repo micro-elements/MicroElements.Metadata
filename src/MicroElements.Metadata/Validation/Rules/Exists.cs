@@ -39,7 +39,7 @@ namespace MicroElements.Validation.Rules
         }
 
         /// <inheritdoc />
-        public override string ToString() => this.GetTypeName();
+        public override string ToString() => this.GetValidatorName();
     }
 
     /// <summary>

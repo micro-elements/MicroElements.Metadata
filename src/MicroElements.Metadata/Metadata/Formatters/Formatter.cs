@@ -3,6 +3,9 @@
 
 namespace MicroElements.Metadata.Formatters
 {
+    /// <summary>
+    /// String formatting.
+    /// </summary>
     public static class Formatter
     {
         /// <summary>
@@ -20,6 +23,9 @@ namespace MicroElements.Metadata.Formatters
             .With(new ValueTuplePairFormatter(SingleValueFormatter))
             .With(DefaultToStringFormatter.Instance);
 
+        /// <summary>
+        /// Gets Recursive formatter that uses itself for collections and key value pairs and tuples.
+        /// </summary>
         public static IValueFormatter FullRecursiveFormatter { get; } = new CompositeFormatter()
             .With(new DefaultFormatProvider().GetFormatters())
             .With(new CollectionFormatter(new RuntimeFormatter(() => FullRecursiveFormatter)))

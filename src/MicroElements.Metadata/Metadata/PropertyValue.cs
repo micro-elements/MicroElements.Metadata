@@ -17,9 +17,7 @@ namespace MicroElements.Metadata
         public IProperty<T> Property { get; }
 
         /// <inheritdoc />
-        [MaybeNull]
-        [AllowNull]
-        public T Value { get; }
+        public T? Value { get; }
 
         /// <inheritdoc />
         public IProperty PropertyUntyped => Property;
@@ -36,7 +34,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Source property.</param>
         /// <param name="value">Value for property.</param>
         /// <param name="source">The source for value.</param>
-        public PropertyValue(IProperty<T> property, [AllowNull] T value, ValueSource? source = null)
+        public PropertyValue(IProperty<T> property, T? value, ValueSource? source = null)
         {
             Property = property ?? throw new ArgumentNullException(nameof(property));
             Value = value;

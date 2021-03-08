@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace MicroElements.Metadata.Schema
 {
+    /// <summary>
+    /// Mutable object schema.
+    /// </summary>
     public class MutableObjectSchema : IMutableObjectSchema
     {
         private readonly List<IProperty> _properties = new List<IProperty>();
@@ -25,7 +28,7 @@ namespace MicroElements.Metadata.Schema
         public IReadOnlyCollection<IProperty> Properties => _properties;
 
         /// <inheritdoc />
-        public ISchemaCombinator? Combinator { get; }
+        public ISchemaCombinator? Combinator => this.GetSchemaCombinator(CombinatorType.AllOf);
 
         public MutableObjectSchema(
             string? name = null,
@@ -37,7 +40,9 @@ namespace MicroElements.Metadata.Schema
             Name = name;
             Type = type ?? typeof(IPropertyContainer);
             Description = description;
-            Combinator = combinator;
+
+            if (combinator != null)
+                this.SetSchemaCombinator(combinator);
 
             if (properties != null)
             {
@@ -67,6 +72,22 @@ namespace MicroElements.Metadata.Schema
         public override string ToString()
         {
             return $"{Name}. Mutable, Count: {_properties.Count}}}";
+        }
+    }
+
+    /// <summary>
+    /// Schema extensions.
+    /// </summary>
+    public static partial class SchemaExtensions
+    {
+        public static IMutableObjectSchema ToSchema(this IPropertySet propertySet)
+        {
+            if (propertySet is IMutableObjectSchema schema)
+            {
+                return schema;
+            }
+
+            return new MutableObjectSchema(name: propertySet.GetType().Name, properties: propertySet);
         }
     }
 }

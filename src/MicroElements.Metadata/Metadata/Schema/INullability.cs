@@ -56,27 +56,29 @@ namespace MicroElements.Metadata.Schema
     public static partial class SchemaExtensions
     {
         /// <summary>
-        /// Sets <see cref="INullability"/> metadata for property.
+        /// Sets <see cref="INullability"/> metadata for the schema.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="property">Source property.</param>
+        /// <typeparam name="TSchema">Schema.</typeparam>
+        /// <param name="schema">Source schema.</param>
         /// <param name="allowNull">Value indicating that property can contain null value.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetAllowNull<T>(this IProperty<T> property, bool allowNull = true)
+        public static TSchema SetAllowNull<TSchema>(this TSchema schema, bool allowNull = true)
+            where TSchema : ISchema
         {
-            property.AssertArgumentNotNull(nameof(property));
+            schema.AssertArgumentNotNull(nameof(schema));
 
             INullability allowNullMetadata = allowNull ? AllowNull.Instance : DisallowNull.Instance;
-            return property.SetMetadata(allowNullMetadata);
+            return schema.SetMetadata(allowNullMetadata);
         }
 
         /// <summary>
         /// Sets <see cref="INullability"/> metadata to <see cref="AllowNull"/>.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
+        /// <typeparam name="TSchema">Schema.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetNullable<T>(this IProperty<T> property)
+        public static TSchema SetNullable<TSchema>(this TSchema property)
+            where TSchema : ISchema
         {
             property.AssertArgumentNotNull(nameof(property));
             return property.SetMetadata(AllowNull.Instance);
@@ -85,10 +87,11 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Sets <see cref="INullability"/> metadata to <see cref="DisallowNull"/>.
         /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
+        /// <typeparam name="TSchema">Schema.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetNotNull<T>(this IProperty<T> property)
+        public static TSchema SetNotNull<TSchema>(this TSchema property)
+            where TSchema : ISchema
         {
             property.AssertArgumentNotNull(nameof(property));
             return property.SetMetadata(DisallowNull.Instance);
@@ -100,7 +103,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="INullability"/> metadata.</returns>
         [Pure]
-        public static INullability? GetNullability(this IProperty property)
+        public static INullability? GetNullability(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -114,7 +117,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="INullability"/>.</returns>
         [Pure]
-        public static INullability GetOrEvaluateNullability(this IProperty property)
+        public static INullability GetOrEvaluateNullability(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 

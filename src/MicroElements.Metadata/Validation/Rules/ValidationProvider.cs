@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Schema;
@@ -16,18 +15,14 @@ namespace MicroElements.Validation.Rules
     public class ValidationProvider : IValidationProvider
     {
         /// <summary>
-        /// Static instance can be used because provider is stateless.
+        /// Gets static instance. Static instance can be used because provider is stateless.
         /// </summary>
         public static ValidationProvider Instance { get; } = new ValidationProvider();
 
         /// <inheritdoc />
         public IEnumerable<IValidationRule> GetValidationRules(IProperty property)
         {
-            IEnumerable<IMetadata> metadataObjects = property
-                .GetMetadataContainer(autoCreate: false)
-                .Select(propertyValue => propertyValue.ValueUntyped)
-                .OfType<IMetadata>();
-
+            IEnumerable<IMetadata> metadataObjects = property.GetSchemaMetadata();
             foreach (IMetadata metadata in metadataObjects)
             {
                 if (metadata is INullability nullability)

@@ -3,7 +3,6 @@
 
 using System;
 using MicroElements.Functional;
-using MicroElements.Metadata.Formatters;
 
 namespace MicroElements.Metadata
 {
@@ -57,30 +56,15 @@ namespace MicroElements.Metadata
             if (value is T valueTyped)
                 return Format(valueTyped);
 
-            if (value is null && ValueFormatter.TypeCache<T>.CanAcceptNull)
+            if (value is null && ValueFormatterTypeCache<T>.CanAcceptNull)
                 return Format(default);
 
             return null;
         }
     }
 
-    public static class ValueFormatter
+    internal static class ValueFormatterTypeCache<T>
     {
-        public static class TypeCache<T>
-        {
-            public static bool CanAcceptNull { get; } = typeof(T).CanAcceptNull();
-        }
-
-        public static string? TryFormat<T>(this IValueFormatter formatter, T? value, Type? valueType = null)
-        {
-            try
-            {
-                return formatter.Format(value, valueType ?? typeof(T));
-            }
-            catch
-            {
-                return DefaultToStringFormatter.Instance.Format(value, valueType ?? typeof(T));
-            }
-        }
+        internal static bool CanAcceptNull { get; } = typeof(T).CanAcceptNull();
     }
 }

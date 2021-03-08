@@ -24,20 +24,23 @@ namespace MicroElements.Validation.Rules
             : base(property)
         {
             _minLength = minLength ?? property.GetMetadata<IStringMinLength>();
-            if (_minLength != null && _minLength.MinLength.HasValue)
+            if (_minLength != null)
             {
                 this.SetDefaultMessageFormat("Value '{value}' is too short (length: {length}, minLength: {minLength})");
                 this.ConfigureMessage((message, value, pc) =>
                     message
                         .WithProperty("length", GetLength(value.ValueUntyped as string))
-                        .WithProperty("minLength", _minLength.MinLength.Value));
+                        .WithProperty("minLength", _minLength.MinLength));
             }
         }
 
         /// <inheritdoc />
+        public override string ToString() => $"StringMinLengthValidationRule({_minLength})";
+
+        /// <inheritdoc />
         protected override bool IsValid(string? value)
         {
-            if (_minLength != null && _minLength.MinLength.HasValue)
+            if (_minLength != null)
             {
                 int valueLength = GetLength(value);
                 return valueLength >= _minLength.MinLength;
@@ -46,9 +49,6 @@ namespace MicroElements.Validation.Rules
             return true;
         }
 
-        private static int GetLength(string? value)
-        {
-            return value?.Length ?? 0;
-        }
+        private static int GetLength(string? value) => value?.Length ?? 0;
     }
 }

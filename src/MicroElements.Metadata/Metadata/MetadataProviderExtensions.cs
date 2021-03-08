@@ -78,14 +78,16 @@ namespace MicroElements.Metadata
         /// <typeparam name="TMetadataProvider">Metadata provider type.</typeparam>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Target metadata provider.</param>
-        /// <param name="data">Metadata to set.</param>
+        /// <param name="metadata">Metadata to set.</param>
+        /// <param name="valueSource">Optional value source for metadata.</param>
         /// <returns>The same metadataProvider.</returns>
         public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(
             this TMetadataProvider metadataProvider,
-            TMetadata data)
+            TMetadata? metadata,
+            ValueSource? valueSource = null)
             where TMetadataProvider : IMetadataProvider
         {
-            return metadataProvider.SetMetadata(typeof(TMetadata).FullName, data);
+            return metadataProvider.SetMetadata(typeof(TMetadata).FullName, metadata, valueSource);
         }
 
         /// <summary>
@@ -95,33 +97,35 @@ namespace MicroElements.Metadata
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
         /// <param name="metadataProvider">Target metadata provider.</param>
         /// <param name="metadataName">Metadata name.</param>
-        /// <param name="data">Metadata to set.</param>
+        /// <param name="metadata">Metadata to set.</param>
+        /// <param name="valueSource">Optional value source for metadata.</param>
         /// <returns>The same metadataProvider.</returns>
         public static TMetadataProvider SetMetadata<TMetadataProvider, TMetadata>(
             this TMetadataProvider metadataProvider,
             string? metadataName,
-            TMetadata data)
+            TMetadata? metadata,
+            ValueSource? valueSource = null)
             where TMetadataProvider : IMetadataProvider
         {
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
-            var metadata = metadataProvider.GetMetadataContainer(autoCreate: true);
+            IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
 
-            if (metadata is IMutablePropertyContainer mutablePropertyContainer)
+            var metadataContainer = metadataProvider.GetMetadataContainer(autoCreate: true);
+
+            if (metadataContainer is IMutablePropertyContainer mutablePropertyContainer)
             {
-                IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
-                mutablePropertyContainer.SetValue(metadataProperty, data);
+                mutablePropertyContainer.SetValue(metadataProperty, metadata, valueSource);
             }
             else
             {
                 bool allowRefreeze = false;
                 if (allowRefreeze)
                 {
-                    var mutable = metadata.AsMutable();
-                    IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);
-                    mutable.SetValue(metadataProperty, data);
+                    var mutable = metadataContainer.AsMutable();
+                    mutable.SetValue(metadataProperty, metadata, valueSource);
                     metadataProvider.SetMetadataContainer(mutable);
                 }
             }

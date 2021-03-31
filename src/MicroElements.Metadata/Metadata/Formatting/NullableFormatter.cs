@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// <see cref="Nullable{T}"/> type formatter.
@@ -20,7 +21,9 @@ namespace MicroElements.Metadata.Formatters
         /// <param name="baseFormatter">Nullable underlying type formatter.</param>
         public NullableFormatter(IValueFormatter baseFormatter)
         {
-            _baseFormatter = baseFormatter.AssertArgumentNotNull(nameof(baseFormatter));
+            baseFormatter.AssertArgumentNotNull(nameof(baseFormatter));
+
+            _baseFormatter = baseFormatter;
         }
 
         /// <inheritdoc />

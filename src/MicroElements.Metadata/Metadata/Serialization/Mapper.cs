@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using MicroElements.Functional;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata.Serialization
 {

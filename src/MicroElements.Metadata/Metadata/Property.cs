@@ -5,8 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -56,12 +57,14 @@ namespace MicroElements.Metadata
             IReadOnlyList<T> examples,
             IPropertyCalculator<T>? calculator)
         {
-            Name = name;
+            defaultValue.AssertArgumentNotNull(nameof(defaultValue));
+            examples.AssertArgumentNotNull(nameof(examples));
 
+            Name = name;
             Description = description;
             Alias = alias;
-            DefaultValue = defaultValue.AssertArgumentNotNull(nameof(defaultValue));
-            Examples = examples.AssertArgumentNotNull(nameof(examples));
+            DefaultValue = defaultValue;
+            Examples = examples;
             Calculator = calculator;
         }
 

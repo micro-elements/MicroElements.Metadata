@@ -5,8 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
-using MicroElements.Metadata.Formatters;
+using MicroElements.CodeContracts;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {

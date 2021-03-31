@@ -3,9 +3,10 @@
 
 using System;
 using System.Linq.Expressions;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Uses <see cref="IFormattable.ToString(string,IFormatProvider)"/> with provided format and optional <see cref="IFormatProvider"/>.

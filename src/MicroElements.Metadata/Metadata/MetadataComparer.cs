@@ -5,7 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata.Diff
 {
@@ -78,7 +79,7 @@ namespace MicroElements.Metadata.Diff
 
         private static string FormatForDiff(IPropertyValue propertyValue)
         {
-            string formatAsTuple = propertyValue.ValueUntyped.DefaultFormatValue();
+            string formatAsTuple = propertyValue.ValueUntyped.FormatValue();
             return formatAsTuple;
         }
     }
@@ -100,7 +101,9 @@ namespace MicroElements.Metadata.Diff
         /// <param name="diffs">Diff list.</param>
         public ObjectDiff(PropertyDiff[] diffs)
         {
-            Diffs = diffs.AssertArgumentNotNull(nameof(diffs));
+            diffs.AssertArgumentNotNull(nameof(diffs));
+
+            Diffs = diffs;
         }
     }
 

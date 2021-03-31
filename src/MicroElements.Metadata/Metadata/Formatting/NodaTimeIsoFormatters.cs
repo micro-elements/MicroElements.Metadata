@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// NodaTime formatters.

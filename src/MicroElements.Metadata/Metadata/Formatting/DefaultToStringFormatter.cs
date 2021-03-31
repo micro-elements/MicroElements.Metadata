@@ -4,7 +4,7 @@
 using System;
 using System.Globalization;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Default ToString formatter.

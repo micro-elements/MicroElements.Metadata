@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using MicroElements.CodeContracts;
 using MicroElements.Core;
 
 namespace MicroElements.Metadata.Schema

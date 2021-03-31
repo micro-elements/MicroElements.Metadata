@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Schema
@@ -43,7 +43,9 @@ namespace MicroElements.Metadata.Schema
         /// <param name="validationRules">Validation rules for property.</param>
         public PropertyValidationRules(IProperty property, IReadOnlyCollection<IValidationRule>? validationRules = null)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            property.AssertArgumentNotNull(nameof(property));
+
+            Property = property;
             Rules = validationRules ?? Array.Empty<IValidationRule>();
         }
     }

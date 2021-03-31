@@ -6,7 +6,7 @@ using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Diff;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.NewtonsoftJson;
 using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.SystemTextJson;
@@ -297,7 +297,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static string ToJsonWithNewtonsoftJson<T>(this T entity)
         {
             var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
-            return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
+            return JsonConvert.SerializeObject(entity, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings);
         }
 
         public static T DeserializeWithNewtonsoftJson<T>(this string json)

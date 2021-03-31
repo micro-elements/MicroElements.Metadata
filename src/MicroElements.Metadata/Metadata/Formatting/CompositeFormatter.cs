@@ -5,9 +5,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Composite formatter with internal formatter cache by type.

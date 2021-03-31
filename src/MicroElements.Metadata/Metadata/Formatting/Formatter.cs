@@ -1,13 +1,15 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// String formatting.
     /// </summary>
     public static class Formatter
     {
+        // TODO: provide format targets: Json, Xml, ISO, Excel
+
         /// <summary>
         /// Gets default single item formatter.
         /// </summary>

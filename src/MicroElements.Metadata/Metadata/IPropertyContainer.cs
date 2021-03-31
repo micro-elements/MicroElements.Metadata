@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Metadata
 {
@@ -66,14 +65,5 @@ namespace MicroElements.Metadata
         /// Clears all property and values.
         /// </summary>
         void Clear();
-    }
-
-    public interface IPropertyContainer<TSchema> : IPropertyContainer, IKnownPropertySet<TSchema>, IPropertySet
-        where TSchema : IPropertySet, new()
-    {
-        TSchema Schema { get; }
-
-        /// <inheritdoc />
-        IEnumerable<IProperty> IPropertySet.GetProperties() => Schema.GetProperties();
     }
 }

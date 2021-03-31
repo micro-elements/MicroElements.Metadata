@@ -3,7 +3,9 @@
 
 using System;
 using System.Diagnostics.Contracts;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -150,14 +152,14 @@ namespace MicroElements.Metadata.Schema
         /// <param name="type">Type to get default value.</param>
         /// <param name="isDefaultValueAllowed">IsDefaultValueAllowed or not.</param>
         /// <returns><seealso cref="IDefaultValue"/> instance.</returns>
-        public static IDefaultValue ForType(Type type, bool isDefaultValueAllowed = true) => new DefaultValueUntyped(type.GetDefaultValue(), isDefaultValueAllowed);
+        public static IDefaultValue ForType(Type type, bool isDefaultValueAllowed = true) => new DefaultValueUntyped(GetDefaultValue(type), isDefaultValueAllowed);
 
         /// <summary>
         /// Gets default value for type.
         /// </summary>
         /// <param name="type">Source type.</param>
         /// <returns>Default value.</returns>
-        public static object? GetDefaultValue(this Type type)
+        public static object? GetDefaultValue(Type type)
         {
             type.AssertArgumentNotNull(nameof(type));
 

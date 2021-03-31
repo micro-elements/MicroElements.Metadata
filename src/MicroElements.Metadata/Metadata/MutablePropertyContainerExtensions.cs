@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata
 {
@@ -186,35 +186,6 @@ namespace MicroElements.Metadata
             var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
             if (propertyValue.IsNullOrNotDefined())
                 propertyContainer.SetValue(property, value!);
-        }
-
-        /// <summary>
-        /// Sets optional value if <paramref name="value"/> is in Some state.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in Option<T> value)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            value.Match(val => propertyContainer.SetValue(property, val), () => { });
-        }
-
-        /// <summary>
-        /// Sets optional value if <paramref name="value"/> is in Some state.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in Option<T> value)
-            where T : struct
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            value.Match(val => propertyContainer.SetValue(property, val), () => { });
         }
 
         /// <summary>

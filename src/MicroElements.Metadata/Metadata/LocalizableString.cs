@@ -153,7 +153,9 @@ namespace MicroElements.Metadata
         /// <param name="language">Text language.</param>
         public LocalString(string text, Language language = Language.English)
         {
-            Text = text.AssertArgumentNotNull(nameof(text));
+            text.AssertArgumentNotNull(nameof(text));
+
+            Text = text;
             Language = language;
         }
 

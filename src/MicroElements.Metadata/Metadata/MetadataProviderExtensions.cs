@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -26,6 +26,21 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
+        /// Determines whether the metadata provider has specified metadata.
+        /// </summary>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Metadata provider.</param>
+        /// <param name="metadataName">Optional metadata name.</param>
+        /// <returns>A value indicating whether the metadata provider has specified metadata.</returns>
+        public static bool HasMetadata<TMetadata>(
+            this IMetadataProvider metadataProvider,
+            string? metadataName = null)
+            where TMetadata : class
+        {
+            return metadataProvider.GetMetadata<TMetadata>(metadataName) is not null;
+        }
+
+        /// <summary>
         /// Gets metadata of required type.
         /// </summary>
         /// <typeparam name="TMetadata">Metadata type.</typeparam>
@@ -33,43 +48,26 @@ namespace MicroElements.Metadata
         /// <param name="metadataName">Optional metadata name.</param>
         /// <param name="defaultValue">Default value to return if not metadata found.</param>
         /// <returns>Metadata or default value if not found.</returns>
-        [return: MaybeNull]
-        public static TMetadata GetMetadata<TMetadata>(
+        public static TMetadata? GetMetadata<TMetadata>(
             this IMetadataProvider metadataProvider,
             string? metadataName = null,
-            [AllowNull] TMetadata defaultValue = default)
-        {
-            Option<TMetadata> metadata = GetMetadataAsOption<TMetadata>(metadataProvider, metadataName);
-            return metadata.IsSome ? (TMetadata)metadata : defaultValue;
-        }
-
-        /// <summary>
-        /// Gets metadata as optional value.
-        /// </summary>
-        /// <typeparam name="TMetadata">Metadata type.</typeparam>
-        /// <param name="metadataProvider">Metadata provider.</param>
-        /// <param name="metadataName">Optional metadata name.</param>
-        /// <returns>Metadata or default value if not found.</returns>
-        public static Option<TMetadata> GetMetadataAsOption<TMetadata>(
-            this IMetadataProvider metadataProvider,
-            string? metadataName = null)
+            TMetadata? defaultValue = default)
         {
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            var metadata = metadataProvider.GetMetadataContainer(autoCreate: false);
-            if (metadata.Count == 0)
-                return Option<TMetadata>.None;
+            var metadataContainer = metadataProvider.GetMetadataContainer(autoCreate: false);
+            if (metadataContainer.Count > 0)
+            {
+                string metadataNameToSearch = metadataName ?? typeof(TMetadata).FullName;
+                SearchOptions metadataSearchOptions = Search.ExistingOnly.UseSearchByNameAndComparer<TMetadata>(metadataNameToSearch, MetadataProvider.DefaultMetadataComparer);
 
-            SearchOptions metadataSearchOptions = Search.ExistingOnly
-                .UseSearchByNameAndComparer<TMetadata>(metadataName ?? typeof(TMetadata).FullName, MetadataProvider.DefaultMetadataComparer);
+                var propertyValue = metadataContainer.GetPropertyValue<TMetadata>(metadataSearchOptions);
+                if (propertyValue.HasValue() && propertyValue.Value.IsNotNull())
+                    return propertyValue.Value;
+            }
 
-            var propertyValue = metadata.GetPropertyValue<TMetadata>(metadataSearchOptions);
-
-            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
-                return propertyValue.Value;
-
-            return Option<TMetadata>.None;
+            return defaultValue;
         }
 
         /// <summary>

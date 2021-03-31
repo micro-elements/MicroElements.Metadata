@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Default format provider.
@@ -23,6 +23,7 @@ namespace MicroElements.Metadata.Formatters
 
             // Date and Time
             yield return DateTimeIsoFormatter.Instance;
+            yield return DateTimeOffsetIsoFormatter.Instance;
 
             // NodaTime Formatters
             foreach (var nodaTimeFormatter in new NodaTimeIsoFormatters().GetFormatters())

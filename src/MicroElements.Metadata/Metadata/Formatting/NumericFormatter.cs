@@ -3,7 +3,7 @@
 
 using System.Globalization;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// <see cref="float"/> formatter.

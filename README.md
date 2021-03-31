@@ -1,5 +1,5 @@
 # MicroElements.Metadata
-Provides metadata model, parsing and reporting.
+Provides metadata model, schema, parsing, formatting, validation and reporting.
 
 ## Statuses
 [![License](https://img.shields.io/github/license/micro-elements/MicroElements.Metadata.svg)](https://raw.githubusercontent.com/micro-elements/MicroElements.Metadata/master/LICENSE)

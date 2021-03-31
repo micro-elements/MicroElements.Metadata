@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using DocumentFormat.OpenXml.Packaging;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 {
@@ -48,11 +48,11 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         [MaybeNull]
         public TOpenXmlElement Data { get; }
 
-        /// <summary>
-        /// Gets OpenXml element as <see cref="Option{A}"/>.
-        /// </summary>
-        /// <returns>Optional OpenXml element.</returns>
-        public Option<TOpenXmlElement> AsOption() => Data!;
+        ///// <summary>
+        ///// Gets OpenXml element as <see cref="Option{A}"/>.
+        ///// </summary>
+        ///// <returns>Optional OpenXml element.</returns>
+        //public Option<TOpenXmlElement> AsOption() => Data!;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelElement{TOpenXmlElement}"/> class.
@@ -61,7 +61,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <param name="data">OpenXml element.</param>
         public ExcelElement(SpreadsheetDocument doc, [MaybeNull] TOpenXmlElement data)
         {
-            Doc = doc.AssertArgumentNotNull(nameof(doc));
+            doc.AssertArgumentNotNull(nameof(doc));
+
+            Doc = doc;
             Data = data;
         }
 

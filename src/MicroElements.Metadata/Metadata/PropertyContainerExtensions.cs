@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata
 {
@@ -12,6 +13,19 @@ namespace MicroElements.Metadata
     /// </summary>
     public static partial class PropertyContainerExtensions
     {
+        /// <summary>
+        /// Gets <see cref="IPropertyContainer"/> as KeyValuePair enumeration.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>KeyValuePair enumeration.</returns>
+        public static IEnumerable<KeyValuePair<string, object?>> AsKeyValuePairs(this IPropertyContainer propertyContainer)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            return propertyContainer.Properties.Select(propertyValue =>
+                new KeyValuePair<string, object?>(propertyValue.PropertyUntyped.Name, propertyValue.ValueUntyped));
+        }
+
         /// <summary>
         /// Converts to <see cref="IMutablePropertyContainer"/> if needed.
         /// Returns the same container if it can be casted to <see cref="IMutablePropertyContainer"/>
@@ -98,7 +112,7 @@ namespace MicroElements.Metadata
                 var hierarchy = GetHierarchy(propertyContainer);
                 foreach (IPropertyContainer ancestor in hierarchy)
                 {
-                    merger.WithValues(ancestor, PropertyAddMode.Set);
+                    merger.WithValues(ancestor, addMode: PropertyAddMode.Set);
                 }
 
                 return merger;
@@ -162,20 +176,20 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Merges composite properties to one container.
         /// </summary>
-        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="objectContainer">Source property container.</param>
         /// <param name="mergeMode">Merge mode. Default: <see cref="PropertyAddMode.Set"/>.</param>
-        /// <param name="properties">Properties to merge.</param>
+        /// <param name="complexObjectProperties">Properties to merge.</param>
         /// <returns>New <see cref="IPropertyContainer"/> instance.</returns>
         public static IPropertyContainer MergeProperties(
-            this IPropertyContainer propertyContainer,
+            this IPropertyContainer objectContainer,
             PropertyAddMode mergeMode = PropertyAddMode.Set,
-            params IProperty<IPropertyContainer>[]? properties)
+            params IProperty<IPropertyContainer>[] complexObjectProperties)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            objectContainer.AssertArgumentNotNull(nameof(objectContainer));
+            complexObjectProperties.AssertArgumentNotNull(nameof(complexObjectProperties));
 
-            return properties
-                .NotNull()
-                .Select(property => propertyContainer.GetValue(property))
+            return complexObjectProperties
+                .Select(complexObjectProperty => objectContainer.GetValue(complexObjectProperty))
                 .Merge(mergeMode);
         }
 

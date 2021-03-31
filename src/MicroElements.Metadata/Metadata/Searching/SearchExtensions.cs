@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using MicroElements.CodeContracts;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -61,8 +62,8 @@ namespace MicroElements.Metadata
             IProperty property,
             SearchOptions? search = default)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(property, nameof(property));
 
             if ((search ?? propertyContainer.SearchOptions).CanUseSimpleUntypedSearch() || property.Type == typeof(Search.UntypedSearch))
             {
@@ -93,8 +94,8 @@ namespace MicroElements.Metadata
             IProperty<T> property,
             SearchOptions? search = null)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(property, nameof(property));
 
             IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
             return propertyValue != null ? propertyValue.Value : default;
@@ -112,8 +113,8 @@ namespace MicroElements.Metadata
             IProperty property,
             SearchOptions? search = null)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(property, nameof(property));
 
             IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(property, search);
             return propertyValue?.ValueUntyped;
@@ -134,8 +135,8 @@ namespace MicroElements.Metadata
             IProperty<T> property,
             SearchOptions? search = null)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(property, nameof(property));
 
             IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
             if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
@@ -205,8 +206,8 @@ namespace MicroElements.Metadata
         [return: MaybeNull]
         public static T GetValueByName<T>(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            propertyName.AssertArgumentNotNull(nameof(propertyName));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(propertyName, nameof(propertyName));
 
             IPropertyValue<T> propertyValue = propertyContainer.GetPropertyValue<T>(Search
                 .ByNameOrAlias<T>(propertyName, ignoreCase: true)
@@ -225,8 +226,8 @@ namespace MicroElements.Metadata
         /// <returns>value or null.</returns>
         public static object? GetValueUntypedByName(this IPropertyContainer propertyContainer, string propertyName, bool searchInParent = true)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            propertyName.AssertArgumentNotNull(nameof(propertyName));
+            Assertions.AssertArgumentNotNull(propertyContainer, nameof(propertyContainer));
+            Assertions.AssertArgumentNotNull(propertyName, nameof(propertyName));
 
             IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(Search
                 .ByNameOrAlias(propertyName, ignoreCase: true)

@@ -4,7 +4,8 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -126,7 +127,7 @@ namespace MicroElements.Metadata.Schema
         {
             schemaType.AssertArgumentNotNull(nameof(schemaType));
 
-            if (!schemaType.IsAssignableTo<ISchema>())
+            if (!schemaType.IsAssignableTo(typeof(ISchema)))
                 throw new ArgumentException($"Type {schemaType} should be {nameof(ISchema)}");
 
             SchemaType = schemaType;

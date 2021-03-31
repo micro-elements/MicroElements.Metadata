@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata
 {
@@ -81,7 +81,9 @@ namespace MicroElements.Metadata
         /// <returns>The same provider instance for chaining.</returns>
         public ReportProvider AddRenderer(IPropertyRenderer renderer)
         {
-            _renderers.Add(renderer.AssertArgumentNotNull(nameof(renderer)));
+            renderer.AssertArgumentNotNull(nameof(renderer));
+
+            _renderers.Add(renderer);
             return this;
         }
 
@@ -92,7 +94,9 @@ namespace MicroElements.Metadata
         /// <returns>The same provider instance for chaining.</returns>
         public ReportProvider AddRenderers(IEnumerable<IPropertyRenderer> renderers)
         {
-            _renderers.AddRange(renderers.AssertArgumentNotNull(nameof(renderers)));
+            renderers.AssertArgumentNotNull(nameof(renderers));
+
+            _renderers.AddRange(renderers);
             return this;
         }
 
@@ -103,7 +107,9 @@ namespace MicroElements.Metadata
         /// <returns>The same provider instance for chaining.</returns>
         public ReportProvider AddRows(IEnumerable<IPropertyContainer> rows)
         {
-            _rows.AddRange(rows.AssertArgumentNotNull(nameof(rows)));
+            rows.AssertArgumentNotNull(nameof(rows));
+
+            _rows.AddRange(rows);
             return this;
         }
     }

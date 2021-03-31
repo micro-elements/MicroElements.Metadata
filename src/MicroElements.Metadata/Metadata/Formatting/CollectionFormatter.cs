@@ -4,9 +4,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection;
 
-namespace MicroElements.Metadata.Formatters
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Formatter for collection types.

@@ -7,7 +7,7 @@ using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using NodaTime;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
@@ -45,8 +45,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             ExcelDocumentMetadata? documentMetadata,
             IReportBuilderSettings? settings)
         {
+            document.AssertArgumentNotNull(nameof(document));
+
             _documentMetadata = documentMetadata ?? new ExcelDocumentMetadata();
-            _documentContext = InitDocument(document.AssertArgumentNotNull(nameof(document)));
+            _documentContext = InitDocument(document);
             _settings = settings ?? new ReportBuilderSettings();
         }
 
@@ -95,7 +97,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder WithDefaultSheetMetadata(ExcelSheetMetadata sheetMetadata)
         {
-            _defaultSheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
+            sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
+
+            _defaultSheetMetadata = sheetMetadata;
             return this;
         }
 
@@ -106,7 +110,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <returns>Builder instance.</returns>
         public ExcelReportBuilder WithDefaultColumnMetadata(ExcelColumnMetadata columnMetadata)
         {
-            _defaultColumnMetadata = columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
+            columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
+
+            _defaultColumnMetadata = columnMetadata;
             return this;
         }
 

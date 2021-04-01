@@ -1,3 +1,6 @@
+# 7.0.0
+- Big release. Main features: XmlParsing, Performance, ExcelBuilder performance, Schema featurea and validations.  See release notes for release candidates
+
 # 7.0.0-rc.30
 - OpenXml: CellReferences optimizations
 - Some minor optimizations
@@ -11,7 +14,7 @@
 - Performance optimization for excel building
 - Complex value Formatting based on IValueFormatter
 - IPropertyValueFactory, CachedPropertyValueFactory
-- CachedStringParser and InernedStringParser
+- CachedStringParser and InternedStringParser
 - XmlParser: IPropertyValueFactory added to IXmlParserSettings
 - XmlParser: GC optimizations
 - ExcelReportBuilder: Caches, GC optimizations, Performance optimizations

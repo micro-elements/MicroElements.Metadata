@@ -208,7 +208,7 @@ namespace MicroElements.Metadata.Tests
 
             IPropertyContainer? container = XDocument
                 .Parse(testXml, LoadOptions.SetLineInfo)
-                .ParseXmlToContainer(personSchema, new XmlParserSettings());
+                .ParseXmlToContainer(personSchema, new XmlParserSettings(validateOnParse: true));
             container.Should().NotBeNull();
 
             IPropertyValue[] values = container.Properties.ToArray();

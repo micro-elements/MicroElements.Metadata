@@ -3,8 +3,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata;
+using MicroElements.Metadata.Formatting;
+using Message = MicroElements.Diagnostics.Message;
+using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
 
 namespace MicroElements.Validation.Rules
 {
@@ -30,8 +33,11 @@ namespace MicroElements.Validation.Rules
         /// <param name="rule2">Second rule.</param>
         public Or(IValidationRule rule1, IValidationRule rule2)
         {
-            FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
-            LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
+            rule1.AssertArgumentNotNull(nameof(rule1));
+            rule2.AssertArgumentNotNull(nameof(rule2));
+
+            FirstRule = rule1;
+            LastRule = rule2;
         }
 
         /// <inheritdoc />
@@ -81,8 +87,11 @@ namespace MicroElements.Validation.Rules
         /// <param name="rule2">Second rule.</param>
         public Or(IPropertyValidationRule<T> rule1, IPropertyValidationRule<T> rule2)
         {
-            FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
-            LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
+            rule1.AssertArgumentNotNull(nameof(rule1));
+            rule2.AssertArgumentNotNull(nameof(rule2));
+
+            FirstRule = rule1;
+            LastRule = rule2;
 
             Property = rule1.Property;
         }
@@ -130,7 +139,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="firstRule">The first rule.</param>
         public OrBuilder(IPropertyValidationRule<T> firstRule)
         {
-            FirstRule = firstRule.AssertArgumentNotNull(nameof(firstRule));
+            firstRule.AssertArgumentNotNull(nameof(firstRule));
+
+            FirstRule = firstRule;
         }
     }
 

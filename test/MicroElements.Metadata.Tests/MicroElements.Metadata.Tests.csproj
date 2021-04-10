@@ -21,6 +21,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="..\..\src\MicroElements.Metadata.All\MicroElements.Metadata.All.csproj" />
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.Functional\MicroElements.Metadata.Functional.csproj" />
     <ProjectReference Include="..\..\src\MicroElements.Metadata.Xml\MicroElements.Metadata.Xml.csproj" />
     <PackageReference Update="coverlet.msbuild" Version="2.9.0" />
   </ItemGroup>

@@ -11,6 +11,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
+using MicroElements.Core;
+using MicroElements.Functional;
 using NodaTime;
 using NodaTime.Text;
 
@@ -133,7 +135,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <returns>Column reference.</returns>
         public static string GetColumnReference(this StringValue cellReference)
         {
-            cellReference.AssertArgumentNotNull(nameof(cellReference));
+            Assertions.AssertArgumentNotNull(cellReference, nameof(cellReference));
 
             return cellReference.Value.GetColumnReference();
         }
@@ -146,7 +148,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <returns>Column reference.</returns>
         public static string GetColumnReference(this string cellReference)
         {
-            cellReference.AssertArgumentNotNull(nameof(cellReference));
+            Assertions.AssertArgumentNotNull(cellReference, nameof(cellReference));
 
             if (cellReference.Length == 2)
                 return cellReference.Substring(0, 1);
@@ -164,8 +166,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider)
         {
-            rows.AssertArgumentNotNull(nameof(rows));
-            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+            Assertions.AssertArgumentNotNull(rows, nameof(rows));
+            Assertions.AssertArgumentNotNull(parserProvider, nameof(parserProvider));
 
             ExcelElement<HeaderCell>[]? headers = null;
             foreach (var row in rows)
@@ -456,8 +458,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             IParserProvider parserProvider,
             Func<IReadOnlyList<IPropertyValue>, T>? factory = null)
         {
-            rows.AssertArgumentNotNull(nameof(rows));
-            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+            Assertions.AssertArgumentNotNull(rows, nameof(rows));
+            Assertions.AssertArgumentNotNull(parserProvider, nameof(parserProvider));
 
             if (factory == null)
                 factory = list => (T)Activator.CreateInstance(typeof(T), list);

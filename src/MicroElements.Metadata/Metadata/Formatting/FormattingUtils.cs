@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Text;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
 
 namespace MicroElements.Metadata.Formatting
 {

@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata;
+using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Validation.Rules
 {
@@ -34,7 +35,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="defaultMessageFormat">Default message format for validation message.</param>
         protected PropertyValidationRule(IProperty<T> property, string? defaultMessageFormat = null)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            property.AssertArgumentNotNull(nameof(property));
+
+            Property = property;
             this.SetDefaultMessageFormat(defaultMessageFormat);
         }
 
@@ -75,7 +78,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="defaultMessageFormat">Default message format for validation message.</param>
         protected PropertyValidationRule(IProperty property, string? defaultMessageFormat = null)
         {
-            PropertyUntyped = property.AssertArgumentNotNull(nameof(property));
+            property.AssertArgumentNotNull(nameof(property));
+
+            PropertyUntyped = property;
             this.SetDefaultMessageFormat(defaultMessageFormat);
         }
 

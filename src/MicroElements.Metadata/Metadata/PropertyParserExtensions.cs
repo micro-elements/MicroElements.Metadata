@@ -46,6 +46,22 @@ namespace MicroElements.Metadata
             }
         }
 
+        public static ParseResult<IPropertyValue> ParseUntyped2(this IParserRule propertyParser, string textValue)
+        {
+            if (propertyParser.TargetProperty != null)
+            {
+                IParseResult parseResult = propertyParser.Parser.ParseUntyped(textValue);
+                if (parseResult.IsSuccess)
+                {
+                    object? parsedValue = parseResult.ValueUntyped;
+                    IPropertyValue propertyValue = PropertyValueFactory.Default.CreateUntyped(propertyParser.TargetProperty, parsedValue);
+                    return propertyValue.ToParseResult();
+                }
+            }
+
+            return ParseResult.Failed<IPropertyValue>();
+        }
+
         /// <summary>
         /// Gets <see cref="IPropertyParser{T}.DefaultValue"/> for untyped <paramref name="propertyParser"/>.
         /// </summary>
@@ -65,7 +81,7 @@ namespace MicroElements.Metadata
                     return ParseResult.Success<IPropertyValue>(new PropertyValue<T>(propertyParser.TargetProperty, defaultValue, ValueSource.DefaultValue));
                 }
 
-                return ParseResult<IPropertyValue>.Failed;
+                return ParseResult.Failed<IPropertyValue>();
             }
         }
     }

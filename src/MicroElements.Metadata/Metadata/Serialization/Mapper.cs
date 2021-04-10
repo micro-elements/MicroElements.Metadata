@@ -6,8 +6,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using MicroElements.Diagnostics;
 using MicroElements.Functional;
 using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
+using Message = MicroElements.Diagnostics.Message;
+using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -30,7 +34,7 @@ namespace MicroElements.Metadata.Serialization
         /// <param name="type">Target type.</param>
         /// <param name="text">Source text.</param>
         /// <returns>Parse result.</returns>
-        Result<object?, Message> DeserializeValue(Type type, string? text);
+        IParseResult DeserializeValue(Type type, string? text);
     }
 
     /// <summary>
@@ -61,137 +65,126 @@ namespace MicroElements.Metadata.Serialization
 
         /// <inheritdoc />
         public string GetTypeName(Type type)
-        {
-            return _typeMapper.GetTypeName(type);
-        }
+            => _typeMapper.GetTypeName(type);
 
         /// <inheritdoc />
         public Type? GetTypeByName(string typeName)
-        {
-            return _typeMapper.GetTypeByName(typeName);
-        }
+            => _typeMapper.GetTypeByName(typeName);
 
         /// <inheritdoc />
         public string? SerializeValue(Type type, object? value)
-        {
-            return _valueFormatter.Format(value, type);
-        }
+            => _valueFormatter.Format(value, type);
 
         /// <inheritdoc />
-        public Result<object?, Message> DeserializeValue(Type type, string? text)
+        public IParseResult DeserializeValue(Type type, string? text)
         {
             if (text == null || text == "null")
-                return (object?)null;
+                return ParseResult.Success((object?)null);
 
-            if (type == typeof(string))
-                return text;
+            var parserProvider = CachedPropertyParserProvider.Create(DefaultValueParserProvider.Instance);
+            IPropertyFactory propertyFactory = new CachedPropertyFactory();
+            IValueParser valueParser = parserProvider.GetParser(propertyFactory.Create(type, type.FullName));
+            IParseResult parseResult = valueParser.ParseUntyped(text);
+            return parseResult;
 
-            if (type.IsConcreteAndAssignableTo<ICollection>())
-                return DeserializeCollection(type, text);
+            //if (type == typeof(string))
+            //    return text;
 
-            Message ReturnWithError() =>
-                new Message(
-                        "Value {text} can not be parsed as {type}",
-                        MessageSeverity.Error,
-                        eventName: "ParseError")
-                    .WithArgs(text, type);
+            //if (type.IsConcreteAndAssignableTo<ICollection>())
+            //    return DeserializeCollection(type, text);
 
-            #region Numbers
+            //IParseResult ReturnWithError<T>()
+            //{
+            //    Message error = new Message(
+            //            "Value {text} can not be parsed as {type}",
+            //            MessageSeverity.Error,
+            //            eventName: "ParseError")
+            //        .WithArgs(text, type);
 
-            if (type == typeof(double) || type == typeof(double?))
-            {
-                if (double.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
-                    return result;
+            //    return ParseResult.Failed<T>(error);
+            //}
 
-                return ReturnWithError();
-            }
+            //#region Numbers
 
-            if (type == typeof(int) || type == typeof(int?))
-            {
-                if (int.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
-                    return result;
+            //if (type == typeof(double) || type == typeof(double?))
+            //{
+            //    return Parser.DoubleParser.Parse(text);
+            //}
 
-                return ReturnWithError();
-            }
+            //if (type == typeof(int) || type == typeof(int?))
+            //{
+            //    return Parser.IntParser.Parse(text);
+            //}
 
-            if (type == typeof(float) || type == typeof(float?))
-            {
-                if (float.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
-                    return result;
+            //if (type == typeof(float) || type == typeof(float?))
+            //{
+            //    return Parser.FloatParser.Parse(text);
+            //}
 
-                return ReturnWithError();
-            }
+            //if (type == typeof(decimal) || type == typeof(decimal?))
+            //{
+            //    return Parser.DecimalParser.Parse(text);
+            //}
 
-            if (type == typeof(decimal) || type == typeof(decimal?))
-            {
-                if (decimal.TryParse(text, NumberStyles.Number, _defaultNumberFormatInfo, out var result))
-                    return result;
+            //#endregion
 
-                return ReturnWithError();
-            }
+            //if (type == typeof(DateTime) || type == typeof(DateTime?))
+            //{
+            //    return Parser.DateTimeParser.Parse(text);
+            //}
 
-            #endregion
+            //string typeFullName = type.FullName;
 
-            if (type == typeof(DateTime) || type == typeof(DateTime?))
-            {
-                if (DateTime.TryParse(text, out var result))
-                    return result;
+            //if (typeFullName.StartsWith("NodaTime"))
+            //{
+            //    if (typeFullName == "NodaTime.LocalDate")
+            //    {
+            //        if (DateTime.TryParse(text, out var dateTime))
+            //        {
+            //            return TryCreateInstance(type, dateTime.Year, dateTime.Month, dateTime.Day);
+            //        }
+            //    }
+            //    if (typeFullName == "NodaTime.LocalDateTime")
+            //    {
+            //        if (DateTime.TryParse(text, out var dateTime))
+            //        {
+            //            return TryCreateInstance(type, dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
+            //        }
+            //    }
+            //}
 
-                return ReturnWithError();
-            }
+            //Result<object?, Message> TryCreateInstance(Type type, params object[] args)
+            //{
+            //    try
+            //    {
+            //        return Activator.CreateInstance(type, args);
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        return Error.CreateError("CreateError", "Value {text} can not be parsed as {type}. Error: {error}", text, type, e.Message).Message;
+            //    }
+            //}
 
-            string typeFullName = type.FullName;
-
-            if (typeFullName.StartsWith("NodaTime"))
-            {
-                if (typeFullName == "NodaTime.LocalDate")
-                {
-                    if (DateTime.TryParse(text, out var dateTime))
-                    {
-                        return TryCreateInstance(type, dateTime.Year, dateTime.Month, dateTime.Day);
-                    }
-                }
-                if (typeFullName == "NodaTime.LocalDateTime")
-                {
-                    if (DateTime.TryParse(text, out var dateTime))
-                    {
-                        return TryCreateInstance(type, dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
-                    }
-                }
-            }
-
-            Result<object?, Message> TryCreateInstance(Type type, params object[] args)
-            {
-                try
-                {
-                    return Activator.CreateInstance(type, args);
-                }
-                catch (Exception e)
-                {
-                    return Error.CreateError("CreateError", "Value {text} can not be parsed as {type}. Error: {error}", text, type, e.Message).Message;
-                }
-            }
-
-            return ReturnWithError();
+            //return ReturnWithError();
         }
 
-        private Result<object?, Message> DeserializeCollection(Type type, string text)
-        {
-            string[] strings = text.TrimStart('[').TrimEnd(']').Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+        //private Result<object?, Message> DeserializeCollection(Type type, string text)
+        //{
+        //    string[] strings = text.TrimStart('[').TrimEnd(']').Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
 
-            Type elementType = typeof(string);
-            if (type.IsArray)
-                elementType = type.GetElementType();
+        //    Type elementType = typeof(string);
+        //    if (type.IsArray)
+        //        elementType = type.GetElementType();
 
-            if (elementType == typeof(string))
-                return strings;
+        //    if (elementType == typeof(string))
+        //        return strings;
 
-            var elements = strings
-                .Select(s => DeserializeValue(elementType, s).GetValueOrDefault(message => elementType.GetDefaultValue()))
-                .ToArray(elementType);
+        //    var elements = strings
+        //        .Select(s => DeserializeValue(elementType, s).GetValueOrDefault(message => elementType.GetDefaultValue()))
+        //        .ToArray(elementType);
 
-            return elements;
-        }
+        //    return elements;
+        //}
     }
 
     public static class Mapper
@@ -229,7 +222,7 @@ namespace MicroElements.Metadata.Serialization
             return new PropertyContainer(sourceValues: propertyValues);
         }
 
-        public static IPropertyValue ToModel(this PropertyValueContract propertyValueContract, IMapperSettings mapperSettings, IMutableMessageList<Message>? messages = null)
+        public static IPropertyValue ToModel(this PropertyValueContract propertyValueContract, IMapperSettings mapperSettings, Diagnostics.IMutableMessageList<Message>? messages = null)
         {
             Type propertyType = mapperSettings.GetTypeByName(propertyValueContract.Type);
             string propertyName = propertyValueContract.Name;
@@ -237,11 +230,12 @@ namespace MicroElements.Metadata.Serialization
 
             var propertyValueResult = mapperSettings.DeserializeValue(propertyType, propertyValueContract.Value);
 
-            object? value = propertyValueResult.GetValueOrDefault(message =>
+            if (propertyValueResult.Error != null)
             {
-                messages?.Add(message);
-                return null;
-            });
+                messages?.Add(propertyValueResult.Error);
+            }
+
+            object? value = propertyValueResult.ValueUntyped;
 
             IPropertyValue propertyValue = PropertyValue.Create(property, value: value, valueSource: propertyValueResult.IsSuccess ? ValueSource.Defined : ValueSource.NotDefined);
             return propertyValue;

@@ -34,7 +34,7 @@ namespace MicroElements.Metadata.Parsing
             if (Enum.TryParse(_enumType, value: source, ignoreCase: true, out object result))
                 return ParseResult.Success<object>(result);
 
-            return ParseResult<object>.Failed;
+            return ParseResult.Failed<object>();
         }
     }
 }

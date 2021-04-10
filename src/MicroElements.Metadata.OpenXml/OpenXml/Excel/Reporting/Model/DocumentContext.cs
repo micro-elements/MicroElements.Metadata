@@ -2,10 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Styling;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting

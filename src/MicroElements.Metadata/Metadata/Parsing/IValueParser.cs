@@ -7,6 +7,7 @@ namespace MicroElements.Metadata
 {
     /// <summary>
     /// Text value parser.
+    /// Parses strings to target type.
     /// </summary>
     public interface IValueParser
     {

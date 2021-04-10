@@ -107,7 +107,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <param name="data">OpenXml element.</param>
         public ExcelElementLight(SpreadsheetDocument doc, [MaybeNull] TOpenXmlElement data)
         {
-            Doc = doc.AssertArgumentNotNull(nameof(doc));
+            doc.AssertArgumentNotNull(nameof(doc));
+
+            Doc = doc;
             Data = data;
         }
 

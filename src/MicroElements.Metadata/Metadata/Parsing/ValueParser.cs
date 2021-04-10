@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using MicroElements.Functional;
+using Message = MicroElements.Diagnostics.Message;
+using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
 
 #pragma warning disable SA1118 // Parameter should not span multiple lines
 
@@ -28,14 +30,15 @@ namespace MicroElements.Metadata.Parsing
             _parseFunc1 = parseFunc;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ValueParser{T}"/> class.
-        /// </summary>
-        /// <param name="parseFunc">Func to parse string to value.</param>
-        public ValueParser(Func<string?, Option<T>> parseFunc)
-        {
-            _parseFunc2 = parseFunc;
-        }
+        //TODO: Migrate
+        ///// <summary>
+        ///// Initializes a new instance of the <see cref="ValueParser{T}"/> class.
+        ///// </summary>
+        ///// <param name="parseFunc">Func to parse string to value.</param>
+        //public ValueParser(Func<string?, Option<T>> parseFunc)
+        //{
+        //    _parseFunc2 = parseFunc;
+        //}
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ValueParser{T}"/> class.
@@ -57,11 +60,12 @@ namespace MicroElements.Metadata.Parsing
                     return ParseResult.Success(value);
                 }
 
-                if (_parseFunc2 != null)
-                {
-                    Option<T> optionalValue = _parseFunc2.Invoke(source);
-                    return optionalValue.ToParseResult();
-                }
+                //TODO: Migrate
+                //if (_parseFunc2 != null)
+                //{
+                //    Option<T> optionalValue = _parseFunc2.Invoke(source);
+                //    return optionalValue.ToParseResult();
+                //}
 
                 if (_parseFunc3 != null)
                 {
@@ -83,7 +87,7 @@ namespace MicroElements.Metadata.Parsing
                     }));
             }
 
-            return ParseResult<T>.Failed;
+            return ParseResult.Failed<T>();
         }
     }
 }

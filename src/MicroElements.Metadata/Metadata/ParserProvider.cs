@@ -39,7 +39,7 @@ namespace MicroElements.Metadata
         /// <param name="sourceName">Source name.</param>
         /// <param name="parseFunc">Parse value function.</param>
         /// <returns><see cref="PropertyParser{T}"/>.</returns>
-        public PropertyParser<T> Source<T>(string sourceName, Func<string, T> parseFunc)
+        public PropertyParser<T> Source<T>(string sourceName, Func<string?, T> parseFunc)
         {
             PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
             _parsers.Add(propertyParser);
@@ -53,12 +53,27 @@ namespace MicroElements.Metadata
         /// <param name="sourceName">Source name.</param>
         /// <param name="parseFunc">Parse value function.</param>
         /// <returns><see cref="PropertyParser{T}"/>.</returns>
-        public PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
+        public PropertyParser<T> Source<T>(string sourceName, Func<string?, ParseResult<T>> parseFunc)
         {
             PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
             _parsers.Add(propertyParser);
             return propertyParser;
         }
+
+        //TODO: Migrate
+        ///// <summary>
+        ///// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
+        ///// </summary>
+        ///// <typeparam name="T">Property type.</typeparam>
+        ///// <param name="sourceName">Source name.</param>
+        ///// <param name="parseFunc">Parse value function.</param>
+        ///// <returns><see cref="PropertyParser{T}"/>.</returns>
+        //public PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
+        //{
+        //    PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
+        //    _parsers.Add(propertyParser);
+        //    return propertyParser;
+        //}
 
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> .

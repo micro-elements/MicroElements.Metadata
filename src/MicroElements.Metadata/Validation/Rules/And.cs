@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata;
+using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Validation.Rules
 {
@@ -39,8 +40,11 @@ namespace MicroElements.Validation.Rules
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
         public And(IPropertyValidationRule<T> rule1, IPropertyValidationRule<T> rule2, bool breakOnFirstError = false)
         {
-            FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
-            LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
+            rule1.AssertArgumentNotNull(nameof(rule1));
+            rule2.AssertArgumentNotNull(nameof(rule2));
+
+            FirstRule = rule1;
+            LastRule = rule2;
 
             Property = rule1.Property;
             BreakOnFirstError = breakOnFirstError;
@@ -94,7 +98,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="breakOnFirstError">Value indicating whether rule should break on first error.</param>
         public AndBuilder(IPropertyValidationRule<T> firstRule, bool breakOnFirstError = false)
         {
-            FirstRule = firstRule.AssertArgumentNotNull(nameof(firstRule));
+            firstRule.AssertArgumentNotNull(nameof(firstRule));
+
+            FirstRule = firstRule;
             BreakOnFirstError = breakOnFirstError;
         }
     }

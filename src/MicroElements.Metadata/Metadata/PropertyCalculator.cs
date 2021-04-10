@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata
 {
@@ -32,7 +32,9 @@ namespace MicroElements.Metadata
         /// <param name="calculateSimple">Calculate func.</param>
         public PropertyCalculator(Func<IPropertyContainer, SearchOptions, T> calculateSimple)
         {
-            _calculateSimple = calculateSimple.AssertArgumentNotNull(nameof(calculateSimple));
+            calculateSimple.AssertArgumentNotNull(nameof(calculateSimple));
+
+            _calculateSimple = calculateSimple;
         }
 
         /// <summary>
@@ -41,7 +43,9 @@ namespace MicroElements.Metadata
         /// <param name="calculate">Calculate func.</param>
         public PropertyCalculator(Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)> calculate)
         {
-            _calculate = calculate.AssertArgumentNotNull(nameof(calculate));
+            calculate.AssertArgumentNotNull(nameof(calculate));
+
+            _calculate = calculate;
         }
 
         /// <inheritdoc />

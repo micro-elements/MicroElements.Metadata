@@ -13,6 +13,7 @@ namespace MicroElements.Metadata
     {
         /// <summary>
         /// Default string formatting for most used types.
+        /// Uses <see cref="Formatter.FullRecursiveFormatter"/> for formatting.
         /// </summary>
         /// <param name="value">Value to format.</param>
         /// <param name="nullResultValue">Value to return if input value is null or formatted result is null.</param>

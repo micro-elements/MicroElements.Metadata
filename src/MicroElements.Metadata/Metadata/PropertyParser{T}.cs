@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
@@ -17,7 +17,7 @@ namespace MicroElements.Metadata
         public Type TargetType => typeof(T);
 
         /// <inheritdoc />
-        public string SourceName { get; }
+        public string SourceName => SourceProperty.Name;
 
         /// <inheritdoc />
         public IProperty TargetPropertyUntyped => TargetProperty;
@@ -31,6 +31,8 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public IDefaultValue<T>? DefaultValue { get; private set; }
 
+        public IProperty<string> SourceProperty { get; private set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
         /// </summary>
@@ -39,14 +41,18 @@ namespace MicroElements.Metadata
         /// <param name="targetProperty">Target property.</param>
         public PropertyParser(string? sourceName, IValueParser<T> valueParser, IProperty<T>? targetProperty)
         {
-            SourceName = sourceName ?? $"Undefined_{Guid.NewGuid()}";
-            ValueParser = valueParser.AssertArgumentNotNull(nameof(valueParser));
+            valueParser.AssertArgumentNotNull(nameof(valueParser));
+
+            SourceProperty = new Property<string>(
+                name: sourceName ?? $"UndefinedSource_{Guid.NewGuid()}");
+
+            ValueParser = valueParser;
             TargetProperty = targetProperty ?? new Property<T>($"UndefinedTarget_{SourceName}");
         }
 
         /// <inheritdoc />
-        public override string ToString() =>
-            $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
+        public override string ToString()
+            => $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
 
         /// <summary>
         /// Sets <see cref="TargetProperty"/> and returns this.
@@ -56,6 +62,17 @@ namespace MicroElements.Metadata
         public PropertyParser<T> Target(IProperty<T> targetProperty)
         {
             TargetProperty = targetProperty;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets default value and returns this.
+        /// </summary>
+        /// <param name="defaultValue">Default value.</param>
+        /// <returns>The same instance.</returns>
+        public PropertyParser<T> SetSourceDefaultValue(string defaultValue)
+        {
+            SourceProperty = SourceProperty.WithDefaultValue(defaultValue);
             return this;
         }
 

@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata;
+using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Validation.Rules
 {
@@ -25,7 +26,9 @@ namespace MicroElements.Validation.Rules
         /// <param name="property">Property to check.</param>
         public Exists(IProperty<T> property)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            property.AssertArgumentNotNull(nameof(property));
+
+            Property = property;
             this.SetDefaultMessageFormat("{propertyName} is not exists.");
         }
 

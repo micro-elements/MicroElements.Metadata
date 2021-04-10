@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using FluentAssertions;
-using MicroElements.Functional;
-using MicroElements.Metadata;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.Diff;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.NewtonsoftJson;
@@ -63,7 +62,9 @@ namespace MicroElements.Metadata.Tests.Serialization
             new DefaultMapperSettings().SerializeValue(typeof(T), value);
 
         public object? DeserializeValue<T>(string text) => 
-            new DefaultMapperSettings().DeserializeValue(typeof(T), text).GetValueOrThrow(allowNullResult: true);
+            new DefaultMapperSettings()
+                .DeserializeValue(typeof(T), text)
+                .GetValueOrThrow(allowNullResult: true);
 
         [Fact]
         public void GetTypeNameTests()

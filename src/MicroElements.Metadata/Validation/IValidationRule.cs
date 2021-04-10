@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Serialization;
+using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Validation
 {

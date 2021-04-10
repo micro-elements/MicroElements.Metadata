@@ -14,6 +14,14 @@ namespace MicroElements.Metadata
     public interface IParserRule
     {
         /// <summary>
+        /// Gets source name that uses to find source value.
+        /// <para>
+        /// <![CDATA[Usage: Source:Dictionary<string, string> + SourceName:string -> SourceValue:string]]>
+        /// </para>
+        /// </summary>
+        string? SourceName { get; }
+
+        /// <summary>
         /// Gets text value parser.
         /// </summary>
         IValueParser Parser { get; }
@@ -35,28 +43,34 @@ namespace MicroElements.Metadata
     public class ParserRule : IParserRule
     {
         /// <inheritdoc />
-        public IValueParser Parser { get; set; }
+        public string? SourceName { get; }
 
         /// <inheritdoc />
-        public Type? TargetType { get; set; }
+        public IValueParser Parser { get; }
 
         /// <inheritdoc />
-        public IProperty? TargetProperty { get; set; }
+        public Type? TargetType { get; }
+
+        /// <inheritdoc />
+        public IProperty? TargetProperty { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ParserRule"/> class.
         /// </summary>
-        /// <param name="parser">Text parser.</param>
+        /// <param name="parser">Value parser.</param>
         /// <param name="targetType">Optional target type.</param>
         /// <param name="targetProperty">Optional target property.</param>
+        /// <param name="sourceName">Optional source name.</param>
         public ParserRule(
             IValueParser parser,
             Type? targetType = null,
-            IProperty? targetProperty = null)
+            IProperty? targetProperty = null,
+            string? sourceName = null)
         {
+            SourceName = sourceName;
+            Parser = parser;
             TargetProperty = targetProperty;
             TargetType = targetType;
-            Parser = parser;
         }
     }
 }

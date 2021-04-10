@@ -30,7 +30,7 @@ namespace MicroElements.Metadata.Parsing
     /// <summary>
     /// Parsing extensions.
     /// </summary>
-    public static class ParsingExtensions
+    public static partial class ParsingExtensions
     {
         /// <summary>
         /// Parses text value with provided <paramref name="tryParse"/> function.

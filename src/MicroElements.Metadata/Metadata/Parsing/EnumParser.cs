@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Parsing
         {
             if (Enum.TryParse(typeof(TEnum), value: source, ignoreCase: true, out object result))
                 return ParseResult.Success((TEnum)result);
-            return ParseResult<TEnum>.Failed;
+            return ParseResult.Failed<TEnum>();
         }
     }
 }

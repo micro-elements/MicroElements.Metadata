@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MicroElements.Functional
+namespace MicroElements.Core
 {
     internal static class EnumerableExtensions
     {

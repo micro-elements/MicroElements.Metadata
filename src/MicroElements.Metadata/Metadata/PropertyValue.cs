@@ -3,7 +3,8 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -88,7 +89,8 @@ namespace MicroElements.Metadata
         /// <param name="sourceName">The source name.</param>
         public ValueSource(string sourceName)
         {
-            SourceName = sourceName.AssertArgumentNotNull(nameof(sourceName));
+            sourceName.AssertArgumentNotNull(nameof(sourceName));
+            SourceName = sourceName;
         }
 
         private bool Equals(ValueSource other) => SourceName == other.SourceName;

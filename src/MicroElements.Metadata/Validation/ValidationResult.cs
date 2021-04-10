@@ -4,7 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
 
 namespace MicroElements.Validation
 {
@@ -31,7 +32,9 @@ namespace MicroElements.Validation
         /// <param name="validationMessages">Validation messages.</param>
         public ValidationResult(T data, IEnumerable<Message> validationMessages)
         {
-            Data = data.AssertArgumentNotNull(nameof(data));
+            data.AssertArgumentNotNull(nameof(data));
+
+            Data = data;
             ValidationMessages = validationMessages?.ToArray() ?? Array.Empty<Message>();
         }
 

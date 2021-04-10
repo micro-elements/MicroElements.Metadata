@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.Xml

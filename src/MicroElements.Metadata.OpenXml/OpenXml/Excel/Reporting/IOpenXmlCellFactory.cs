@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Core;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {

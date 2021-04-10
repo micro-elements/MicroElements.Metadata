@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
@@ -82,10 +82,15 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             IExcelMetadata sheetMetadata,
             IReportRenderer reportRenderer)
         {
-            DocumentContext = documentContext.AssertArgumentNotNull(nameof(documentContext));
-            WorksheetPart = worksheetPart.AssertArgumentNotNull(nameof(worksheetPart));
-            SheetMetadata = sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
-            ReportRenderer = reportRenderer.AssertArgumentNotNull(nameof(reportRenderer));
+            documentContext.AssertArgumentNotNull(nameof(documentContext));
+            worksheetPart.AssertArgumentNotNull(nameof(worksheetPart));
+            sheetMetadata.AssertArgumentNotNull(nameof(sheetMetadata));
+            reportRenderer.AssertArgumentNotNull(nameof(reportRenderer));
+
+            DocumentContext = documentContext;
+            WorksheetPart = worksheetPart;
+            SheetMetadata = sheetMetadata;
+            ReportRenderer = reportRenderer;
         }
     }
 }

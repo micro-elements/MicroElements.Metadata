@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using FluentAssertions;
+using MicroElements.Diagnostics;
 using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Xml;

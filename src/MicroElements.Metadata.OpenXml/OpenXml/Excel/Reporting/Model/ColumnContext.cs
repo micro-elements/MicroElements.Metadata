@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -52,9 +52,13 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             IExcelMetadata columnMetadata,
             IPropertyRenderer propertyRenderer)
         {
-            SheetContext = sheetContext.AssertArgumentNotNull(nameof(sheetContext));
-            ColumnMetadata = columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
-            PropertyRenderer = propertyRenderer.AssertArgumentNotNull(nameof(propertyRenderer));
+            sheetContext.AssertArgumentNotNull(nameof(sheetContext));
+            columnMetadata.AssertArgumentNotNull(nameof(columnMetadata));
+            propertyRenderer.AssertArgumentNotNull(nameof(propertyRenderer));
+
+            SheetContext = sheetContext;
+            ColumnMetadata = columnMetadata;
+            PropertyRenderer = propertyRenderer;
         }
     }
 }

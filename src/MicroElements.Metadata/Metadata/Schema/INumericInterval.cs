@@ -3,7 +3,9 @@
 
 using System;
 using System.Globalization;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
+using MicroElements.Reflection;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

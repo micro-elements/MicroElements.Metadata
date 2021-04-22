@@ -238,7 +238,7 @@ namespace MicroElements.Metadata.Xml
                 IEnumerable<Message> messages = container.Validate(validationRules.Rules);
                 foreach (Message message in messages)
                 {
-                    context.Messages.Add(message.WithText(string.Join(message.OriginalMessage, GetXmlLineInfo(propertyElement))));
+                    context.Messages.Add(message.WithText(string.Concat(message.OriginalMessage, GetXmlLineInfo(propertyElement))));
                 }
             }
         }

@@ -1,12 +1,12 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -19,18 +19,24 @@ namespace MicroElements.Metadata.Swashbuckle
     /// </summary>
     public class PropertyContainerSchemaFilter : ISchemaFilter
     {
+        private readonly JsonSerializerOptions _serializerOptions;
         private readonly PropertyContainerSchemaFilterOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainerSchemaFilter"/> class.
         /// </summary>
         /// <param name="options">Options.</param>
-        public PropertyContainerSchemaFilter(PropertyContainerSchemaFilterOptions? options)
+        /// <param name="serializerOptions">JsonSerializerOptions.</param>
+        public PropertyContainerSchemaFilter(
+            PropertyContainerSchemaFilterOptions? options,
+            IOptions<JsonSerializerOptions> serializerOptions)
         {
             _options = new PropertyContainerSchemaFilterOptions
             {
                 ResolvePropertyName = options?.ResolvePropertyName ?? (propertyName => propertyName),
             };
+
+            _serializerOptions = serializerOptions.Value;
         }
 
         /// <inheritdoc />
@@ -70,7 +76,8 @@ namespace MicroElements.Metadata.Swashbuckle
                             propertySchema.Enum = new List<IOpenApiAny>();
                             foreach (object allowedValue in allowedValues.ValuesUntyped)
                             {
-                                IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFor(propertySchema, allowedValue);
+                                string jsonValue = JsonConverterFunc(allowedValue);
+                                IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
                                 propertySchema.Enum.Add(openApiAny);
                             }
                         }
@@ -80,6 +87,11 @@ namespace MicroElements.Metadata.Swashbuckle
                     }
                 }
             }
+        }
+
+        private string JsonConverterFunc(object value)
+        {
+            return JsonSerializer.Serialize(value, _serializerOptions);
         }
     }
 }

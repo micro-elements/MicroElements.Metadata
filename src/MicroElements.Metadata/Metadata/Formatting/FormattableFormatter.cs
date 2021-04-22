@@ -4,7 +4,6 @@
 using System;
 using System.Linq.Expressions;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
 
 namespace MicroElements.Metadata.Formatting
 {

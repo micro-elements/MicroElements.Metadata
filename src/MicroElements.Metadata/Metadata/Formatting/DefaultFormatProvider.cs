@@ -16,7 +16,7 @@ namespace MicroElements.Metadata.Formatting
             // String
             yield return SimpleStringFormatter.Instance;
 
-            // Floating numbers
+            // Floating numbers (integers formats by default formatter)
             yield return FloatFormatter.Instance;
             yield return DoubleFormatter.Instance;
             yield return DecimalFormatter.Instance;

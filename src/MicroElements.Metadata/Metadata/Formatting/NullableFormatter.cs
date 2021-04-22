@@ -3,7 +3,6 @@
 
 using System;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
 
 namespace MicroElements.Metadata.Formatting
 {
@@ -30,7 +29,7 @@ namespace MicroElements.Metadata.Formatting
         public bool CanFormat(Type valueType) => true;
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
             if (value == null)
                 return null;

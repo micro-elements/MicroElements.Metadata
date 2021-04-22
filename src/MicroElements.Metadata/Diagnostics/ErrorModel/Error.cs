@@ -246,6 +246,4 @@ namespace MicroElements.Diagnostics.ErrorModel
             return Try(action, default);
         }
     }
-
-
 }

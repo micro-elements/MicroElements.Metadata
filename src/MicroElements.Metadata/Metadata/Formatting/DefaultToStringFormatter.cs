@@ -24,7 +24,6 @@ namespace MicroElements.Metadata.Formatting
                 return null;
 
             /* NOTE: Nullable types boxed as its underlying type. So no need to process nullability case. */
-
             return value is IFormattable formattable
                 ? formattable.ToString(null, CultureInfo.InvariantCulture)
                 : value.ToString();

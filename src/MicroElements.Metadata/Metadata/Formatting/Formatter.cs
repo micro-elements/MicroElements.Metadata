@@ -13,7 +13,8 @@ namespace MicroElements.Metadata.Formatting
         /// <summary>
         /// Gets default single item formatter.
         /// </summary>
-        public static IValueFormatter SingleValueFormatter { get; } = new CompositeFormatter(new DefaultFormatProvider().GetFormatters());
+        public static IValueFormatter SingleValueFormatter { get; } = new CompositeFormatter()
+            .With(new DefaultFormatProvider().GetFormatters());
 
         /// <summary>
         /// Gets FullToStringFormatter that formats with <see cref="SingleValueFormatter"/> and can format collections.

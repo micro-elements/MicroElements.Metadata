@@ -34,7 +34,7 @@ namespace MicroElements.Metadata.Formatting
         }
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
             if (value is ICollection collection)
             {
@@ -70,7 +70,7 @@ namespace MicroElements.Metadata.Formatting
         }
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
             if (value is KeyValuePair<string, object?> keyValuePair)
                 return $"({keyValuePair.Key}: {_valueFormatter.TryFormat(keyValuePair.Value)})";
@@ -101,7 +101,7 @@ namespace MicroElements.Metadata.Formatting
         }
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
             if (value is ValueTuple<string, object?> nameValueTuple)
                 return $"({nameValueTuple.Item1}: {_valueFormatter.TryFormat(nameValueTuple.Item2)})";
@@ -126,7 +126,7 @@ namespace MicroElements.Metadata.Formatting
         }
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
             return _formatterGetter().Format(value, valueType);
         }

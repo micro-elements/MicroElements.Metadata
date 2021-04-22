@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
 
 namespace MicroElements.Metadata.Formatting
 {
@@ -37,11 +36,9 @@ namespace MicroElements.Metadata.Formatting
         }
 
         /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
+        public string? Format(object? value, Type? valueType)
         {
-            // typeof(object) treats as type unknown
-            if (valueType == typeof(object))
-                valueType = value?.GetType() ?? typeof(object);
+            valueType = ValueFormatter.GetTargetType(value, valueType);
 
             IValueFormatter valueFormatter = _formattersCache.GetOrAdd(valueType, GetFormatter);
             return valueFormatter.Format(value, valueType);
@@ -49,22 +46,21 @@ namespace MicroElements.Metadata.Formatting
 
         private IValueFormatter GetFormatter(Type valueType)
         {
-            IValueFormatter? valueFormatter = _formatters
-                .FirstOrDefault(formatter => formatter.CanFormat(valueType));
+            IValueFormatter? valueFormatter = _formatters.FirstOrDefault(formatter => formatter.CanFormat(valueType));
 
             if (valueFormatter is null && Nullable.GetUnderlyingType(valueType) is { } underlyingType)
             {
                 valueFormatter = _formatters.FirstOrDefault(formatter => formatter.CanFormat(underlyingType));
+
                 if (valueFormatter != null)
                 {
                     return new NullableFormatter(valueFormatter);
                 }
             }
 
-            IValueFormatter? instance = valueFormatter;
-            if (instance != null)
+            if (valueFormatter != null)
             {
-                return instance;
+                return valueFormatter;
             }
 
             return DefaultToStringFormatter.Instance;

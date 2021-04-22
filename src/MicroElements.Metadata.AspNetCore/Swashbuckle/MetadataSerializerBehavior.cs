@@ -31,7 +31,7 @@ namespace MicroElements.Metadata.Swashbuckle
             if (type.IsAssignableTo<IPropertyContainer>())
             {
                 // Array is used for schema inlining.
-                // If IPropertyContainer is not collection then schema will be generated as reference but we need make it PropertySet dependent.
+                // If IPropertyContainer is not collection then schema will be generated as a reference but we need to make it dependent on PropertySet.
                 return DataContract.ForArray(type, typeof(PropertyValueContract));
             }
 

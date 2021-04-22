@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -27,7 +26,7 @@ namespace MicroElements.Metadata
         /// <param name="value">Value to format.</param>
         /// <param name="valueType">Value type.</param>
         /// <returns>Formatted string.</returns>
-        string? Format(object? value, Type valueType);
+        string? Format(object? value, Type? valueType = null);
     }
 
     /// <summary>
@@ -38,11 +37,18 @@ namespace MicroElements.Metadata
     public interface IValueFormatter<T> : IValueFormatter
     {
         /// <summary>
-        /// Formats <paramref name="value"/> to string.
+        /// Formats not null <paramref name="value"/> to string.
+        /// If you want to process <c>null</c> value override <see cref="FormatNull"/>.
         /// </summary>
         /// <param name="value">Value to format.</param>
         /// <returns>Formatted string.</returns>
-        string? Format(T? value);
+        string? Format(T value);
+
+        /// <summary>
+        /// Formats null value to string. By default returns <c>null</c>.
+        /// </summary>
+        /// <returns>Formatted string in case of null value.</returns>
+        string? FormatNull() => null;
 
         /// <inheritdoc />
         bool IValueFormatter.CanFormat(Type valueType)
@@ -51,20 +57,31 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        string? IValueFormatter.Format(object? value, Type valueType)
+        string? IValueFormatter.Format(object? value, Type? valueType)
         {
-            if (value is T valueTyped)
-                return Format(valueTyped);
+            if (value is T typedValue)
+                return Format(typedValue);
 
-            if (value is null && ValueFormatterTypeCache<T>.CanAcceptNull)
-                return Format(default);
-
-            return null;
+            return FormatNull();
         }
     }
 
-    internal static class ValueFormatterTypeCache<T>
+    internal static class ValueFormatter
     {
-        internal static bool CanAcceptNull { get; } = typeof(T).CanAcceptNull();
+        /// <summary>
+        /// Gets target type.
+        /// Treats null type and typeof(object) as type unknown (so it should be retrived from <paramref name="value"/>).
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="valueType"></param>
+        /// <returns></returns>
+        public static Type GetTargetType(object? value, Type? valueType)
+        {
+            // treats null type and typeof(object) as type unknown
+            if (valueType == null || valueType == typeof(object))
+                valueType = value?.GetType() ?? typeof(object);
+            return valueType;
+        }
     }
 }

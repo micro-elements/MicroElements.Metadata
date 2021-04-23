@@ -35,6 +35,11 @@ namespace MicroElements.Metadata.SystemTextJson
     public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
     {
         /// <summary>
+        /// Gets output type (for deserialization).
+        /// </summary>
+        public Type OutputType { get; }
+
+        /// <summary>
         /// Gets metadata json serializer options.
         /// </summary>
         public MetadataJsonSerializationOptions Options { get; }
@@ -43,15 +48,17 @@ namespace MicroElements.Metadata.SystemTextJson
         /// Initializes a new instance of the <see cref="PropertyContainerConverter"/> class.
         /// </summary>
         /// <param name="options">Metadata json serializer options.</param>
-        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
+        /// <param name="outputType">Output type (for deserialization).</param>
+        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null, Type? outputType = null)
         {
+            OutputType = outputType ?? typeof(IPropertyContainer);
             Options = options.Copy();
         }
 
         /// <inheritdoc />
         public override bool CanConvert(Type typeToConvert)
         {
-            return typeToConvert.IsAssignableTo<IPropertyContainer>();
+            return typeToConvert.IsAssignableTo(OutputType);
         }
 
         /// <inheritdoc />
@@ -61,6 +68,10 @@ namespace MicroElements.Metadata.SystemTextJson
             bool isPositional = false;
             int propertyIndex = 0;
             var propertyContainer = new MutablePropertyContainer();
+
+            IPropertySet? knownPropertySet = typeToConvert.GetSchemaByKnownPropertySet();
+            if (knownPropertySet != null)
+                schema = knownPropertySet;
 
             while (utf8JsonReader.Read())
             {
@@ -101,7 +112,8 @@ namespace MicroElements.Metadata.SystemTextJson
                 if (propertyName == "$metadata.schema.compact")
                 {
                     var compactSchemaItems = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                    schema = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
+                    IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
+                    schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
                     return;
                 }
 
@@ -110,7 +122,8 @@ namespace MicroElements.Metadata.SystemTextJson
                 {
                     isPositional = true;
                     var typeNames = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                    schema = MetadataSchema.ParseMetadataTypes(typeNames);
+                    IPropertySet schemaFromJson = MetadataSchema.ParseMetadataTypes(typeNames);
+                    schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
                     return;
                 }
 
@@ -152,9 +165,26 @@ namespace MicroElements.Metadata.SystemTextJson
                 propertyIndex++;
             }
 
-            if (typeToConvert.IsAssignableTo<IMutablePropertyContainer>())
+            if (OutputType == typeof(IMutablePropertyContainer) || OutputType == typeof(MutablePropertyContainer))
                 return propertyContainer;
 
+            if (OutputType == typeof(IPropertyContainer) || OutputType == typeof(PropertyContainer))
+                return new PropertyContainer(sourceValues: propertyContainer.Properties);
+
+            if (OutputType.IsConcreteType())
+            {
+                /*
+                 *  public PropertyContainer(
+                        IEnumerable<IPropertyValue>? sourceValues = null,
+                        IPropertyContainer? parentPropertySource = null,
+                        SearchOptions? searchOptions = null)
+                 */
+                object[] ctorArgs = new object[] { propertyContainer.Properties, null, null };
+                IPropertyContainer resultContainer = (IPropertyContainer)Activator.CreateInstance(OutputType, args: ctorArgs);
+                return resultContainer;
+            }
+
+            // Return ReadOnly PropertyContainer as a result.
             return new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 

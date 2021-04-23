@@ -1,5 +1,6 @@
 # 7.1.0
 - MicroElements.Metadata.AspNetCore: Swashbuckle updated to 6.1.3
+- MicroElements.Metadata: Schema metadata more close to JsonSchema
 
 # 7.0.0
 - Big release. Main features: XmlParsing, Performance, ExcelBuilder performance, Schema featurea and validations.  See release notes for release candidates

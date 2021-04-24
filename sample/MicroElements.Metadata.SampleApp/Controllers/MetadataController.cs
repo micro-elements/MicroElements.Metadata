@@ -51,20 +51,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         [PropertySet(Type = typeof(DatabaseMeta))]
         public IPropertyContainer Database { get; set; }
 
-        public PropertyContainerContract<PersonMetadata> Person { get; set; }
-    }
-
-    public class PropertyContainerContract<TPropertySet> : PropertyContainer, IKnownPropertySet<TPropertySet>
-        where TPropertySet : IPropertySet, new()
-    {
-        /// <inheritdoc />
-        public PropertyContainerContract(
-            IEnumerable<IPropertyValue>? sourceValues = null,
-            IPropertyContainer? parentPropertySource = null,
-            SearchOptions? searchOptions = null)
-            : base(sourceValues, parentPropertySource, searchOptions)
-        {
-        }
+        public PropertyContainer<PersonMetadata> Person { get; set; }
     }
 
     public class DatabaseMeta : IPropertySet

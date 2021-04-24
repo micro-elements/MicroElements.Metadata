@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
-using MicroElements.Shared;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -116,6 +115,17 @@ namespace MicroElements.Metadata.Serialization
             }
 
             return null;
+        }
+
+        public static IPropertySet AppendAbsentProperties(this IPropertySet source, IPropertySet propertiesToAdd, IEqualityComparer<IProperty>? propertyComparer = null)
+        {
+            propertyComparer ??= PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
+            var sourceProperties = source.GetProperties().ToList();
+            var lookup = sourceProperties.ToDictionary(property => property, property => property, propertyComparer);
+            List<IProperty> toAdd = propertiesToAdd.GetProperties().Where(property => !lookup.ContainsKey(property)).ToList();
+            if (toAdd.Count > 0)
+                return new PropertySet(sourceProperties.Concat(toAdd));
+            return source;
         }
     }
 }

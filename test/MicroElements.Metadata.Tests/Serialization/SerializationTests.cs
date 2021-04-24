@@ -176,9 +176,9 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
-        public void SerializePropertyContainer()
+        public void SerializeDeserializePropertyContainer()
         {
-            var propertyContainer = new MutablePropertyContainer()
+            var initialContainer = new MutablePropertyContainer()
                 .WithValue(TestMeta.StringProperty, "Text")
                 .WithValue(TestMeta.IntProperty, 42)
                 .WithValue(TestMeta.DoubleProperty, 10.2)
@@ -188,19 +188,32 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .WithValue(TestMeta.IntArray, new[] { 1, 2 })
                 ;
 
-            var propertyContainerContract = propertyContainer.ToContract(new DefaultMapperSettings());
+            var propertyContainerContract = initialContainer.ToContract(new DefaultMapperSettings());
             propertyContainerContract.Should().NotBeNull();
 
             var contractJson = propertyContainerContract.ToJsonWithSystemTextJson();
 
-            var json1 = propertyContainer.ToJsonWithSystemTextJson();
-            var container1 = JsonSerializer.Deserialize<PropertyContainer>(json1, new JsonSerializerOptions().ConfigureJsonOptions());
+            var json1 = initialContainer.ToJsonWithSystemTextJson();
+            var jsonOptions = new JsonSerializerOptions().ConfigureJsonOptions();
 
-            var json2 = propertyContainer.ToJsonWithNewtonsoftJson();
+            DeserializeAndCompare<IPropertyContainer>();
+            DeserializeAndCompare<PropertyContainer>();
+            DeserializeAndCompare<IMutablePropertyContainer>();
+            DeserializeAndCompare<MutablePropertyContainer>();
+            DeserializeAndCompare<PropertyContainer<TestMeta>>();
+            
+            var json2 = initialContainer.ToJsonWithNewtonsoftJson();
             var container2 = json2.DeserializeWithNewtonsoftJson<IPropertyContainer>();
-
-            ObjectDiff objectDiff = MetadataComparer.GetDiff(container1, container2);
+            ObjectDiff objectDiff = MetadataComparer.GetDiff(initialContainer, container2);
             objectDiff.Diffs.Should().BeEmpty();
+
+            void DeserializeAndCompare<TContainer>() where TContainer : IPropertyContainer
+            {
+                TContainer? restored = JsonSerializer.Deserialize<TContainer>(json1, jsonOptions);
+
+                ObjectDiff objectDiff = MetadataComparer.GetDiff(restored, initialContainer);
+                objectDiff.Diffs.Should().BeEmpty();
+            }
         }
 
         [Fact]
@@ -308,7 +321,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
     }
 
-    public static class TestMeta
+    public class TestMeta : IStaticPropertySet
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");

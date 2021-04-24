@@ -23,7 +23,7 @@ namespace MicroElements.Metadata.SystemTextJson
             this JsonSerializerOptions options,
             Action<MetadataJsonSerializationOptions>? configureMetadataJson = null)
         {
-            bool added = options.Converters.FirstOrDefault(converter => converter.GetType() == typeof(PropertyContainerConverter)) != null;
+            bool added = options.Converters.Any(converter => converter.GetType() == typeof(PropertyContainerConverter) || converter.GetType() == typeof(PropertyContainerConverterFactory));
             if (!added)
             {
                 MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null;
@@ -34,7 +34,7 @@ namespace MicroElements.Metadata.SystemTextJson
                     configureMetadataJson(metadataJsonSerializationOptions);
                 }
 
-                options.Converters.Add(new PropertyContainerConverter(metadataJsonSerializationOptions));
+                options.Converters.Add(new PropertyContainerConverterFactory(metadataJsonSerializationOptions));
             }
 
             return options;

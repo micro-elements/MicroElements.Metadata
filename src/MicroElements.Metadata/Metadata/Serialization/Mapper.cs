@@ -47,14 +47,6 @@ namespace MicroElements.Metadata.Serialization
         private readonly ITypeMapper _typeMapper;
         private readonly IValueFormatter _valueFormatter;
 
-        /// <summary>
-        /// Invariant format info. Uses '.' as decimal separator for floating point numbers.
-        /// </summary>
-        private static readonly NumberFormatInfo _defaultNumberFormatInfo = NumberFormatInfo.ReadOnly(
-            new NumberFormatInfo {
-                NumberDecimalSeparator = ".",
-            });
-
         public DefaultMapperSettings(
             ITypeMapper? typeMapper = null,
             IValueFormatter? valueFormatter = null)
@@ -81,9 +73,12 @@ namespace MicroElements.Metadata.Serialization
             if (text == null || text == "null")
                 return ParseResult.Success((object?)null);
 
-            var parserProvider = CachedPropertyParserProvider.Create(DefaultValueParserProvider.Instance);
+            IValueParserProvider valueParserProvider = DefaultValueParserProvider.Instance;
+            var cachedParserProvider = CachedValueParserProvider.Create(valueParserProvider);
             IPropertyFactory propertyFactory = new CachedPropertyFactory();
-            IValueParser valueParser = parserProvider.GetParser(propertyFactory.Create(type, type.FullName));
+            IProperty property = propertyFactory.Create(type, type.FullName);
+            IValueParser valueParser = cachedParserProvider.GetParser(property);
+
             IParseResult parseResult = valueParser.ParseUntyped(text);
             return parseResult;
 

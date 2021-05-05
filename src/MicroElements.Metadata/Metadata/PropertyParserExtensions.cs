@@ -21,7 +21,22 @@ namespace MicroElements.Metadata
         {
             return sourceRow
                 .GetValueAsOption(propertyParser.SourceName)
-                .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
+                .Match(
+                    textValue => ParseUntyped(propertyParser, textValue),
+                    () => propertyParser.GetDefaultValueUntyped());
+        }
+
+        public static ParseResult<IPropertyValue> ParseRowUntyped(this IParserRule parserRule, IReadOnlyDictionary<string, string> sourceRow, bool useDefaultValueForAbsent = false)
+        {
+            if (parserRule.SourceName != null)
+            {
+                if (sourceRow.TryGetValue(parserRule.SourceName, out string textValue))
+                {
+                    return ParseUntyped2(parserRule, textValue);
+                }
+            }
+
+            return ParseResult.Cache<IPropertyValue>.None;
         }
 
         /// <summary>
@@ -46,17 +61,19 @@ namespace MicroElements.Metadata
             }
         }
 
-        public static ParseResult<IPropertyValue> ParseUntyped2(this IParserRule propertyParser, string textValue)
+        public static ParseResult<IPropertyValue> ParseUntyped2(this IParserRule parserRule, string textValue)
         {
-            if (propertyParser.TargetProperty != null)
+            if (parserRule.TargetProperty != null)
             {
-                IParseResult parseResult = propertyParser.Parser.ParseUntyped(textValue);
+                IParseResult parseResult = parserRule.Parser.ParseUntyped(textValue);
                 if (parseResult.IsSuccess)
                 {
                     object? parsedValue = parseResult.ValueUntyped;
-                    IPropertyValue propertyValue = PropertyValueFactory.Default.CreateUntyped(propertyParser.TargetProperty, parsedValue);
+                    IPropertyValue propertyValue = PropertyValueFactory.Default.CreateUntyped(parserRule.TargetProperty, parsedValue);
                     return propertyValue.ToParseResult();
                 }
+
+                return ParseResult.Failed<IPropertyValue>(parseResult.Error);
             }
 
             return ParseResult.Failed<IPropertyValue>();

@@ -32,7 +32,7 @@ namespace MicroElements.Metadata.Xml
         public static IXmlParserContext With(
             this IXmlParserContext context,
             IXmlParserSettings? parserSettings = null,
-            Schema.IMutableObjectSchema? schema = null,
+            IMutableObjectSchema? schema = null,
             IMutableMessageList<Message>? messages = null,
             ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
             ConcurrentDictionary<IProperty, ISchema>? schemaCache = null,

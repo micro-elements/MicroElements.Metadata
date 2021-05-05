@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
+using System.ComponentModel;
 using MicroElements.CodeContracts;
-using MicroElements.Functional;
-using Message = MicroElements.Diagnostics.Message;
-using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
-using ObjectExtensions = MicroElements.Reflection.ObjectExtensions;
+using MicroElements.Diagnostics;
+using MicroElements.Diagnostics.ErrorModel;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -39,10 +37,24 @@ namespace MicroElements.Metadata
     }
 
     /// <summary>
+    /// Strong typed parse result.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IParseResult<T> : IParseResult
+    {
+        /// <summary>
+        /// Gets result value.
+        /// </summary>
+        public T? Value { get; }
+    }
+
+    /// <summary>
     /// Represents parse result.
+    /// ParseResult is a class because most use cases uses it as boxed <see cref="IParseResult"/>.
     /// </summary>
     /// <typeparam name="T">Result value type.</typeparam>
-    public readonly struct ParseResult<T> : IParseResult
+    [ImmutableObject(true)]
+    public class ParseResult<T> : IParseResult<T>
     {
         /// <inheritdoc />
         public Type Type => typeof(T);
@@ -62,7 +74,7 @@ namespace MicroElements.Metadata
         public T? Value { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ParseResult{T}"/> struct.
+        /// Initializes a new instance of the <see cref="ParseResult{T}"/> class.
         /// </summary>
         /// <param name="isSuccess">Is success.</param>
         /// <param name="value">Parse result.</param>
@@ -86,17 +98,26 @@ namespace MicroElements.Metadata
     /// </summary>
     public static class ParseResult
     {
+        /// <summary>
+        /// Most used parse results.
+        /// </summary>
+        /// <typeparam name="T">Value type.</typeparam>
         public static class Cache<T>
         {
             /// <summary>
             /// Gets Empty Success result for type.
             /// </summary>
-            public static ParseResult<T> SuccessDefault { get; } = ParseResult.Success<T>(default);
+            public static ParseResult<T> SuccessDefault { get; } = new ParseResult<T>(isSuccess: true, value: default, error: null);
 
             /// <summary>
             /// Gets default Failed result for type.
             /// </summary>
-            public static ParseResult<T> Failed { get; } = ParseResult.Failed<T>();
+            public static ParseResult<T> Failed { get; } = new ParseResult<T>(isSuccess: false, value: default, error: new Message("Failed result."));
+
+            /// <summary>
+            /// Gets None result.
+            /// </summary>
+            public static ParseResult<T> None { get; } = new ParseResult<T>(isSuccess: false, value: default, error: new Message("None result."));
 
             /// <summary>
             /// Gets default Failed result for type.
@@ -122,10 +143,10 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Result type.</typeparam>
         /// <param name="value">Value.</param>
         /// <returns>Success <see cref="ParseResult{T}"/> instance.</returns>
-        public static ParseResult<T> Success<T>([AllowNull] T value)
+        public static ParseResult<T> Success<T>(T? value)
         {
-            if (ObjectExtensions.IsDefault(value))
-                return ParseResult.Cache<T>.SuccessDefault;
+            if (value.IsDefault())
+                return Cache<T>.SuccessDefault;
 
             return new ParseResult<T>(isSuccess: true, value: value, error: null);
         }
@@ -139,7 +160,7 @@ namespace MicroElements.Metadata
         public static ParseResult<T> Failed<T>(Message? error = null)
         {
             if (error == null)
-                return ParseResult.Cache<T>.Failed;
+                return Cache<T>.Failed;
 
             return new ParseResult<T>(isSuccess: false, value: default, error: error);
         }
@@ -161,11 +182,11 @@ namespace MicroElements.Metadata
 
         public static ParseResult<T> ToParseResult<T>(this T value, bool allowNull = false)
         {
-            if (ObjectExtensions.IsNull(value))
+            if (value.IsNull())
             {
                 if (!allowNull)
-                    return ParseResult.Cache<T>.FailedNullNotAllowed;
-                return ParseResult.Cache<T>.SuccessDefault;
+                    return Cache<T>.FailedNullNotAllowed;
+                return Cache<T>.SuccessDefault;
             }
 
             return ParseResult.Success(value);
@@ -173,9 +194,9 @@ namespace MicroElements.Metadata
 
         public static ParseResult<T> ParseNotNull<T>(this T? value)
         {
-            if (ObjectExtensions.IsNull(value))
+            if (value.IsNull())
             {
-                return ParseResult.Cache<T>.FailedNullNotAllowed;
+                return Cache<T>.FailedNullNotAllowed;
             }
 
             return ParseResult.Success(value);
@@ -183,9 +204,9 @@ namespace MicroElements.Metadata
 
         public static ParseResult<T> Parse<T>(this T value)
         {
-            if (ObjectExtensions.IsNull(value))
+            if (value.IsNull())
             {
-                return ParseResult.Cache<T>.SuccessDefault;
+                return Cache<T>.SuccessDefault;
             }
 
             return ParseResult.Success(value);
@@ -199,9 +220,9 @@ namespace MicroElements.Metadata
         /// <param name="source">Source result.</param>
         /// <param name="map">Map function.</param>
         /// <returns><see cref="ParseResult{T}"/> of type <typeparamref name="B"/>.</returns>
-        public static ParseResult<B> Map<A, B>(this in ParseResult<A> source, Func<A, B> map)
+        public static ParseResult<B> Map<A, B>(this IParseResult<A> source, Func<A, B> map)
         {
-            Assertions.AssertArgumentNotNull(map, nameof(map));
+            map.AssertArgumentNotNull(nameof(map));
 
             if (source.IsSuccess)
             {
@@ -212,9 +233,9 @@ namespace MicroElements.Metadata
             return ParseResult.Failed<B>(source.Error);
         }
 
-        public static ParseResult<T> MapNotNull<T>(this in ParseResult<T?> source)
+        public static IParseResult<T> MapNotNull<T>(this IParseResult<T?> source)
         {
-            if (source.IsSuccess && ObjectExtensions.IsNotNull(source.Value))
+            if (source.IsSuccess && source.Value.IsNotNull())
             {
                 return source;
             }
@@ -222,11 +243,11 @@ namespace MicroElements.Metadata
             return ParseResult.Cache<T>.FailedNullNotAllowed;
         }
 
-        public static ParseResult<B> MapNotNull<A, B>(this in ParseResult<A?> source, Func<A, B> map)
+        public static IParseResult<B> MapNotNull<A, B>(this IParseResult<A?> source, Func<A, B> map)
         {
-            Assertions.AssertArgumentNotNull(map, nameof(map));
+            map.AssertArgumentNotNull(nameof(map));
 
-            if (source.IsSuccess && ObjectExtensions.IsNotNull(source.Value))
+            if (source.IsSuccess && source.Value.IsNotNull())
             {
                 B valueB = map(source.Value!);
                 return Success(valueB);
@@ -235,9 +256,9 @@ namespace MicroElements.Metadata
             return ParseResult.Failed<B>(source.Error);
         }
 
-        public static ParseResult<B> Bind<A, B>(this in ParseResult<A> source, Func<A, ParseResult<B>> bind)
+        public static IParseResult<B> Bind<A, B>(this IParseResult<A> source, Func<A, IParseResult<B>> bind)
         {
-            Assertions.AssertArgumentNotNull(bind, nameof(bind));
+            bind.AssertArgumentNotNull(nameof(bind));
 
             if (source.IsSuccess)
             {
@@ -247,18 +268,19 @@ namespace MicroElements.Metadata
             return ParseResult.Failed<B>(source.Error);
         }
 
-        public static T? GetValueOrThrow<T>(this in ParseResult<T> source, bool allowNullResult = true)
+        public static T? GetValueOrThrow<T>(this IParseResult<T> source, bool allowNullResult = true)
         {
             if (source.IsSuccess)
             {
                 T? value = source.Value;
-                if (!allowNullResult && ObjectExtensions.IsNull(value))
+                if (!allowNullResult && value.IsNull())
                     throw new Exception();
 
                 return value;
             }
 
-            throw source.Error.ToException();
+            Message error = source.Error ?? new Message("ParseResult dos not contain detailed error", severity: MessageSeverity.Error);
+            throw error.ToException();
         }
 
         public static object? GetValueOrThrow(this IParseResult source, bool allowNullResult = true)
@@ -266,18 +288,20 @@ namespace MicroElements.Metadata
             if (source.IsSuccess)
             {
                 var value = source.ValueUntyped;
-                if (!allowNullResult && ObjectExtensions.IsNull(value))
+                if (!allowNullResult && value.IsNull())
                     throw new Exception();
 
                 return value;
             }
 
-            throw source.Error.ToException();
+            Message error = source.Error ?? new Message("ParseResult dos not contain detailed error", severity: MessageSeverity.Error);
+            throw error.ToException();
         }
 
         public static Exception ToException(this Message message)
         {
-            return new Diagnostics.ErrorModel.ExceptionWithError<string>(new Diagnostics.ErrorModel.Error<string>(message.EventName, message.FormattedMessage));
+            Error<string> error = new Error<string>(message.EventName ?? "ERROR", message.FormattedMessage);
+            return new ExceptionWithError<string>(error);
         }
     }
 }

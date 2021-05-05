@@ -79,7 +79,7 @@ namespace MicroElements.Metadata.Diff
 
         private static string FormatForDiff(IPropertyValue propertyValue)
         {
-            string formatAsTuple = propertyValue.ValueUntyped.FormatValue();
+            string formatAsTuple = propertyValue.ValueUntyped.FormatValue(nullPlaceholder: "null");
             return formatAsTuple;
         }
     }

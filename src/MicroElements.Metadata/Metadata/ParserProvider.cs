@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
@@ -14,6 +13,7 @@ namespace MicroElements.Metadata
     public abstract class ParserProvider : IParserProvider
     {
         private readonly List<IPropertyParser> _parsers = new List<IPropertyParser>();
+        private readonly List<IParserRule> _parserRules = new List<IParserRule>();
 
         /// <inheritdoc />
         public IEnumerable<IPropertyParser> GetParsers() => _parsers;
@@ -44,6 +44,40 @@ namespace MicroElements.Metadata
             PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
             _parsers.Add(propertyParser);
             return propertyParser;
+        }
+
+        public class RuleBuilder<T> : IParserRule
+        {
+            public RuleBuilder(string sourceName, Func<string?, T> parseFunc)
+            {
+                SourceName = sourceName;
+                Parser = new ValueParser<T>(parseFunc);
+            }
+
+            /// <inheritdoc />
+            public string? SourceName { get; }
+
+            /// <inheritdoc />
+            public IValueParser Parser { get; }
+
+            /// <inheritdoc />
+            public Type? TargetType { get; }
+
+            /// <inheritdoc />
+            public IProperty? TargetProperty { get; private set; }
+
+            public RuleBuilder<T> Target(IProperty<T> property)
+            {
+                TargetProperty = property;
+                return this;
+            }
+        }
+
+        public RuleBuilder<T> Source2<T>(string sourceName, Func<string?, T> parseFunc)
+        {
+            var ruleBuilder = new RuleBuilder<T>(sourceName, parseFunc);
+            _parserRules.Add(ruleBuilder);
+            return ruleBuilder;
         }
 
         /// <summary>

@@ -9,6 +9,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represent parser for property.
     /// </summary>
+    [Obsolete("Will be replaced by IParserRule")]
     public interface IPropertyParser
     {
         /// <summary>
@@ -31,6 +32,7 @@ namespace MicroElements.Metadata
     /// Generic property parser.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
+    [Obsolete("Will be replaced by IParserRule")]
     public interface IPropertyParser<T> : IPropertyParser
     {
         /// <summary>

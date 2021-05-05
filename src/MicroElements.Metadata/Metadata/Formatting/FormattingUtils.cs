@@ -38,7 +38,7 @@ namespace MicroElements.Metadata.Formatting
             startSymbol.AssertArgumentNotNull(nameof(startSymbol));
             endSymbol.AssertArgumentNotNull(nameof(endSymbol));
 
-            formatValue ??= value => value.FormatValue(nullResultValue: "null");
+            formatValue ??= value => value.FormatValue(nullPlaceholder: nullPlaceholder);
 
             var stringBuilder = new StringBuilder();
             stringBuilder.Append(startSymbol);

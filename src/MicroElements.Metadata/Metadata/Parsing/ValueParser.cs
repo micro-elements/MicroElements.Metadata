@@ -50,7 +50,7 @@ namespace MicroElements.Metadata.Parsing
         }
 
         /// <inheritdoc />
-        public override ParseResult<T> Parse(string? source)
+        public override IParseResult<T> Parse(string? source)
         {
             try
             {

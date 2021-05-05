@@ -133,7 +133,7 @@ namespace MicroElements.Metadata
                     return formattable.ToString(format, formatProvider ?? CultureInfo.InvariantCulture);
                 }
 
-                return valueUntyped.FormatValue(nullResultValue: options.NullValue);
+                return valueUntyped.FormatValue(nullPlaceholder: options.NullValue);
             }
         }
 

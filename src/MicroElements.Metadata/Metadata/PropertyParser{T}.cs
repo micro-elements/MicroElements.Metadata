@@ -11,6 +11,7 @@ namespace MicroElements.Metadata
     /// Generic property parser.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
+    [Obsolete("Will be replaced by ParserRule")]
     public sealed class PropertyParser<T> : IPropertyParser<T>
     {
         /// <inheritdoc />

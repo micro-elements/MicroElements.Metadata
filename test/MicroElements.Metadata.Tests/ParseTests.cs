@@ -33,7 +33,7 @@ namespace MicroElements.Metadata.Tests
 
     public static class ParseResultAssertions
     {
-        public static ParseResult<T> Should<T>(this ParseResult<T> parseResult, bool beSuccess = true)
+        public static IParseResult<T> Should<T>(this IParseResult<T> parseResult, bool beSuccess = true)
         {
             parseResult.IsSuccess.Should().Be(beSuccess);
 

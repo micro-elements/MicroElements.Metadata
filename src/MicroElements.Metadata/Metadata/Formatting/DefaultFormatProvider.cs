@@ -30,6 +30,9 @@ namespace MicroElements.Metadata.Formatting
             {
                 yield return nodaTimeFormatter;
             }
+
+            // Type
+            yield return FriendlyTypeNameFormatter.Instance;
         }
     }
 }

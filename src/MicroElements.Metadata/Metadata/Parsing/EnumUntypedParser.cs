@@ -26,7 +26,7 @@ namespace MicroElements.Metadata.Parsing
         }
 
         /// <inheritdoc />
-        public override ParseResult<object> Parse(string? source)
+        public override IParseResult<object> Parse(string? source)
         {
             if (source == null && _allowNull)
                 return ParseResult.Success<object>(null);

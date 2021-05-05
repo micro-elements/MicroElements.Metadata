@@ -169,10 +169,11 @@ namespace MicroElements.Metadata.Tests.Serialization
             var mapperSettings = new DefaultMapperSettings();
             var messageList = new ConcurrentMessageList<Message>();
 
-            new PropertyValueContract { Name = name, Value = value, Type = type }
+            var restored = new PropertyValueContract { Name = name, Value = value, Type = type }
                 .ToModel(mapperSettings, messageList)
-                .ToContract(mapperSettings)
-                .Should().BeEquivalentTo(new PropertyValueContract { Name = name, Value = value, Type = type2 ?? type });
+                .ToContract(mapperSettings);
+
+            restored.Should().BeEquivalentTo(new PropertyValueContract { Name = name, Value = value, Type = type2 ?? type });
         }
 
         [Fact]

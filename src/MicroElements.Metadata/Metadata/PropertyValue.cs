@@ -50,7 +50,7 @@ namespace MicroElements.Metadata
         public static implicit operator T(PropertyValue<T> propertyValue) => propertyValue.Value;
 
         /// <inheritdoc />
-        public override string ToString() => $"{Property.Name}: {Value.FormatValue()}";
+        public override string ToString() => $"{Property.Name}: {Value.FormatValue("null")}";
     }
 
     /// <summary>

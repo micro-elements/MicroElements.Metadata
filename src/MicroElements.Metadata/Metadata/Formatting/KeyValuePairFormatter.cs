@@ -2,24 +2,24 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using MicroElements.CodeContracts;
 using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
-    /// Formatter for collection types.
+    /// Formatter for <see cref="KeyValuePair{TKey,TValue}"/> with string key.
     /// </summary>
-    public class CollectionFormatter : IValueFormatter
+    public class KeyValuePairFormatter : IValueFormatter
     {
         private readonly IValueFormatter _valueFormatter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CollectionFormatter"/> class.
+        /// Initializes a new instance of the <see cref="KeyValuePairFormatter"/> class.
         /// </summary>
-        /// <param name="valueFormatter">Collection values formatter.</param>
-        public CollectionFormatter(IValueFormatter valueFormatter)
+        /// <param name="valueFormatter">Value formatter.</param>
+        public KeyValuePairFormatter(IValueFormatter valueFormatter)
         {
             valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
 
@@ -29,19 +29,14 @@ namespace MicroElements.Metadata.Formatting
         /// <inheritdoc />
         public bool CanFormat(Type valueType)
         {
-            return valueType.IsAssignableTo(typeof(ICollection)) || valueType.Name.StartsWith("IReadOnlyCollection");
+            return valueType.IsAssignableTo(typeof(KeyValuePair<string, object>));
         }
 
         /// <inheritdoc />
         public string? Format(object? value, Type? valueType)
         {
-            if (value is ICollection collection)
-            {
-                return collection.FormatAsTuple(
-                    startSymbol: "[",
-                    endSymbol: "]",
-                    formatValue: item => _valueFormatter.Format(item, typeof(object)));
-            }
+            if (value is KeyValuePair<string, object?> keyValuePair)
+                return $"({keyValuePair.Key}: {_valueFormatter.TryFormat(keyValuePair.Value)})";
 
             return null;
         }

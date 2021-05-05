@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Metadata.Parsing;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -45,6 +47,14 @@ namespace MicroElements.Metadata
                 {
                     // Nullable enum.
                     parserRule = new ParserRule(new EnumUntypedParser(baseType, allowNull: true), property.Type);
+                }
+            }
+
+            if (parserRule == null)
+            {
+                if (property.Type.IsAssignableTo(typeof(ICollection)) || property.Type.Name.StartsWith("IReadOnlyCollection"))
+                {
+                    parserRule = new ParserRule(new CollectionParser(property.Type), property.Type);
                 }
             }
 

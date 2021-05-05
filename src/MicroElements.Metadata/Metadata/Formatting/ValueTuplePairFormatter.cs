@@ -2,24 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using MicroElements.CodeContracts;
 using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
-    /// Formatter for collection types.
+    /// Formatter for <see cref="ValueTuple{TKey,TValue}"/> with string key.
     /// </summary>
-    public class CollectionFormatter : IValueFormatter
+    public class ValueTuplePairFormatter : IValueFormatter
     {
         private readonly IValueFormatter _valueFormatter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CollectionFormatter"/> class.
+        /// Initializes a new instance of the <see cref="ValueTuplePairFormatter"/> class.
         /// </summary>
-        /// <param name="valueFormatter">Collection values formatter.</param>
-        public CollectionFormatter(IValueFormatter valueFormatter)
+        /// <param name="valueFormatter">Value formatter.</param>
+        public ValueTuplePairFormatter(IValueFormatter valueFormatter)
         {
             valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
 
@@ -29,19 +28,14 @@ namespace MicroElements.Metadata.Formatting
         /// <inheritdoc />
         public bool CanFormat(Type valueType)
         {
-            return valueType.IsAssignableTo(typeof(ICollection)) || valueType.Name.StartsWith("IReadOnlyCollection");
+            return valueType.IsAssignableTo(typeof(ValueTuple<string, object>));
         }
 
         /// <inheritdoc />
         public string? Format(object? value, Type? valueType)
         {
-            if (value is ICollection collection)
-            {
-                return collection.FormatAsTuple(
-                    startSymbol: "[",
-                    endSymbol: "]",
-                    formatValue: item => _valueFormatter.Format(item, typeof(object)));
-            }
+            if (value is ValueTuple<string, object?> nameValueTuple)
+                return $"({nameValueTuple.Item1}: {_valueFormatter.TryFormat(nameValueTuple.Item2)})";
 
             return null;
         }

@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {
@@ -71,6 +74,20 @@ namespace MicroElements.Metadata
             Parser = parser;
             TargetProperty = targetProperty;
             TargetType = targetType;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            IEnumerable<(string, string?)> KeyValuePairs()
+            {
+                yield return (nameof(SourceName), SourceName);
+                yield return (nameof(Parser), Parser.FormatValue());
+                yield return (nameof(TargetType), TargetType.FormatValue());
+                yield return (nameof(TargetProperty), TargetProperty.FormatValue());
+            }
+
+            return KeyValuePairs().Where(tuple => tuple.Item2 is not null).FormatAsTuple();
         }
     }
 }

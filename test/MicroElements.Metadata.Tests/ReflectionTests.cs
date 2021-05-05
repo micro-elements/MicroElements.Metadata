@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using MicroElements.Metadata.Serialization;
+using MicroElements.Validation;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -81,6 +83,14 @@ namespace MicroElements.Metadata.Tests
 
             IMeta manualMeta2 = new ManualMeta2() { Meta = "ManualMeta2" };
             manualMeta2.GetMeta().Should().Be("ManualMeta2");
+        }
+
+        [Fact]
+        public void GetTypeFriendlyName()
+        {
+            string friendlyName = typeof(string[]).GetFriendlyName();
+
+            string typeName = DefaultMapperSettings.Instance.GetTypeName(typeof(string[]));
         }
     }
 

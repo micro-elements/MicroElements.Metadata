@@ -627,23 +627,23 @@ namespace MicroElements.Diagnostics
         public IValueFormatter Get(string name, string args) => _rendererProvider.Get(name, args);
     }
 
-    public class ConvertToStringFormatter : IValueFormatter
-    {
-        private IValueFormatter _formatter;
+    //public class ConvertToStringFormatter : IValueFormatter
+    //{
+    //    private IValueFormatter _formatter;
 
 
-        /// <inheritdoc />
-        public bool CanFormat(Type valueType) => true;
+    //    /// <inheritdoc />
+    //    public bool CanFormat(Type valueType) => true;
 
-        /// <inheritdoc />
-        public string? Format(object? value, Type? valueType = null)
-        {
-            if(_formatter.CanFormat())
-            string formatValue = value.FormatValue(nullResultValue: null);
+    //    /// <inheritdoc />
+    //    public string? Format(object? value, Type? valueType = null)
+    //    {
+    //        if(_formatter.CanFormat())
+    //        string formatValue = value.FormatValue(nullResultValue: null);
 
-            return formatValue;
-        }
-    }
+    //        return formatValue;
+    //    }
+    //}
 
     /// <summary>
     /// Cached provider caches renderer for each pair: (name, arg).

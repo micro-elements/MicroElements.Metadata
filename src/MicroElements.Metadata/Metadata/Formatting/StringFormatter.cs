@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
@@ -16,14 +17,15 @@ namespace MicroElements.Metadata
         /// Uses <see cref="Formatter.FullRecursiveFormatter"/> for formatting.
         /// </summary>
         /// <param name="value">Value to format.</param>
-        /// <param name="nullResultValue">Value to return if input value is null or formatted result is null.</param>
-        /// <returns>Formatted string.</returns>
-        public static string FormatValue(this object? value, string nullResultValue = "null")
+        /// <param name="nullPlaceholder">Value to return if input value is null or formatted result is null.</param>
+        /// <returns>Formatted string or <paramref name="nullPlaceholder"/>.</returns>
+        [return: NotNullIfNotNull("nullPlaceholder")]
+        public static string? FormatValue(this object? value, string? nullPlaceholder = null)
         {
             if (value == null)
-                return nullResultValue;
+                return nullPlaceholder;
 
-            return Formatter.FullRecursiveFormatter.TryFormat(value) ?? nullResultValue;
+            return Formatter.FullRecursiveFormatter.TryFormat(value) ?? nullPlaceholder;
         }
 
         /// <summary>

@@ -35,6 +35,6 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="source">Source value.</param>
         /// <returns>Parse result.</returns>
-        ParseResult<T> Parse(string? source);
+        IParseResult<T> Parse(string? source);
     }
 }

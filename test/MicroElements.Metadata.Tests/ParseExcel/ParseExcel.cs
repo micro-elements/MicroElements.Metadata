@@ -58,6 +58,8 @@ namespace MicroElements.Metadata.Tests.ParseExcel
                 Source("Text").Target(FxSheetMeta.Text);
 
                 Source("Date", ParseLocalDate).Target(FxSheetMeta.Date);
+                Source2("Date", ParseLocalDate).Target(FxSheetMeta.Date);
+
                 Source("Time", ParseLocalTime).Target(FxSheetMeta.Time);
                 Source("DateTime", ParseDateTime).Target(FxSheetMeta.DateTime);
 

@@ -64,6 +64,10 @@ namespace MicroElements.Metadata.Parsing
 
         public static ParseResult<DateTime?> ParseNullableDateTime(string? text) => text.ParseNullable<DateTime>(DateTime.TryParse);
 
+        public static ParseResult<DateTimeOffset> ParseDateTimeOffset(string? text) => text.Parse<DateTimeOffset>(DateTimeOffset.TryParse);
+
+        public static ParseResult<DateTimeOffset?> ParseNullableDateTimeOffset(string? text) => text.ParseNullable<DateTimeOffset>(DateTimeOffset.TryParse);
+
         public static readonly ValueParser<int> IntParser = new ValueParser<int>(ParseInt);
 
         public static readonly ValueParser<byte> ByteParser = new ValueParser<byte>(ParseByte);
@@ -115,5 +119,9 @@ namespace MicroElements.Metadata.Parsing
         public static readonly ValueParser<DateTime> DateTimeParser = new ValueParser<DateTime>(ParseDateTime);
 
         public static readonly ValueParser<DateTime?> NullableDateTimeParser = new ValueParser<DateTime?>(ParseNullableDateTime);
+
+        public static readonly ValueParser<DateTimeOffset> DateTimeOffsetParser = new ValueParser<DateTimeOffset>(ParseDateTimeOffset);
+
+        public static readonly ValueParser<DateTimeOffset?> NullableDateTimeOffsetParser = new ValueParser<DateTimeOffset?>(ParseNullableDateTimeOffset);
     }
 }

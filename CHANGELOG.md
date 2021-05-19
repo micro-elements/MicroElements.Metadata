@@ -1,3 +1,7 @@
+# 7.2.0
+- PropertyContainerConverter becomes generic and supports collections
+- DateTimeOffsetFormatter added to DefaultFormatProvider
+
 # 7.1.0
 - MicroElements.Metadata.AspNetCore: Swashbuckle updated to 6.1.3
 - MicroElements.Metadata: Schema metadata more close to JsonSchema

@@ -22,7 +22,8 @@ namespace MicroElements.Metadata.Formatters
             yield return DecimalFormatter.Instance;
 
             // Date and Time
-            yield return DateTimeIsoFormatter.Instance;
+            yield return DateTimeFormatter.IsoShort;
+            yield return DateTimeOffsetFormatter.Iso;
 
             // NodaTime Formatters
             foreach (var nodaTimeFormatter in new NodaTimeIsoFormatters().GetFormatters())

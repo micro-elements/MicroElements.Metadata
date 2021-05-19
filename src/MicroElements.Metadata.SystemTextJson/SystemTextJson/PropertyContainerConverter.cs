@@ -32,7 +32,9 @@ namespace MicroElements.Metadata.SystemTextJson
     /// }
     /// </example>
     /// </summary>
-    public class PropertyContainerConverter : JsonConverter<IPropertyContainer>
+    /// <typeparam name="TPropertyContainer">PropertyContainer type.</typeparam>
+    public class PropertyContainerConverter<TPropertyContainer> : JsonConverter<TPropertyContainer>
+        where TPropertyContainer : IPropertyContainer
     {
         /// <summary>
         /// Gets output type (for deserialization).
@@ -45,13 +47,12 @@ namespace MicroElements.Metadata.SystemTextJson
         public MetadataJsonSerializationOptions Options { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyContainerConverter"/> class.
+        /// Initializes a new instance of the <see cref="PropertyContainerConverter{TPropertyContainer}"/> class.
         /// </summary>
         /// <param name="options">Metadata json serializer options.</param>
-        /// <param name="outputType">Output type (for deserialization).</param>
-        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null, Type? outputType = null)
+        public PropertyContainerConverter(MetadataJsonSerializationOptions? options = null)
         {
-            OutputType = outputType ?? typeof(IPropertyContainer);
+            OutputType = typeof(TPropertyContainer);
             Options = options.Copy();
         }
 
@@ -62,7 +63,7 @@ namespace MicroElements.Metadata.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override IPropertyContainer Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions options)
+        public override TPropertyContainer Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions options)
         {
             IPropertySet? schema = null;
             bool isPositional = false;
@@ -166,10 +167,10 @@ namespace MicroElements.Metadata.SystemTextJson
             }
 
             if (OutputType == typeof(IMutablePropertyContainer) || OutputType == typeof(MutablePropertyContainer))
-                return propertyContainer;
+                return (TPropertyContainer)(object)propertyContainer;
 
             if (OutputType == typeof(IPropertyContainer) || OutputType == typeof(PropertyContainer))
-                return new PropertyContainer(sourceValues: propertyContainer.Properties);
+                return (TPropertyContainer)(object)new PropertyContainer(sourceValues: propertyContainer.Properties);
 
             if (OutputType.IsConcreteType())
             {
@@ -180,16 +181,16 @@ namespace MicroElements.Metadata.SystemTextJson
                         SearchOptions? searchOptions = null)
                  */
                 object[] ctorArgs = new object[] { propertyContainer.Properties, null, null };
-                IPropertyContainer resultContainer = (IPropertyContainer)Activator.CreateInstance(OutputType, args: ctorArgs);
+                TPropertyContainer resultContainer = (TPropertyContainer)Activator.CreateInstance(OutputType, args: ctorArgs);
                 return resultContainer;
             }
 
             // Return ReadOnly PropertyContainer as a result.
-            return new PropertyContainer(sourceValues: propertyContainer.Properties);
+            return (TPropertyContainer)(object)new PropertyContainer(sourceValues: propertyContainer.Properties);
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, IPropertyContainer container, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TPropertyContainer container, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
 

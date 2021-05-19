@@ -34,7 +34,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
 
             return new PersonView
             {
-                Person = new PropertyContainerContract<PersonMetadata>(propertyContainer)
+                Person = new PropertyContainer<PersonMetadata>(propertyContainer)
             };
         }
     }

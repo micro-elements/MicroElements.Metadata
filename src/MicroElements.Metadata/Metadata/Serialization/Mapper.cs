@@ -188,7 +188,7 @@ namespace MicroElements.Metadata.Serialization
 
             var elements = strings
                 .Select(s => DeserializeValue(elementType, s).GetValueOrDefault(message => elementType.GetDefaultValue()))
-                .ToArray(elementType);
+                .ToArrayOfType(elementType);
 
             return elements;
         }
@@ -196,7 +196,7 @@ namespace MicroElements.Metadata.Serialization
 
     public static class Mapper
     {
-        public static object ToArray(this IEnumerable<object?> objects, Type type)
+        public static Array ToArrayOfType(this IEnumerable<object?> objects, Type type)
         {
             object?[] array = objects.ToArray();
             Array typedArray = Array.CreateInstance(type, array.Length);

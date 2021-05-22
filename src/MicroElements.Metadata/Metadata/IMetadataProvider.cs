@@ -63,7 +63,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets default property comparer for metadata search.
         /// </summary>
-        public static IEqualityComparer<IProperty> DefaultMetadataComparer { get; } = PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
+        public static IEqualityComparer<IProperty> DefaultMetadataComparer { get; } = PropertyComparer.DefaultMetadataComparer;
 
         /// <summary>
         /// Gets default search options for metadata providers.

@@ -61,6 +61,10 @@ namespace MicroElements.Metadata.NewtonsoftJson
             int propertyIndex = 0;
             var propertyContainer = new MutablePropertyContainer();
 
+            IPropertySet? knownPropertySet = objectType.GetSchemaByKnownPropertySet();
+            if (knownPropertySet != null)
+                schema = knownPropertySet;
+
             while (reader.Read())
             {
                 if (reader.TokenType == JsonToken.PropertyName)
@@ -99,7 +103,8 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 if (propertyName == "$metadata.schema.compact")
                 {
                     var compactSchemaItems = serializer.Deserialize<string[]>(reader);
-                    schema = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
+                    IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
+                    schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
                     return;
                 }
 
@@ -108,7 +113,8 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 {
                     isPositional = true;
                     var typeNames = serializer.Deserialize<string[]>(reader);
-                    schema = MetadataSchema.ParseMetadataTypes(typeNames);
+                    IPropertySet schemaFromJson = MetadataSchema.ParseMetadataTypes(typeNames);
+                    schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
                     return;
                 }
 

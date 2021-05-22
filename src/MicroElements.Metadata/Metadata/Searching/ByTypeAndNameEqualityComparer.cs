@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Property comparer by <see cref="IProperty.Name"/> and <see cref="IProperty.Type"/>.
+    /// Property comparer by Type and Name.
     /// </summary>
     public sealed class ByTypeAndNameEqualityComparer : IEqualityComparer<IProperty>
     {
@@ -23,12 +23,14 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc/>
-        public bool Equals(IProperty x, IProperty y)
+        public bool Equals(IProperty? x, IProperty? y)
         {
-            if (ReferenceEquals(x, y)) return true;
-            if (ReferenceEquals(x, null)) return false;
-            if (ReferenceEquals(y, null)) return false;
-            if (x.GetType() != y.GetType()) return false;
+            if (x is null || y is null)
+                return false;
+
+            if (ReferenceEquals(x, y))
+                return true;
+
             return x.Type == y.Type && x.Name.Equals(y.Name, _stringComparison);
         }
 

@@ -218,6 +218,31 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
+        public void SerializeDeserializePropertyContainerCollection()
+        {
+            var initialContainer = new MutablePropertyContainer()
+                .WithValue(TestMeta.StringProperty, "Text")
+                .WithValue(TestMeta.IntProperty, 42)
+                .WithValue(TestMeta.DoubleProperty, 10.2)
+                .WithValue(TestMeta.NullableIntProperty, null)
+                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
+                .WithValue(TestMeta.StringArray, new[] { "a1", "a2" })
+                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
+                ;
+
+            IPropertyContainer[] containers = new IPropertyContainer[] {initialContainer};
+
+            var json1 = containers.ToJsonWithSystemTextJson();
+            var json2 = containers.ToJsonWithNewtonsoftJson();
+
+            var containers1Restored = json1.DeserializeWithSystemTextJson<IReadOnlyCollection<IPropertyContainer>>();
+            var containers2Restored = json2.DeserializeWithNewtonsoftJson<IReadOnlyCollection<IPropertyContainer>>();
+
+            containers1Restored.Should().NotBeEmpty();
+            containers2Restored.Should().NotBeEmpty();
+        }
+
+        [Fact]
         public void FormatDateTime()
         {
             // Sortable
@@ -225,19 +250,19 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
                 .Should().Be("2021-01-23T17:15:49");
 
-            DateTimeIsoFormatter.Instance
+            DateTimeFormatter.IsoShort
                 .Format(new DateTime(2021, 01, 23))
                 .Should().Be("2021-01-23");
 
-            DateTimeIsoFormatter.Instance
+            DateTimeFormatter.IsoShort
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123))
                 .Should().Be("2021-01-23T17:15:49.123");
 
-            DateTimeIsoFormatter.Instance
+            DateTimeFormatter.IsoShort
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 10))
                 .Should().Be("2021-01-23T17:15:49.01");
 
-            DateTimeIsoFormatter.Instance
+            DateTimeFormatter.IsoShort
                 .Format(new DateTime(2021, 01, 23, 17, 15, 49, 000))
                 .Should().Be("2021-01-23T17:15:49");
 
@@ -257,6 +282,14 @@ namespace MicroElements.Metadata.Tests.Serialization
             Formatter.FullRecursiveFormatter
                 .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 000))
                 .Should().Be("2021-01-23T17:15:49");
+
+            Formatter.FullRecursiveFormatter
+                .TryFormat(new DateTimeOffset(2021, 01, 23, 17, 15, 49, 123, TimeSpan.FromHours(4)))
+                .Should().Be("2021-01-23T17:15:49.123+04:00");
+
+            DateTimeOffsetFormatter.IgnoringOffset
+                .TryFormat(new DateTimeOffset(2021, 01, 23, 17, 15, 49, 123, TimeSpan.FromHours(4)))
+                .Should().Be("2021-01-23T17:15:49.123");
         }
 
         [Fact]
@@ -313,6 +346,13 @@ namespace MicroElements.Metadata.Tests.Serialization
         {
             var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
             return JsonConvert.SerializeObject(entity, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings);
+        }
+
+        public static T DeserializeWithSystemTextJson<T>(this string json)
+        {
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            T? restored = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
+            return restored;
         }
 
         public static T DeserializeWithNewtonsoftJson<T>(this string json)

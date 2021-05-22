@@ -3,43 +3,52 @@
 
 using System;
 using System.Collections.Generic;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
     /// Property comparers.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1623:Property summary documentation should match accessors", Justification = "Ok.")]
     public static class PropertyComparer
     {
         /// <summary>
-        /// DefaultEqualityComparer. (Same as <see cref="ByReferenceComparer"/>).
+        /// DefaultEqualityComparer.
+        /// Compares by Type and Name.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> DefaultEqualityComparer = new ByTypeAndNameEqualityComparer();
+        public static IEqualityComparer<IProperty> DefaultEqualityComparer { get; } = new ByTypeAndNameEqualityComparer();
+
+        /// <summary>
+        /// DefaultMetadataComparer.
+        /// Compares by Type and Name ignore case.
+        /// </summary>
+        public static IEqualityComparer<IProperty> DefaultMetadataComparer { get; } = new ByTypeAndNameEqualityComparer(StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// Property comparer by reference equality.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> ByReferenceComparer = new ByReferenceEqualityComparer();
+        public static IEqualityComparer<IProperty> ByReferenceComparer { get; } = new ByReferenceEqualityComparer();
 
         /// <summary>
-        /// Property comparer by <see cref="IProperty.Type"/> and <see cref="IProperty.Name"/>.
+        /// Property comparer by Type and Name.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> ByTypeAndNameComparer = new ByTypeAndNameEqualityComparer();
+        public static IEqualityComparer<IProperty> ByTypeAndNameComparer { get; } = new ByTypeAndNameEqualityComparer();
 
         /// <summary>
-        /// Property comparer by <see cref="IProperty.Type"/> and <see cref="IProperty.Name"/> ignore case.
+        /// Property comparer by Type and Name ignore case.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseComparer = new ByTypeAndNameEqualityComparer(StringComparison.OrdinalIgnoreCase);
+        public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseComparer { get; } = new ByTypeAndNameEqualityComparer(StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Property comparer by <see cref="IProperty.Name"/> or <see cref="IProperty.Alias"/> ignore case.
+        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/> ignore case.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> ByNameOrAliasIgnoreCase = ByNameOrAliasEqualityComparer.IgnoreCase;
+        public static IEqualityComparer<IProperty> ByNameOrAliasIgnoreCase { get; } = ByNameOrAliasEqualityComparer.IgnoreCase;
 
         /// <summary>
-        /// Property comparer by <see cref="IProperty.Name"/> or <see cref="IProperty.Alias"/> ignore case.
+        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/> ignore case.
         /// </summary>
-        public static readonly IEqualityComparer<IProperty> ByNameOrAliasOrdinal = ByNameOrAliasEqualityComparer.Ordinal;
+        public static IEqualityComparer<IProperty> ByNameOrAliasOrdinal { get; } = ByNameOrAliasEqualityComparer.Ordinal;
 
         /// <summary>
         /// Gets comparer ByNameOrAlias depending <paramref name="ignoreCase"/> flag.

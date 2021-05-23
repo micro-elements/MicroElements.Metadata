@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Formatting
             .With(new DefaultFormatProvider().GetFormatters());
 
         /// <summary>
-        /// Gets FullToStringFormatter that formats with <see cref="SingleValueFormatter"/> and can format collections.
+        /// Gets FullToStringFormatter that formats with <see cref="SingleValueFormatter"/> and can format collections and key value pairs.
         /// </summary>
         public static IValueFormatter FullToStringFormatter { get; } = new CompositeFormatter()
             .With(SingleValueFormatter)

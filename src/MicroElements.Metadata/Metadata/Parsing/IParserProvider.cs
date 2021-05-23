@@ -1,13 +1,16 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
     /// Provides property parsers.
     /// </summary>
+    [Obsolete("Use IParserRuleProvider where possible instead IParserProvider")]
     public interface IParserProvider
     {
         /// <summary>
@@ -29,27 +32,5 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <returns>Enumerable of <see cref="IValueParser"/>.</returns>
         IEnumerable<IValueParser> GetValueParsers();
-    }
-
-    /// <summary>
-    /// Provides parsers rules.
-    /// Knows how to match source and target type or property.
-    /// </summary>
-    public interface IParserRuleProvider
-    {
-        /// <summary>
-        /// Gets parser rules.
-        /// </summary>
-        /// <returns>Enumerable of <see cref="IParserRule"/>.</returns>
-        IEnumerable<IParserRule> GetParserRules();
-    }
-
-    public interface IValueParserProvider2
-    {
-        /// <summary>
-        /// Gets value parsers.
-        /// </summary>
-        /// <returns>Enumerable of <see cref="IValueParser"/>.</returns>
-        IParserRule GetParser(IProperty property);
     }
 }

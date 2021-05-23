@@ -21,7 +21,7 @@ namespace MicroElements.Metadata.Serialization
             {
                 string jsonPropertyName = gatPropertyName(propertyValue.PropertyUntyped.Name);
                 Type propertyType = propertyValue.PropertyUntyped.Type;
-                string typeAlias = DefaultMapperSettings.Instance.GetTypeName(propertyType);
+                string typeAlias = DefaultMetadataSerializer.Instance.GetTypeName(propertyType);
                 propertyInfos[i++] = $"{jsonPropertyName}{separator}type={typeAlias}";
             }
 
@@ -53,7 +53,7 @@ namespace MicroElements.Metadata.Serialization
             int i = 0;
             foreach (string typeName in typeNames)
             {
-                Type type = DefaultMapperSettings.Instance.GetTypeByName(typeName);
+                Type type = DefaultMetadataSerializer.Instance.GetTypeByName(typeName);
                 IProperty property = Property.Create(type, $"{i}");
                 properties.Add(property);
                 i++;
@@ -72,7 +72,7 @@ namespace MicroElements.Metadata.Serialization
                 {
                     string propertyName = parts[0];
                     string typeAlias = typePart.Substring("type=".Length);
-                    Type? propertyType = DefaultMapperSettings.Instance.GetTypeByName(typeAlias);
+                    Type? propertyType = DefaultMetadataSerializer.Instance.GetTypeByName(typeAlias);
                     if (propertyType != null)
                         return Property.Create(propertyType, propertyName);
                 }
@@ -93,7 +93,7 @@ namespace MicroElements.Metadata.Serialization
                     {
                         string propertyName = parts[0];
                         string typeAlias = typePart.Substring("type=".Length);
-                        Type propertyType = DefaultMapperSettings.Instance.GetTypeByName(typeAlias);
+                        Type propertyType = DefaultMetadataSerializer.Instance.GetTypeByName(typeAlias);
                         if (propertyType != null)
                             return (propertyName, propertyType);
                     }

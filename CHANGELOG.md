@@ -1,3 +1,14 @@
+# 8.0.0-beta.1
+Metadata.Parsing:
+- IParserRuleProvider: search methods added, search implementation moved to ParserRuleProvider
+- Added CachedParserRuleProvider
+- XmlParserContext: ParserCache changed to ParserRuleProvider (cached)
+- CollectionParser supports recursing with IParserRuleProvider
+
+Metadata.NewtonsoftJson:
+- WriteSchemaToPropertyName removed from MetadataJsonSerializationOptions
+- PropertyContainerWithMetadataTypesConverter removed
+
 # 7.2.0
 - PropertyContainerConverter becomes generic and supports collections
 - DateTimeOffsetFormatter added to DefaultFormatProvider

@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using MicroElements.CodeContracts;
 using MicroElements.Diagnostics;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.Xml
@@ -29,9 +30,9 @@ namespace MicroElements.Metadata.Xml
         IMutableMessageList<Message> Messages { get; }
 
         /// <summary>
-        /// Gets parsers cache.
+        /// Gets cached parser provider.
         /// </summary>
-        ConcurrentDictionary<IProperty, IValueParser> ParsersCache { get; }
+        IParserRuleProvider ParserRuleProvider { get; }
 
         /// <summary>
         /// Gets schema cache.
@@ -59,7 +60,7 @@ namespace MicroElements.Metadata.Xml
         public IMutableMessageList<Message> Messages { get; }
 
         /// <inheritdoc />
-        public ConcurrentDictionary<IProperty, IValueParser> ParsersCache { get; }
+        public IParserRuleProvider ParserRuleProvider { get; }
 
         /// <inheritdoc />
         public ConcurrentDictionary<IProperty, ISchema> SchemaCache { get; }
@@ -73,14 +74,14 @@ namespace MicroElements.Metadata.Xml
         /// <param name="parserSettings">Parser settings.</param>
         /// <param name="schema">Schema to use for parsing.</param>
         /// <param name="messages">Optional message list.</param>
-        /// <param name="parsersCache">Optional parsers cache.</param>
+        /// <param name="parserRuleProvider">Optional parser rule provider.</param>
         /// <param name="schemaCache">Optional schemas cache.</param>
         /// <param name="validatorsCache">Optional validators cache.</param>
         public XmlParserContext(
             IXmlParserSettings parserSettings,
             ISchema? schema,
             IMutableMessageList<Message>? messages = null,
-            ConcurrentDictionary<IProperty, IValueParser>? parsersCache = null,
+            IParserRuleProvider? parserRuleProvider = null,
             ConcurrentDictionary<IProperty, ISchema>? schemaCache = null,
             ConcurrentDictionary<IProperty, IPropertyValidationRules>? validatorsCache = null)
         {
@@ -91,9 +92,22 @@ namespace MicroElements.Metadata.Xml
 
             Messages = messages ?? new MutableMessageList<Message>();
 
-            ParsersCache = parsersCache ?? new ConcurrentDictionary<IProperty, IValueParser>(comparer: parserSettings.PropertyComparer);
             SchemaCache = schemaCache ?? new ConcurrentDictionary<IProperty, ISchema>(comparer: parserSettings.PropertyComparer);
             ValidatorsCache = validatorsCache ?? new ConcurrentDictionary<IProperty, IPropertyValidationRules>(comparer: parserSettings.PropertyComparer);
+
+            if (parserRuleProvider != null )
+            {
+                if (parserRuleProvider is CachedParserRuleProvider)
+                    ParserRuleProvider = parserRuleProvider;
+                else
+                    ParserRuleProvider = new CachedParserRuleProvider(parserRuleProvider);
+            }
+
+            else
+            {
+                var ruleProvider = new ParserRuleProvider(parserSettings.ParserRules, parserSettings.PropertyComparer);
+                ParserRuleProvider = new CachedParserRuleProvider(ruleProvider);
+            }
         }
     }
 }

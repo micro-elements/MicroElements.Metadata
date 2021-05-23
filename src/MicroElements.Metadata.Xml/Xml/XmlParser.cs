@@ -186,7 +186,7 @@ namespace MicroElements.Metadata.Xml
                             }
                         }
 
-                        IValueParser valueParser = context.GetParserCached(property);
+                        IValueParser valueParser = context.ParserRuleProvider.GetParserOrEmpty(property);
                         if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;

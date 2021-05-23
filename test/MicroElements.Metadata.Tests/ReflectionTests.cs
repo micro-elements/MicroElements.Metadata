@@ -90,7 +90,7 @@ namespace MicroElements.Metadata.Tests
         {
             string friendlyName = typeof(string[]).GetFriendlyName();
 
-            string typeName = DefaultMapperSettings.Instance.GetTypeName(typeof(string[]));
+            string typeName = DefaultMetadataSerializer.Instance.GetTypeName(typeof(string[]));
         }
     }
 

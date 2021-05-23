@@ -59,17 +59,17 @@ namespace MicroElements.Metadata.Tests.Serialization
             Formatter.FullToStringFormatter.Format(value, typeof(T));
 
         public string? SerializeValue<T>(T value) =>
-            new DefaultMapperSettings().SerializeValue(typeof(T), value);
+            new DefaultMetadataSerializer().SerializeValue(typeof(T), value);
 
         public object? DeserializeValue<T>(string text) => 
-            new DefaultMapperSettings()
+            new DefaultMetadataSerializer()
                 .DeserializeValue(typeof(T), text)
                 .GetValueOrThrow(allowNullResult: true);
 
         [Fact]
         public void GetTypeNameTests()
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = new DefaultMetadataSerializer();
 
             mapperSettings.GetTypeName(typeof(string)).Should().Be("string");
 
@@ -98,7 +98,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         [Fact]
         public void GetTypeByNameTests()
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = new DefaultMetadataSerializer();
 
             mapperSettings.GetTypeByName("string").Should().Be(typeof(string));
 
@@ -166,7 +166,7 @@ namespace MicroElements.Metadata.Tests.Serialization
 
         public void DeserializeProperty(string name, string value, string type, string? type2 = null)
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = new DefaultMetadataSerializer();
             var messageList = new ConcurrentMessageList<Message>();
 
             var restored = new PropertyValueContract { Name = name, Value = value, Type = type }
@@ -189,7 +189,7 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .WithValue(TestMeta.IntArray, new[] { 1, 2 })
                 ;
 
-            var propertyContainerContract = initialContainer.ToContract(new DefaultMapperSettings());
+            var propertyContainerContract = initialContainer.ToContract(new DefaultMetadataSerializer());
             propertyContainerContract.Should().NotBeNull();
 
             var contractJson = propertyContainerContract.ToJsonWithSystemTextJson();

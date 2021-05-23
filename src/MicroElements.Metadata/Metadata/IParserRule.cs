@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
 {
@@ -45,6 +46,11 @@ namespace MicroElements.Metadata
     /// </summary>
     public class ParserRule : IParserRule
     {
+        /// <summary>
+        /// Empty parser rule. Uses <see cref="EmptyParser.Instance"/>.
+        /// </summary>
+        public static ParserRule Empty { get; } = new ParserRule(EmptyParser.Instance);
+
         /// <inheritdoc />
         public string? SourceName { get; }
 

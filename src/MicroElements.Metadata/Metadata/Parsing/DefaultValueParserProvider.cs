@@ -61,6 +61,7 @@ namespace MicroElements.Metadata.Parsing
             yield return Parser.DateTimeOffsetParser;
             yield return Parser.NullableDateTimeOffsetParser;
 
+            // NodaTime parsers.
             yield return new NodaLocalDateParser();
             yield return new NodaLocalDateTimeParser();
         }

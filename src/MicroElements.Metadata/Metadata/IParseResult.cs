@@ -126,7 +126,7 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Gets default Failed result for type.
+        /// Gets default NullNotAllowed result for type.
         /// </summary>
         public static ParseResult<T> NullNotAllowed<T>() => Cache<T>.FailedNullNotAllowed;
 

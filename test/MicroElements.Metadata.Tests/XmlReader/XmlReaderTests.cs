@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using FluentAssertions;
 using MicroElements.Diagnostics;
 using MicroElements.Functional;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Xml;
 using MicroElements.Validation;
@@ -287,9 +288,10 @@ namespace MicroElements.Metadata.Tests
         public void EnumParsingRules()
         {
             IXmlParserSettings parserSettings = new XmlParserSettings();
+            XmlParserContext xmlParserContext = new XmlParserContext(parserSettings, null);
 
             Property<Sex> enumProp = new Property<Sex>("Sex");
-            var enumParser = parserSettings.ParserRules.GetParserRule(enumProp).Parser as IValueParser;
+            var enumParser = xmlParserContext.ParserRuleProvider.GetParser(enumProp);
             enumParser.Should().NotBeNull();
 
             CheckValue(enumProp, enumParser, "Male", true, Sex.Male);
@@ -297,7 +299,7 @@ namespace MicroElements.Metadata.Tests
             CheckValue(enumProp, enumParser, null, false, null);
 
             Property<Sex?> nullableEnumProp = new Property<Sex?>("OptionalSex");
-            var nullableEnumParser = parserSettings.ParserRules.GetParserRule(nullableEnumProp).Parser as IValueParser;
+            var nullableEnumParser = xmlParserContext.ParserRuleProvider.GetParser(nullableEnumProp);
             nullableEnumParser.Should().NotBeNull();
 
             CheckValue(nullableEnumProp, nullableEnumParser, "Male", true, Sex.Male);

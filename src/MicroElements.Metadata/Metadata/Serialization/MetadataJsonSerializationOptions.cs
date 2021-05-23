@@ -37,13 +37,6 @@ namespace MicroElements.Metadata.Serialization
         public string Separator { get; set; } = "@";
 
         /// <summary>
-        /// Gets or sets a value indicating whether schema info will be injected in a property name.
-        /// It's the most compact presentation with schema but can lead problems with json processing by standard tools.
-        /// Default: false.
-        /// </summary>
-        public bool WriteSchemaToPropertyName { get; set; } = false;
-
-        /// <summary>
         /// Gets or sets an alternative separator in addition to <see cref="Separator"/>.
         /// </summary>
         public string? AltSeparator { get; set; } = null;
@@ -77,7 +70,6 @@ namespace MicroElements.Metadata.Serialization
                 DoNotFail = source.DoNotFail,
                 WriteArraysInOneRow = source.WriteArraysInOneRow,
                 WriteSchemaCompact = source.WriteSchemaCompact,
-                WriteSchemaToPropertyName = source.WriteSchemaToPropertyName,
                 Separator = source.Separator ?? _default.Separator,
                 AltSeparator = source.AltSeparator ?? _default.AltSeparator,
             };

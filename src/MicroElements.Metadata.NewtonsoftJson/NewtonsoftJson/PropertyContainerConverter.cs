@@ -192,13 +192,6 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     string jsonPropertyName = namingStrategy.GetPropertyName(propertyValue.PropertyUntyped.Name, false);
                     Type propertyType = propertyValue.PropertyUntyped.Type;
 
-                    if (Options.WriteSchemaToPropertyName)
-                    {
-                        string typeAlias = DefaultMapperSettings.Instance.GetTypeName(propertyType);
-                        if (typeAlias != "string")
-                            jsonPropertyName += $"{Options.Separator}type={typeAlias}";
-                    }
-
                     // PropertyName
                     writer.WritePropertyName(jsonPropertyName);
 

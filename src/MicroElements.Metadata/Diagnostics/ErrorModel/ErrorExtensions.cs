@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Diagnostics.ErrorModel
@@ -37,9 +40,8 @@ namespace MicroElements.Diagnostics.ErrorModel
         /// </summary>
         /// <typeparam name="TErrorCode">ErrorCode type.</typeparam>
         /// <param name="error">Source error.</param>
-        /// <returns>No return value.</returns>
         [DoesNotReturn]
-        public static Unit Throw<TErrorCode>(this Error<TErrorCode> error)
+        public static void Throw<TErrorCode>(this Error<TErrorCode> error)
             where TErrorCode : notnull
         {
             throw error.ToException();
@@ -50,9 +52,8 @@ namespace MicroElements.Diagnostics.ErrorModel
         /// </summary>
         /// <typeparam name="TErrorCode">ErrorCode type.</typeparam>
         /// <param name="error">Source error.</param>
-        /// <returns>No return value.</returns>
         [DoesNotReturn]
-        public static Unit Throw<TErrorCode>(this IError<TErrorCode> error)
+        public static void Throw<TErrorCode>(this IError<TErrorCode> error)
             where TErrorCode : notnull
         {
             throw error.ToException();

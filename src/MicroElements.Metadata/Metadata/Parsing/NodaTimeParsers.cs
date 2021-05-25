@@ -1,11 +1,15 @@
-﻿using System;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using MicroElements.Metadata.Functional;
 using MicroElements.Shared;
 using Error = MicroElements.Diagnostics.ErrorModel.Error;
 using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Metadata.Parsing
 {
-    abstract class ReflectionParser : IValueParser
+    public abstract class ReflectionParser : IValueParser
     {
         /// <inheritdoc />
         public Type Type { get; }
@@ -44,34 +48,11 @@ namespace MicroElements.Metadata.Parsing
         }
     }
 
-    class ParserResultUntyped : IParseResult
-    {
-        /// <inheritdoc />
-        public Type Type { get; }
-
-        /// <inheritdoc />
-        public bool IsSuccess { get; }
-
-        /// <inheritdoc />
-        public object? ValueUntyped { get; }
-
-        /// <inheritdoc />
-        public Message? Error { get; }
-
-        public ParserResultUntyped(Type type, bool isSuccess, object? valueUntyped, Message? error)
-        {
-            Type = type;
-            IsSuccess = isSuccess;
-            ValueUntyped = valueUntyped;
-            Error = error;
-        }
-    }
-
-    class NodaLocalDateParser : ReflectionParser
+    public class NodaLocalDateParser : ReflectionParser
     {
         /// <inheritdoc />
         public NodaLocalDateParser()
-            : base(TypeCache.NodaTimeTypes.Value.GetByFullName("NodaTime.LocalDate"))
+            : base(TypeUtils.GetByFullName("NodaTime.LocalDate"))
         {
         }
 
@@ -89,11 +70,11 @@ namespace MicroElements.Metadata.Parsing
         }
     }
 
-    class NodaLocalDateTimeParser : ReflectionParser
+    public class NodaLocalDateTimeParser : ReflectionParser
     {
         /// <inheritdoc />
         public NodaLocalDateTimeParser()
-            : base(TypeCache.NodaTimeTypes.Value.GetByFullName("NodaTime.LocalDateTime"))
+            : base(TypeUtils.GetByFullName("NodaTime.LocalDateTime"))
         {
         }
 

@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
+using MicroElements.Extensions;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.Parsing;
-using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Metadata.Serialization
 {

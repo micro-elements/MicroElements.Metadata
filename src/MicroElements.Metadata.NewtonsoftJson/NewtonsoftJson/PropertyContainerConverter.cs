@@ -118,14 +118,6 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     return;
                 }
 
-                // Obsolete branch. Use $metadata.schema.compact. Case: difficult to work with standard instruments.
-                if (propertyName.Contains(Options.Separator) || (Options.AltSeparator != null && propertyName.Contains(Options.AltSeparator)))
-                {
-                    MetadataSchema.ParseName(propertyName, Options.Separator)
-                        .OrElse(MetadataSchema.ParseName(propertyName, Options.AltSeparator))
-                        .MatchSome(result => (propertyName, propertyType) = result);
-                }
-
                 if (propertyType == null && schema != null)
                 {
                     if (isPositional)

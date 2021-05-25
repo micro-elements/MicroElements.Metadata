@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -79,28 +78,6 @@ namespace MicroElements.Metadata.Serialization
             }
 
             return null;
-        }
-
-        public static Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string? separator)
-        {
-            if (separator != null)
-            {
-                string[] parts = fullPropertyName.Split(separator);
-                if (parts.Length > 1)
-                {
-                    string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
-                    if (typePart != null)
-                    {
-                        string propertyName = parts[0];
-                        string typeAlias = typePart.Substring("type=".Length);
-                        Type propertyType = DefaultMetadataSerializer.Instance.GetTypeByName(typeAlias);
-                        if (propertyType != null)
-                            return (propertyName, propertyType);
-                    }
-                }
-            }
-
-            return Option<(string, Type)>.None;
         }
 
         public static IProperty? GetFromSchema(this IPropertySet propertySet, string propertyName)

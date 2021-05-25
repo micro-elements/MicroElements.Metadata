@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata
 {
@@ -17,13 +17,17 @@ namespace MicroElements.Metadata
         /// <param name="propertyParser">Source property parser.</param>
         /// <param name="sourceRow">Value to parse.</param>
         /// <returns>Optional parse result.</returns>
-        public static ParseResult<IPropertyValue> ParseRowUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
+        public static ParseResult<IPropertyValue> ParseRowUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow, bool useDefaultValueForAbsent = true)
         {
-            return sourceRow
-                .GetValueAsOption(propertyParser.SourceName)
-                .Match(
-                    textValue => ParseUntyped(propertyParser, textValue),
-                    () => propertyParser.GetDefaultValueUntyped());
+            if (sourceRow.TryGetValue(propertyParser.SourceName, out var value) && value.IsNotNull())
+            {
+                return ParseUntyped(propertyParser, value);
+            }
+
+            if (useDefaultValueForAbsent)
+                return propertyParser.GetDefaultValueUntyped();
+
+            return ParseResult.Cache<IPropertyValue>.None;
         }
 
         public static ParseResult<IPropertyValue> ParseRowUntyped(this IParserRule parserRule, IReadOnlyDictionary<string, string> sourceRow, bool useDefaultValueForAbsent = false)

@@ -13,7 +13,6 @@ namespace MicroElements.Diagnostics
     // Use IPropertyContainer, Formatters, Parsers?
     // TODO: IReadOnlyList<KeyValuePair<string, object>> remove?
     // TODO: Immutability? see [Immutable] and ParseResult in NodaTime
-    // TODO: ParseResult as class?
 
     /// <summary>
     /// Represents message.

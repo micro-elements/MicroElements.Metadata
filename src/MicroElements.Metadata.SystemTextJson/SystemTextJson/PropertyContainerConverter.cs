@@ -166,27 +166,7 @@ namespace MicroElements.Metadata.SystemTextJson
                 propertyIndex++;
             }
 
-            if (OutputType == typeof(IMutablePropertyContainer) || OutputType == typeof(MutablePropertyContainer))
-                return (TPropertyContainer)(object)propertyContainer;
-
-            if (OutputType == typeof(IPropertyContainer) || OutputType == typeof(PropertyContainer))
-                return (TPropertyContainer)(object)new PropertyContainer(sourceValues: propertyContainer.Properties);
-
-            if (OutputType.IsConcreteType())
-            {
-                /*
-                 *  public PropertyContainer(
-                        IEnumerable<IPropertyValue>? sourceValues = null,
-                        IPropertyContainer? parentPropertySource = null,
-                        SearchOptions? searchOptions = null)
-                 */
-                object[] ctorArgs = new object[] { propertyContainer.Properties, null, null };
-                TPropertyContainer resultContainer = (TPropertyContainer)Activator.CreateInstance(OutputType, args: ctorArgs);
-                return resultContainer;
-            }
-
-            // Return ReadOnly PropertyContainer as a result.
-            return (TPropertyContainer)(object)new PropertyContainer(sourceValues: propertyContainer.Properties);
+            return propertyContainer.ToPropertyContainerOfType<TPropertyContainer>();
         }
 
         /// <inheritdoc />

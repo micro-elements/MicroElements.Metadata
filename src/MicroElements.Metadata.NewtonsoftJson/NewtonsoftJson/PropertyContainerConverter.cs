@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 using MicroElements.Metadata.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -118,14 +117,6 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     return;
                 }
 
-                // Obsolete branch. Use $metadata.schema.compact. Case: difficult to work with standard instruments.
-                if (propertyName.Contains(Options.Separator) || (Options.AltSeparator != null && propertyName.Contains(Options.AltSeparator)))
-                {
-                    MetadataSchema.ParseName(propertyName, Options.Separator)
-                        .OrElse(MetadataSchema.ParseName(propertyName, Options.AltSeparator))
-                        .MatchSome(result => (propertyName, propertyType) = result);
-                }
-
                 if (propertyType == null && schema != null)
                 {
                     if (isPositional)
@@ -148,10 +139,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 propertyIndex++;
             }
 
-            if (objectType.IsAssignableTo<IMutablePropertyContainer>())
-                return propertyContainer;
-
-            return new PropertyContainer(sourceValues: propertyContainer.Properties);
+            return propertyContainer.ToPropertyContainerOfType(objectType);
         }
 
         private Type GetPropertyTypeFromToken(JsonReader reader)

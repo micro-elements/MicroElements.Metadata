@@ -7,19 +7,19 @@ using System.Collections.Generic;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Property comparer by Type and Name.
+    /// Compares properties by user defined predicate.
     /// </summary>
-    public sealed class ByTypeAndNameEqualityComparer : IEqualityComparer<IProperty>
+    public sealed class ByPredicatePropertyComparer : IEqualityComparer<IProperty>
     {
-        private readonly StringComparison _stringComparison;
+        private readonly Func<IProperty, IProperty, bool> _predicate;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ByTypeAndNameEqualityComparer"/> class.
+        /// Initializes a new instance of the <see cref="ByPredicatePropertyComparer"/> class.
         /// </summary>
-        /// <param name="stringComparison">StringComparison for name comparing.</param>
-        public ByTypeAndNameEqualityComparer(StringComparison stringComparison = StringComparison.Ordinal)
+        /// <param name="predicate">Predicate for comparing.</param>
+        public ByPredicatePropertyComparer(Func<IProperty, IProperty, bool> predicate)
         {
-            _stringComparison = stringComparison;
+            _predicate = predicate;
         }
 
         /// <inheritdoc/>
@@ -31,7 +31,7 @@ namespace MicroElements.Metadata
             if (ReferenceEquals(x, y))
                 return true;
 
-            return x.Type == y.Type && x.Name.Equals(y.Name, _stringComparison);
+            return _predicate(x, y);
         }
 
         /// <inheritdoc/>

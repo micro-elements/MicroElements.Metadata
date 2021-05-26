@@ -62,14 +62,14 @@ namespace MicroElements.Metadata.Serialization
         /// </summary>
         /// <typeparam name="TSchema">Schema.</typeparam>
         /// <param name="sourceData">Source object.</param>
-        /// <param name="includePropertiesNotFromSchema">Should include properties not from schema.</param>
+        /// <param name="addPropertiesNotFromSchema">Should include properties not from schema.</param>
         /// <param name="propertyComparer">Optional property comparer for search property in schema. Default: <see cref="PropertyComparer.ByTypeAndNameIgnoreCaseComparer"/>.</param>
         /// <param name="propertyFactory">Optional property factory.</param>
         /// <param name="propertyValueFactory">Optional property value factory.</param>
         /// <returns>Result property container.</returns>
         public static PropertyContainer<TSchema> ToPropertyContainer<TSchema>(
             this object sourceData,
-            bool includePropertiesNotFromSchema = false,
+            bool addPropertiesNotFromSchema = false,
             IEqualityComparer<IProperty>? propertyComparer = null,
             IPropertyFactory? propertyFactory = null,
             IPropertyValueFactory? propertyValueFactory = null)
@@ -93,15 +93,8 @@ namespace MicroElements.Metadata.Serialization
                 IProperty propertyFromType = propertyFactory.Create(propertyInfo.PropertyType, propertyInfo.Name);
                 IProperty? schemaProperty = schemaProperties.FirstOrDefault(property => propertyComparer.Equals(property, propertyFromType));
 
-                // propertyInfo.PropertyType can be Nullable but property in schema can be not nullable
-                if (schemaProperty == null && value != null && value.GetType() != propertyInfo.PropertyType)
-                {
-                    propertyFromType = propertyFactory.Create(value.GetType(), propertyInfo.Name);
-                    schemaProperty = schemaProperties.FirstOrDefault(property => propertyComparer.Equals(property, propertyFromType));
-                }
-
                 IProperty? propertyToAdd = schemaProperty;
-                if (schemaProperty == null && includePropertiesNotFromSchema)
+                if (schemaProperty == null && addPropertiesNotFromSchema)
                     propertyToAdd = propertyFromType;
 
                 if (propertyToAdd != null)

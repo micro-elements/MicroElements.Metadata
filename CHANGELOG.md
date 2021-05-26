@@ -1,6 +1,7 @@
 # 7.3.0
 - Added PropertyContainerMapper with methods ToPropertyContainerOfType, ToPropertyContainer and ToObject
 - PropertyContainerConverters (SystemTextJson and NewtonsoftJson) uses common method ToPropertyContainerOfType and supports typed PropertyContainers
+- 7.3.2: PropertyComparers types ends with PropertyComparer (was EqualityComparer), ByTypeAndNamePropertyComparer can compare types ignoring Nullable wrapper
 
 # 7.2.0
 - PropertyContainerConverter becomes generic and supports collections

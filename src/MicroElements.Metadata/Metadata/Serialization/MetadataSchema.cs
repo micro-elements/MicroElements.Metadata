@@ -117,15 +117,18 @@ namespace MicroElements.Metadata.Serialization
             return null;
         }
 
+        /// <summary>
+        /// Merges two property sets.
+        /// </summary>
         public static IPropertySet AppendAbsentProperties(this IPropertySet source, IPropertySet propertiesToAdd, IEqualityComparer<IProperty>? propertyComparer = null)
         {
-            propertyComparer ??= PropertyComparer.ByTypeAndNameIgnoreCaseComparer;
-            var sourceProperties = source.GetProperties().ToList();
-            var lookup = sourceProperties.ToDictionary(property => property, property => property, propertyComparer);
-            List<IProperty> toAdd = propertiesToAdd.GetProperties().Where(property => !lookup.ContainsKey(property)).ToList();
-            if (toAdd.Count > 0)
-                return new PropertySet(sourceProperties.Concat(toAdd));
-            return source;
+            propertyComparer ??= PropertyComparer.ByNameOrAliasIgnoreCase;
+
+            var sourceProperties = source.GetProperties();
+            var resultProperties = sourceProperties.Union(propertiesToAdd, propertyComparer);
+
+            PropertySet propertySet = new PropertySet(resultProperties);
+            return propertySet;
         }
     }
 }

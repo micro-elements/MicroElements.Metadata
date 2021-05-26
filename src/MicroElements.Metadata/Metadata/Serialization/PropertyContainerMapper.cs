@@ -116,21 +116,54 @@ namespace MicroElements.Metadata.Serialization
         /// <returns>Result object.</returns>
         public static TModel ToObject<TModel>(this IPropertyContainer propertyContainer, Func<TModel>? factory = null)
         {
-            //var schema = propertyContainer.GetType().GetSchemaByKnownPropertySet();
-            //IProperty[]? schemaProperties = schema?.ToArray();
             PropertyInfo[] propertyInfos = typeof(TModel).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             TModel model = factory != null ? factory() : Activator.CreateInstance<TModel>();
 
             foreach (IPropertyValue propertyValue in propertyContainer.Properties)
             {
+                object? value = propertyValue.ValueUntyped;
+
                 PropertyInfo? propertyInfo = propertyInfos.FirstOrDefault(info =>
-                    info.Name == propertyValue.PropertyUntyped.Name &&
+                    string.Equals(info.Name, propertyValue.PropertyUntyped.Name, StringComparison.OrdinalIgnoreCase) &&
                     propertyValue.PropertyUntyped.Type.IsAssignableTo(info.PropertyType));
+
+                if (propertyInfo == null)
+                {
+                    propertyInfo = propertyInfos.FirstOrDefault(info =>
+                        string.Equals(info.Name, propertyValue.PropertyUntyped.Name, StringComparison.OrdinalIgnoreCase));
+
+                    if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
+                    {
+                        if (Enum.TryParse(propertyInfo.PropertyType, value?.ToString(), ignoreCase: true, out object? enumValue))
+                        {
+                            value = enumValue;
+                        }
+                    }
+
+                    if (propertyInfo != null && propertyInfo.PropertyType.IsNullableStruct())
+                    {
+                        Type underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType)!;
+                        if (underlyingType.IsEnum && Enum.TryParse(underlyingType, value?.ToString(), ignoreCase: true, out object? enumValue))
+                        {
+                            value = enumValue;
+                        }
+                    }
+
+                    if (propertyInfo == null)
+                    {
+                        int breakpoint = 1;
+                    }
+
+                }
 
                 if (propertyInfo != null && propertyInfo.CanWrite)
                 {
-                    propertyInfo.SetValue(model, propertyValue.ValueUntyped);
+                    propertyInfo.SetValue(model, value);
+                }
+                else
+                {
+                    int breakpoint = 2;
                 }
             }
 

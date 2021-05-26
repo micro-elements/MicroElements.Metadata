@@ -30,7 +30,12 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc/>
-        public int GetHashCode(IProperty obj) => HashCode.Combine(obj.Name);
+        public int GetHashCode(IProperty obj)
+        {
+            if (_ignoreCase)
+                return obj.Name.GetHashCode(StringComparison.OrdinalIgnoreCase);
+            return obj.Name.GetHashCode();
+        }
     }
 
     /// <summary>

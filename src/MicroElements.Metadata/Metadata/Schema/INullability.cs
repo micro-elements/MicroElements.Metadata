@@ -107,7 +107,7 @@ namespace MicroElements.Metadata.Schema
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetMetadata<INullability>();
+            return property.GetSchemaMetadata<INullability>();
         }
 
         /// <summary>

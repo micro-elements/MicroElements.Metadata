@@ -2,15 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Metadata.Schema;
 
-namespace MicroElements.Metadata.Xml
+namespace MicroElements.Metadata.Schema
 {
     /// <summary>
-    /// Metadata for property with additional information from xml parser.
+    /// Metadata for property with additional information from parser.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IPropertyXmlParseInfo : IMetadata
+    public interface IPropertyParseInfo : IMetadata
     {
         /// <summary>
         /// Gets a value indicating whether the property was not created from schema.
@@ -21,7 +20,7 @@ namespace MicroElements.Metadata.Xml
     /// <summary>
     /// Metadata for property with additional information from xml parser.
     /// </summary>
-    public class PropertyXmlParseInfo : IPropertyXmlParseInfo
+    public class PropertyParseInfo : IPropertyParseInfo
     {
         /// <inheritdoc />
         public bool IsNotFromSchema { get; set; } = true;
@@ -30,28 +29,28 @@ namespace MicroElements.Metadata.Xml
     /// <summary>
     /// Schema extensions.
     /// </summary>
-    public static class SchemaExtensions
+    public static partial class SchemaExtensions
     {
         /// <summary>
-        /// Sets <see cref="IPropertyXmlParseInfo.IsNotFromSchema"/> metadata property.
+        /// Sets <see cref="IPropertyParseInfo.IsNotFromSchema"/> metadata property.
         /// </summary>
         /// <param name="property">Source property.</param>
         /// <param name="isNotFromSchema">A value indicating whether the property was not created from schema.</param>
         /// <returns>The same property.</returns>
         public static IProperty SetIsNotFromSchema(this IProperty property, bool isNotFromSchema = true)
         {
-            return property.ConfigureMetadata<IProperty, IPropertyXmlParseInfo, PropertyXmlParseInfo>(info =>
+            return property.ConfigureMetadata<IProperty, IPropertyParseInfo, PropertyParseInfo>(info =>
                 info.IsNotFromSchema = isNotFromSchema);
         }
 
         /// <summary>
-        /// Gets <see cref="IPropertyXmlParseInfo.IsNotFromSchema"/> metadata property.
+        /// Gets <see cref="IPropertyParseInfo.IsNotFromSchema"/> metadata property.
         /// </summary>
         /// <param name="property">Source property.</param>
         /// <returns>A value indicating whether the property was not created from schema.</returns>
         public static bool GetIsNotFromSchema(this IProperty property)
         {
-            return property.GetMetadata<IPropertyXmlParseInfo>()?.IsNotFromSchema ?? false;
+            return property.GetMetadata<IPropertyParseInfo>()?.IsNotFromSchema ?? false;
         }
 
         /// <summary>

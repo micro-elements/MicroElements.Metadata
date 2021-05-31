@@ -95,69 +95,124 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
+    /// Metadata merge mode.
+    /// </summary>
+    public enum MetadataMergeMode
+    {
+        /// <summary>
+        /// Replace metadata.
+        /// </summary>
+        Set,
+
+        /// <summary>
+        /// Merge metadata. New metadata values appends on Current.
+        /// </summary>
+        Merge,
+
+        ///// <summary>
+        ///// Merge in reverse order. Current metadata appends on New.
+        ///// </summary>
+        //ReverseMerge,
+    }
+
+    /// <summary>
     /// Property schema extensions.
     /// </summary>
     public static partial class SchemaExtensions
     {
         /// <summary>
-        /// Adds <see cref="INumericInterval"/> metadata to numeric property.
+        /// Adds <see cref="INumericInterval"/> metadata to numeric property or schema.
         /// </summary>
-        /// <typeparam name="T">Property value type.</typeparam>
-        /// <param name="property">Source property.</param>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="schema">Source property.</param>
         /// <param name="numericInterval">Numeric interval for property values.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetNumericInterval<T>(this IProperty<T> property, INumericInterval numericInterval)
+        public static TSchema SetNumericInterval<TSchema>(this TSchema schema, INumericInterval numericInterval, MetadataMergeMode mergeMode = MetadataMergeMode.Set)
+            where TSchema : ISchema
         {
-            property.AssertArgumentNotNull(nameof(property));
-            property.AssertPropertyIsNumeric();
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
 
-            return property.SetMetadata(numericInterval);
+            INumericInterval interval = numericInterval;
+            if (mergeMode == MetadataMergeMode.Merge && schema.GetNumericInterval() is { } existing)
+            {
+                interval = new NumericInterval(
+                    minimum: numericInterval.Minimum ?? existing.Minimum,
+                    exclusiveMinimum: numericInterval.ExclusiveMinimum ?? existing.ExclusiveMinimum,
+                    maximum: numericInterval.Maximum ?? existing.Maximum,
+                    exclusiveMaximum: numericInterval.ExclusiveMaximum ?? existing.ExclusiveMaximum);
+            }
+
+            return schema.SetMetadata(interval);
         }
 
-        public static INumericInterval? GetNumericInterval(this IProperty property)
+        public static TSchema MergeNumericInterval<TSchema>(this TSchema schema, INumericInterval numericInterval)
+            where TSchema : ISchema
         {
-            property.AssertArgumentNotNull(nameof(property));
-
-            return property.GetMetadata<INumericInterval>();
+            return SetNumericInterval(schema, numericInterval, MetadataMergeMode.Merge);
         }
 
-        public static IProperty<T> GreaterThan<T>(this IProperty<T> property, T minimum)
+        public static INumericInterval? GetNumericInterval(this ISchema schema)
         {
-            property.AssertArgumentNotNull(nameof(property));
-            property.AssertPropertyIsNumeric();
+            schema.AssertArgumentNotNull(nameof(schema));
 
-            return property.SetNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: true, null, null));
+            return schema.GetSchemaMetadata<INumericInterval>();
         }
 
-        public static IProperty<T> GreaterThanOrEqual<T>(this IProperty<T> property, T minimum)
+        public static ISchema<T> SetMinimum<T>(this ISchema<T> schema, T minimum, bool exclusiveMinimum = false)
         {
-            property.AssertArgumentNotNull(nameof(property));
-            property.AssertPropertyIsNumeric();
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
 
-            return property.SetNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: false, null, null));
+            return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: exclusiveMinimum, null, null));
         }
 
-        public static IProperty<T> LessThan<T>(this IProperty<T> property, T maximum)
+        public static ISchema<T> SetMaximum<T>(this ISchema<T> schema, T maximum, bool exclusiveMaximum = false)
         {
-            property.AssertArgumentNotNull(nameof(property));
-            property.AssertPropertyIsNumeric();
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
 
-            return property.SetNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: true));
+            return schema.MergeNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: exclusiveMaximum));
         }
 
-        public static IProperty<T> LessThanOrEqual<T>(this IProperty<T> property, T maximum)
+        public static ISchema<T> GreaterThan<T>(this ISchema<T> schema, T minimum)
         {
-            property.AssertArgumentNotNull(nameof(property));
-            property.AssertPropertyIsNumeric();
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
 
-            return property.SetNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: false));
+            return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: true, null, null));
         }
 
-        private static void AssertPropertyIsNumeric<T>(this IProperty<T> property)
+        public static ISchema<T> GreaterThanOrEqual<T>(this ISchema<T> schema, T minimum)
         {
-            bool isNumericType = typeof(T).IsNumericType() || typeof(T).IsNullableNumericType();
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
+
+            return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: false, null, null));
+        }
+
+        public static ISchema<T> LessThan<T>(this ISchema<T> schema, T maximum)
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
+
+            return schema.MergeNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: true));
+        }
+
+        public static ISchema<T> LessThanOrEqual<T>(this ISchema<T> schema, T maximum)
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+            schema.AssertPropertyIsNumeric();
+
+            return schema.MergeNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: false));
+        }
+
+        private static void AssertPropertyIsNumeric<TSchema>(this TSchema schema)
+            where TSchema : ISchema
+        {
+            bool isNumericType = schema.Type.IsNumericType() || schema.Type.IsNullableNumericType();
             if (!isNumericType)
-                throw new ArgumentException($"{nameof(INumericInterval)} can be set only for numeric properties. Property '{property.Name}' has type '{property.Type}'.");
+                throw new ArgumentException($"{nameof(INumericInterval)} can be set only for numeric properties. Property '{schema.Name}' has type '{schema.Type}'.");
         }
     }
 

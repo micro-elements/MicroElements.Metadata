@@ -235,7 +235,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="schemaType">Schema type.</param>
         /// <returns>The same instance.</returns>
         public static TProperty SetSchema<TProperty>(this TProperty property, Type schemaType)
-            where TProperty : IProperty
+            where TProperty : ISchema
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -245,18 +245,18 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets optional <see cref="IHasSchema"/> metadata.
         /// </summary>
-        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="metadataProvider">Source property container.</param>
         /// <returns>Optional <see cref="IHasSchema"/>.</returns>
         [Pure]
-        public static IHasSchema? GetHasSchema(this IPropertyContainer propertyContainer)
+        public static IHasSchema? GetHasSchema(this IPropertyContainer metadataProvider)
         {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
-            return propertyContainer.GetMetadata<IHasSchema>();
+            return metadataProvider.GetMetadata<IHasSchema>(searchInSchema: false);
         }
 
         /// <summary>
-        /// Gets optional <see cref="IMutableObjectSchema"/> from <see cref="IHasSchema"/> metadata.
+        /// Gets optional <see cref="IObjectSchema"/> from <see cref="IHasSchema"/> metadata.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
         /// <returns>Optional <see cref="IMutableObjectSchema"/>.</returns>
@@ -276,7 +276,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="IHasSchema"/>.</returns>
         [Pure]
-        public static IHasSchema? GetHasSchema(this IProperty property)
+        public static IHasSchema? GetHasSchema(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -289,7 +289,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="ISchema"/>.</returns>
         [Pure]
-        public static ISchema? GetSchema(this IProperty property)
+        public static ISchema? GetSchema(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
@@ -301,7 +301,7 @@ namespace MicroElements.Metadata.Schema
         /// </summary>
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="ISchema"/>.</returns>
-        public static ISchema? GetNewSchema(this IProperty property)
+        public static ISchema? GetNewSchema(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 

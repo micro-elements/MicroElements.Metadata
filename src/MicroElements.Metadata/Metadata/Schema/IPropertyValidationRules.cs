@@ -118,7 +118,7 @@ namespace MicroElements.Metadata.Schema
         public static IEnumerable<IValidationRule> GetValidationRules(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
-            return property.GetMetadata<IPropertyValidationRules>()?.Rules ?? Array.Empty<IValidationRule>();
+            return property.GetSchemaMetadata<IPropertyValidationRules>()?.Rules ?? Array.Empty<IValidationRule>();
         }
 
         /// <summary>

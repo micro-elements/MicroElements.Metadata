@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -133,13 +134,22 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 }
 
                 object? propertyValue = serializer.Deserialize(reader, propertyType);
-                property ??= Property.Create(propertyType, propertyName);
+                if (property == null)
+                {
+                    property = Property.Create(propertyType, propertyName);
+                    if (Options.AddSchemaInfo)
+                        property.SetIsNotFromSchema();
+                }
+
                 propertyContainer.WithValueUntyped(property, propertyValue);
 
                 propertyIndex++;
             }
 
-            return propertyContainer.ToPropertyContainerOfType(objectType);
+            var resultContainer = propertyContainer.ToPropertyContainerOfType(objectType);
+            if (Options.AddSchemaInfo && schema != null)
+                resultContainer.SetSchema(schema.ToSchema());
+            return resultContainer;
         }
 
         private Type GetPropertyTypeFromToken(JsonReader reader)

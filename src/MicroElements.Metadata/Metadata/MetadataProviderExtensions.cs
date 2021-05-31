@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -32,44 +32,79 @@ namespace MicroElements.Metadata
         /// <param name="metadataProvider">Metadata provider.</param>
         /// <param name="metadataName">Optional metadata name.</param>
         /// <param name="defaultValue">Default value to return if not metadata found.</param>
+        /// <param name="searchInSchema">Search in schema if metadata not found in current.</param>
         /// <returns>Metadata or default value if not found.</returns>
-        [return: MaybeNull]
-        public static TMetadata GetMetadata<TMetadata>(
+        public static TMetadata? GetMetadata<TMetadata>(
             this IMetadataProvider metadataProvider,
             string? metadataName = null,
-            [AllowNull] TMetadata defaultValue = default)
-        {
-            Option<TMetadata> metadata = GetMetadataAsOption<TMetadata>(metadataProvider, metadataName);
-            return metadata.IsSome ? (TMetadata)metadata : defaultValue;
-        }
-
-        /// <summary>
-        /// Gets metadata as optional value.
-        /// </summary>
-        /// <typeparam name="TMetadata">Metadata type.</typeparam>
-        /// <param name="metadataProvider">Metadata provider.</param>
-        /// <param name="metadataName">Optional metadata name.</param>
-        /// <returns>Metadata or default value if not found.</returns>
-        public static Option<TMetadata> GetMetadataAsOption<TMetadata>(
-            this IMetadataProvider metadataProvider,
-            string? metadataName = null)
+            TMetadata? defaultValue = default,
+            bool searchInSchema = false)
         {
             if (metadataProvider == null)
                 throw new ArgumentNullException(nameof(metadataProvider));
 
-            var metadata = metadataProvider.GetMetadataContainer(autoCreate: false);
-            if (metadata.Count == 0)
-                return Option<TMetadata>.None;
+            var metadataContainer = metadataProvider.GetMetadataContainer(autoCreate: false);
+            if (metadataContainer.Count > 0)
+            {
+                string metadataNameToSearch = metadataName ?? typeof(TMetadata).FullName;
+                SearchOptions metadataSearchOptions = Search.ExistingOnly
+                    .UseSearchByNameAndComparer<TMetadata>(metadataNameToSearch, MetadataProvider.DefaultMetadataComparer);
 
-            SearchOptions metadataSearchOptions = Search.ExistingOnly
-                .UseSearchByNameAndComparer<TMetadata>(metadataName ?? typeof(TMetadata).FullName, MetadataProvider.DefaultMetadataComparer);
+                if (searchInSchema && metadataContainer.GetMetadataFromContainer<IHasSchema>() is { Schema: { } schema })
+                {
+                    metadataContainer = new HierarchicalContainer(metadataContainer, schema.GetMetadataContainer());
+                    metadataSearchOptions = metadataSearchOptions.SearchInParent(true);
+                }
 
-            var propertyValue = metadata.GetPropertyValue<TMetadata>(metadataSearchOptions);
+                var propertyValue = metadataContainer.GetPropertyValue<TMetadata>(metadataSearchOptions);
+                if (propertyValue.HasValue() && propertyValue.Value.IsNotNull())
+                    return propertyValue.Value;
+            }
 
-            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
-                return propertyValue.Value;
+            return defaultValue;
+        }
 
-            return Option<TMetadata>.None;
+        /// <summary>
+        /// The same as <see cref="GetMetadata{TMetadata}"/> but also searches metadata in schema (if bound).
+        /// </summary>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataProvider">Metadata provider.</param>
+        /// <param name="metadataName">Optional metadata name.</param>
+        /// <param name="defaultValue">Default value to return if not metadata found.</param>
+        /// <returns>Metadata or default value if not found.</returns>
+        public static TMetadata? GetSchemaMetadata<TMetadata>(
+            this IMetadataProvider metadataProvider,
+            string? metadataName = null,
+            TMetadata? defaultValue = default)
+        {
+            return GetMetadata(metadataProvider, metadataName, defaultValue, searchInSchema: true);
+        }
+
+        /// <summary>
+        /// Gets metadata of required type. The same as <see cref="GetMetadata{TMetadata}"/> but searches metadata in provided container.
+        /// </summary>
+        /// <typeparam name="TMetadata">Metadata type.</typeparam>
+        /// <param name="metadataContainer">Metadata container.</param>
+        /// <param name="metadataName">Optional metadata name.</param>
+        /// <param name="defaultValue">Default value to return if not metadata found.</param>
+        /// <returns>Metadata or default value if not found.</returns>
+        public static TMetadata? GetMetadataFromContainer<TMetadata>(
+            this IPropertyContainer metadataContainer,
+            string? metadataName = null,
+            TMetadata? defaultValue = default)
+        {
+            if (metadataContainer.Count > 0)
+            {
+                string metadataNameToSearch = metadataName ?? typeof(TMetadata).FullName;
+                SearchOptions metadataSearchOptions = Search.ExistingOnly
+                    .UseSearchByNameAndComparer<TMetadata>(metadataNameToSearch, MetadataProvider.DefaultMetadataComparer);
+
+                var propertyValue = metadataContainer.GetPropertyValue<TMetadata>(metadataSearchOptions);
+                if (propertyValue.HasValue() && propertyValue.Value.IsNotNull())
+                    return propertyValue.Value;
+            }
+
+            return defaultValue;
         }
 
         /// <summary>

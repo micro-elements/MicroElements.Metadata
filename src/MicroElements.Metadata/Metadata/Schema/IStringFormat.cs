@@ -69,7 +69,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return schema.GetMetadata<IStringFormat>();
+            return schema.GetSchemaMetadata<IStringFormat>();
         }
 
         /// <summary>

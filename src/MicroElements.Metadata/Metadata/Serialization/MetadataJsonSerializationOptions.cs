@@ -42,6 +42,8 @@ namespace MicroElements.Metadata.Serialization
         /// Gets or sets an alternative separator in addition to <see cref="Separator"/>.
         /// </summary>
         public string? AltSeparator { get; set; } = null;
+
+        public bool AddSchemaInfo { get; set; } = false;
     }
 
     public enum MetadataSchemaType

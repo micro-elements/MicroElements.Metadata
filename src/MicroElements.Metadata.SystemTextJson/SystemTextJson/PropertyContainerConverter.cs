@@ -5,6 +5,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 
 namespace MicroElements.Metadata.SystemTextJson
@@ -160,13 +161,22 @@ namespace MicroElements.Metadata.SystemTextJson
                     }
                 }
 
-                property ??= Property.Create(propertyType, propertyName);
+                if (property == null)
+                {
+                    property = Property.Create(propertyType, propertyName);
+                    if (Options.AddSchemaInfo)
+                        property.SetIsNotFromSchema();
+                }
+
                 propertyContainer.WithValueUntyped(property, propertyValue);
 
                 propertyIndex++;
             }
 
-            return propertyContainer.ToPropertyContainerOfType<TPropertyContainer>();
+            var resultContainer = propertyContainer.ToPropertyContainerOfType<TPropertyContainer>();
+            if (Options.AddSchemaInfo && schema != null)
+                resultContainer.SetSchema(schema.ToSchema());
+            return resultContainer;
         }
 
         /// <inheritdoc />

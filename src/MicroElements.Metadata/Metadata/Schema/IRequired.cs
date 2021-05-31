@@ -60,7 +60,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return schema.GetMetadata<IRequired>();
+            return schema.GetSchemaMetadata<IRequired>();
         }
     }
 }

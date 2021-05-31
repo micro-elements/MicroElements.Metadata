@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -63,6 +64,7 @@ namespace MicroElements.Metadata.Serialization
         /// <typeparam name="TSchema">Schema.</typeparam>
         /// <param name="sourceData">Source object.</param>
         /// <param name="addPropertiesNotFromSchema">Should include properties not from schema.</param>
+        /// <param name="addPropertiesWithNullValues">Should add properties with null values.</param>
         /// <param name="propertyComparer">Optional property comparer for search property in schema. Default: <see cref="PropertyComparer.ByTypeAndNameIgnoreCaseComparer"/>.</param>
         /// <param name="propertyFactory">Optional property factory.</param>
         /// <param name="propertyValueFactory">Optional property value factory.</param>
@@ -70,6 +72,7 @@ namespace MicroElements.Metadata.Serialization
         public static PropertyContainer<TSchema> ToPropertyContainer<TSchema>(
             this object sourceData,
             bool addPropertiesNotFromSchema = false,
+            bool addPropertiesWithNullValues = false,
             IEqualityComparer<IProperty>? propertyComparer = null,
             IPropertyFactory? propertyFactory = null,
             IPropertyValueFactory? propertyValueFactory = null)
@@ -95,12 +98,26 @@ namespace MicroElements.Metadata.Serialization
 
                 IProperty? propertyToAdd = schemaProperty;
                 if (schemaProperty == null && addPropertiesNotFromSchema)
-                    propertyToAdd = propertyFromType;
+                {
+                    // Property IsNotFromSchema
+                    propertyToAdd = propertyFromType.SetIsNotFromSchema();
+                }
 
                 if (propertyToAdd != null)
                 {
-                    IPropertyValue propertyValue = propertyValueFactory.CreateUntyped(propertyToAdd, value);
-                    propertyContainer.Add(propertyValue);
+                    if (value is not null)
+                    {
+                        IPropertyValue propertyValue = propertyValueFactory.CreateUntyped(propertyToAdd, value);
+                        propertyContainer.Add(propertyValue);
+                    }
+                    else
+                    {
+                        if (addPropertiesWithNullValues)
+                        {
+                            IPropertyValue propertyValue = propertyValueFactory.CreateUntyped(propertyToAdd, TypeExtensions.GetDefaultValue(propertyToAdd.Type), ValueSource.NotDefined);
+                            propertyContainer.Add(propertyValue);
+                        }
+                    }
                 }
             }
 
@@ -169,5 +186,18 @@ namespace MicroElements.Metadata.Serialization
 
             return model;
         }
+    }
+
+    public class PropertyContainerMapperSettings
+    {
+        public bool? AddPropertiesNotFromSchema { get; set; }
+
+        public bool? AddPropertiesWithNullValues { get; set; }
+
+        public IEqualityComparer<IProperty>? PropertyComparer { get; set; }
+
+        public IPropertyFactory? PropertyFactory { get; set; }
+
+        public IPropertyValueFactory? PropertyValueFactory { get; set; }
     }
 }

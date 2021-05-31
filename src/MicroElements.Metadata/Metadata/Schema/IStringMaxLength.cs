@@ -87,7 +87,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return schema.GetMetadata<IStringMaxLength>();
+            return schema.GetSchemaMetadata<IStringMaxLength>();
         }
     }
 }

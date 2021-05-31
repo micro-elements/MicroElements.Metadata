@@ -23,7 +23,7 @@ namespace MicroElements.Validation.Rules
         public StringMaxLengthValidationRule(IProperty<string> property, IStringMaxLength? maxLength = null)
             : base(property)
         {
-            _maxLength = maxLength ?? property.GetMetadata<IStringMaxLength>();
+            _maxLength = maxLength ?? property.GetSchemaMetadata<IStringMaxLength>();
             if (_maxLength != null)
             {
                 this.SetDefaultMessageFormat("Value '{value}' is too long (length: {length}, maxLength: {maxLength})");

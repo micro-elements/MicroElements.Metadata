@@ -23,7 +23,7 @@ namespace MicroElements.Validation.Rules
         public StringMinLengthValidationRule(IProperty<string> property, IStringMinLength? minLength = null)
             : base(property)
         {
-            _minLength = minLength ?? property.GetMetadata<IStringMinLength>();
+            _minLength = minLength ?? property.GetSchemaMetadata<IStringMinLength>();
             if (_minLength != null)
             {
                 this.SetDefaultMessageFormat("Value '{value}' is too short (length: {length}, minLength: {minLength})");

@@ -200,7 +200,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return schema.GetMetadata<IDefaultValue>();
+            return schema.GetSchemaMetadata<IDefaultValue>();
         }
 
         /// <summary>

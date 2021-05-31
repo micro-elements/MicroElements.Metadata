@@ -9,7 +9,7 @@ using Xunit;
 
 namespace MicroElements.Metadata.Tests
 {
-    public class ValidationTests
+    public class ValidationSexTypeTests
     {
         public static IProperty<string> Name = new Property<string>("Name");
         public static IProperty<int> Age = new Property<int>("Age");

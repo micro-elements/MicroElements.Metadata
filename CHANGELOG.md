@@ -5,6 +5,12 @@
 - 7.3.3: ByNameOrAliasPropertyComparer GetHashCode fix
 - 7.3.3: MetadataSchema.AppendAbsentProperties fix
 - 7.3.3: PropertyContainerMapper.ToObject nullable and enum support
+- 7.3.4: Added HierarchicalContainer that merges two hierarchies
+- 7.3.4: GetMetadata can get metadata from attached ISchema (see 'searchInSchema'' arg)
+- 7.3.4: Added GetSchemaMetadata that always uses GetMetadata with searchInSchema: true
+- 7.3.4: More metadata types that can be set to ISchema (not only IProperty): IAllowedValues, INumericInterval 
+- 7.3.4: PropertyContainerMapper more customization
+
 
 # 7.2.0
 - PropertyContainerConverter becomes generic and supports collections

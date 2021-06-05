@@ -209,7 +209,25 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="TEnum">Enum value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
+        public static IProperty<string> SetAllowedValuesFromEnum<TEnum>(this IProperty<string> property)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
         public static ISchema<TEnum> SetAllowedValuesFromEnum<TEnum>(this ISchema<TEnum> property)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static ISchema<string> SetAllowedValuesFromEnum<TEnum>(this ISchema<string> property)
             => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
         /// <summary>
@@ -221,9 +239,14 @@ namespace MicroElements.Metadata.Schema
         public static ISchema<int> SetAllowedValuesFromEnum<TEnum>(this ISchema<int> property)
             => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
         public static IProperty<int> SetAllowedValuesFromEnum<TEnum>(this IProperty<int> property)
             => property.SetAllowedValuesFromEnum(typeof(TEnum));
-
     }
 
     /// <summary>

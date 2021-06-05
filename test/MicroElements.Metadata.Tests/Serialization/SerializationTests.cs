@@ -2,15 +2,19 @@
 using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using AutoFixture;
+using AutoFixture.Kernel;
 using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Diff;
 using MicroElements.Metadata.Formatters;
 using MicroElements.Metadata.NewtonsoftJson;
+using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.SystemTextJson;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
 using Xunit;
@@ -174,18 +178,26 @@ namespace MicroElements.Metadata.Tests.Serialization
                 .Should().BeEquivalentTo(new PropertyValueContract { Name = name, Value = value, Type = type2 ?? type });
         }
 
+        public IPropertyContainer CreateTestContainer()
+        {
+            var initialContainer = new MutablePropertyContainer()
+                    .WithValue(TestMeta.StringProperty, "Text")
+                    .WithValue(TestMeta.IntProperty, 42)
+                    .WithValue(TestMeta.DoubleProperty, 10.2)
+                    .WithValue(TestMeta.NullableIntProperty, null)
+                    .WithValue(TestMeta.BoolProperty, true)
+                    .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
+                    .WithValue(TestMeta.StringArray, new[] { "a1", "a2" })
+                    .WithValue(TestMeta.IntArray, new[] { 1, 2 })
+                ;
+
+            return initialContainer;
+        }
+
         [Fact]
         public void SerializeDeserializePropertyContainer()
         {
-            var initialContainer = new MutablePropertyContainer()
-                .WithValue(TestMeta.StringProperty, "Text")
-                .WithValue(TestMeta.IntProperty, 42)
-                .WithValue(TestMeta.DoubleProperty, 10.2)
-                .WithValue(TestMeta.NullableIntProperty, null)
-                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
-                .WithValue(TestMeta.StringArray, new [] { "a1", "a2" })
-                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
-                ;
+            var initialContainer = CreateTestContainer();
 
             var propertyContainerContract = initialContainer.ToContract(new DefaultMapperSettings());
             propertyContainerContract.Should().NotBeNull();
@@ -216,25 +228,222 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
+        public void ReadWithSchemaFirst()
+        {
+            string json = @"{
+  'StringProperty': 'Text',
+  'IntProperty': 42,
+  'DoubleProperty': 10.2,
+  'NullableIntProperty': null,
+  'BoolProperty': true,
+  'DateProperty': '2020-12-26',
+  'StringArray':['a1','a2'],
+  'IntArray':[1,2],
+  '$metadata.schema.compact': [
+    'StringProperty@type=string',
+    'IntProperty@type=int',
+    'DoubleProperty@type=double',
+    'NullableIntProperty@type=int?',
+    'BoolProperty @type = bool',
+    'DateProperty@type=LocalDate',
+    'StringArray@type=string[]',
+    'IntArray@type=int[]'
+  ]
+}";
+            var initialContainer = CreateTestContainer();
+
+            var restoredContainer = json.DeserializeWithNewtonsoftJson<IPropertyContainer>(configureSerialization: options => options.ReadSchemaFirst = true);
+            ObjectDiff objectDiff = MetadataComparer.GetDiff(restoredContainer, initialContainer);
+            objectDiff.Diffs.Should().BeEmpty();
+
+            // container will lose types
+            var restoredContainer2 = json.DeserializeWithNewtonsoftJson<IPropertyContainer>(configureSerialization: options => options.ReadSchemaFirst = false);
+            ObjectDiff objectDiff2 = MetadataComparer.GetDiff(restoredContainer2, initialContainer);
+            objectDiff2.Diffs.Should().NotBeNullOrEmpty();
+        }
+
+        public class ComplexObject
+        {
+            public PropertyContainer<TestMeta> Data1 { get; set; }
+            public PropertyContainer<TestMeta> Data2 { get; set; }
+        }
+
+        public interface IMetadataSchemaProvider : IMetadataProvider
+        {
+            [JsonProperty(PropertyName = "$defs")]
+            public ISchemaRepository Schemas
+            {
+                get
+                {
+                    ISchemaRepository? schemaRepository = this.GetMetadata<ISchemaRepository>();
+                    if (schemaRepository == null)
+                    {
+                        schemaRepository = new SchemaRepository();
+                        this.SetMetadata(schemaRepository);
+                    }
+
+                    return schemaRepository;
+                }
+                set
+                {
+                    this.SetMetadata(value);
+                }
+            }
+        }
+
+        public class ComplexObjectUntyped : IMetadataSchemaProvider
+        {
+            public IPropertyContainer Data1 { get; set; }
+            public IPropertyContainer Data2 { get; set; }
+        }
+
+
+        [Fact]
+        public void ReadWithSchemaRef()
+        {
+            string json = @"{
+  '$defs':
+  {
+    'metadata.schema.TestMeta':
+	{
+      '$metadata.schema.compact': [
+       'StringProperty@type=string',
+       'IntProperty@type=int',
+       'DoubleProperty@type=double',
+       'NullableIntProperty@type=int?',
+       'BoolProperty@type=bool',
+       'DateProperty@type=LocalDate',
+       'StringArray@type=string[]',
+       'IntArray@type=int[]'
+	   ]
+	}
+  },
+  'Data1': {
+    '$ref': '#/$defs/metadata.schema.TestMeta',
+    'StringProperty': 'Text',
+    'IntProperty': 42,
+    'DoubleProperty': 10.2,
+    'NullableIntProperty': null,
+    'BoolProperty': true,
+    'DateProperty': '2020-12-26',
+    'StringArray':['a1','a2'],
+    'IntArray':[1,2]
+  },
+  'Data2': {
+    '$ref': '#/$defs/metadata.schema.TestMeta',
+    'StringProperty': 'Text',
+    'IntProperty': 42,
+    'DoubleProperty': 10.2,
+    'NullableIntProperty': null,
+    'BoolProperty': true,
+    'DateProperty': '2020-12-26',
+    'StringArray':['a1','a2'],
+    'IntArray':[1,2]
+  }
+}";
+            var propertyContainer = CreateTestContainer().ToPropertyContainerOfType<PropertyContainer<TestMeta>>();
+            ComplexObject complexObject = new ComplexObject()
+            {
+                Data1 = propertyContainer,
+                Data2 = propertyContainer,
+            };
+            string jsonWithNewtonsoftJson = complexObject.ToJsonWithNewtonsoftJson(configureJsonSerializerSettings: settings =>
+            {
+                settings.ReferenceResolverProvider = ReferenceResolverProvider;
+                settings.PreserveReferencesHandling = PreserveReferencesHandling.All;
+                settings.MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead;
+            });
+
+            var container = json.DeserializeWithNewtonsoftJson<ComplexObjectUntyped>(configureJsonSerializerSettings: settings =>
+            {
+                settings.ReferenceResolverProvider = ReferenceResolverProvider;
+                settings.PreserveReferencesHandling = PreserveReferencesHandling.All;
+                settings.MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead;
+                settings.ContractResolver = new ContractResolver();
+            });
+        }
+
+        private IReferenceResolver? ReferenceResolverProvider()
+        {
+            return new ReferenceResolver();
+        }
+
+        class ContractResolver : IContractResolver
+        {
+            DefaultContractResolver defaultContractResolver = new DefaultContractResolver();
+
+            /// <inheritdoc />
+            public JsonContract ResolveContract(Type type)
+            {
+                JsonContract jsonContract = defaultContractResolver.ResolveContract(type);
+
+                if (type.IsAssignableTo<IMetadataSchemaProvider>() && jsonContract is JsonObjectContract contract)
+                {
+                    JsonObjectContract resolveContract = (JsonObjectContract)defaultContractResolver.ResolveContract(typeof(IMetadataSchemaProvider));
+                    contract.Properties.AddProperty(resolveContract.Properties[0]);
+                }
+
+                return jsonContract;
+            }
+        }
+
+        class ReferenceResolver : IReferenceResolver
+        {
+            /// <inheritdoc />
+            public object ResolveReference(object context, string reference)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <inheritdoc />
+            public string GetReference(object context, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <inheritdoc />
+            public bool IsReferenced(object context, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <inheritdoc />
+            public void AddReference(object context, string reference, object value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Fact]
         public void SerializeDeserializePropertyContainerCollection()
         {
-            var initialContainer = new MutablePropertyContainer()
-                .WithValue(TestMeta.StringProperty, "Text")
-                .WithValue(TestMeta.IntProperty, 42)
-                .WithValue(TestMeta.DoubleProperty, 10.2)
-                .WithValue(TestMeta.NullableIntProperty, null)
-                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
-                .WithValue(TestMeta.StringArray, new[] { "a1", "a2" })
-                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
-                ;
+            var initialContainer = CreateTestContainer();
 
-            IPropertyContainer[] containers = new IPropertyContainer[] {initialContainer};
+            IPropertyContainer[] containers = new IPropertyContainer[] {initialContainer, initialContainer};
 
             var json1 = containers.ToJsonWithSystemTextJson();
             var json2 = containers.ToJsonWithNewtonsoftJson();
 
             var containers1Restored = json1.DeserializeWithSystemTextJson<IReadOnlyCollection<IPropertyContainer>>();
             var containers2Restored = json2.DeserializeWithNewtonsoftJson<IReadOnlyCollection<IPropertyContainer>>();
+
+            containers1Restored.Should().NotBeEmpty();
+            containers2Restored.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void SerializeDeserializeTypedPropertyContainerCollection()
+        {
+            var initialContainer = CreateTestContainer()
+                    .ToPropertyContainerOfType(typeof(PropertyContainer<TestMeta>));
+
+            IPropertyContainer[] containers = new IPropertyContainer[] { initialContainer, initialContainer };
+
+            var json1 = containers.ToJsonWithSystemTextJson();
+            var json2 = containers.ToJsonWithNewtonsoftJson();
+
+            var containers1Restored = json1.DeserializeWithSystemTextJson<IReadOnlyCollection<PropertyContainer<TestMeta>>>();
+            var containers2Restored = json2.DeserializeWithNewtonsoftJson<IReadOnlyCollection<PropertyContainer<TestMeta>>>();
 
             containers1Restored.Should().NotBeEmpty();
             containers2Restored.Should().NotBeEmpty();
@@ -319,13 +528,27 @@ namespace MicroElements.Metadata.Tests.Serialization
             string? formattedValue = fullToStringFormatter.TryFormat(list);
             formattedValue.Should().Be("[(Key1: 2021-01-23), (Key2: [a1, a2]), (Key3: (Internal, 5))]");
         }
+
+        [Fact]
+        public void MetadataJsonSerializationOptions_should_be_copied_properly()
+        {
+            Fixture fixture = new Fixture();
+            fixture.Customizations.Add(
+                new TypeRelay(
+                    typeof(ITypeMapper),
+                    typeof(DefaultTypeMapper)));
+            var options = fixture.Create<MetadataJsonSerializationOptions>();
+            var optionsCopy = options.Copy();
+
+            optionsCopy.Should().BeEquivalentTo(options);
+        }
     }
 
     internal static class SerializationExtensions
     {
-        public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options)
+        public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            options.ConfigureJsonForPropertyContainers();
+            options.ConfigureJsonForPropertyContainers(configureSerialization);
             options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
             options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
@@ -334,28 +557,40 @@ namespace MicroElements.Metadata.Tests.Serialization
             return options;
         }
 
-        public static string ToJsonWithSystemTextJson<T>(this T entity)
+        public static string ToJsonWithSystemTextJson<T>(this T entity, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions(configureSerialization);
             return JsonSerializer.Serialize(entity, jsonSerializerOptions);
         }
 
-        public static string ToJsonWithNewtonsoftJson<T>(this T entity)
+        public static string ToJsonWithNewtonsoftJson<T>(this T entity, Action<JsonSerializerSettings>? configureJsonSerializerSettings = null, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
+            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers(configureSerialization);
             return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
         }
 
-        public static T DeserializeWithSystemTextJson<T>(this string json)
+        public static T DeserializeWithSystemTextJson<T>(this string json, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions(configureSerialization);
             T? restored = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
             return restored;
         }
 
-        public static T DeserializeWithNewtonsoftJson<T>(this string json)
+        public static T DeserializeWithSystemTextJson<T>(this string json, JsonSerializerOptions jsonSerializerOptions)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
+            T? restored = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
+            return restored;
+        }
+
+        public static T DeserializeWithNewtonsoftJson<T>(
+            this string json, 
+            Action<JsonSerializerSettings>? configureJsonSerializerSettings = null,
+            Action<MetadataJsonSerializationOptions>? configureSerialization = null)
+        {
+            var jsonSerializerSettings = new JsonSerializerSettings()
+                .ConfigureJsonForPropertyContainers(configureSerialization);
+            configureJsonSerializerSettings?.Invoke(jsonSerializerSettings);
+
             return JsonConvert.DeserializeObject<T>(json, jsonSerializerSettings);
         }
     }
@@ -367,6 +602,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static readonly IProperty<int?> NullableIntProperty = new Property<int?>("NullableIntProperty");
         public static readonly IProperty<double> DoubleProperty = new Property<double>("DoubleProperty");
         public static readonly IProperty<LocalDate> DateProperty = new Property<LocalDate>("DateProperty");
+        public static readonly IProperty<bool> BoolProperty = new Property<bool>("BoolProperty");
 
         public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
         public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MicroElements.Functional;
@@ -67,8 +68,6 @@ namespace MicroElements.Metadata.SystemTextJson
         public override TPropertyContainer Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions options)
         {
             IPropertySet? schema = null;
-            bool isPositional = false;
-            int propertyIndex = 0;
             var propertyContainer = new MutablePropertyContainer();
 
             IPropertySet? knownPropertySet = typeToConvert.GetSchemaByKnownPropertySet();
@@ -111,31 +110,18 @@ namespace MicroElements.Metadata.SystemTextJson
                 reader.Read();
 
                 // Compact schema presentation. Use for embedding to json.
+                // NOTE: Some json implementations can change property order so $metadata.schema.compact can be not first!!!...
                 if (propertyName == "$metadata.schema.compact")
                 {
                     var compactSchemaItems = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                    IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator);
-                    schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
-                    return;
-                }
-
-                // Obsolete branch. Some json implementations can change property order so @metadata.types can be irrelevant...
-                if (propertyName == "@metadata.types")
-                {
-                    isPositional = true;
-                    var typeNames = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                    IPropertySet schemaFromJson = MetadataSchema.ParseMetadataTypes(typeNames);
+                    IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator, Options.TypeMapper);
                     schema = knownPropertySet != null ? knownPropertySet.AppendAbsentProperties(schemaFromJson) : schemaFromJson;
                     return;
                 }
 
                 if (propertyType == null && schema != null)
                 {
-                    if (isPositional)
-                        property = schema.GetFromSchema($"{propertyIndex}");
-                    else
-                        property = schema.GetFromSchema(propertyName);
-
+                    property = schema.GetFromSchema(propertyName);
                     propertyType = property?.Type;
                 }
 
@@ -169,14 +155,29 @@ namespace MicroElements.Metadata.SystemTextJson
                 }
 
                 propertyContainer.WithValueUntyped(property, propertyValue);
-
-                propertyIndex++;
             }
 
             var resultContainer = propertyContainer.ToPropertyContainerOfType<TPropertyContainer>();
             if (Options.AddSchemaInfo && schema != null)
                 resultContainer.SetSchema(schema.ToSchema());
             return resultContainer;
+        }
+
+        public class JsonWriterContext
+        {
+            public record Item
+            {
+                public Type Type { get;}
+                public IPropertySet? KnownPropertySet { get; }
+
+                public Item(Type type, IPropertySet? knownPropertySet)
+                {
+                    Type = type;
+                    KnownPropertySet = knownPropertySet;
+                }
+            }
+
+            public ConcurrentDictionary<Type, Item> Dictionary { get; } = new ConcurrentDictionary<Type, Item>();
         }
 
         /// <inheritdoc />
@@ -190,9 +191,22 @@ namespace MicroElements.Metadata.SystemTextJson
 
                 if (Options.WriteSchemaCompact)
                 {
-                    writer.WritePropertyName("$metadata.schema.compact");
-                    string[] compactSchema = MetadataSchema.GenerateCompactSchema(container, GetJsonPropertyName);
-                    JsonSerializer.Serialize(writer, compactSchema, options);
+                    Type containerType = container.GetType();
+
+                    var metadataProvider = writer.AsMetadataProvider();
+                    JsonWriterContext? jsonWriterContext = metadataProvider.GetMetadata<JsonWriterContext>();
+                    if (jsonWriterContext == null || !jsonWriterContext.Dictionary.ContainsKey(containerType))
+                    {
+                        writer.WritePropertyName("$metadata.schema.compact");
+                        string[] compactSchema = MetadataSchema.GenerateCompactSchema(container, GetJsonPropertyName, Options.Separator, Options.TypeMapper);
+                        JsonSerializer.Serialize(writer, compactSchema, options);
+
+                        IPropertySet? knownPropertySet = containerType.GetSchemaByKnownPropertySet();
+                        if (knownPropertySet != null)
+                        {
+                            metadataProvider.ConfigureMetadata<JsonWriterContext>(context => context.Dictionary.TryAdd(containerType, new JsonWriterContext.Item(containerType, knownPropertySet)));
+                        }
+                    }
                 }
 
                 foreach (IPropertyValue propertyValue in container.Properties)

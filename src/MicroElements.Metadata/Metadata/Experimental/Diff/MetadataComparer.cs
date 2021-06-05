@@ -138,7 +138,7 @@ namespace MicroElements.Metadata.Diff
         }
 
         /// <inheritdoc />
-        public override string ToString() => $"{nameof(Property)}: {Property}, {nameof(OldValue)}: {OldValue}, {nameof(NewValue)}: {NewValue}";
+        public override string ToString() => $"{nameof(Property)}: {Property}, {nameof(OldValue)}: '{OldValue}', {nameof(NewValue)}: '{NewValue}'";
     }
 
     public static partial class Enumerable

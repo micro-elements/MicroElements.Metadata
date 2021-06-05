@@ -12,8 +12,6 @@ namespace MicroElements.Metadata
     /// </summary>
     public interface IPropertySet : IMetadataProvider, IEnumerable<IProperty>
     {
-        //TODO: XSD CompositorType: All, Choice, Sequence
-
         /// <summary>
         /// Gets properties enumeration.
         /// </summary>

@@ -125,7 +125,7 @@ namespace MicroElements.Metadata.Tests
             var container = XDocument.Parse(testXml).ParseXmlToContainer(personSchema);
             IXmlParserContext xmlParserContext = container.GetMetadata<IXmlParserContext>();
 
-            var validationRules = personSchema.GetValidationRules().ToArray();
+            var validationRules = personSchema.Properties.GetValidationRules().ToArray();
             var messages = container.Validate(validationRules).ToArray();
             messages.Should().HaveCount(2);
             messages[0].FormattedMessage.Should().Be("FirstName length should be greater then 1 but was 1");

@@ -53,6 +53,9 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
+        public IEnumerable<IProperty> GetProperties() => _properties;
+
+        /// <inheritdoc />
         public IProperty AddProperty(IProperty property)
         {
             _properties.Add(property);
@@ -87,7 +90,7 @@ namespace MicroElements.Metadata.Schema
                 return schema;
             }
 
-            return new MutableObjectSchema(name: propertySet.GetType().Name, properties: propertySet);
+            return new MutableObjectSchema(name: propertySet.GetType().Name, properties: propertySet.GetProperties());
         }
     }
 }

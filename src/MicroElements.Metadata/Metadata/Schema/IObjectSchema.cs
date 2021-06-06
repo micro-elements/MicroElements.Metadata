@@ -9,7 +9,7 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Represents complex schema for object.
     /// </summary>
-    public interface IObjectSchema : ISchema
+    public interface IObjectSchema : ISchema, IPropertySet
     {
         /// <summary>
         /// Gets object properties.

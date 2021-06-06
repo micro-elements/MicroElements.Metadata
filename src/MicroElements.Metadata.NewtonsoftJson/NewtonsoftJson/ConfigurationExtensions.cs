@@ -24,7 +24,8 @@ namespace MicroElements.Metadata.NewtonsoftJson
             configureSerialization?.Invoke(metadataJsonSerializationOptions);
 
             options.Converters.Add(new PropertyContainerConverter(metadataJsonSerializationOptions));
-            options.Converters.Add(new SchemaRepositoryConverter(metadataJsonSerializationOptions));
+            //options.Converters.Add(new SchemaRepositoryConverter(metadataJsonSerializationOptions));
+            options.Converters.Add(new MetadataSchemaProviderConverter(metadataJsonSerializationOptions));
 
             //options.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
             return options;

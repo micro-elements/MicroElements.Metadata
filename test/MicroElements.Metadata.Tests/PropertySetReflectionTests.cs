@@ -9,9 +9,9 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void PropertySetEvaluatorTest()
         {
-            PropertySetEvaluator.GetPropertySet(typeof(ConcretePropertySet)).Should().NotBeNullOrEmpty();
-            PropertySetEvaluator.GetPropertySet(typeof(SomeMeta), property: "PropertySet").Should().NotBeNullOrEmpty();
-            PropertySetEvaluator.GetPropertySet(typeof(SomeMeta), method: "GetProperties").Should().NotBeNullOrEmpty();
+            PropertySetEvaluator.GetPropertySet(typeof(ConcretePropertySet)).GetProperties().Should().NotBeNullOrEmpty();
+            PropertySetEvaluator.GetPropertySet(typeof(SomeMeta), property: "PropertySet").GetProperties().Should().NotBeNullOrEmpty();
+            PropertySetEvaluator.GetPropertySet(typeof(SomeMeta), method: "GetProperties").GetProperties().Should().NotBeNullOrEmpty();
         }
     }
 

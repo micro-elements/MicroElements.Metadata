@@ -165,19 +165,17 @@ namespace MicroElements.Metadata.SystemTextJson
 
         public class JsonWriterContext
         {
-            public record Item
-            {
-                public Type Type { get;}
-                public IPropertySet? KnownPropertySet { get; }
+            private ConcurrentDictionary<Type, bool> Dictionary { get; } = new ConcurrentDictionary<Type, bool>();
 
-                public Item(Type type, IPropertySet? knownPropertySet)
-                {
-                    Type = type;
-                    KnownPropertySet = knownPropertySet;
-                }
+            public void SetIsWritten(Type type)
+            {
+                Dictionary[type] = true;
             }
 
-            public ConcurrentDictionary<Type, Item> Dictionary { get; } = new ConcurrentDictionary<Type, Item>();
+            public bool IsWritten(Type type)
+            {
+               return Dictionary.ContainsKey(type);
+            }
         }
 
         /// <inheritdoc />
@@ -193,18 +191,24 @@ namespace MicroElements.Metadata.SystemTextJson
                 {
                     Type containerType = container.GetType();
 
-                    var metadataProvider = writer.AsMetadataProvider();
-                    JsonWriterContext? jsonWriterContext = metadataProvider.GetMetadata<JsonWriterContext>();
-                    if (jsonWriterContext == null || !jsonWriterContext.Dictionary.ContainsKey(containerType))
+                    bool writeSchemaCompact = true;
+
+                    if (Options.WriteSchemaOnceForKnownTypes && container is IKnownPropertySet)
+                    {
+                        JsonWriterContext? jsonWriterContext = writer.AsMetadataProvider().GetMetadata<JsonWriterContext>();
+                        if (jsonWriterContext != null)
+                            writeSchemaCompact = !jsonWriterContext.IsWritten(containerType);
+                    }
+
+                    if (writeSchemaCompact)
                     {
                         writer.WritePropertyName("$metadata.schema.compact");
                         string[] compactSchema = MetadataSchema.GenerateCompactSchema(container, GetJsonPropertyName, Options.Separator, Options.TypeMapper);
                         JsonSerializer.Serialize(writer, compactSchema, options);
 
-                        IPropertySet? knownPropertySet = containerType.GetSchemaByKnownPropertySet();
-                        if (knownPropertySet != null)
+                        if (Options.WriteSchemaOnceForKnownTypes && container is IKnownPropertySet)
                         {
-                            metadataProvider.ConfigureMetadata<JsonWriterContext>(context => context.Dictionary.TryAdd(containerType, new JsonWriterContext.Item(containerType, knownPropertySet)));
+                            writer.AsMetadataProvider().ConfigureMetadata<JsonWriterContext>(context => context.SetIsWritten(containerType));
                         }
                     }
                 }

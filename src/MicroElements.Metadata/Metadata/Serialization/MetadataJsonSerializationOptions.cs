@@ -29,6 +29,11 @@ namespace MicroElements.Metadata.Serialization
         public bool WriteSchemaCompact { get; set; } = true;
 
         /// <summary>
+        /// WriteSchemaOnceForKnownTypes.
+        /// </summary>
+        public bool WriteSchemaOnceForKnownTypes { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets a value indicating whether schema info will be injected in a property name.
         /// It's the most compact presentation with schema but can lead problems with json processing by standard tools.
         /// </summary>
@@ -60,6 +65,17 @@ namespace MicroElements.Metadata.Serialization
         /// This impacts performance - use when schema is not the first node in json.
         /// </summary>
         public bool ReadSchemaFirst { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether serialization should use common schema catalog in json.
+        /// This impacts performance but reduces json size.
+        /// </summary>
+        public bool UseSchemasRoot { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets schemas root name in json.
+        /// </summary>
+        public string SchemasRootName { get; set; } = "$defs";
     }
 
     public enum MetadataSchemaType
@@ -96,6 +112,9 @@ namespace MicroElements.Metadata.Serialization
                 TypeMapper = source.TypeMapper,
                 AddSchemaInfo = source.AddSchemaInfo,
                 ReadSchemaFirst = source.ReadSchemaFirst,
+                SchemasRootName = source.SchemasRootName,
+                UseSchemasRoot = source.UseSchemasRoot,
+                WriteSchemaOnceForKnownTypes = source.WriteSchemaOnceForKnownTypes,
             };
         }
     }

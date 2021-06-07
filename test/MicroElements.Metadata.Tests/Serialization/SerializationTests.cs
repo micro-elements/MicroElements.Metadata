@@ -179,9 +179,9 @@ namespace MicroElements.Metadata.Tests.Serialization
 	}
   }
 }";
-            JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
-            var complexObject = json.DeserializeWithNewtonsoftJson<ComplexObjectUntyped>(jsonSerializerSettings);
+            JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers(options => options.UseSchemasRoot = true);
 
+            var complexObject = json.DeserializeWithNewtonsoftJson<ComplexObjectUntyped>(jsonSerializerSettings);
             complexObject.Data1.Properties.FirstOrDefault(value => value.PropertyUntyped.Name == "NullableIntProperty")
                 .PropertyUntyped.Type.Should().Be(typeof(int?));
 
@@ -308,7 +308,7 @@ namespace MicroElements.Metadata.Tests.Serialization
 
             IPropertyContainer[] containers = new IPropertyContainer[] { initialContainer, initialContainer };
 
-            var json1 = containers.ToJsonWithSystemTextJson();
+            var json1 = containers.ToJsonWithSystemTextJson(options => options.WriteSchemaOnceForKnownTypes = true);
             var json2 = containers.ToJsonWithNewtonsoftJson();
 
             var containers1Restored = json1.DeserializeWithSystemTextJson<IReadOnlyCollection<PropertyContainer<TestMeta>>>();

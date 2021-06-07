@@ -47,7 +47,6 @@ namespace MicroElements.Metadata.Schema
 
     public interface IMetadataSchemaProvider : IMetadataProvider
     {
-        //[JsonProperty(PropertyName = "$defs")]
         public ISchemaRepository Schemas
         {
             get

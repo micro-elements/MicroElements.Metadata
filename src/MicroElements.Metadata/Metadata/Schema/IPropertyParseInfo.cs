@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 namespace MicroElements.Metadata.Schema
 {
+    //TODO: rename to IsFromSchema, make optional
+
     /// <summary>
     /// Metadata for property with additional information from parser.
     /// </summary>

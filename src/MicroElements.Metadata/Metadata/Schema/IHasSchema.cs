@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using MicroElements.Functional;
 
@@ -253,21 +254,6 @@ namespace MicroElements.Metadata.Schema
             metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             return metadataProvider.GetMetadata<IHasSchema>(searchInSchema: false);
-        }
-
-        /// <summary>
-        /// Gets optional <see cref="IObjectSchema"/> from <see cref="IHasSchema"/> metadata.
-        /// </summary>
-        /// <param name="propertyContainer">Source property container.</param>
-        /// <returns>Optional <see cref="IMutableObjectSchema"/>.</returns>
-        [Pure]
-        public static IObjectSchema? GetSchema(this IPropertyContainer propertyContainer)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            ISchema? schema = propertyContainer.GetHasSchema()?.Schema;
-
-            return schema?.ToObjectSchema();
         }
 
         /// <summary>

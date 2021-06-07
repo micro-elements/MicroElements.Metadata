@@ -1,6 +1,8 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using MicroElements.Metadata.Serialization;
 using Newtonsoft.Json;
 
 namespace MicroElements.Metadata.NewtonsoftJson
@@ -14,10 +16,18 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// Configures <see cref="JsonSerializerSettings"/> to serialize <see cref="IPropertyContainer"/>.
         /// </summary>
         /// <param name="options"><see cref="JsonSerializerSettings"/> instance.</param>
+        /// <param name="configureSerialization">Optional action to configure metadata  serialization.</param>
         /// <returns>The same options.</returns>
-        public static JsonSerializerSettings ConfigureJsonForPropertyContainers(this JsonSerializerSettings options)
+        public static JsonSerializerSettings ConfigureJsonForPropertyContainers(this JsonSerializerSettings options, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            options.Converters.Add(new PropertyContainerConverter());
+            MetadataJsonSerializationOptions metadataJsonSerializationOptions = new MetadataJsonSerializationOptions();
+            configureSerialization?.Invoke(metadataJsonSerializationOptions);
+
+            options.Converters.Add(new PropertyContainerConverter(metadataJsonSerializationOptions));
+            //options.Converters.Add(new SchemaRepositoryConverter(metadataJsonSerializationOptions));
+            options.Converters.Add(new MetadataSchemaProviderConverter(metadataJsonSerializationOptions));
+
+            //options.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
             return options;
         }
 

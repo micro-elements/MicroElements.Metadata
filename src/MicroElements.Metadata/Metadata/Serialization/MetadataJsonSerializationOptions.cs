@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -28,9 +29,9 @@ namespace MicroElements.Metadata.Serialization
         public bool WriteSchemaCompact { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets symbol that separates property name and property information.
+        /// WriteSchemaOnceForKnownTypes.
         /// </summary>
-        public string Separator { get; set; } = "@";
+        public bool WriteSchemaOnceForKnownTypes { get; set; } = false;
 
         /// <summary>
         /// Gets or sets a value indicating whether schema info will be injected in a property name.
@@ -39,11 +40,42 @@ namespace MicroElements.Metadata.Serialization
         public bool WriteSchemaToPropertyName { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets symbol that separates property name and property information.
+        /// </summary>
+        public string Separator { get; set; } = "@";
+
+        /// <summary>
         /// Gets or sets an alternative separator in addition to <see cref="Separator"/>.
         /// </summary>
         public string? AltSeparator { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets a TypeMapper to map types in schema.
+        /// </summary>
+        public ITypeMapper TypeMapper { get; set; } = DefaultTypeMapper.Instance;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether schema reference will be added to property container.
+        /// For properties not from schema <see cref="IPropertyParseInfo.IsNotFromSchema"/> will be set to true.
+        /// </summary>
         public bool AddSchemaInfo { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether reader should read schema first and that read data.
+        /// This impacts performance - use when schema is not the first node in json.
+        /// </summary>
+        public bool ReadSchemaFirst { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether serialization should use common schema catalog in json.
+        /// This impacts performance but reduces json size.
+        /// </summary>
+        public bool UseSchemasRoot { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets schemas root name in json.
+        /// </summary>
+        public string SchemasRootName { get; set; } = "$defs";
     }
 
     public enum MetadataSchemaType
@@ -77,6 +109,12 @@ namespace MicroElements.Metadata.Serialization
                 WriteSchemaToPropertyName = source.WriteSchemaToPropertyName,
                 Separator = source.Separator ?? _default.Separator,
                 AltSeparator = source.AltSeparator ?? _default.AltSeparator,
+                TypeMapper = source.TypeMapper,
+                AddSchemaInfo = source.AddSchemaInfo,
+                ReadSchemaFirst = source.ReadSchemaFirst,
+                SchemasRootName = source.SchemasRootName,
+                UseSchemasRoot = source.UseSchemasRoot,
+                WriteSchemaOnceForKnownTypes = source.WriteSchemaOnceForKnownTypes,
             };
         }
     }

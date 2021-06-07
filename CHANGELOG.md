@@ -1,3 +1,13 @@
+# 7.4.0
+Schema serialization and utility release
+- Added IMetadataSchemaProvider
+- NewtonsoftJson: Added MetadataSchemaProviderConverter that allows to use common schema section in json document
+- ConfigureJsonForPropertyContainers: added action to configure MetadataJsonSerializationOptions
+- MetadataJsonSerializationOptions: added options: TypeMapper, UseSchemasRoot, SchemasRootName, WriteSchemaOnceForKnownTypes
+- Removed IEnumeration interface from IPropertySet 
+- Removed PropertyContainerWithMetadataTypesConverter
+- Many other usability improvements
+
 # 7.3.0
 - Added PropertyContainerMapper with methods ToPropertyContainerOfType, ToPropertyContainer and ToObject
 - PropertyContainerConverters (SystemTextJson and NewtonsoftJson) uses common method ToPropertyContainerOfType and supports typed PropertyContainers

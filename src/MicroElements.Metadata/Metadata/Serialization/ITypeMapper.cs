@@ -53,6 +53,8 @@ namespace MicroElements.Metadata.Serialization
                 .Concat(new[]
                 {
                     new TypeRegistration(typeof(string), "string"),
+                    new TypeRegistration(typeof(bool), "bool"),
+                    new TypeRegistration(typeof(bool?), "bool?"),
                     new TypeRegistration(typeof(DateTime), "DateTime"),
                     new TypeRegistration(typeof(DateTime?), "DateTime?"),
                 })

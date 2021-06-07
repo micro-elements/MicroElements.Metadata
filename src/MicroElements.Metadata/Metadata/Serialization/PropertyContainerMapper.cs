@@ -83,7 +83,7 @@ namespace MicroElements.Metadata.Serialization
             propertyValueFactory ??= new CachedPropertyValueFactory(new PropertyValueFactory(), propertyComparer);
 
             var schema = new TSchema();
-            IProperty[] schemaProperties = schema.ToArray();
+            IProperty[] schemaProperties = schema.GetProperties().ToArray();
 
             var searchOptions = SearchOptions.Default.WithPropertyComparer(propertyComparer);
             var propertyContainer = new MutablePropertyContainer(searchOptions: searchOptions);

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -13,22 +12,40 @@ namespace MicroElements.Metadata.Serialization
     /// </summary>
     public static class MetadataSchema
     {
-        public static string[] GenerateCompactSchema(IPropertyContainer propertyContainer, Func<string, string> gatPropertyName, string separator = "@")
+        public static string[] GenerateCompactSchema(
+            IPropertyContainer propertyContainer,
+            Func<string, string> getPropertyName,
+            string separator,
+            ITypeMapper? typeMapper)
         {
-            string[] propertyInfos = new string[propertyContainer.Properties.Count];
+            List<IProperty> properties = propertyContainer.Properties.Select(pv => pv.PropertyUntyped).ToList();
+            return GenerateCompactSchema(properties, getPropertyName, separator, typeMapper);
+        }
+
+        public static string[] GenerateCompactSchema(
+            IReadOnlyCollection<IProperty> properties,
+            Func<string, string> getPropertyName,
+            string separator,
+            ITypeMapper? typeMapper)
+        {
+            typeMapper ??= DefaultTypeMapper.Instance;
+            string[] propertyInfos = new string[properties.Count];
             int i = 0;
-            foreach (IPropertyValue propertyValue in propertyContainer.Properties)
+            foreach (IProperty property in properties)
             {
-                string jsonPropertyName = gatPropertyName(propertyValue.PropertyUntyped.Name);
-                Type propertyType = propertyValue.PropertyUntyped.Type;
-                string typeAlias = DefaultMapperSettings.Instance.GetTypeName(propertyType);
+                string jsonPropertyName = getPropertyName(property.Name);
+                Type propertyType = property.Type;
+                string typeAlias = typeMapper.GetTypeName(propertyType);
                 propertyInfos[i++] = $"{jsonPropertyName}{separator}type={typeAlias}";
             }
 
             return propertyInfos;
         }
 
-        public static IPropertySet ParseCompactSchema(string[]? compactSchemaItems, string separator = "@")
+        public static IPropertySet ParseCompactSchema(
+            string[]? compactSchemaItems,
+            string separator,
+            ITypeMapper? typeMapper)
         {
             if (compactSchemaItems == null)
                 return new PropertySet();
@@ -36,7 +53,7 @@ namespace MicroElements.Metadata.Serialization
             List<IProperty> properties = new List<IProperty>(compactSchemaItems.Length);
             foreach (string compactSchemaItem in compactSchemaItems)
             {
-                IProperty? property = ParsePropertyInfo(compactSchemaItem, separator);
+                IProperty? property = ParsePropertyInfo(compactSchemaItem, separator, typeMapper);
                 if (property != null)
                     properties.Add(property);
             }
@@ -44,26 +61,10 @@ namespace MicroElements.Metadata.Serialization
             return new PropertySet(properties);
         }
 
-        public static IPropertySet ParseMetadataTypes(string[]? typeNames)
+        public static IProperty? ParsePropertyInfo(string fullPropertyName, string separator, ITypeMapper? typeMapper)
         {
-            if (typeNames == null)
-                return new PropertySet();
+            typeMapper ??= DefaultTypeMapper.Instance;
 
-            List<IProperty> properties = new List<IProperty>(typeNames.Length);
-            int i = 0;
-            foreach (string typeName in typeNames)
-            {
-                Type type = DefaultMapperSettings.Instance.GetTypeByName(typeName);
-                IProperty property = Property.Create(type, $"{i}");
-                properties.Add(property);
-                i++;
-            }
-
-            return new PropertySet(properties);
-        }
-
-        public static IProperty? ParsePropertyInfo(string fullPropertyName, string separator)
-        {
             string[] parts = fullPropertyName.Split(separator);
             if (parts.Length > 1)
             {
@@ -72,35 +73,13 @@ namespace MicroElements.Metadata.Serialization
                 {
                     string propertyName = parts[0];
                     string typeAlias = typePart.Substring("type=".Length);
-                    Type? propertyType = DefaultMapperSettings.Instance.GetTypeByName(typeAlias);
+                    Type? propertyType = typeMapper.GetTypeByName(typeAlias);
                     if (propertyType != null)
                         return Property.Create(propertyType, propertyName);
                 }
             }
 
             return null;
-        }
-
-        public static Option<(string PropertyName, Type PropertyType)> ParseName(string fullPropertyName, string? separator)
-        {
-            if (separator != null)
-            {
-                string[] parts = fullPropertyName.Split(separator);
-                if (parts.Length > 1)
-                {
-                    string? typePart = parts.FirstOrDefault(part => part.StartsWith("type="));
-                    if (typePart != null)
-                    {
-                        string propertyName = parts[0];
-                        string typeAlias = typePart.Substring("type=".Length);
-                        Type propertyType = DefaultMapperSettings.Instance.GetTypeByName(typeAlias);
-                        if (propertyType != null)
-                            return (propertyName, propertyType);
-                    }
-                }
-            }
-
-            return Option<(string, Type)>.None;
         }
 
         public static IProperty? GetFromSchema(this IPropertySet propertySet, string propertyName)
@@ -125,7 +104,7 @@ namespace MicroElements.Metadata.Serialization
             propertyComparer ??= PropertyComparer.ByNameOrAliasIgnoreCase;
 
             var sourceProperties = source.GetProperties();
-            var resultProperties = sourceProperties.Union(propertiesToAdd, propertyComparer);
+            var resultProperties = sourceProperties.Union(propertiesToAdd.GetProperties(), propertyComparer);
 
             PropertySet propertySet = new PropertySet(resultProperties);
             return propertySet;

@@ -201,7 +201,8 @@ namespace MicroElements.Metadata.Tests.Serialization
                 Data2 = CreateTestContainer()
             };
 
-            string jsonWithNewtonsoftJson = complexObject.ToJsonWithNewtonsoftJson();
+            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = false);
+            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = true);
         }
 
         class TestPerson
@@ -372,7 +373,9 @@ namespace MicroElements.Metadata.Tests.Serialization
 
         public static string ToJsonWithNewtonsoftJson<T>(this T entity, Action<JsonSerializerSettings>? configureJsonSerializerSettings = null, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers(configureSerialization);
+            JsonSerializerSettings serializerSettings = new JsonSerializerSettings();
+            configureJsonSerializerSettings?.Invoke(serializerSettings);
+            var jsonSerializerSettings = serializerSettings.ConfigureJsonForPropertyContainers(configureSerialization);
             return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
         }
 

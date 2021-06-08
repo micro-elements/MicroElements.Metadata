@@ -33,7 +33,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
             if (!Options.UseSchemasRoot)
             {
                 // Serialize standard way
-                serializer.Serialize(writer, value);
+                WriteObject(writer, value, serializer);
                 return;
             }
 

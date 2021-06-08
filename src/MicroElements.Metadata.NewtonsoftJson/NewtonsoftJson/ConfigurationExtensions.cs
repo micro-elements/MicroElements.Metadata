@@ -24,17 +24,15 @@ namespace MicroElements.Metadata.NewtonsoftJson
             configureSerialization?.Invoke(metadataJsonSerializationOptions);
 
             options.Converters.Add(new PropertyContainerConverter(metadataJsonSerializationOptions));
-            //options.Converters.Add(new SchemaRepositoryConverter(metadataJsonSerializationOptions));
             options.Converters.Add(new MetadataSchemaProviderConverter(metadataJsonSerializationOptions));
 
-            //options.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
             return options;
         }
 
         /// <inheritdoc cref="ConfigureJsonForPropertyContainers"/>.
-        public static JsonSerializerSettings ConfigureForMetadata(this JsonSerializerSettings options)
+        public static JsonSerializerSettings ConfigureForMetadata(this JsonSerializerSettings options, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            return options.ConfigureJsonForPropertyContainers();
+            return options.ConfigureJsonForPropertyContainers(configureSerialization);
         }
     }
 }

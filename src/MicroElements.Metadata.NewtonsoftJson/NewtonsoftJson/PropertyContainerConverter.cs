@@ -146,7 +146,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                 // Compact schema presentation. Use for embedding to json.
                 // NOTE: Some json implementations can change property order so $metadata.schema.compact can be not first!!!...
-                // For example PostrgeSql jsonb orders properties by name length.
+                // For example PostrgeSql jsonb orders properties by name length. Use ReadSchemaFirst for this case.
                 if (propertyName == "$metadata.schema.compact")
                 {
                     if (hasSchemaFromJson)

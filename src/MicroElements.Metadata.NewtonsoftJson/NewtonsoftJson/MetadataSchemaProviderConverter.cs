@@ -4,6 +4,7 @@ using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace MicroElements.Metadata.NewtonsoftJson
 {
@@ -29,9 +30,6 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, IMetadataSchemaProvider? value, JsonSerializer serializer)
         {
-            // Remove this converter to deserialize object standard way.
-            serializer.Converters.Remove(this);
-
             if (!Options.UseSchemasRoot)
             {
                 // Serialize standard way
@@ -49,7 +47,10 @@ namespace MicroElements.Metadata.NewtonsoftJson
             jTokenWriter.AsMetadataProvider().SetMetadata((ISchemaRepository)schemaRepository);
 
             // Stage:1 Write to jTokenWriter
-            serializer.Serialize(jTokenWriter, value);
+            // NOTE: Standard serializer.Serialize calls the same converter in an infinite loop. So we need to use manual WriteObject
+            // NOTE: Removing converter from converters list is working but there is some scenarios when serializer reused.
+            WriteObject(jTokenWriter, value, serializer);
+
             JToken? jToken = jTokenWriter.Token;
 
             if (jToken != null)
@@ -70,6 +71,38 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 // Stage2: Write final json
                 jToken.WriteTo(writer);
             }
+        }
+
+        private static void WriteObject(JsonWriter jsonWriter, object? value, JsonSerializer serializer)
+        {
+            if (value == null)
+            {
+                jsonWriter.WriteNull();
+                return;
+            }
+
+            JsonObjectContract jsonObjectContract = (JsonObjectContract)serializer.ContractResolver.ResolveContract(value.GetType());
+
+            jsonWriter.WriteStartObject();
+            foreach (JsonProperty jsonProperty in jsonObjectContract.Properties)
+            {
+                if (jsonProperty.PropertyName != null)
+                {
+                    jsonWriter.WritePropertyName(jsonProperty.PropertyName);
+                    object? propertyValue = jsonProperty.ValueProvider?.GetValue(value);
+
+                    if (propertyValue != null)
+                    {
+                        serializer.Serialize(jsonWriter, propertyValue);
+                    }
+                    else
+                    {
+                        jsonWriter.WriteNull();
+                    }
+                }
+            }
+
+            jsonWriter.WriteEndObject();
         }
 
         /// <inheritdoc />

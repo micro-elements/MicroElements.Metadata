@@ -56,6 +56,27 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
+        /// Gets <see cref="IPropertyParseInfo.IsNotFromSchema"/> metadata property.
+        /// </summary>
+        /// <param name="property">Source property.</param>
+        /// <returns>A value indicating whether the property was not created from schema.</returns>
+        public static bool IsNotFromSchema(this IProperty property) => property.GetIsNotFromSchema();
+
+        /// <summary>
+        /// Gets properties that was not created from schema.
+        /// </summary>
+        /// <param name="properties">Source properties.</param>
+        /// <returns>Properties that was not created from schema.</returns>
+        public static IEnumerable<IProperty> GetPropertiesNotFromSchema(this IEnumerable<IProperty> properties)
+        {
+            foreach (IProperty property in properties)
+            {
+                if (property.GetIsNotFromSchema())
+                    yield return property;
+            }
+        }
+
+        /// <summary>
         /// Gets properties that was not created from schema.
         /// </summary>
         /// <param name="schema">Source schema.</param>

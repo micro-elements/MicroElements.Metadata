@@ -7,6 +7,7 @@ Schema serialization and utility release
 - Removed IEnumeration interface from IPropertySet 
 - Removed PropertyContainerWithMetadataTypesConverter
 - Many other usability improvements
+- 7.4.1: added default value to GetValue extension
 
 # 7.3.0
 - Added PropertyContainerMapper with methods ToPropertyContainerOfType, ToPropertyContainer and ToObject

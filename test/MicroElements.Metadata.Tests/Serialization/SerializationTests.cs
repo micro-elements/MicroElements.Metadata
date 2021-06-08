@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using AutoFixture;
@@ -316,6 +318,36 @@ namespace MicroElements.Metadata.Tests.Serialization
 
             containers1Restored.Should().NotBeEmpty();
             containers2Restored.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void UseSchemasRootShouldWorkOnSerializerReuse()
+        {
+            ComplexObjectUntyped complexObject = new ComplexObjectUntyped()
+            {
+                Data1 = CreateTestContainer().ToPropertyContainerOfType<PropertyContainer<TestMeta>>(),
+                Data2 = CreateTestContainer().ToPropertyContainerOfType<PropertyContainer<TestMeta>>()
+            };
+
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+                .ConfigureJsonForPropertyContainers(options => options.UseSchemasRoot = true);
+
+            Newtonsoft.Json.JsonSerializer jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(settings);
+
+            StringBuilder stringBuilder1 = new StringBuilder();
+            StringWriter stringWriter1 = new StringWriter(stringBuilder1);
+
+            jsonSerializer.Serialize(stringWriter1, complexObject);
+
+            StringBuilder stringBuilder2 = new StringBuilder();
+            StringWriter stringWriter2 = new StringWriter(stringBuilder2);
+
+            jsonSerializer.Serialize(stringWriter2, complexObject);
+
+            string json1 = stringBuilder1.ToString();
+            string json2 = stringBuilder2.ToString();
+
+            json2.Should().Be(json1);
         }
     }
 

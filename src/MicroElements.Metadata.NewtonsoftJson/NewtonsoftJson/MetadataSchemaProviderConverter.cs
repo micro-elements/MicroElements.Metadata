@@ -1,10 +1,12 @@
-﻿using System;
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace MicroElements.Metadata.NewtonsoftJson
 {
@@ -30,10 +32,13 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, IMetadataSchemaProvider? value, JsonSerializer serializer)
         {
+            // Serializer copy without this converter to prevent infinite loop.
+            var serializerCopy = serializer.CopyWithoutConverter(this);
+
             if (!Options.UseSchemasRoot)
             {
                 // Serialize standard way
-                WriteObject(writer, value, serializer);
+                serializerCopy.Serialize(writer, value);
                 return;
             }
 
@@ -47,9 +52,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
             jTokenWriter.AsMetadataProvider().SetMetadata((ISchemaRepository)schemaRepository);
 
             // Stage:1 Write to jTokenWriter
-            // NOTE: Standard serializer.Serialize calls the same converter in an infinite loop. So we need to use manual WriteObject
-            // NOTE: Removing converter from converters list is working but there is some scenarios when serializer reused.
-            WriteObject(jTokenWriter, value, serializer);
+            serializerCopy.Serialize(jTokenWriter, value);
 
             JToken? jToken = jTokenWriter.Token;
 
@@ -73,38 +76,6 @@ namespace MicroElements.Metadata.NewtonsoftJson
             }
         }
 
-        private static void WriteObject(JsonWriter jsonWriter, object? value, JsonSerializer serializer)
-        {
-            if (value == null)
-            {
-                jsonWriter.WriteNull();
-                return;
-            }
-
-            JsonObjectContract jsonObjectContract = (JsonObjectContract)serializer.ContractResolver.ResolveContract(value.GetType());
-
-            jsonWriter.WriteStartObject();
-            foreach (JsonProperty jsonProperty in jsonObjectContract.Properties)
-            {
-                if (jsonProperty.PropertyName != null)
-                {
-                    jsonWriter.WritePropertyName(jsonProperty.PropertyName);
-                    object? propertyValue = jsonProperty.ValueProvider?.GetValue(value);
-
-                    if (propertyValue != null)
-                    {
-                        serializer.Serialize(jsonWriter, propertyValue);
-                    }
-                    else
-                    {
-                        jsonWriter.WriteNull();
-                    }
-                }
-            }
-
-            jsonWriter.WriteEndObject();
-        }
-
         /// <inheritdoc />
         public override IMetadataSchemaProvider ReadJson(
             JsonReader reader,
@@ -113,45 +84,49 @@ namespace MicroElements.Metadata.NewtonsoftJson
             bool hasExistingValue,
             JsonSerializer serializer)
         {
-            ISchemaRepository? schemaRepository = reader.AsMetadataProvider().GetMetadata<ISchemaRepository>();
-            if (schemaRepository == null)
+            if (Options.UseSchemasRoot)
             {
-                schemaRepository = new SchemaRepository();
-
-                // Load json in memory (first iteration).
-                JObject jObject = JObject.Load(reader);
-                if (jObject.Property(Options.SchemasRootName)?.Value is JObject schemasRoot)
+                ISchemaRepository? schemaRepository = reader.AsMetadataProvider().GetMetadata<ISchemaRepository>();
+                if (schemaRepository == null)
                 {
-                    foreach (JProperty property in schemasRoot.Properties())
-                    {
-                        string schemaName = property.Name;
-                        string root = $"#/{Options.SchemasRootName}/";
-                        string referenceName = root + schemaName;
+                    schemaRepository = new SchemaRepository();
 
-                        JProperty? jProperty = ((JObject)property.Value).Property("$metadata.schema.compact");
-                        if (jProperty is { First: { } schemaBody })
+                    // Load json in memory (first iteration).
+                    JObject jObject = JObject.Load(reader);
+                    if (jObject.Property(Options.SchemasRootName)?.Value is JObject schemasRoot)
+                    {
+                        foreach (JProperty property in schemasRoot.Properties())
                         {
-                            JsonReader jsonReader = schemaBody.CreateReader();
-                            var compactSchemaItems = serializer.Deserialize<string[]>(jsonReader);
-                            IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator, Options.TypeMapper);
-                            schemaRepository.AddSchema(referenceName, schemaFromJson.ToSchema(schemaName));
+                            string schemaName = property.Name;
+                            string root = $"#/{Options.SchemasRootName}/";
+                            string referenceName = root + schemaName;
+
+                            JProperty? jProperty = ((JObject)property.Value).Property("$metadata.schema.compact");
+                            if (jProperty is { First: { } schemaBody })
+                            {
+                                JsonReader jsonReader = schemaBody.CreateReader();
+                                var compactSchemaItems = serializer.Deserialize<string[]>(jsonReader);
+                                IPropertySet schemaFromJson = MetadataSchema.ParseCompactSchema(compactSchemaItems, Options.Separator, Options.TypeMapper);
+                                schemaRepository.AddSchema(referenceName, schemaFromJson.ToSchema(schemaName));
+                            }
                         }
                     }
+
+                    // Recreate reader to read from beginning (second iteration)
+                    reader = jObject.CreateReader();
+                    reader.Read();
+
+                    // Attaches ISchemaRepository to reader
+                    reader.AsMetadataProvider().SetMetadata((ISchemaRepository)schemaRepository);
                 }
-
-                // Recreate reader to read from beginning (second iteration)
-                reader = jObject.CreateReader();
-                reader.Read();
-
-                // Attaches ISchemaRepository to reader
-                reader.AsMetadataProvider().SetMetadata((ISchemaRepository)schemaRepository);
-
-                // Remove this converter to deserialize object standard way.
-                serializer.Converters.Remove(this);
             }
 
+            // Remove this converter to deserialize object standard way.
+            var serializerCopy = serializer.CopyWithoutConverter(this);
+
             // Deserialize object without other hacks (second iteration)
-            IMetadataSchemaProvider metadataSchemaProvider = (IMetadataSchemaProvider)serializer.Deserialize(reader, objectType)!;
+            IMetadataSchemaProvider metadataSchemaProvider = (IMetadataSchemaProvider)serializerCopy.Deserialize(reader, objectType)!;
+
             return metadataSchemaProvider;
         }
     }

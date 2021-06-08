@@ -6,7 +6,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace MicroElements.Metadata.NewtonsoftJson
 {
-    internal ref struct CompactSchemaGenerator
+    public ref struct CompactSchemaGenerator
     {
         private JsonSerializer _jsonSerializer;
         private MetadataJsonSerializationOptions _metadataJsonSerializationOptions;

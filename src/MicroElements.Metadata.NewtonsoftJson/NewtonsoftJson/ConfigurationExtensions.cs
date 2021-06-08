@@ -16,13 +16,13 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// Configures <see cref="JsonSerializerSettings"/> to serialize <see cref="IPropertyContainer"/>.
         /// </summary>
         /// <param name="jsonSerializerSettings"><see cref="JsonSerializerSettings"/> instance.</param>
-        /// <param name="metadataJsonSerializationOptions">Optional metadata serialization options.</param>
         /// <param name="configureSerialization">Optional action to configure metadata serialization.</param>
+        /// <param name="metadataJsonSerializationOptions">Optional metadata serialization options.</param>
         /// <returns>The same options.</returns>
         public static JsonSerializerSettings ConfigureJsonForPropertyContainers(
             this JsonSerializerSettings jsonSerializerSettings,
-            MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null,
-            Action<MetadataJsonSerializationOptions>? configureSerialization = null)
+            Action<MetadataJsonSerializationOptions>? configureSerialization = null,
+            MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null)
         {
             metadataJsonSerializationOptions ??= new MetadataJsonSerializationOptions();
             configureSerialization?.Invoke(metadataJsonSerializationOptions);
@@ -38,15 +38,15 @@ namespace MicroElements.Metadata.NewtonsoftJson
         /// The same as <see cref="ConfigureJsonForPropertyContainers"/>.
         /// </summary>
         /// <param name="jsonSerializerSettings"><see cref="JsonSerializerSettings"/> instance.</param>
-        /// <param name="metadataJsonSerializationOptions">Optional metadata serialization options.</param>
         /// <param name="configureSerialization">Optional action to configure metadata serialization.</param>
+        /// <param name="metadataJsonSerializationOptions">Optional metadata serialization options.</param>
         /// <returns>The same options.</returns>
         public static JsonSerializerSettings ConfigureForMetadata(
             this JsonSerializerSettings jsonSerializerSettings,
-            MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null,
-            Action<MetadataJsonSerializationOptions>? configureSerialization = null)
+            Action<MetadataJsonSerializationOptions>? configureSerialization = null,
+            MetadataJsonSerializationOptions? metadataJsonSerializationOptions = null)
         {
-            return jsonSerializerSettings.ConfigureJsonForPropertyContainers(metadataJsonSerializationOptions, configureSerialization);
+            return jsonSerializerSettings.ConfigureJsonForPropertyContainers(configureSerialization, metadataJsonSerializationOptions);
         }
     }
 }

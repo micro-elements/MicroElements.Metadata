@@ -12,6 +12,7 @@ using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.NewtonsoftJson;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;

@@ -8,6 +8,7 @@ Schema serialization and utility release
 - Removed PropertyContainerWithMetadataTypesConverter
 - Many other usability improvements
 - 7.4.1: added default value to GetValue extension
+- 7.4.3: PropertyContainerMapper moves to MicroElements.Metadata.Mapping and becomes more flexible
 
 # 7.3.0
 - Added PropertyContainerMapper with methods ToPropertyContainerOfType, ToPropertyContainer and ToObject
@@ -21,7 +22,6 @@ Schema serialization and utility release
 - 7.3.4: Added GetSchemaMetadata that always uses GetMetadata with searchInSchema: true
 - 7.3.4: More metadata types that can be set to ISchema (not only IProperty): IAllowedValues, INumericInterval 
 - 7.3.4: PropertyContainerMapper more customization
-
 
 # 7.2.0
 - PropertyContainerConverter becomes generic and supports collections

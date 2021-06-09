@@ -2,6 +2,7 @@
 using System.Linq;
 using AutoFixture.Kernel;
 using MicroElements.Functional;
+using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 

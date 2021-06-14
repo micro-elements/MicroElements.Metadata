@@ -17,7 +17,7 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IProperty<T> : IProperty, IHasAlias
+    public interface IProperty<T> : ISchema<T>, IProperty, IHasAlias
     {
         /// <summary>
         /// Gets default value for property.

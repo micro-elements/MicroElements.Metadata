@@ -61,7 +61,7 @@ namespace MicroElements.Metadata.Swashbuckle
 
                 if (propertySet != null)
                 {
-                    foreach (IProperty property in propertySet)
+                    foreach (IProperty property in propertySet.GetProperties())
                     {
                         var propertySchema = context.SchemaGenerator.GenerateSchema(property.Type, context.SchemaRepository);
                         propertySchema.Description = property.Description ?? propertySchema.Description;

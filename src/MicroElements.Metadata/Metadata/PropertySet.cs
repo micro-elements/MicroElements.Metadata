@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 using System.Collections.Generic;
 
 namespace MicroElements.Metadata
@@ -70,11 +69,5 @@ namespace MicroElements.Metadata
     {
         /// <inheritdoc />
         public abstract IEnumerable<IProperty> GetProperties();
-
-        /// <inheritdoc />
-        public IEnumerator<IProperty> GetEnumerator() => GetProperties().GetEnumerator();
-
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

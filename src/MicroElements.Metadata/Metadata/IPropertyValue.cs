@@ -40,8 +40,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property value.
         /// </summary>
-        [MaybeNull]
-        T Value { get; }
+        T? Value { get; }
     }
 
     /// <summary>

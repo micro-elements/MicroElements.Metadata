@@ -120,33 +120,20 @@ namespace MicroElements.Metadata.Schema
         public static IEnumerable<IValidationRule> GetValidationRules(this IProperty property)
         {
             property.AssertArgumentNotNull(nameof(property));
-            return property.GetMetadata<IPropertyValidationRules>()?.Rules ?? Array.Empty<IValidationRule>();
+            return property.GetSchemaMetadata<IPropertyValidationRules>()?.Rules ?? Array.Empty<IValidationRule>();
         }
 
         /// <summary>
         /// Gets validation rules attached to properties in schema.
         /// Rules are stored in <see cref="IPropertyValidationRules"/> metadata.
         /// </summary>
-        /// <param name="schema">Source schema.</param>
+        /// <param name="properties">Properties.</param>
         /// <returns>Validation rules.</returns>
-        public static IEnumerable<IValidationRule> GetValidationRules(this IPropertySet schema)
+        public static IEnumerable<IValidationRule> GetValidationRules(this IEnumerable<IProperty> properties)
         {
-            schema.AssertArgumentNotNull(nameof(schema));
+            properties.AssertArgumentNotNull(nameof(properties));
 
-            return schema.GetProperties().SelectMany(property => property.GetValidationRules());
-        }
-
-        /// <summary>
-        /// Gets validation rules attached to properties in schema.
-        /// Rules are stored in <see cref="IPropertyValidationRules"/> metadata.
-        /// </summary>
-        /// <param name="schema">Source schema.</param>
-        /// <returns>Validation rules.</returns>
-        public static IEnumerable<IValidationRule> GetValidationRules(this ISchema schema)
-        {
-            schema.AssertArgumentNotNull(nameof(schema));
-
-            return schema.GetProperties().SelectMany(property => property.GetValidationRules());
+            return properties.SelectMany(property => property.GetValidationRules());
         }
 
         private static IPropertyValidationRules CreatePropertyValidationRules(IProperty property)

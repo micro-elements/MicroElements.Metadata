@@ -14,7 +14,7 @@ namespace MicroElements.Metadata.Schema
     /// Example: Currency (string type with maxLength: 3).
     /// </summary>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema : ISchema
+    public class SimpleTypeSchema : ISchema, IManualMetadataProvider
     {
         /// <inheritdoc />
         public string Name { get; }
@@ -39,7 +39,12 @@ namespace MicroElements.Metadata.Schema
             Name = name;
             Type = type;
             Description = description;
+
+            Metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
         }
+
+        /// <inheritdoc />
+        public IPropertyContainer Metadata { get; }
     }
 
     /// <summary>

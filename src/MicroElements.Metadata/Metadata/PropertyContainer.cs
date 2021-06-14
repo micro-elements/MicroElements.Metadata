@@ -1,10 +1,13 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {
@@ -14,13 +17,6 @@ namespace MicroElements.Metadata
     [DebuggerTypeProxy(typeof(PropertyContainerDebugView))]
     public partial class PropertyContainer : IPropertyContainer
     {
-        internal const string EmptyName = "Empty";
-
-        /// <summary>
-        /// Real data holder.
-        /// </summary>
-        private readonly IPropertyContainer _propertyContainer;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainer"/> class.
         /// </summary>
@@ -32,35 +28,56 @@ namespace MicroElements.Metadata
             IPropertyContainer? parentPropertySource = null,
             SearchOptions? searchOptions = null)
         {
-            _propertyContainer = new MutablePropertyContainer(sourceValues, parentPropertySource, searchOptions);
+            if (sourceValues == null)
+            {
+                Properties = Array.Empty<IPropertyValue>();
+            }
+            else
+            {
+                if (sourceValues is IPropertyContainer propertyContainer)
+                    sourceValues = propertyContainer.Properties;
+
+                bool isWritableCollection = sourceValues is ICollection<IPropertyValue> { IsReadOnly: false } || sourceValues is IList { IsReadOnly: false };
+
+                if (sourceValues is IReadOnlyCollection<IPropertyValue> readOnlyCollection && !isWritableCollection)
+                {
+                    Properties = readOnlyCollection;
+                }
+
+                // Protective copy because external collection can be changed outside
+                Properties = sourceValues.ToArray();
+            }
+
+            ParentSource = parentPropertySource;
+            SearchOptions = searchOptions ?? Search.Default;
         }
 
         /// <inheritdoc />
-        public override string ToString()
-        {
-            if (ReferenceEquals(this, Empty))
-                return EmptyName;
-
-            return _propertyContainer.ToString();
-        }
-
-        /// <inheritdoc />
-        public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.GetEnumerator();
+        public IEnumerator<IPropertyValue> GetEnumerator() => Properties.GetEnumerator();
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc />
-        public int Count => _propertyContainer.Count;
+        public int Count => Properties.Count;
 
         /// <inheritdoc />
-        public IPropertyContainer? ParentSource => _propertyContainer.ParentSource;
+        public IPropertyContainer? ParentSource { get; }
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer.Properties;
+        public IReadOnlyCollection<IPropertyValue> Properties { get; }
 
         /// <inheritdoc />
-        public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
+        public SearchOptions SearchOptions { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            if (ReferenceEquals(this, PropertyContainer.Empty) || Count == 0)
+                return PropertyContainer.EmptyName;
+
+            return Formatter.FullRecursiveFormatter.TryFormat(Properties) ?? "FormatError";
+        }
 
         /// <summary>
         /// Gets or calculates value for property.
@@ -82,6 +99,8 @@ namespace MicroElements.Metadata
     /// </summary>
     public partial class PropertyContainer
     {
+        internal const string EmptyName = "Empty";
+
         /// <summary>
         /// Empty property container singleton instance.
         /// </summary>

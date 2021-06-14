@@ -1,193 +1,68 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using AutoFixture;
+using AutoFixture.Kernel;
 using FluentAssertions;
-using MicroElements.Diagnostics;
+using MicroElements.Reflection;
 using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.NewtonsoftJson;
+using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.SystemTextJson;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
 using Xunit;
+using JsonProperty = Newtonsoft.Json.Serialization.JsonProperty;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace MicroElements.Metadata.Tests.Serialization
 {
-    public class FormatTests
+    public class SerializationTests
     {
-        [Fact]
-        public void FormatValueTest()
+        public IPropertyContainer CreateTestContainer()
         {
-            SerializeValue<string>(null).Should().Be(null);
-            SerializeValue<string>("text").Should().Be("text");
-            SerializeValue<int>(42).Should().Be("42");
-            SerializeValue<double>(42.7).Should().Be("42.7");
-            SerializeValue<LocalDate>(new LocalDate(2020, 11, 26)).Should().Be("2020-11-26");
-            SerializeValue<LocalDateTime>(new LocalDateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
-            SerializeValue<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
+            var initialContainer = new MutablePropertyContainer()
+                    .WithValue(TestMeta.StringProperty, "Text")
+                    .WithValue(TestMeta.IntProperty, 42)
+                    .WithValue(TestMeta.DoubleProperty, 10.2)
+                    .WithValue(TestMeta.NullableIntProperty, null)
+                    .WithValue(TestMeta.BoolProperty, true)
+                    .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
+                    .WithValue(TestMeta.StringArray, new[] { "a1", "a2" })
+                    .WithValue(TestMeta.IntArray, new[] { 1, 2 })
+                ;
+
+            return initialContainer;
         }
 
         [Fact]
-        public void FormatValueTest2()
+        public void MetadataJsonSerializationOptions_should_be_copied_properly()
         {
-            SerializeValue2<string>(null).Should().Be(null);
-            SerializeValue2<string>("text").Should().Be("text");
-            SerializeValue2<int>(42).Should().Be("42");
-            SerializeValue2<double>(42.7).Should().Be("42.7");
-            SerializeValue2<LocalDate>(new LocalDate(2020, 11, 26)).Should().Be("2020-11-26");
-            SerializeValue2<LocalDateTime>(new LocalDateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
-            SerializeValue2<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
-        }
+            Fixture fixture = new Fixture();
+            fixture.Customizations.Add(
+                new TypeRelay(
+                    typeof(ITypeMapper),
+                    typeof(DefaultTypeMapper)));
+            var options = fixture.Create<MetadataJsonSerializationOptions>();
+            var optionsCopy = options.Copy();
 
-        [Fact]
-        public void FormatValueTest3()
-        {
-            SerializeValue2<string>(null).Should().Be(null);
-            SerializeValue2<string>("text").Should().Be("text");
-            SerializeValue2<int>(42).Should().Be("42");
-            SerializeValue2<double>(42.7).Should().Be("42.7");
-            SerializeValue2<LocalDate>(new LocalDate(2020, 11, 26)).Should().Be("2020-11-26");
-            SerializeValue2<LocalDateTime>(new LocalDateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
-            SerializeValue2<DateTime>(new DateTime(2020, 11, 26, 15, 27, 17)).Should().Be("2020-11-26T15:27:17");
-        }
-
-        public string? SerializeValue2<T>(T value) =>
-            Formatter.FullToStringFormatter.Format(value, typeof(T));
-
-        public string? SerializeValue<T>(T value) =>
-            new DefaultMetadataSerializer().SerializeValue(typeof(T), value);
-
-        public object? DeserializeValue<T>(string text) => 
-            new DefaultMetadataSerializer()
-                .DeserializeValue(typeof(T), text)
-                .GetValueOrThrow(allowNullResult: true);
-
-        [Fact]
-        public void GetTypeNameTests()
-        {
-            var mapperSettings = new DefaultMetadataSerializer();
-
-            mapperSettings.GetTypeName(typeof(string)).Should().Be("string");
-
-            mapperSettings.GetTypeName(typeof(int)).Should().Be("int");
-            mapperSettings.GetTypeName(typeof(int?)).Should().Be("int?");
-
-            mapperSettings.GetTypeName(typeof(double)).Should().Be("double");
-            mapperSettings.GetTypeName(typeof(double?)).Should().Be("double?");
-
-            mapperSettings.GetTypeName(typeof(float)).Should().Be("float");
-            mapperSettings.GetTypeName(typeof(float?)).Should().Be("float?");
-
-            mapperSettings.GetTypeName(typeof(decimal)).Should().Be("decimal");
-            mapperSettings.GetTypeName(typeof(decimal?)).Should().Be("decimal?");
-
-            mapperSettings.GetTypeName(typeof(DateTime)).Should().Be("DateTime");
-            mapperSettings.GetTypeName(typeof(DateTime?)).Should().Be("DateTime?");
-
-            mapperSettings.GetTypeName(typeof(LocalDate)).Should().Be("LocalDate");
-            mapperSettings.GetTypeName(typeof(LocalDate?)).Should().Be("LocalDate?");
-
-            mapperSettings.GetTypeName(typeof(LocalDateTime)).Should().Be("LocalDateTime");
-            mapperSettings.GetTypeName(typeof(LocalDateTime?)).Should().Be("LocalDateTime?");
-        }
-
-        [Fact]
-        public void GetTypeByNameTests()
-        {
-            var mapperSettings = new DefaultMetadataSerializer();
-
-            mapperSettings.GetTypeByName("string").Should().Be(typeof(string));
-
-            mapperSettings.GetTypeByName("int").Should().Be(typeof(int));
-            mapperSettings.GetTypeByName("int?").Should().Be(typeof(int?));
-
-            mapperSettings.GetTypeByName("double").Should().Be(typeof(double));
-            mapperSettings.GetTypeByName("double?").Should().Be(typeof(double?));
-
-            mapperSettings.GetTypeByName("float").Should().Be(typeof(float));
-            mapperSettings.GetTypeByName("float?").Should().Be(typeof(float?));
-
-            mapperSettings.GetTypeByName("decimal").Should().Be(typeof(decimal));
-            mapperSettings.GetTypeByName("decimal?").Should().Be(typeof(decimal?));
-
-            mapperSettings.GetTypeByName("DateTime").Should().Be(typeof(DateTime));
-            mapperSettings.GetTypeByName("DateTime?").Should().Be(typeof(DateTime?));
-
-            mapperSettings.GetTypeByName("LocalDate").Should().Be(typeof(LocalDate));
-            mapperSettings.GetTypeByName("LocalDate?").Should().Be(typeof(LocalDate?));
-
-            mapperSettings.GetTypeByName("LocalDateTime").Should().Be(typeof(LocalDateTime));
-            mapperSettings.GetTypeByName("LocalDateTime?").Should().Be(typeof(LocalDateTime?));
-        }
-
-        [Fact]
-        public void DeserializeValueTest()
-        {
-            DeserializeValue<string>("null").Should().Be(null);
-            DeserializeValue<string>("text").Should().Be("text");
-            DeserializeValue<int>("42").Should().Be(42);
-            DeserializeValue<double>("42.7").Should().Be(42.7);
-            DeserializeValue<LocalDate>("2020-11-26").Should().Be(new LocalDate(2020, 11, 26));
-            DeserializeValue<LocalDateTime>("2020-11-26T15:27:17").Should().Be(new LocalDateTime(2020, 11, 26, 15, 27, 17));
-            DeserializeValue<DateTime>("2020-11-26T15:27:17").Should().Be(new DateTime(2020, 11, 26, 15, 27, 17));
-        }
-
-        [Theory]
-        [InlineData("NullString", null, "string")]
-        [InlineData("Text", "text", "string")]
-
-        [InlineData("IntValue", "42", "System.Int32", "int")]
-        [InlineData("IntValue", "42", "int")]
-        [InlineData("IntValue", "42", "int?")]
-        [InlineData("IntValue", null, "int?")]
-
-        [InlineData("DoubleValue", "42.7", "double")]
-        [InlineData("DoubleValue", "42.7", "double?")]
-        [InlineData("DoubleValue", null, "double?")]
-
-        [InlineData("LocalDate", "2020-11-26", "NodaTime.LocalDate", "LocalDate")]
-        [InlineData("LocalDate", "2020-11-26", "LocalDate")]
-        [InlineData("LocalDate", null, "LocalDate?")]
-
-        [InlineData("LocalDateTime", "2020-11-26T15:27:17", "NodaTime.LocalDateTime", "LocalDateTime")]
-        [InlineData("LocalDateTime", "2020-11-26T15:27:17", "LocalDateTime")]
-        [InlineData("LocalDateTime", null, "LocalDateTime?")]
-
-        [InlineData("DateTime", "2020-11-26T15:27:17", "System.DateTime", "DateTime")]
-        [InlineData("DateTime", "2020-11-26T15:27:17", "DateTime")]
-        [InlineData("DateTime", null, "DateTime?")]
-
-        [InlineData("StringArray", "[a1, a2]", "string[]")]
-        [InlineData("IntArray", "[1, 2]", "int[]")]
-
-        public void DeserializeProperty(string name, string value, string type, string? type2 = null)
-        {
-            var mapperSettings = new DefaultMetadataSerializer();
-            var messageList = new ConcurrentMessageList<Message>();
-
-            var restored = new PropertyValueContract { Name = name, Value = value, Type = type }
-                .ToModel(mapperSettings, messageList)
-                .ToContract(mapperSettings);
-
-            restored.Should().BeEquivalentTo(new PropertyValueContract { Name = name, Value = value, Type = type2 ?? type });
+            optionsCopy.Should().BeEquivalentTo(options);
         }
 
         [Fact]
         public void SerializeDeserializePropertyContainer()
         {
-            var initialContainer = new MutablePropertyContainer()
-                .WithValue(TestMeta.StringProperty, "Text")
-                .WithValue(TestMeta.IntProperty, 42)
-                .WithValue(TestMeta.DoubleProperty, 10.2)
-                .WithValue(TestMeta.NullableIntProperty, null)
-                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
-                .WithValue(TestMeta.StringArray, new [] { "a1", "a2" })
-                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
-                ;
+            var initialContainer = CreateTestContainer();
 
             var propertyContainerContract = initialContainer.ToContract(new DefaultMetadataSerializer());
             propertyContainerContract.Should().NotBeNull();
@@ -202,7 +77,7 @@ namespace MicroElements.Metadata.Tests.Serialization
             DeserializeAndCompare<IMutablePropertyContainer>();
             DeserializeAndCompare<MutablePropertyContainer>();
             DeserializeAndCompare<PropertyContainer<TestMeta>>();
-            
+
             var json2 = initialContainer.ToJsonWithNewtonsoftJson();
             var container2 = json2.DeserializeWithNewtonsoftJson<IPropertyContainer>();
             ObjectDiff objectDiff = MetadataComparer.GetDiff(initialContainer, container2);
@@ -218,19 +93,206 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
+        public void ReadWithSchemaFirst()
+        {
+            string json = @"{
+  'StringProperty': 'Text',
+  'IntProperty': 42,
+  'DoubleProperty': 10.2,
+  'NullableIntProperty': null,
+  'BoolProperty': true,
+  'DateProperty': '2020-12-26',
+  'StringArray':['a1','a2'],
+  'IntArray':[1,2],
+  '$metadata.schema.compact': [
+    'StringProperty@type=string',
+    'IntProperty@type=int',
+    'DoubleProperty@type=double',
+    'NullableIntProperty@type=int?',
+    'BoolProperty @type = bool',
+    'DateProperty@type=LocalDate',
+    'StringArray@type=string[]',
+    'IntArray@type=int[]'
+  ]
+}";
+            var initialContainer = CreateTestContainer();
+
+            var restoredContainer = json.DeserializeWithNewtonsoftJson<IPropertyContainer>(configureSerialization: options => options.ReadSchemaFirst = true);
+            ObjectDiff objectDiff = MetadataComparer.GetDiff(restoredContainer, initialContainer);
+            objectDiff.Diffs.Should().BeEmpty();
+
+            // container will lose types
+            var restoredContainer2 = json.DeserializeWithNewtonsoftJson<IPropertyContainer>(configureSerialization: options => options.ReadSchemaFirst = false);
+            ObjectDiff objectDiff2 = MetadataComparer.GetDiff(restoredContainer2, initialContainer);
+            objectDiff2.Diffs.Should().NotBeNullOrEmpty();
+        }
+
+        public class ComplexObject
+        {
+            public PropertyContainer<TestMeta> Data1 { get; set; }
+            public PropertyContainer<TestMeta> Data2 { get; set; }
+        }
+
+        public class ComplexObjectUntyped : IMetadataSchemaProvider
+        {
+            public IPropertyContainer Data1 { get; set; }
+            public IPropertyContainer Data2 { get; set; }
+        }
+
+        [Fact]
+        public void ReadWithSchemaRef()
+        {
+            string json = @"{
+  'Data1': {
+    '$ref': '#/$defs/metadata.schema.TestMeta',
+    'StringProperty': 'Text',
+    'IntProperty': 42,
+    'DoubleProperty': 10.2,
+    'NullableIntProperty': null,
+    'BoolProperty': true,
+    'DateProperty': '2020-12-26',
+    'StringArray':['a1','a2'],
+    'IntArray':[1,2]
+  },
+  'Data2': {
+    '$ref': '#/$defs/metadata.schema.TestMeta',
+    'StringProperty': 'Text',
+    'IntProperty': 42,
+    'DoubleProperty': 10.2,
+    'NullableIntProperty': null,
+    'BoolProperty': true,
+    'DateProperty': '2020-12-26',
+    'StringArray':['a1','a2'],
+    'IntArray':[1,2]
+  },
+  '$defs':
+  {
+    'metadata.schema.TestMeta':
+	{
+      '$metadata.schema.compact': [
+       'StringProperty@type=string',
+       'IntProperty@type=int',
+       'DoubleProperty@type=double',
+       'NullableIntProperty@type=int?',
+       'BoolProperty@type=bool',
+       'DateProperty@type=LocalDate',
+       'StringArray@type=string[]',
+       'IntArray@type=int[]'
+	   ]
+	}
+  }
+}";
+            JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers(options => options.UseSchemasRoot = true);
+
+            var complexObject = json.DeserializeWithNewtonsoftJson<ComplexObjectUntyped>(jsonSerializerSettings);
+            complexObject.Data1.Properties.FirstOrDefault(value => value.PropertyUntyped.Name == "NullableIntProperty")
+                .PropertyUntyped.Type.Should().Be(typeof(int?));
+
+            var complexObject2 = json.DeserializeWithNewtonsoftJson<ComplexObjectUntyped>(jsonSerializerSettings);
+            complexObject2.Data1.Properties.FirstOrDefault(value => value.PropertyUntyped.Name == "NullableIntProperty")
+                .PropertyUntyped.Type.Should().Be(typeof(int?));
+        }
+
+        [Fact]
+        public void WriteWithSchemaRef()
+        {
+            ComplexObjectUntyped complexObject = new ComplexObjectUntyped()
+            {
+                Data1 = CreateTestContainer(),
+                Data2 = CreateTestContainer()
+            };
+
+            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = false);
+            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = true);
+        }
+
+        class TestPerson
+        {
+            public string Name { get; set; }
+            public DateTime BirthDate { get; set; }
+        }
+
+        [Fact]
+        public void NewtonsoftJsonRefSample()
+        {
+            string json = @"
+[
+  {
+    '$id': '1',
+    'Name': 'James',
+    'BirthDate': '1983-03-08T00:00Z'
+  },
+  {
+    '$ref': '1'
+  }
+]";
+
+            var persons = json.DeserializeWithNewtonsoftJson<List<TestPerson>>();
+            persons[^1].Name.Should().Be("James");
+        }
+
+        private IReferenceResolver? ReferenceResolverProvider()
+        {
+            return new ReferenceResolver();
+        }
+
+        class ContractResolver : IContractResolver
+        {
+            readonly DefaultContractResolver _defaultContractResolver = new DefaultContractResolver();
+
+            /// <inheritdoc />
+            public JsonContract ResolveContract(Type type)
+            {
+                JsonContract jsonContract = _defaultContractResolver.ResolveContract(type);
+
+                if (type.IsAssignableTo(typeof(IMetadataSchemaProvider)) && jsonContract is JsonObjectContract contract)
+                {
+                    JsonObjectContract schemaProviderContract = (JsonObjectContract)_defaultContractResolver.ResolveContract(typeof(IMetadataSchemaProvider));
+                    JsonProperty jsonProperty = schemaProviderContract.Properties[0];
+                    jsonProperty.PropertyName = "$defs";
+                    contract.Properties.AddProperty(jsonProperty);
+                }
+
+                return jsonContract;
+            }
+        }
+
+        class ReferenceResolver : IReferenceResolver
+        {
+            private ConcurrentDictionary<string, object> _objects = new ConcurrentDictionary<string, object>();
+
+            /// <inheritdoc />
+            public object ResolveReference(object context, string reference)
+            {
+                _objects.TryGetValue(reference, out var value);
+                return value;
+            }
+
+            /// <inheritdoc />
+            public string GetReference(object context, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <inheritdoc />
+            public bool IsReferenced(object context, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <inheritdoc />
+            public void AddReference(object context, string reference, object value)
+            {
+                _objects.TryAdd(reference, value);
+            }
+        }
+
+        [Fact]
         public void SerializeDeserializePropertyContainerCollection()
         {
-            var initialContainer = new MutablePropertyContainer()
-                .WithValue(TestMeta.StringProperty, "Text")
-                .WithValue(TestMeta.IntProperty, 42)
-                .WithValue(TestMeta.DoubleProperty, 10.2)
-                .WithValue(TestMeta.NullableIntProperty, null)
-                .WithValue(TestMeta.DateProperty, new LocalDate(2020, 12, 26))
-                .WithValue(TestMeta.StringArray, new[] { "a1", "a2" })
-                .WithValue(TestMeta.IntArray, new[] { 1, 2 })
-                ;
+            var initialContainer = CreateTestContainer();
 
-            IPropertyContainer[] containers = new IPropertyContainer[] {initialContainer};
+            IPropertyContainer[] containers = new IPropertyContainer[] { initialContainer, initialContainer };
 
             var json1 = containers.ToJsonWithSystemTextJson();
             var json2 = containers.ToJsonWithNewtonsoftJson();
@@ -243,91 +305,59 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
-        public void FormatDateTime()
+        public void SerializeDeserializeTypedPropertyContainerCollection()
         {
-            // Sortable
-            new FormattableFormatter(type => type == typeof(DateTime), "s")
-                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123), typeof(DateTime))
-                .Should().Be("2021-01-23T17:15:49");
+            var initialContainer = CreateTestContainer()
+                    .ToPropertyContainerOfType(typeof(PropertyContainer<TestMeta>));
 
-            DateTimeFormatter.IsoShort
-                .Format(new DateTime(2021, 01, 23))
-                .Should().Be("2021-01-23");
+            IPropertyContainer[] containers = new IPropertyContainer[] { initialContainer, initialContainer };
 
-            DateTimeFormatter.IsoShort
-                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 123))
-                .Should().Be("2021-01-23T17:15:49.123");
+            var json1 = containers.ToJsonWithSystemTextJson(options => options.WriteSchemaOnceForKnownTypes = true);
+            var json2 = containers.ToJsonWithNewtonsoftJson();
 
-            DateTimeFormatter.IsoShort
-                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 10))
-                .Should().Be("2021-01-23T17:15:49.01");
+            var containers1Restored = json1.DeserializeWithSystemTextJson<IReadOnlyCollection<PropertyContainer<TestMeta>>>();
+            var containers2Restored = json2.DeserializeWithNewtonsoftJson<IReadOnlyCollection<PropertyContainer<TestMeta>>>();
 
-            DateTimeFormatter.IsoShort
-                .Format(new DateTime(2021, 01, 23, 17, 15, 49, 000))
-                .Should().Be("2021-01-23T17:15:49");
-
-
-            Formatter.FullRecursiveFormatter
-                .TryFormat(new LocalDate(2021, 01, 23))
-                .Should().Be("2021-01-23");
-
-            Formatter.FullRecursiveFormatter
-                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 123))
-                .Should().Be("2021-01-23T17:15:49.123");
-
-            Formatter.FullRecursiveFormatter
-                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 10))
-                .Should().Be("2021-01-23T17:15:49.01");
-
-            Formatter.FullRecursiveFormatter
-                .TryFormat(new LocalDateTime(2021, 01, 23, 17, 15, 49, 000))
-                .Should().Be("2021-01-23T17:15:49");
-
-            Formatter.FullRecursiveFormatter
-                .TryFormat(new DateTimeOffset(2021, 01, 23, 17, 15, 49, 123, TimeSpan.FromHours(4)))
-                .Should().Be("2021-01-23T17:15:49.123+04:00");
-
-            DateTimeOffsetFormatter.IgnoringOffset
-                .TryFormat(new DateTimeOffset(2021, 01, 23, 17, 15, 49, 123, TimeSpan.FromHours(4)))
-                .Should().Be("2021-01-23T17:15:49.123");
+            containers1Restored.Should().NotBeEmpty();
+            containers2Restored.Should().NotBeEmpty();
         }
 
         [Fact]
-        public void NullableIntegerFormatting()
+        public void UseSchemasRootShouldWorkOnSerializerReuse()
         {
-            double? number = 5.1;
-            object boxedNumber = number;
-            DefaultToStringFormatter.Instance
-                .Format(boxedNumber)
-                .Should().Be("5.1");
+            ComplexObjectUntyped complexObject = new ComplexObjectUntyped()
+            {
+                Data1 = CreateTestContainer().ToPropertyContainerOfType<PropertyContainer<TestMeta>>(),
+                Data2 = CreateTestContainer().ToPropertyContainerOfType<PropertyContainer<TestMeta>>()
+            };
 
-            double? number2 = null;
-            object boxedNumber2 = number2;
-            DefaultToStringFormatter.Instance
-                .Format(boxedNumber2)
-                .Should().Be(null);
-        }
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+                .ConfigureJsonForPropertyContainers(options => options.UseSchemasRoot = true);
 
-        [Fact]
-        public void RecursiveFormatting()
-        {
-            List<KeyValuePair<string, object>> list = new List<KeyValuePair<string, object>>();
+            Newtonsoft.Json.JsonSerializer jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(settings);
 
-            list.Add(new KeyValuePair<string, object>("Key1", new LocalDate(2021, 01, 23)));
-            list.Add(new KeyValuePair<string, object>("Key2", new []{"a1", "a2"}));
-            list.Add(new KeyValuePair<string, object>("Key3", ("Internal", 5)));
+            StringBuilder stringBuilder1 = new StringBuilder();
+            StringWriter stringWriter1 = new StringWriter(stringBuilder1);
 
-            IValueFormatter fullToStringFormatter = Formatter.FullRecursiveFormatter;
-            string? formattedValue = fullToStringFormatter.TryFormat(list);
-            formattedValue.Should().Be("[(Key1: 2021-01-23), (Key2: [a1, a2]), (Key3: (Internal, 5))]");
+            jsonSerializer.Serialize(stringWriter1, complexObject);
+
+            StringBuilder stringBuilder2 = new StringBuilder();
+            StringWriter stringWriter2 = new StringWriter(stringBuilder2);
+
+            jsonSerializer.Serialize(stringWriter2, complexObject);
+
+            string json1 = stringBuilder1.ToString();
+            string json2 = stringBuilder2.ToString();
+
+            json2.Should().Be(json1);
         }
     }
 
     internal static class SerializationExtensions
     {
-        public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options)
+        public static JsonSerializerOptions ConfigureJsonOptions(this JsonSerializerOptions options, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            options.ConfigureJsonForPropertyContainers();
+            options.ConfigureJsonForPropertyContainers(configureSerialization);
             options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
             options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
@@ -336,49 +366,60 @@ namespace MicroElements.Metadata.Tests.Serialization
             return options;
         }
 
-        public static string ToJsonWithSystemTextJson<T>(this T entity)
+        public static string ToJsonWithSystemTextJson<T>(this T entity, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions(configureSerialization);
             return JsonSerializer.Serialize(entity, jsonSerializerOptions);
         }
 
-        public static string ToJsonWithNewtonsoftJson<T>(this T entity)
+        public static string ToJsonWithNewtonsoftJson<T>(this T entity, Action<JsonSerializerSettings>? configureJsonSerializerSettings = null, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
+            JsonSerializerSettings serializerSettings = new JsonSerializerSettings();
+            configureJsonSerializerSettings?.Invoke(serializerSettings);
+            var jsonSerializerSettings = serializerSettings.ConfigureJsonForPropertyContainers(configureSerialization);
             return JsonConvert.SerializeObject(entity, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings);
         }
 
-        public static T DeserializeWithSystemTextJson<T>(this string json)
+        public static T DeserializeWithSystemTextJson<T>(this string json, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
         {
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions();
+            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions().ConfigureJsonOptions(configureSerialization);
             T? restored = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
             return restored;
         }
 
-        public static T DeserializeWithNewtonsoftJson<T>(this string json)
+        public static T DeserializeWithSystemTextJson<T>(this string json, JsonSerializerOptions jsonSerializerOptions)
         {
-            var jsonSerializerSettings = new JsonSerializerSettings().ConfigureJsonForPropertyContainers();
+            T? restored = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
+            return restored;
+        }
+
+        public static T DeserializeWithNewtonsoftJson<T>(
+            this string json,
+            JsonSerializerSettings? jsonSerializerSettings = null,
+            Action<JsonSerializerSettings>? configureJsonSerializerSettings = null,
+            Action<MetadataJsonSerializationOptions>? configureSerialization = null)
+        {
+            if (jsonSerializerSettings == null)
+            {
+                jsonSerializerSettings = new JsonSerializerSettings()
+                    .ConfigureJsonForPropertyContainers(configureSerialization);
+                configureJsonSerializerSettings?.Invoke(jsonSerializerSettings);
+            }
+
             return JsonConvert.DeserializeObject<T>(json, jsonSerializerSettings);
         }
     }
 
-    public class TestMeta : IStaticPropertySet
+    public class TestMeta : IStaticPropertySet, IStaticSchema
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");
         public static readonly IProperty<int?> NullableIntProperty = new Property<int?>("NullableIntProperty");
         public static readonly IProperty<double> DoubleProperty = new Property<double>("DoubleProperty");
         public static readonly IProperty<LocalDate> DateProperty = new Property<LocalDate>("DateProperty");
+        public static readonly IProperty<bool> BoolProperty = new Property<bool>("BoolProperty");
 
         public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
         public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");
-
-        public static IPropertySet PropertySet { get; } = new PropertySet(GetProperties());
-
-        public static IEnumerable<IProperty> GetProperties()
-        {
-            yield return StringProperty;
-            yield return IntProperty;
-        }
     }
 }

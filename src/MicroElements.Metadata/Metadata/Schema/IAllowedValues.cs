@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
@@ -16,13 +18,13 @@ namespace MicroElements.Metadata.Schema
     /// Describes allowed values that can be accepted by property.
     /// It's an equivalent of JsonSchema enum.
     /// </summary>
-    [MetadataUsage(ValidOn = MetadataTargets.Property)]
+    [MetadataUsage(ValidOn = MetadataTargets.Property | MetadataTargets.SimpleSchema)]
     public interface IAllowedValues : IMetadata
     {
         /// <summary>
         /// Gets all possible values that can be accepted by property.
         /// </summary>
-        IReadOnlyList<object> ValuesUntyped { get; }
+        IReadOnlyCollection<object> ValuesUntyped { get; }
     }
 
     /// <summary>
@@ -36,30 +38,52 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets all possible values that can be accepted by property.
         /// </summary>
-        IReadOnlyList<T> Values { get; }
+        IReadOnlyCollection<T> Values { get; }
     }
 
     /// <inheritdoc cref="IAllowedValues{T}"/>
     public class AllowedValues<T> : IAllowedValues<T>
     {
-        private readonly Lazy<IReadOnlyList<object>> _lazyValuesUntyped;
+        private readonly Lazy<IReadOnlyCollection<object>> _lazyValuesUntyped;
 
         /// <inheritdoc />
-        public IReadOnlyList<T> Values { get; }
+        public IReadOnlyCollection<T> Values { get; }
 
         /// <inheritdoc />
-        public IReadOnlyList<object> ValuesUntyped => _lazyValuesUntyped.Value;
+        public IReadOnlyCollection<object> ValuesUntyped => _lazyValuesUntyped.Value;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AllowedValues{T}"/> class.
         /// </summary>
         /// <param name="values">All possible values that can be accepted by property.</param>
-        public AllowedValues(IReadOnlyList<T> values)
+        public AllowedValues(IReadOnlyCollection<T> values)
         {
             values.AssertArgumentNotNull(nameof(values));
 
             Values = values;
-            _lazyValuesUntyped = new Lazy<IReadOnlyList<object>>(() => Values.Cast<object>().ToArray());
+            _lazyValuesUntyped = new Lazy<IReadOnlyCollection<object>>(() => Values.Cast<object>().ToArray());
+        }
+
+        public static AllowedValues<T> CreateFromEnumerable(IEnumerable values)
+        {
+            T[] array = values.Cast<T>().ToArray();
+            return new AllowedValues<T>(array);
+        }
+    }
+
+    public static class AllowedValues
+    {
+        public static IAllowedValues CreateUntyped(Type valueType, IEnumerable values)
+        {
+            valueType.AssertArgumentNotNull(nameof(valueType));
+            values.AssertArgumentNotNull(nameof(values));
+
+            Type allowedValuesGeneric = typeof(AllowedValues<>).MakeGenericType(valueType);
+            MethodInfo methodInfo = allowedValuesGeneric.GetMethod(nameof(AllowedValues<object>.CreateFromEnumerable),
+                BindingFlags.Public | BindingFlags.Static);
+
+            object invoke = methodInfo.Invoke(null, parameters: new object[] { values });
+            return (IAllowedValues)invoke;
         }
     }
 
@@ -75,7 +99,8 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetAllowedValues<T>(this IProperty<T> property, params T[] allowedValues)
+        public static TSchema SetAllowedValues<TSchema, T>(this TSchema property, params T[] allowedValues)
+            where TSchema : ISchema<T>
         {
             property.AssertArgumentNotNull(nameof(property));
             allowedValues.AssertArgumentNotNull(nameof(allowedValues));
@@ -90,12 +115,22 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <param name="allowedValues">Allowed values.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<T> SetAllowedValues<T>(this IProperty<T> property, IAllowedValues<T> allowedValues)
+        public static TSchema SetAllowedValues<TSchema, T>(this TSchema property, IAllowedValues<T> allowedValues)
+            where TSchema : ISchema<T>
         {
             property.AssertArgumentNotNull(nameof(property));
             allowedValues.AssertArgumentNotNull(nameof(allowedValues));
 
             return property.SetMetadata((IAllowedValues)allowedValues);
+        }
+
+        public static TSchema SetAllowedValuesUntyped<TSchema>(this TSchema property, IEnumerable allowedValues)
+            where TSchema : ISchema
+        {
+            property.AssertArgumentNotNull(nameof(property));
+            allowedValues.AssertArgumentNotNull(nameof(allowedValues));
+
+            return property.SetMetadata((IAllowedValues)AllowedValues.CreateUntyped(property.Type, allowedValues));
         }
 
         /// <summary>
@@ -105,11 +140,11 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="IAllowedValues{T}"/>.</returns>
         [Pure]
-        public static IAllowedValues<T>? GetAllowedValues<T>(this IProperty<T> property)
+        public static IAllowedValues<T>? GetAllowedValues<T>(this ISchema<T> property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetMetadata<IAllowedValues>() as IAllowedValues<T>;
+            return property.GetSchemaMetadata<IAllowedValues>() as IAllowedValues<T>;
         }
 
         /// <summary>
@@ -118,11 +153,45 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>Optional <see cref="IAllowedValues"/>.</returns>
         [Pure]
-        public static IAllowedValues? GetAllowedValuesUntyped(this IProperty property)
+        public static IAllowedValues? GetAllowedValuesUntyped(this ISchema property)
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetMetadata<IAllowedValues>();
+            return property.GetSchemaMetadata<IAllowedValues>();
+        }
+
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static TSchema SetAllowedValuesFromEnum<TSchema>(this TSchema property, Type enumType)
+            where TSchema : ISchema
+        {
+            property.AssertArgumentNotNull(nameof(property));
+
+            if (!enumType.IsEnum)
+                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
+
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+
+            if (property.Type == enumType || property.Type == underlyingType)
+            {
+                var values = Enum.GetValues(enumType);
+                property.SetAllowedValuesUntyped(values);
+            }
+            else if (property.Type == typeof(string))
+            {
+                string[] names = Enum.GetNames(enumType);
+                property.SetAllowedValuesUntyped(names);
+            }
+            else
+            {
+                throw new ArgumentException($"{nameof(TSchema)} should be typed as string or {enumType} or {underlyingType}.");
+            }
+
+            return property;
         }
 
         /// <summary>
@@ -132,18 +201,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
         public static IProperty<TEnum> SetAllowedValuesFromEnum<TEnum>(this IProperty<TEnum> property)
-        {
-            property.AssertArgumentNotNull(nameof(property));
-
-            Type enumType = typeof(TEnum);
-
-            if (!enumType.IsEnum)
-                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
-
-            var values = (TEnum[])Enum.GetValues(enumType);
-
-            return property.SetAllowedValues(values);
-        }
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
         /// <summary>
         /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
@@ -152,18 +210,34 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
         public static IProperty<string> SetAllowedValuesFromEnum<TEnum>(this IProperty<string> property)
-        {
-            property.AssertArgumentNotNull(nameof(property));
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
-            Type enumType = typeof(TEnum);
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static ISchema<TEnum> SetAllowedValuesFromEnum<TEnum>(this ISchema<TEnum> property)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
-            if (!enumType.IsEnum)
-                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static ISchema<string> SetAllowedValuesFromEnum<TEnum>(this ISchema<string> property)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
-            string[] names = Enum.GetNames(enumType);
-
-            return property.SetAllowedValues(names);
-        }
+        /// <summary>
+        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>The same property.</returns>
+        public static ISchema<int> SetAllowedValuesFromEnum<TEnum>(this ISchema<int> property)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
 
         /// <summary>
         /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
@@ -172,22 +246,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
         public static IProperty<int> SetAllowedValuesFromEnum<TEnum>(this IProperty<int> property)
-        {
-            property.AssertArgumentNotNull(nameof(property));
-
-            Type enumType = typeof(TEnum);
-
-            if (!enumType.IsEnum)
-                throw new ArgumentException($"Type '{enumType}' should be Enum type to use in {nameof(SetAllowedValuesFromEnum)}.");
-
-            Type underlyingType = Enum.GetUnderlyingType(enumType);
-            if (underlyingType != typeof(int))
-                throw new ArgumentException($"Enum type '{enumType}' should have int as UnderlyingType.");
-
-            var values = ((TEnum[])Enum.GetValues(enumType)).Cast<int>().ToArray();
-
-            return property.SetAllowedValues(values);
-        }
+            => property.SetAllowedValuesFromEnum(typeof(TEnum));
     }
 
     /// <summary>

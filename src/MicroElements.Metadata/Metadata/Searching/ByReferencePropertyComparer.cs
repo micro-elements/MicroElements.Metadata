@@ -8,7 +8,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Property comparer by reference equality.
     /// </summary>
-    public sealed class ByReferenceEqualityComparer : IEqualityComparer<IProperty>
+    public sealed class ByReferencePropertyComparer : IEqualityComparer<IProperty>
     {
         /// <inheritdoc/>
         public bool Equals(IProperty? x, IProperty? y) => ReferenceEquals(x, y);

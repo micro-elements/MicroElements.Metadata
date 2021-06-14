@@ -53,6 +53,9 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
+        public IEnumerable<IProperty> GetProperties() => _properties;
+
+        /// <inheritdoc />
         public IProperty AddProperty(IProperty property)
         {
             _properties.Add(property);
@@ -80,14 +83,26 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     public static partial class SchemaExtensions
     {
-        public static IMutableObjectSchema ToSchema(this IPropertySet propertySet)
+        public static IMutableObjectSchema ToSchema(this IPropertySet propertySet, string? schemaName = null)
         {
             if (propertySet is IMutableObjectSchema schema)
             {
                 return schema;
             }
 
-            return new MutableObjectSchema(name: propertySet.GetType().Name, properties: propertySet);
+            string? name = schemaName;
+
+            if (name == null && propertySet is IKnownPropertySet knownPropertySet)
+            {
+                name = knownPropertySet.SchemaType.Name;
+            }
+
+            if (name == null)
+            {
+                name = propertySet.GetType().Name;
+            }
+
+            return new MutableObjectSchema(name: name, properties: propertySet.GetProperties());
         }
     }
 }

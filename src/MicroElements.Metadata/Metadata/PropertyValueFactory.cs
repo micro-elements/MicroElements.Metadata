@@ -10,6 +10,8 @@ using MicroElements.CodeContracts;
 using MicroElements.Core;
 using MicroElements.Reflection;
 
+using MicroElements.Metadata.Schema;
+
 namespace MicroElements.Metadata
 {
     /// <summary>
@@ -17,12 +19,19 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyValueFactory : IPropertyValueFactory
     {
+        private readonly bool _assumeNullForNotNullableAsNotDefined;
+
         /// <summary>
         /// Gets default <see cref="IPropertyValue"/> factory instance.
         /// </summary>
         public static IPropertyValueFactory Default { get; } = new PropertyValueFactory();
 
         private static readonly ConcurrentDictionary<Type, Func<IPropertyValueFactory, IProperty, object, ValueSource, IPropertyValue>> _funcCache = new ();
+
+        public PropertyValueFactory(bool assumeNullForNotNullableAsNotDefined = true)
+        {
+            _assumeNullForNotNullableAsNotDefined = assumeNullForNotNullableAsNotDefined;
+        }
 
         /// <inheritdoc />
         public IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
@@ -43,7 +52,17 @@ namespace MicroElements.Metadata
                 throw new InvalidOperationException($"Value type {value.GetType()} should be the assignable to property type {propertyType}.");
 
             if (value == null && propertyType.CanNotAcceptNull())
-                throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
+            {
+                if (_assumeNullForNotNullableAsNotDefined)
+                {
+                    value = propertyType.GetDefaultValue();
+                    valueSource = ValueSource.NotDefined;
+                }
+                else
+                {
+                    throw new ArgumentException($"Existing property {property.Name} has type {property.Type} and null value is not allowed");
+                }
+            }
 
             // Most popular cases:
             if (propertyType == typeof(string))

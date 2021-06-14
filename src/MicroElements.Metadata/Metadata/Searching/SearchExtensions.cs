@@ -87,18 +87,22 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Source property container.</param>
         /// <param name="property">Property to find.</param>
         /// <param name="search">Search options.</param>
+        /// <param name="defaultValue">Default value that returns if property value was not found.</param>
         /// <returns>The value for property.</returns>
-        [return: MaybeNull]
-        public static T GetValue<T>(
+        public static T? GetValue<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
-            SearchOptions? search = null)
+            SearchOptions? search = null,
+            T? defaultValue = default)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             property.AssertArgumentNotNull(nameof(property));
 
             IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
-            return propertyValue != null ? propertyValue.Value : default;
+            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
+                return defaultValue;
+
+            return propertyValue.Value;
         }
 
         /// <summary>

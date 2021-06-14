@@ -91,8 +91,8 @@ namespace MicroElements.Metadata.Tests
         public void PropertySetTests()
         {
             PropertySet propertySet = new PropertySet(new[] {new Property<string>("prop1"), new Property<string>("prop2"),});
-            propertySet.Count().Should().Be(2);
-            propertySet.Last().Name.Should().Be("prop2");
+            propertySet.Properties.Count().Should().Be(2);
+            propertySet.Properties.Last().Name.Should().Be("prop2");
         }
 
         [Fact]

@@ -9,6 +9,31 @@ Metadata.NewtonsoftJson:
 - WriteSchemaToPropertyName removed from MetadataJsonSerializationOptions
 - PropertyContainerWithMetadataTypesConverter removed
 
+# 7.4.0
+Schema serialization and utility release
+- Added IMetadataSchemaProvider
+- NewtonsoftJson: Added MetadataSchemaProviderConverter that allows to use common schema section in json document
+- ConfigureJsonForPropertyContainers: added action to configure MetadataJsonSerializationOptions
+- MetadataJsonSerializationOptions: added options: TypeMapper, UseSchemasRoot, SchemasRootName, WriteSchemaOnceForKnownTypes
+- Removed IEnumeration interface from IPropertySet 
+- Removed PropertyContainerWithMetadataTypesConverter
+- Many other usability improvements
+- 7.4.1: added default value to GetValue extension
+- 7.4.3: PropertyContainerMapper moves to MicroElements.Metadata.Mapping and becomes more flexible
+
+# 7.3.0
+- Added PropertyContainerMapper with methods ToPropertyContainerOfType, ToPropertyContainer and ToObject
+- PropertyContainerConverters (SystemTextJson and NewtonsoftJson) uses common method ToPropertyContainerOfType and supports typed PropertyContainers
+- 7.3.2: PropertyComparers types ends with PropertyComparer (was EqualityComparer), ByTypeAndNamePropertyComparer can compare types ignoring Nullable wrapper
+- 7.3.3: ByNameOrAliasPropertyComparer GetHashCode fix
+- 7.3.3: MetadataSchema.AppendAbsentProperties fix
+- 7.3.3: PropertyContainerMapper.ToObject nullable and enum support
+- 7.3.4: Added HierarchicalContainer that merges two hierarchies
+- 7.3.4: GetMetadata can get metadata from attached ISchema (see 'searchInSchema'' arg)
+- 7.3.4: Added GetSchemaMetadata that always uses GetMetadata with searchInSchema: true
+- 7.3.4: More metadata types that can be set to ISchema (not only IProperty): IAllowedValues, INumericInterval 
+- 7.3.4: PropertyContainerMapper more customization
+
 # 7.2.0
 - PropertyContainerConverter becomes generic and supports collections
 - DateTimeOffsetFormatter added to DefaultFormatProvider

@@ -84,7 +84,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            return schema.GetMetadata<IListMinItems>();
+            return schema.GetSchemaMetadata<IListMinItems>();
         }
     }
 }

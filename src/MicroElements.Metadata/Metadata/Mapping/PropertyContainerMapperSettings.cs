@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 
 namespace MicroElements.Metadata.Mapping
 {

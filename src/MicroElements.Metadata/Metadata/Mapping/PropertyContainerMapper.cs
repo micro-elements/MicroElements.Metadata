@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Mapping
 {

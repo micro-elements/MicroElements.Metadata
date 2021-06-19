@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
-using Message = MicroElements.Diagnostics.Message;
-using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
+using MicroElements.Diagnostics;
 
 #pragma warning disable SA1118 // Parameter should not span multiple lines
 
@@ -18,7 +16,6 @@ namespace MicroElements.Metadata.Parsing
     public class ValueParser<T> : ValueParserBase<T>
     {
         private readonly Func<string, T>? _parseFunc1;
-        private readonly Func<string, Option<T>>? _parseFunc2;
         private readonly Func<string, ParseResult<T>>? _parseFunc3;
 
         /// <summary>

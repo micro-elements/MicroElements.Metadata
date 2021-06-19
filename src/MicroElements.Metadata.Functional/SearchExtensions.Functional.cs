@@ -4,9 +4,9 @@
 using MicroElements.CodeContracts;
 using MicroElements.Functional;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Functional
 {
-    public static partial class SearchExtensions
+    public static class SearchExtensions
     {
         /// <summary>
         /// Gets or calculates optional not null value.

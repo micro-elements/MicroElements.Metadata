@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
 
 namespace MicroElements.Metadata
 {
@@ -12,7 +11,7 @@ namespace MicroElements.Metadata
     /// </summary>
     public interface ISourceValueProvider
     {
-        Option<string> GetSourceValue(string name);
+        bool TryGetSourceValue(string name, out string value);
     }
 
     public class SourceNameProvider : ISourceValueProvider
@@ -20,11 +19,9 @@ namespace MicroElements.Metadata
         private IDictionary<string, string> _values;
 
         /// <inheritdoc />
-        public Option<string> GetSourceValue(string name)
+        public bool TryGetSourceValue(string name, out string value)
         {
-            if (_values.TryGetValue(name, out var value))
-                return value;
-            return Option<string>.None;
+            return _values.TryGetValue(name, out value);
         }
     }
 }

@@ -4,7 +4,7 @@
 using MicroElements.CodeContracts;
 using MicroElements.Functional;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Functional
 {
     public static class PropertyContainerOptionalExtensions
     {

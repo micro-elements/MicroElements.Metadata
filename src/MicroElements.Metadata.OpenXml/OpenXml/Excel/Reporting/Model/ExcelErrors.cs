@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using MicroElements.Functional;
+using MicroElements.Diagnostics.ErrorModel;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -44,7 +44,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             "No CellFormat registered in stylesheet");
 
         [DoesNotReturn]
-        public static void Throw(this in Error<ExcelError> error)
+        public static void Throw(this Error<ExcelError> error)
         {
             throw new ExcelException(error);
         }

@@ -12,6 +12,10 @@ namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents parse result.
+    /// 1. Result can be in two states: Success | Failed;
+    /// 2. Result knows value type.
+    /// 3. Result can hold null value as Success; (Option can not)
+    /// 4. Failed result should have error message.
     /// </summary>
     public interface IParseResult
     {
@@ -50,7 +54,7 @@ namespace MicroElements.Metadata
 
     /// <summary>
     /// Represents parse result.
-    /// ParseResult is a class because most use cases uses it as boxed <see cref="IParseResult"/>.
+    /// ParseResult is a class because most use cases uses it as boxed <see cref="IParseResult"/> also it can be cached.
     /// </summary>
     /// <typeparam name="T">Result value type.</typeparam>
     [ImmutableObject(true)]

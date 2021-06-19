@@ -22,6 +22,7 @@ namespace MicroElements.Metadata
         /// <para>
         /// <![CDATA[Usage: Source:Dictionary<string, string> + SourceName:string -> SourceValue:string]]>
         /// </para>
+        /// <seealso cref="ISourceValueProvider"/>
         /// </summary>
         string? SourceName { get; }
 

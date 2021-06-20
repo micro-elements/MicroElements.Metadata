@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using MicroElements.Metadata.Parsing;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests

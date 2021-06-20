@@ -8,7 +8,7 @@ using MicroElements.Diagnostics;
 using MicroElements.Diagnostics.ErrorModel;
 using MicroElements.Reflection;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Represents parse result.

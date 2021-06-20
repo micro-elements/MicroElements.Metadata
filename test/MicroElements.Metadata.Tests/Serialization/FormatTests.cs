@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using MicroElements.Diagnostics;
 using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Serialization;
 using NodaTime;
 using Xunit;

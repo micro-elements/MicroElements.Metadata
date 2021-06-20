@@ -5,9 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Metadata.Formatting;
-using MicroElements.Metadata.Parsing;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Parser rule attaches parser to type or property.

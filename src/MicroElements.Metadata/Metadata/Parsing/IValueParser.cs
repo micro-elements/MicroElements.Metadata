@@ -3,7 +3,7 @@
 
 using System;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Parsing
 {
     /// <summary>
     /// Text value parser.

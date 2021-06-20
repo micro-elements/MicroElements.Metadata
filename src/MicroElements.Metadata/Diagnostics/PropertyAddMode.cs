@@ -21,6 +21,6 @@ namespace MicroElements.Diagnostics
         /// <summary>
         /// Adds property if not exists on old list.
         /// </summary>
-        AddIfNotExists
+        AddIfNotExists,
     }
 }

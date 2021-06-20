@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using MicroElements.CodeContracts;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Provides <see cref="IValueFormatter"/> list to perform formatting.

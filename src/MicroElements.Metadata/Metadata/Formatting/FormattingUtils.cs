@@ -8,6 +8,9 @@ using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.Formatting
 {
+    /// <summary>
+    /// Formatting extensions.
+    /// </summary>
     public static class FormattingUtils
     {
         /// <summary>

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 
 namespace MicroElements.Diagnostics
 {
@@ -17,10 +16,10 @@ namespace MicroElements.Diagnostics
         /// </summary>
         /// <param name="messageList">Список сообщений.</param>
         /// <param name="errorMessage">Сообщение.</param>
-        /// <returns>Созданный <see cref="Diagnostics.Message"/></returns>
-        public static Diagnostics.IMessageList<Diagnostics.Message>? AddError(this Diagnostics.IMessageList<Diagnostics.Message>? messageList, string errorMessage)
+        /// <returns>Созданный <see cref="Message"/>.</returns>
+        public static IMessageList<Message>? AddError(this IMessageList<Message>? messageList, string errorMessage)
         {
-            return messageList?.Add(new Diagnostics.Message(errorMessage, MessageSeverity.Error));
+            return messageList?.Add(new Message(errorMessage, MessageSeverity.Error));
         }
 
         /// <summary>
@@ -29,14 +28,14 @@ namespace MicroElements.Diagnostics
         /// <param name="messageList">Список сообщений.</param>
         /// <param name="exception">Опциональное исключение.</param>
         /// <param name="errorMessage">Сообщение.</param>
-        /// <returns>Созданный <see cref="Diagnostics.Message"/></returns>
-        public static Diagnostics.IMessageList<Diagnostics.Message>? AddError(
-            this Diagnostics.IMessageList<Diagnostics.Message>? messageList,
+        /// <returns>Созданный <see cref="Message"/>.</returns>
+        public static IMessageList<Message>? AddError(
+            this IMessageList<Message>? messageList,
             Exception exception,
             string errorMessage,
             Func<Exception, IReadOnlyList<KeyValuePair<string, object>>> exceptionExtract)
         {
-            Diagnostics.Message message = new Diagnostics.Message(errorMessage, MessageSeverity.Error)
+            Message message = new Message(errorMessage, MessageSeverity.Error)
                 .WithProperties(exceptionExtract(exception));
             return messageList?.Add(message);
         }
@@ -46,10 +45,10 @@ namespace MicroElements.Diagnostics
         /// </summary>
         /// <param name="messageList">Список сообщений.</param>
         /// <param name="message">Сообщение.</param>
-        /// <returns>Созданный <see cref="Diagnostics.Message"/></returns>
-        public static Diagnostics.IMessageList<Diagnostics.Message>? AddWarning(this Diagnostics.IMessageList<Diagnostics.Message>? messageList, string message)
+        /// <returns>Созданный <see cref="Message"/>.</returns>
+        public static IMessageList<Message>? AddWarning(this IMessageList<Message>? messageList, string message)
         {
-            Diagnostics.Message msg = new Diagnostics.Message(message, MessageSeverity.Warning);
+            Message msg = new Message(message, MessageSeverity.Warning);
             return messageList?.Add(msg);
         }
 
@@ -58,10 +57,10 @@ namespace MicroElements.Diagnostics
         /// </summary>
         /// <param name="messageList">Список сообщений.</param>
         /// <param name="message">Сообщение.</param>
-        /// <returns>Созданный <see cref="Diagnostics.Message"/></returns>
-        public static Diagnostics.IMessageList<Diagnostics.Message>? AddInformation(this Diagnostics.IMessageList<Diagnostics.Message>? messageList, string message)
+        /// <returns>Созданный <see cref="Message"/>.</returns>
+        public static IMessageList<Message>? AddInformation(this IMessageList<Message>? messageList, string message)
         {
-            Diagnostics.Message msg = new Diagnostics.Message(message, MessageSeverity.Information);
+            Message msg = new Message(message, MessageSeverity.Information);
             return messageList?.Add(msg);
         }
     }

@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata

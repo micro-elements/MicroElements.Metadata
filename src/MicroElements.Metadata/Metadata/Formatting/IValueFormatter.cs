@@ -3,7 +3,7 @@
 
 using System;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Represents value formatter.

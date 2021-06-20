@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata

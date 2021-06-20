@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using MicroElements.Diagnostics;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata.Mapping
 {

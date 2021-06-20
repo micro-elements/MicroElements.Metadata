@@ -4,7 +4,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Schema

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MicroElements.CodeContracts;
 using MicroElements.Core;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata.Diff
 {

@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MicroElements.CodeContracts;
-using MicroElements.Metadata;
 using MicroElements.Metadata.Formatting;
 //using TextSpan = System.ReadOnlySpan<char>; //todo: remove after performance tests (span has no perf win...)
 using TextSpan = System.String;
@@ -31,7 +30,7 @@ namespace MicroElements.Diagnostics
         public IReadOnlyList<Token> Tokens { get; }
 
         /// <summary>
-        /// Crates new instance of <seealso cref="MessageTemplate"/>.
+        /// Initializes a new instance of the <see cref="MessageTemplate"/> class.
         /// </summary>
         /// <param name="originalFormat">Original format message.</param>
         /// <param name="tokens">Tokens for parsed <seealso cref="OriginalFormat"/>.</param>

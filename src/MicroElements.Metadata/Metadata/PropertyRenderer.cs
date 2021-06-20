@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {

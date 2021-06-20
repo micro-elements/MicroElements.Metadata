@@ -3,9 +3,8 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Metadata.Formatting;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Formatting
 {
     /// <summary>
     /// Formatting extensions.

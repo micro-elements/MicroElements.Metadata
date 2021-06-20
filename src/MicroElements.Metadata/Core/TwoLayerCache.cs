@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MicroElements.Core
 {
+    // TODO: Move TwoLayerCache to Shared
     /// <summary>
     /// Represents cache that holds only limited number of items.
     /// Cache organized in two layers: hot and cold. Items first added to cold cache.

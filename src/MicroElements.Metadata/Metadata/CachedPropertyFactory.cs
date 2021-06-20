@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
-using MicroElements.Functional;
+using MicroElements.Core;
 
 namespace MicroElements.Metadata
 {

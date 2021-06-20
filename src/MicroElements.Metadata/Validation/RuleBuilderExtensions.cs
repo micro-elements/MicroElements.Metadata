@@ -3,7 +3,6 @@
 
 using System;
 using MicroElements.Diagnostics;
-using MicroElements.Functional;
 using MicroElements.Metadata;
 using Message = MicroElements.Diagnostics.Message;
 using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;

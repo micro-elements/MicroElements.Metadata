@@ -3,7 +3,9 @@
 
 using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("MicroElements.Metadata.AspNetCore")]
+[assembly: InternalsVisibleTo("MicroElements.Metadata.Functional")]
 [assembly: InternalsVisibleTo("MicroElements.Metadata.OpenXml")]
 [assembly: InternalsVisibleTo("MicroElements.Metadata.Xml")]
-[assembly: InternalsVisibleTo("MicroElements.Metadata.Functional")]
+[assembly: InternalsVisibleTo("MicroElements.Metadata.NewtonsoftJson")]
 [assembly: InternalsVisibleTo("MicroElements.Metadata.SystemTextJson")]

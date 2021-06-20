@@ -4,8 +4,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
-using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;

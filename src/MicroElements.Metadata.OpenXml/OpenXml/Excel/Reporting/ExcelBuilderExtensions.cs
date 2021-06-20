@@ -7,7 +7,6 @@ using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting

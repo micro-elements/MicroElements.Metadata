@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using DocumentFormat.OpenXml.Spreadsheet;
 using FluentAssertions;
 using MicroElements.Functional;

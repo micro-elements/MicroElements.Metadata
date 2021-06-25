@@ -15,7 +15,7 @@ namespace MicroElements.Metadata
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public sealed class Property<T> : IProperty<T>
+    public sealed partial class Property<T> : IProperty<T>
     {
         /// <summary>
         /// Empty property instance.

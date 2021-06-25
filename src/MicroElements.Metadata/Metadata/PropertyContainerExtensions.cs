@@ -13,6 +13,36 @@ namespace MicroElements.Metadata
     public static partial class PropertyContainerExtensions
     {
         /// <summary>
+        /// Clones source <paramref name="propertyContainer"/> as <see cref="MutablePropertyContainer"/>.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>Mutable copy of initial property container.</returns>
+        public static IMutablePropertyContainer CloneAsMutable(this IPropertyContainer propertyContainer)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            return new MutablePropertyContainer(
+                sourceValues: propertyContainer.Properties,
+                parentPropertySource: propertyContainer.ParentSource,
+                searchOptions: propertyContainer.SearchOptions);
+        }
+
+        /// <summary>
+        /// Clones source <paramref name="propertyContainer"/> as <see cref="PropertyContainer"/>.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>ReadOnly copy of initial property container.</returns>
+        public static IPropertyContainer CloneAsReadOnly(this IPropertyContainer propertyContainer)
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+
+            return new PropertyContainer(
+                sourceValues: propertyContainer.Properties,
+                parentPropertySource: propertyContainer.ParentSource,
+                searchOptions: propertyContainer.SearchOptions);
+        }
+
+        /// <summary>
         /// Converts to <see cref="IMutablePropertyContainer"/> if needed.
         /// Returns the same container if it can be casted to <see cref="IMutablePropertyContainer"/>
         /// Or returns new <see cref="MutablePropertyContainer"/> copy of <paramref name="propertyContainer"/>.

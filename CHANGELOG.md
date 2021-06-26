@@ -1,3 +1,9 @@
+# 7.5.0
+- Added Property<T> Clone method
+- Added IPropertyContainer extensions: CloneAsMutable and CloneAsReadOnly
+- ToPropertyContainerOfType: added arg returnTheSameIfNoNeedToConvert
+- Swagger: added GenerateKnownSchemasAsRefs to PropertyContainerSchemaFilterOptions to generates known types as separate definitions
+
 # 7.4.0
 Schema serialization and utility release
 - Added IMetadataSchemaProvider

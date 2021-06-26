@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
-using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -34,7 +33,7 @@ namespace MicroElements.Metadata
 
             if (type.IsAssignableTo<IPropertySet>() && type.IsConcreteType())
             {
-                result = (IPropertySet) Activator.CreateInstance(type);
+                result = (IPropertySet)Activator.CreateInstance(type);
             }
 
             bool isStatic = type.IsAbstract && type.IsSealed;
@@ -73,7 +72,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="valueType">Type that implements <see cref="IKnownPropertySet{TPropertySet}"/>.</param>
         /// <returns><see cref="IPropertySet"/> or null.</returns>
-        public static IPropertySet? GetSchemaByKnownPropertySet(this Type valueType)
+        public static IPropertySet? GetSchemaByKnownPropertySet(this Type? valueType)
         {
             if (valueType == null)
                 return null;

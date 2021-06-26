@@ -29,7 +29,7 @@ namespace MicroElements.Metadata.Swashbuckle
             bool containsFilter = swagger.SchemaFilterDescriptors.FirstOrDefault(descriptor => descriptor.Type == typeof(PropertyContainerSchemaFilter)) != null;
 
             if (!containsFilter)
-                swagger.SchemaFilter<PropertyContainerSchemaFilter>();
+                swagger.SchemaFilter<PropertyContainerSchemaFilter>(swagger);
 
             return swagger;
         }

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MicroElements.CodeContracts;
-using MicroElements.Metadata.Formatting;
+
 //using TextSpan = System.ReadOnlySpan<char>; //todo: remove after performance tests (span has no perf win...)
 using TextSpan = System.String;
 
@@ -490,7 +490,7 @@ namespace MicroElements.Diagnostics
             foreach (var format in formats)
             {
                 var renderer = _valueRendererProvider.Get(format.Name, format.Args);
-                propValue = renderer != null ? renderer.Format(propValue) : RenderToString(propValue, format.Name);
+                propValue = renderer != null ? renderer.Render(propValue) : RenderToString(propValue, format.Name);
             }
 
             return RenderToString(propValue);
@@ -603,7 +603,7 @@ namespace MicroElements.Diagnostics
         /// <param name="name">Renderer name.</param>
         /// <param name="args">Renderer optional args.</param>
         /// <returns>Renderer or null if not found.</returns>
-        IValueFormatter Get(string name, string args);
+        IValueRenderer Get(string name, string args);
     }
 
     /// <summary>
@@ -616,14 +616,14 @@ namespace MicroElements.Diagnostics
         /// </summary>
         public static readonly IValueRendererProvider Instance = new DefaultValueRendererProvider();
 
-        private readonly IValueRendererProvider _rendererProvider = new CachedValueRendererProvider(new Dictionary<string, Func<string, IValueFormatter>>
+        private readonly IValueRendererProvider _rendererProvider = new CachedValueRendererProvider(new Dictionary<string, Func<string, IValueRenderer>>
         {
             { "upper", args => new UpperRenderer() },
-            { "trim", args => new TrimFormatter(args) },
+            { "trim", args => new TrimRenderer(args) },
         });
 
         /// <inheritdoc />
-        public IValueFormatter Get(string name, string args) => _rendererProvider.Get(name, args);
+        public IValueRenderer Get(string name, string args) => _rendererProvider.Get(name, args);
     }
 
     /// <summary>
@@ -631,11 +631,11 @@ namespace MicroElements.Diagnostics
     /// </summary>
     public class CachedValueRendererProvider : IValueRendererProvider
     {
-        private readonly ConcurrentDictionary<string, Func<string, IValueFormatter>> _formatterFactoryCache = new (StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<(string name, string args), IValueFormatter> _rendererCache = new ();
+        private readonly ConcurrentDictionary<string, Func<string, IValueRenderer>> _formatterFactoryCache = new (StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<(string name, string args), IValueRenderer> _rendererCache = new ();
 
         /// <inheritdoc />
-        public CachedValueRendererProvider(IDictionary<string, Func<string, IValueFormatter>> rendererTypes)
+        public CachedValueRendererProvider(IDictionary<string, Func<string, IValueRenderer>> rendererTypes)
         {
             foreach (var rendererType in rendererTypes)
             {
@@ -644,9 +644,9 @@ namespace MicroElements.Diagnostics
         }
 
         /// <inheritdoc />
-        public IValueFormatter Get(string name, string args)
+        public IValueRenderer Get(string name, string args)
         {
-            if (_rendererCache.TryGetValue((name, args), out IValueFormatter renderer))
+            if (_rendererCache.TryGetValue((name, args), out var renderer))
             {
                 return renderer;
             }
@@ -662,22 +662,70 @@ namespace MicroElements.Diagnostics
     }
 
     /// <summary>
+    /// Value renderer renders value to string.
+    /// Also it can generate new value or transform input value.
+    /// </summary>
+    public interface IValueRenderer
+    {
+        /// <summary>
+        /// Renders value to string.
+        /// Can generate new value or transform input value.
+        /// </summary>
+        /// <param name="value">Input value.</param>
+        /// <returns>Processed value.</returns>
+        object Render(object value);
+    }
+
+    /// <summary>
+    /// Renderer that treats input value as string and renders result as string.
+    /// </summary>
+    public abstract class StringRenderer : IValueRenderer
+    {
+        /// <summary>
+        /// Renders string value to string result.
+        /// </summary>
+        /// <param name="textValue">Input value.</param>
+        /// <returns>Result value.</returns>
+        protected abstract string RenderString(string textValue);
+
+        /// <inheritdoc />
+        public object Render(object value)
+        {
+            string text = ValueToString(value);
+            return RenderString(text);
+        }
+
+        private static string ValueToString(object value)
+        {
+            if (value == null)
+                return string.Empty;
+
+            string text;
+            if (value is string str)
+                text = str;
+            else
+                text = value.ToString();
+            return text;
+        }
+    }
+
+    /// <summary>
     /// Renders string value as UPPERCASE string.
     /// </summary>
-    public sealed class UpperRenderer : IValueFormatter<string>
+    public sealed class UpperRenderer : StringRenderer
     {
         /// <inheritdoc />
-        public string? Format(string value) => value.ToUpperInvariant();
+        protected override string RenderString(string textValue) => textValue.ToUpperInvariant();
     }
 
     /// <summary>
     /// Trims first N symbols.
     /// </summary>
-    public sealed class TrimFormatter : IValueFormatter<string>
+    public sealed class TrimRenderer : StringRenderer
     {
         private readonly int _length;
 
-        public TrimFormatter(string args)
+        public TrimRenderer(string args)
         {
             if (!int.TryParse(args, out _length))
             {
@@ -686,15 +734,15 @@ namespace MicroElements.Diagnostics
         }
 
         /// <inheritdoc />
-        public string? Format(string value)
+        protected override string RenderString(string textValue)
         {
-            if (_length > 0 && _length <= value.Length)
+            if (_length > 0 && _length <= textValue.Length)
             {
-                string result = value.Substring(0, _length);
+                string result = textValue.Substring(0, _length);
                 return result;
             }
 
-            return value;
+            return textValue;
         }
     }
 

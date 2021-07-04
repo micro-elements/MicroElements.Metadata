@@ -1,3 +1,10 @@
+# 7.6.0
+- IAllowedValues: added IEqualityComparer
+- NumericInterval extension methods returns the same type where possible
+- Required validation rule extended with SearchOptions and assertValueIsNull argument, added IRequiredPropertyValidationRule marker interface
+- ExtractValidateMap initial functionality
+- MapToTuple extensions methods
+
 # 7.5.0
 - Added Property<T> Clone method
 - Added IPropertyContainer extensions: CloneAsMutable and CloneAsReadOnly

@@ -11,28 +11,44 @@ namespace MicroElements.Validation.Rules
     /// Checks that property value exists and has not null value.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public class Required<T> : IPropertyValidationRule<T>
+    public class Required<T> : IPropertyValidationRule<T>, IRequiredPropertyValidationRule
     {
         /// <inheritdoc />
         public IProperty<T> Property { get; }
+
+        /// <inheritdoc />
+        public SearchOptions? SearchOptions { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the validator should assert if value is null.
+        /// </summary>
+        public bool AssertValueIsNull { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Required{T}"/> class.
         /// </summary>
         /// <param name="property">Property to check.</param>
-        public Required(IProperty<T> property)
+        /// <param name="assertValueIsNull">A value indicating whether the validator should assert if value is null.</param>
+        /// <param name="searchOptions">Optional search options.</param>
+        public Required(IProperty<T> property, bool assertValueIsNull = true, SearchOptions? searchOptions = null)
         {
-            Property = property.AssertArgumentNotNull(nameof(property));
+            AssertValueIsNull = assertValueIsNull;
+            property.AssertArgumentNotNull(nameof(property));
+
+            Property = property;
+            SearchOptions = searchOptions;
         }
 
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            propertyValue ??= propertyContainer.GetPropertyValue(Property, Search.ExistingOnly);
+            propertyValue ??= propertyContainer.GetPropertyValue(Property, SearchOptions ?? propertyContainer.SearchOptions.UseDefaultValue(false).ReturnNotDefined());
+            propertyValue ??= new PropertyValue<T>(Property, default, ValueSource.NotDefined);
 
-            if (propertyValue == null)
-                yield return this.GetConfiguredMessage(new PropertyValue<T>(Property, default, ValueSource.NotDefined), propertyContainer, "{propertyName} is marked as required but is not exists.");
-            else if (propertyValue.Value.IsNull())
+            if (!propertyValue.HasValue())
+                yield return this.GetConfiguredMessage(propertyValue, propertyContainer, "{propertyName} is marked as required but is not exists.");
+
+            if (AssertValueIsNull && propertyValue.HasValue() && propertyValue.Value.IsNull())
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer, "{propertyName} is marked as required but has null value.");
         }
     }
@@ -47,10 +63,12 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to check.</param>
+        /// <param name="assertValueIsNull">Also asserts if value is null.</param>
+        /// <param name="searchOptions">Optional search options.</param>
         /// <returns><see cref="Required{T}"/> validation rule.</returns>
-        public static Required<T> Required<T>(this IProperty<T> property)
+        public static Required<T> Required<T>(this IProperty<T> property, bool assertValueIsNull = true, SearchOptions? searchOptions = null)
         {
-            return new Required<T>(property);
+            return new Required<T>(property, assertValueIsNull, searchOptions);
         }
     }
 }

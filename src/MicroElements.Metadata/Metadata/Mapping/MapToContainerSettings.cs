@@ -10,9 +10,51 @@ namespace MicroElements.Metadata.Mapping
 {
     /// <summary>
     /// Settings for property container mapping.
-    /// The same as <see cref="PropertyContainerMapperSettings"/> but with all fields initialized.
     /// </summary>
-    public class PropertyContainerMappingContext
+    public class MapToContainerSettings
+    {
+        /// <summary>
+        /// Gets or sets a value indicating whether the mapper should add properties not from schema.
+        /// </summary>
+        public bool? AddPropertiesNotFromSchema { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the mapper should add properties with null values.
+        /// </summary>
+        public bool? AddPropertiesWithNullValues { get; set; }
+
+        /// <summary>
+        /// Gets or sets optional property comparer for search property in schema.
+        /// Default: <see cref="Metadata.PropertyComparer.ByNameOrAliasIgnoreCase"/>.
+        /// </summary>
+        public IEqualityComparer<IProperty>? PropertyComparer { get; set; }
+
+        /// <summary>
+        /// Gets or sets optional property factory.
+        /// </summary>
+        public IPropertyFactory? PropertyFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets optional property value factory.
+        /// </summary>
+        public IPropertyValueFactory? PropertyValueFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets optional value formatter if target property is string.
+        /// </summary>
+        public IValueFormatter? ValueFormatter { get; set; }
+
+        /// <summary>
+        /// Gets or sets action that will be invoked on mapping or validation error.
+        /// </summary>
+        public Action<Message>? LogMessage { get; set; }
+    }
+
+    /// <summary>
+    /// Settings for property container mapping.
+    /// The same as <see cref="MapToContainerSettings"/> but with all fields initialized.
+    /// </summary>
+    public class MapToContainerContext
     {
         /// <summary>
         /// Gets a value indicating whether the mapper should add properties not from schema.
@@ -51,10 +93,10 @@ namespace MicroElements.Metadata.Mapping
         public Action<Message> LogMessage { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyContainerMappingContext"/> class.
+        /// Initializes a new instance of the <see cref="MapToContainerContext"/> class.
         /// </summary>
         /// <param name="settings">Optional settings.</param>
-        public PropertyContainerMappingContext(PropertyContainerMapperSettings? settings = null)
+        public MapToContainerContext(MapToContainerSettings? settings = null)
         {
             AddPropertiesNotFromSchema = settings?.AddPropertiesNotFromSchema ?? false;
             AddPropertiesWithNullValues = settings?.AddPropertiesWithNullValues ?? false;

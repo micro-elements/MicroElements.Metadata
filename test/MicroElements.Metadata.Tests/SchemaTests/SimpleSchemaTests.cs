@@ -86,5 +86,22 @@ namespace MicroElements.Metadata.Tests.SchemaTests
                 schema.GetDefaultValue().GetDefaultValue().Should().Be(100.0);
             }
         }
+
+        [Fact]
+        public void MinMax()
+        {
+            {
+                ISchema<double> schema = new SimpleTypeSchema<double>("Rate")
+                    .SetMinimum(0)
+                    .SetMaximum(1);
+                schema.GetNumericInterval().Should().NotBeNull().And.BeEquivalentTo(new NumericInterval(0, false, 1, false));
+
+                IProperty<double> property = new Property<double>("Rate")
+                    .SetMinimum(0)
+                    .SetMaximum(1);
+                property.GetNumericInterval().Should().NotBeNull().And.BeEquivalentTo(new NumericInterval(0, false, 1, false));
+            }
+
+        }
     }
 }

@@ -39,6 +39,11 @@ namespace MicroElements.Metadata.Schema
         /// Gets all possible values that can be accepted by property.
         /// </summary>
         IReadOnlyCollection<T> Values { get; }
+
+        /// <summary>
+        /// Gets comparer for values.
+        /// </summary>
+        IEqualityComparer<T> Comparer { get; }
     }
 
     /// <inheritdoc cref="IAllowedValues{T}"/>
@@ -50,30 +55,36 @@ namespace MicroElements.Metadata.Schema
         public IReadOnlyCollection<T> Values { get; }
 
         /// <inheritdoc />
+        public IEqualityComparer<T> Comparer { get; }
+
+        /// <inheritdoc />
         public IReadOnlyCollection<object> ValuesUntyped => _lazyValuesUntyped.Value;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AllowedValues{T}"/> class.
         /// </summary>
         /// <param name="values">All possible values that can be accepted by property.</param>
-        public AllowedValues(IReadOnlyCollection<T> values)
+        /// <param name="comparer">Equality comparer.</param>
+        public AllowedValues(IReadOnlyCollection<T> values, IEqualityComparer<T>? comparer = null)
         {
             values.AssertArgumentNotNull(nameof(values));
 
             Values = values;
+            Comparer = comparer ?? EqualityComparer<T>.Default;
+
             _lazyValuesUntyped = new Lazy<IReadOnlyCollection<object>>(() => Values.Cast<object>().ToArray());
         }
 
-        public static AllowedValues<T> CreateFromEnumerable(IEnumerable values)
+        public static AllowedValues<T> CreateFromEnumerable(IEnumerable values, IEqualityComparer<T>? comparer = null)
         {
             T[] array = values.Cast<T>().ToArray();
-            return new AllowedValues<T>(array);
+            return new AllowedValues<T>(array, comparer);
         }
     }
 
     public static class AllowedValues
     {
-        public static IAllowedValues CreateUntyped(Type valueType, IEnumerable values)
+        public static IAllowedValues CreateUntyped(Type valueType, IEnumerable values, IEqualityComparer? comparer = null)
         {
             valueType.AssertArgumentNotNull(nameof(valueType));
             values.AssertArgumentNotNull(nameof(values));
@@ -82,8 +93,8 @@ namespace MicroElements.Metadata.Schema
             MethodInfo methodInfo = allowedValuesGeneric.GetMethod(nameof(AllowedValues<object>.CreateFromEnumerable),
                 BindingFlags.Public | BindingFlags.Static);
 
-            object invoke = methodInfo.Invoke(null, parameters: new object[] { values });
-            return (IAllowedValues)invoke;
+            object allowedValues = methodInfo.Invoke(null, parameters: new object[] { values, comparer });
+            return (IAllowedValues)allowedValues;
         }
     }
 
@@ -124,13 +135,13 @@ namespace MicroElements.Metadata.Schema
             return property.SetMetadata((IAllowedValues)allowedValues);
         }
 
-        public static TSchema SetAllowedValuesUntyped<TSchema>(this TSchema property, IEnumerable allowedValues)
+        public static TSchema SetAllowedValuesUntyped<TSchema>(this TSchema property, IEnumerable allowedValues, IEqualityComparer? equalityComparer = null)
             where TSchema : ISchema
         {
             property.AssertArgumentNotNull(nameof(property));
             allowedValues.AssertArgumentNotNull(nameof(allowedValues));
 
-            return property.SetMetadata((IAllowedValues)AllowedValues.CreateUntyped(property.Type, allowedValues));
+            return property.SetMetadata((IAllowedValues)AllowedValues.CreateUntyped(property.Type, allowedValues, equalityComparer));
         }
 
         /// <summary>
@@ -166,7 +177,7 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="TEnum">Enum value type.</typeparam>
         /// <param name="property">Source property.</param>
         /// <returns>The same property.</returns>
-        public static TSchema SetAllowedValuesFromEnum<TSchema>(this TSchema property, Type enumType)
+        public static TSchema SetAllowedValuesFromEnum<TSchema>(this TSchema property, Type enumType, IEqualityComparer? equalityComparer = null)
             where TSchema : ISchema
         {
             property.AssertArgumentNotNull(nameof(property));
@@ -179,12 +190,15 @@ namespace MicroElements.Metadata.Schema
             if (property.Type == enumType || property.Type == underlyingType)
             {
                 var values = Enum.GetValues(enumType);
-                property.SetAllowedValuesUntyped(values);
+                property.SetAllowedValuesUntyped(values, equalityComparer);
             }
             else if (property.Type == typeof(string))
             {
                 string[] names = Enum.GetNames(enumType);
-                property.SetAllowedValuesUntyped(names);
+                var comparer = equalityComparer as IEqualityComparer<string>;
+
+                var allowedValues = new AllowedValues<string>(names, comparer);
+                ((IProperty<string>)property).SetAllowedValues(allowedValues);
             }
             else
             {
@@ -208,9 +222,10 @@ namespace MicroElements.Metadata.Schema
         /// </summary>
         /// <typeparam name="TEnum">Enum value type.</typeparam>
         /// <param name="property">Source property.</param>
+        /// <param name="ignoreCase">Compare enum values ignore case.</param>
         /// <returns>The same property.</returns>
-        public static IProperty<string> SetAllowedValuesFromEnum<TEnum>(this IProperty<string> property)
-            => property.SetAllowedValuesFromEnum(typeof(TEnum));
+        public static IProperty<string> SetAllowedValuesFromEnum<TEnum>(this IProperty<string> property, bool ignoreCase = true)
+            => property.SetAllowedValuesFromEnum(typeof(TEnum), ignoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
         /// <summary>
         /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
@@ -273,7 +288,7 @@ namespace MicroElements.Metadata.Schema
         {
             if (_allowedValues != null)
             {
-                return _allowedValues.Values.Contains(value);
+                return _allowedValues.Values.Contains(value, _allowedValues.Comparer);
             }
 
             return true;

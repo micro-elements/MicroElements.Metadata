@@ -67,13 +67,16 @@ namespace MicroElements.Metadata.Tests.Mapping
                 .WithValue(ModelScheme.TextValue, "text")
                 .WithValue(ModelScheme.Sex, Sex.Male.ToString());
 
+            Model model = new Model();
+
             container
                 .Extractor()
                 .Extract(ModelScheme.TextValue).Required().Output(out string textValue)
                 .Extract(ModelScheme.TextValue).WithValidation(property => property.NotNull()).Output(out string textValue2)
                 .Extract(ModelScheme.IntValue).Optional().Output(out int? intValue)
-                .Extract(ModelScheme.Sex).Map(Enum.Parse<Sex>).Output(out Sex sex)
+                .Extract(ModelScheme.Sex).Map(Enum.Parse<Sex>).WithValidation(property => property.NotDefault()).Output(out Sex sex)
                 .Extract(ModelScheme.Sex).MapToEnum<Sex>().Output(out Sex sex2)
+                .Extract(ModelScheme.Sex).MapToEnum<Sex>().Output(model)
                 .ExtractErrors(out IReadOnlyCollection<Message>? messages);
 
             messages.Should().BeNullOrEmpty();
@@ -82,21 +85,35 @@ namespace MicroElements.Metadata.Tests.Mapping
             intValue.Should().Be(null);
             sex.Should().Be(Sex.Male);
             sex2.Should().Be(Sex.Male);
+            model.Sex.Should().Be(Sex.Male);
         }
 
         [Fact]
         public void extract_map_error()
         {
-            var container = new MutablePropertyContainer()
-                .WithValue(ModelScheme.TextValue, "text")
-                .WithValue(ModelScheme.Sex, "other");
+            {
+                var container = new MutablePropertyContainer()
+                    .WithValue(ModelScheme.Sex, "other");
 
-            container
-                .Extractor()
-                .Extract(ModelScheme.Sex).MapToEnum<Sex>().Output(out Sex sex)
-                .ExtractErrors(out IReadOnlyCollection<Message>? messages);
+                container
+                    .Extractor()
+                    .Extract(ModelScheme.Sex).MapToEnum<Sex>().Output(out Sex sex)
+                    .ExtractErrors(out IReadOnlyCollection<Message>? messages);
 
-            messages.Should().HaveCount(1);
+                messages.Should().HaveCount(1);
+            }
+
+            {
+                var container = new MutablePropertyContainer()
+                    .WithValue(ModelScheme.Sex, Sex.Unknown.ToString());
+
+                container
+                    .Extractor()
+                    .Extract(ModelScheme.Sex).Map(Enum.Parse<Sex>).WithValidation(property => property.NotDefault()).Output(out Sex sex)
+                    .ExtractErrors(out IReadOnlyCollection<Message>? messages);
+
+                messages.Should().HaveCount(1);
+            }
         }
 
         [Fact]

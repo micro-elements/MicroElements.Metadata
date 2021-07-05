@@ -172,10 +172,12 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
-        /// Sets <see cref="IAllowedValues"/> metadata from <typeparamref name="TEnum"/>.
+        /// Sets <see cref="IAllowedValues"/> metadata from enum type.
         /// </summary>
-        /// <typeparam name="TEnum">Enum value type.</typeparam>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
         /// <param name="property">Source property.</param>
+        /// <param name="enumType">Enum type.</param>
+        /// <param name="equalityComparer">Optional equality comparer.</param>
         /// <returns>The same property.</returns>
         public static TSchema SetAllowedValuesFromEnum<TSchema>(this TSchema property, Type enumType, IEqualityComparer? equalityComparer = null)
             where TSchema : ISchema
@@ -192,13 +194,13 @@ namespace MicroElements.Metadata.Schema
                 var values = Enum.GetValues(enumType);
                 property.SetAllowedValuesUntyped(values, equalityComparer);
             }
-            else if (property.Type == typeof(string))
+            else if (property is ISchema<string> stringSchema)
             {
                 string[] names = Enum.GetNames(enumType);
-                var comparer = equalityComparer as IEqualityComparer<string>;
 
+                var comparer = equalityComparer as IEqualityComparer<string>;
                 var allowedValues = new AllowedValues<string>(names, comparer);
-                ((IProperty<string>)property).SetAllowedValues(allowedValues);
+                stringSchema.SetAllowedValues(allowedValues);
             }
             else
             {

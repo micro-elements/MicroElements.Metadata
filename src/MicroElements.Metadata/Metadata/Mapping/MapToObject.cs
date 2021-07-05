@@ -26,54 +26,82 @@ namespace MicroElements.Metadata.Mapping
             MapToObjectSettings<TModel>? settings = null)
         {
             settings ??= new MapToObjectSettings<TModel>();
+            TModel model = settings.Factory != null ? settings.Factory() : Activator.CreateInstance<TModel>();
 
             PropertyInfo[] propertyInfos = typeof(TModel).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-            TModel model = settings.Factory != null ? settings.Factory() : Activator.CreateInstance<TModel>();
 
             foreach (IPropertyValue propertyValue in propertyContainer.Properties)
             {
                 if (settings.SourceFilter?.Invoke(propertyValue.PropertyUntyped) == false)
                     continue;
 
-                string targetPropertyName = settings.TargetName?.Invoke(propertyValue.PropertyUntyped) ?? propertyValue.PropertyUntyped.Name;
+                (PropertyInfo? propertyInfo, object? value) = TryGetTargetPropertyAndValue(propertyValue, typeof(TModel), propertyInfos, settings);
 
-                (PropertyInfo? propertyInfo, object? value) = TryGetTargetPropertyAndValue(propertyValue, propertyInfos);
-
-                if (propertyInfo != null && propertyInfo.CanWrite)
+                if (propertyInfo != null)
                 {
-                    propertyInfo.SetValue(model, value);
-                }
-                else
-                {
-                    int breakpoint = 2;
+                    if (propertyInfo.CanWrite)
+                    {
+                        propertyInfo.SetValue(model, value);
+                    }
+                    else
+                    {
+                        settings.LogMessage?.Invoke(new Message($"Property {propertyInfo.Name} is not writable", MessageSeverity.Error));
+                    }
                 }
             }
 
             return model;
         }
 
-        public static (PropertyInfo? PropertyInfo, object? Value) TryGetTargetPropertyAndValue(IPropertyValue propertyValue, PropertyInfo[] propertyInfos)
+        /// <summary>
+        /// Fills object with values from property container.
+        /// </summary>
+        /// <typeparam name="TModel">Model type.</typeparam>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="settings">Mapping factory.</param>
+        /// <returns>Result object.</returns>
+        public static TModel FillObject<TModel>(
+            this IPropertyContainer propertyContainer,
+            TModel model,
+            MapToObjectSettings<TModel>? settings = null)
+        {
+            model.AssertArgumentNotNull(nameof(model));
+
+            // Override factory with provided object.
+            MapToObjectSettings<TModel> context = settings ?? new MapToObjectSettings<TModel>();
+            context = context with { Factory = () => model };
+
+            return MapToObject(propertyContainer, context);
+        }
+
+        public static (PropertyInfo? PropertyInfo, object? Value) TryGetTargetPropertyAndValue(
+            IPropertyValue propertyValue,
+            Type modelType,
+            PropertyInfo[]? propertyInfos,
+            IMapToObjectSettings settings)
         {
             object? value = propertyValue.ValueUntyped;
 
+            string targetPropertyName = settings.TargetName?.Invoke(propertyValue.PropertyUntyped) ?? propertyValue.PropertyUntyped.Name;
+
+            propertyInfos ??= modelType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
             // Search by name and type (best choice, no map required)
             PropertyInfo? propertyInfo = propertyInfos.FirstOrDefault(info =>
-                string.Equals(info.Name, propertyValue.PropertyUntyped.Name, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(info.Name, targetPropertyName, StringComparison.OrdinalIgnoreCase) &&
                 propertyValue.PropertyUntyped.Type.IsAssignableTo(info.PropertyType));
 
             if (propertyInfo == null)
             {
                 // Search by name only (other type, need to map)
                 propertyInfo = propertyInfos.FirstOrDefault(info =>
-                    string.Equals(info.Name, propertyValue.PropertyUntyped.Name, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(info.Name, targetPropertyName, StringComparison.OrdinalIgnoreCase));
 
                 if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
                 {
                     if (Enum.TryParse(propertyInfo.PropertyType, value?.ToString(), ignoreCase: true, out object? enumValue))
                     {
                         value = enumValue;
-                        //return;
                     }
                 }
 
@@ -88,7 +116,8 @@ namespace MicroElements.Metadata.Mapping
 
                 if (propertyInfo == null)
                 {
-                    int breakpoint = 1;
+                    settings.LogMessage?.Invoke(new Message("Property {propertyName} was not found in type {modelType}", MessageSeverity.Error)
+                        .WithArgs(targetPropertyName, modelType.FullName));
                 }
             }
 

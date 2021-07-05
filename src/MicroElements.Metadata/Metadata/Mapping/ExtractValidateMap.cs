@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using MicroElements.Functional;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
@@ -105,15 +106,39 @@ namespace MicroElements.Metadata.Mapping
         }
     }
 
+    /// <summary>
+    /// Property extract context.
+    /// </summary>
+    /// <typeparam name="T">Property type.</typeparam>
     public interface IPropertyExtractContext<T>
     {
         /// <summary>
         /// Gets extractor context.
         /// </summary>
-        public IExtractValidateMapContext Context { get; }
+        IExtractValidateMapContext Context { get; }
 
-        (IPropertyValue<T> PropertyValue, ICollection<Message> Messages) GetResult();
+        /// <summary>
+        /// Gets property to extract.
+        /// </summary>
+        IProperty<T> Property { get; }
+
+        /// <summary>
+        /// Gets property validation rules.
+        /// </summary>
+        List<IPropertyValidationRule<T>> ValidationRules { get; }
+
+        /// <summary>
+        /// Gets extract result.
+        /// </summary>
+        /// <returns>Extract and validate result.</returns>
+        ExtractResult<T> GetResult();
     }
+
+    /// <summary>
+    /// Extract and validate result.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public record ExtractResult<T>(IPropertyValue<T> PropertyValue, ICollection<Message> Messages);
 
     /// <summary>
     /// Extract context for single property.
@@ -135,26 +160,6 @@ namespace MicroElements.Metadata.Mapping
         /// Gets validation rules to use before extract.
         /// </summary>
         public List<IPropertyValidationRule<T>> ValidationRules { get; } = new List<IPropertyValidationRule<T>>();
-
-        #region IExtractValidateMapContext
-
-        /// <inheritdoc />
-        public IPropertyContainer PropertyContainer => Context.PropertyContainer;
-
-        /// <inheritdoc />
-        public IReadOnlyCollection<Message> Messages => Context.Messages;
-
-        /// <inheritdoc />
-        public IExtractValidateMapSettings Settings => Context.Settings;
-
-        /// <inheritdoc />
-        public IExtractValidateMapContext AddMessages(IEnumerable<Message> messages)
-        {
-            Context.AddMessages(messages);
-            return Context;
-        }
-
-        #endregion
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyExtractContext{T}"/> class.
@@ -181,60 +186,20 @@ namespace MicroElements.Metadata.Mapping
         }
 
         /// <inheritdoc />
-        public (IPropertyValue<T> PropertyValue, ICollection<Message> Messages) GetResult()
+        public ExtractResult<T> GetResult()
         {
             // Get value.
-            IPropertyValue<T>? propertyValue = GetPropertyValue() ?? new PropertyValue<T>(Property, default, ValueSource.NotDefined);
+            IPropertyValue<T> propertyValue = GetPropertyValue();
 
             // Validate value.
-            Validate(propertyValue, out var messages);
+            this.Validate(propertyValue, out var messages);
 
-            return (propertyValue, messages);
-        }
+            return new ExtractResult<T>(propertyValue, messages);
 
-        /// <summary>
-        /// Final output method.
-        /// Gets property value, validates it and outputs to result variable.
-        /// </summary>
-        /// <param name="value">Output variable.</param>
-        /// <returns>Initial context.</returns>
-        public IExtractValidateMapContext Output(out T value)
-        {
-            // Get value.
-            var (propertyValue, _) = GetResult();
-
-            // Output.
-            value = propertyValue.Value!;
-
-            return Context;
-        }
-
-        public IPropertyValue<T>? GetPropertyValue()
-        {
-            return PropertyContainer.GetPropertyValue(Property);
-        }
-
-        public PropertyExtractContext<T> Validate(IPropertyValue<T>? propertyValue, out Message[] messages)
-        {
-            messages = ValidationRules
-                .SelectMany(rule => rule.Validate(propertyValue, PropertyContainer))
-                .ToArray();
-
-            if (messages.Length > 0)
-                Context.AddMessages(messages);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Adds required check to property validation rules.
-        /// </summary>
-        /// <returns>The same instance.</returns>
-        public PropertyExtractContext<T> Required()
-        {
-            if (!ValidationRules.OfType<IRequiredPropertyValidationRule>().Any())
-                ValidationRules.Add(Property.Required());
-            return this;
+            IPropertyValue<T> GetPropertyValue()
+            {
+                return Context.PropertyContainer.GetPropertyValue(Property) ?? new PropertyValue<T>(Property, default, ValueSource.NotDefined);
+            }
         }
 
         /// <summary>
@@ -271,68 +236,60 @@ namespace MicroElements.Metadata.Mapping
         }
     }
 
-    public class PropertyExtractContext<T1, T2> : IPropertyExtractContext<T2>
+    public class PropertyExtractMapContext<T1, T2> : IPropertyExtractContext<T2>
     {
         /// <inheritdoc />
-        public IExtractValidateMapContext Context => ParentContext.Context;
+        public IExtractValidateMapContext Context => PropertyContext.Context;
 
-        public IPropertyExtractContext<T1> ParentContext { get; }
+        /// <inheritdoc />
+        public IProperty<T2> Property { get; }
 
-        protected Func<IPropertyValue<T1>, T2> Map { get; }
+        public IPropertyExtractContext<T1> PropertyContext { get; }
 
-        public PropertyExtractContext(IPropertyExtractContext<T1> parentContext, Func<IPropertyValue<T1>, T2> map)
-        {
-            ParentContext = parentContext;
-            Map = map;
-        }
+        protected Func<IPropertyValue<T1>, T2> MapFunc { get; }
 
         /// <summary>
-        /// Final output method.
-        /// Gets property value, validates it and outputs to result variable.
+        /// Gets validation rules to use before extract.
         /// </summary>
-        /// <param name="value">Output variable.</param>
-        /// <returns>Initial context.</returns>
-        public IExtractValidateMapContext Output(out T2 value)
+        public List<IPropertyValidationRule<T2>> ValidationRules { get; } = new List<IPropertyValidationRule<T2>>();
+
+        public PropertyExtractMapContext(
+            IPropertyExtractContext<T1> propertyContext,
+            Func<IPropertyValue<T1>, T2> map,
+            IEnumerable<IPropertyValidationRule<T2>>? validationRules = null)
         {
-            // Get parent value.
-            var (propertyValue, messages) = ParentContext.GetResult();
+            PropertyContext = propertyContext;
+            MapFunc = map;
 
-            // Map value (if initial value is valid).
-            if (messages is { Count: 0 } && propertyValue.HasValue())
-            {
-                // Output value.
-                value = Map(propertyValue);
-            }
-            else
-            {
-                value = default;
-            }
-
-            return ParentContext.Context;
+            Property = new Property<T2>(PropertyContext.Property.Name);
+            ValidationRules.AddRange(validationRules.NotNull());
         }
 
         /// <inheritdoc />
-        public (IPropertyValue<T2> PropertyValue, ICollection<Message> Messages) GetResult()
+        public ExtractResult<T2> GetResult()
         {
             // Get parent value.
-            var (propertyValue, messages) = ParentContext.GetResult();
+            var result1 = PropertyContext.GetResult();
 
             // Map value (if initial value is valid).
-            IPropertyValue<T2> pv2;
-            IProperty<T2> property2 = new Property<T2>($"Generated_{Guid.NewGuid()}");
+            IPropertyValue<T2> propertyValue2;
 
-            if (messages is { Count: 0 } && propertyValue.HasValue())
+            if (result1.Messages is { Count: 0 } && result1.PropertyValue.HasValue())
             {
                 // Output value.
-                var value2 = Map(propertyValue);
-                pv2 = new PropertyValue<T2>(property2, value2, ValueSource.Calculated);
+                var value2 = MapFunc(result1.PropertyValue);
+
+                propertyValue2 = new PropertyValue<T2>(Property, value2, ValueSource.Calculated);
+
+                this.Validate(propertyValue2, out var messages2);
+
+                return new ExtractResult<T2>(propertyValue2, messages2);
             }
             else
             {
-                pv2 = new PropertyValue<T2>(property2, default, ValueSource.NotDefined);
+                propertyValue2 = new PropertyValue<T2>(Property, default, ValueSource.NotDefined);
+                return new ExtractResult<T2>(propertyValue2, result1.Messages);
             }
-
-            return (pv2, messages);
         }
     }
 
@@ -350,7 +307,134 @@ namespace MicroElements.Metadata.Mapping
             return new PropertyExtractContext<T>(extractValidateMapContext, property);
         }
 
-        public static PropertyExtractContext<T, T?> Optional<T>(this PropertyExtractContext<T> context)
+        public static IPropertyExtractContext<T> Validate<T>(this IPropertyExtractContext<T> propertyContext, IPropertyValue<T>? propertyValue, out Message[] messages)
+        {
+            messages = propertyContext.ValidationRules
+                .SelectMany(rule => rule.Validate(propertyValue, propertyContext.Context.PropertyContainer))
+                .ToArray();
+
+            if (messages.Length > 0)
+                propertyContext.Context.AddMessages(messages);
+
+            return propertyContext;
+        }
+
+        public static IExtractValidateMapContext AddMessage(this IExtractValidateMapContext extractValidateMapContext, string message)
+        {
+            return extractValidateMapContext.AddMessages(new[] {new Message(message, severity: MessageSeverity.Error)});
+        }
+
+        /// <summary>
+        /// Adds required check to property validation rules.
+        /// </summary>
+        /// <returns>The same instance.</returns>
+        public static IPropertyExtractContext<T> Required<T>(this IPropertyExtractContext<T> propertyContext)
+        {
+            if (!propertyContext.ValidationRules.OfType<IRequiredPropertyValidationRule>().Any())
+                propertyContext.ValidationRules.Add(propertyContext.Property.Required());
+            return propertyContext;
+        }
+
+        /// <summary>
+        /// Clears validation rules for property.
+        /// </summary>
+        /// <returns>The same instance.</returns>
+        public static IPropertyExtractContext<T> NoValidation<T>(this IPropertyExtractContext<T> propertyContext)
+        {
+            propertyContext.ValidationRules.Clear();
+            return propertyContext;
+        }
+
+        /// <summary>
+        /// Adds validation rule.
+        /// </summary>
+        /// <param name="createValidationRule">Rule factory.</param>
+        /// <returns>The same instance.</returns>
+        public static IPropertyExtractContext<T> WithValidation<T>(this IPropertyExtractContext<T> propertyContext, Func<IProperty<T>, IPropertyValidationRule<T>> createValidationRule)
+        {
+            IPropertyValidationRule<T> propertyValidationRule = createValidationRule(propertyContext.Property);
+            propertyContext.ValidationRules.Add(propertyValidationRule);
+            return propertyContext;
+        }
+
+        /// <summary>
+        /// Adds validation rules.
+        /// </summary>
+        /// <param name="validationRules">Validation rules.</param>
+        /// <returns>The same instance.</returns>
+        public static IPropertyExtractContext<T> WithValidationRules<T>(this IPropertyExtractContext<T> propertyContext, IEnumerable<IPropertyValidationRule<T>> validationRules)
+        {
+            propertyContext.ValidationRules.AddRange(validationRules);
+            return propertyContext;
+        }
+
+        /// <summary>
+        /// Final output method.
+        /// Gets property value, validates it and outputs to result variable.
+        /// </summary>
+        /// <param name="value">Output variable.</param>
+        /// <returns>Initial context.</returns>
+        public static IExtractValidateMapContext Output<T>(this IPropertyExtractContext<T> propertyContext, out T value)
+        {
+            // Get value.
+            var (propertyValue, _) = propertyContext.GetResult();
+
+            // Output.
+            value = propertyValue.Value!;
+
+            return propertyContext.Context;
+        }
+
+        /// <summary>
+        /// Final output method.
+        /// Gets property value, validates it and outputs to result variable.
+        /// </summary>
+        /// <param name="propertyContext">Property context.</param>
+        /// <param name="resultAction">Action with output result.</param>
+        /// <returns>Initial context.</returns>
+        public static IExtractValidateMapContext Output<T>(this IPropertyExtractContext<T> propertyContext, Action<ExtractResult<T>> resultAction)
+        {
+            // Get value.
+            var result = propertyContext.GetResult();
+
+            // Output.
+            resultAction(result);
+
+            return propertyContext.Context;
+        }
+
+        public static IExtractValidateMapContext Output<T, TModel>(this IPropertyExtractContext<T> propertyContext, TModel target)
+        {
+            // Get value.
+            var result = propertyContext.GetResult();
+
+            // Output.
+            (PropertyInfo? propertyInfo, object? value) = PropertyContainerMapper.TryGetTargetPropertyAndValue(
+                result.PropertyValue,
+                target.GetType(),
+                null,
+                new MapToObjectSettings<TModel>()
+                {
+                    SourceFilter = property => property == result.PropertyValue.PropertyUntyped,
+                    //TargetName = property => propertyContext.Property.Name,
+                });
+
+            if (propertyInfo != null)
+            {
+                if (propertyInfo.CanWrite)
+                {
+                    propertyInfo.SetValue(target, value);
+                }
+                else
+                {
+                    propertyContext.Context.AddMessage($"Property {propertyInfo.Name} is not writable");
+                }
+            }
+
+            return propertyContext.Context;
+        }
+
+        public static PropertyExtractMapContext<T, T?> Optional<T>(this PropertyExtractContext<T> context)
             where T : struct
         {
             static T? Nullify(IPropertyValue<T> propertyValue)
@@ -367,27 +451,27 @@ namespace MicroElements.Metadata.Mapping
             return context.WithValidationRules(withoutExcluded);
         }
 
-        public static PropertyExtractContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<T1, T2> map)
+        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<T1, T2> map)
         {
-            return new PropertyExtractContext<T1, T2>(context, pv => map(pv.Value));
+            return new PropertyExtractMapContext<T1, T2>(context, pv => map(pv.Value));
         }
 
-        public static PropertyExtractContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<IPropertyValue<T1>, T2> map)
+        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<IPropertyValue<T1>, T2> map)
         {
-            return new PropertyExtractContext<T1, T2>(context, map);
+            return new PropertyExtractMapContext<T1, T2>(context, map);
         }
 
-        public static PropertyExtractContext<T2, T3> Map<T1, T2, T3>(this PropertyExtractContext<T1, T2> context, Func<IPropertyValue<T2>, T3> map)
+        public static PropertyExtractMapContext<T2, T3> Map<T1, T2, T3>(this PropertyExtractMapContext<T1, T2> context, Func<IPropertyValue<T2>, T3> map)
         {
-            return new PropertyExtractContext<T2, T3>(context, map);
+            return new PropertyExtractMapContext<T2, T3>(context, map);
         }
 
-        public static PropertyExtractContext<T2, T3> Map<T1, T2, T3>(this PropertyExtractContext<T1, T2> context, Func<T2, T3> map)
+        public static PropertyExtractMapContext<T2, T3> Map<T1, T2, T3>(this PropertyExtractMapContext<T1, T2> context, Func<T2, T3> map)
         {
-            return new PropertyExtractContext<T2, T3>(context, pv => map(pv.Value));
+            return new PropertyExtractMapContext<T2, T3>(context, pv => map(pv.Value));
         }
 
-        public static PropertyExtractContext<string, TEnum> MapToEnum<TEnum>(this PropertyExtractContext<string> context)
+        public static PropertyExtractMapContext<string, TEnum> MapToEnum<TEnum>(this PropertyExtractContext<string> context)
             where TEnum : struct
         {
             static TEnum Parse(string text, IExtractValidateMapContext extractValidateMapContext)

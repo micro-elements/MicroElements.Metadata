@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.Functional;
+using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Mapping
 {
@@ -97,20 +98,32 @@ namespace MicroElements.Metadata.Mapping
                 propertyInfo = propertyInfos.FirstOrDefault(info =>
                     string.Equals(info.Name, targetPropertyName, StringComparison.OrdinalIgnoreCase));
 
+                string? textValue = value?.ToString();
                 if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
                 {
-                    if (Enum.TryParse(propertyInfo.PropertyType, value?.ToString(), ignoreCase: true, out object? enumValue))
+                    if (Enum.TryParse(propertyInfo.PropertyType, textValue, ignoreCase: true, out object? enumValue))
                     {
                         value = enumValue;
+                    }
+                    else
+                    {
+                        settings.LogMessage?.Invoke(MappingError.NotEnumValue(propertyInfo.PropertyType, textValue));
                     }
                 }
 
                 if (propertyInfo != null && propertyInfo.PropertyType.IsNullableStruct())
                 {
                     Type underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType)!;
-                    if (underlyingType.IsEnum && Enum.TryParse(underlyingType, value?.ToString(), ignoreCase: true, out object? enumValue))
+                    if (underlyingType.IsEnum)
                     {
-                        value = enumValue;
+                        if (Enum.TryParse(underlyingType, textValue, ignoreCase: true, out object? enumValue))
+                        {
+                            value = enumValue;
+                        }
+                        else
+                        {
+                            settings.LogMessage?.Invoke(MappingError.NotEnumValue(propertyInfo.PropertyType, textValue));
+                        }
                     }
                 }
 
@@ -139,6 +152,16 @@ namespace MicroElements.Metadata.Mapping
             {
                 yield return propertyContainer.MapToObject(settings);
             }
+        }
+    }
+
+    public static class MappingError
+    {
+        public static Message NotEnumValue(Type enumType, string? text)
+        {
+            return new Message(
+                $"Can not convert value {text} to enum {enumType.GetFriendlyName()}",
+                MessageSeverity.Error);
         }
     }
 }

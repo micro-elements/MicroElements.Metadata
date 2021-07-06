@@ -291,6 +291,11 @@ namespace MicroElements.Metadata.Mapping
             return extractValidateMapContext.AddMessages(new[] {new Message(message, severity: MessageSeverity.Error)});
         }
 
+        public static IExtractValidateMapContext AddMessage(this IExtractValidateMapContext extractValidateMapContext, Message message)
+        {
+            return extractValidateMapContext.AddMessages(new[] { message });
+        }
+
         /// <summary>
         /// Adds required check to property validation rules.
         /// </summary>
@@ -372,29 +377,35 @@ namespace MicroElements.Metadata.Mapping
 
         public static IExtractValidateMapContext Output<T, TModel>(this IPropertyExtractContext<T> propertyContext, TModel target)
         {
+            if (target is null)
+                return propertyContext.Context;
+
             // Get value.
             var result = propertyContext.GetResult();
 
             // Output.
-            (PropertyInfo? propertyInfo, object? value) = PropertyContainerMapper.TryGetTargetPropertyAndValue(
-                result.PropertyValue,
-                target.GetType(),
-                null,
-                new MapToObjectSettings<TModel>()
-                {
-                    SourceFilter = property => property == result.PropertyValue.PropertyUntyped,
-                    //TargetName = property => propertyContext.Property.Name,
-                });
-
-            if (propertyInfo != null)
+            if (result.PropertyValue.HasValue())
             {
-                if (propertyInfo.CanWrite)
+                (PropertyInfo? propertyInfo, object? value) = PropertyContainerMapper.TryGetTargetPropertyAndValue(
+                    result.PropertyValue,
+                    target.GetType(),
+                    null,
+                    new MapToObjectSettings<TModel>()
+                    {
+                        SourceFilter = property => property == result.PropertyValue.PropertyUntyped,
+                        //TargetName = property => propertyContext.Property.Name,
+                    });
+
+                if (propertyInfo != null)
                 {
-                    propertyInfo.SetValue(target, value);
-                }
-                else
-                {
-                    propertyContext.Context.AddMessage($"Property {propertyInfo.Name} is not writable");
+                    if (propertyInfo.CanWrite)
+                    {
+                        propertyInfo.SetValue(target, value);
+                    }
+                    else
+                    {
+                        propertyContext.Context.AddMessage($"Property {propertyInfo.Name} is not writable");
+                    }
                 }
             }
 
@@ -448,7 +459,7 @@ namespace MicroElements.Metadata.Mapping
                     return (TEnum)result;
                 }
 
-                extractValidateMapContext.AddMessages(new[] { new Message($"Can not convert value {text} to enum {typeof(TEnum).Name}", MessageSeverity.Error) });
+                extractValidateMapContext.AddMessage(MappingError.NotEnumValue(typeof(TEnum), text));
                 return default;
             }
 

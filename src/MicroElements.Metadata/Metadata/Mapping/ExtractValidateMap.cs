@@ -201,39 +201,6 @@ namespace MicroElements.Metadata.Mapping
                 return Context.PropertyContainer.GetPropertyValue(Property) ?? new PropertyValue<T>(Property, default, ValueSource.NotDefined);
             }
         }
-
-        /// <summary>
-        /// Clears validation rules for property.
-        /// </summary>
-        /// <returns>The same instance.</returns>
-        public PropertyExtractContext<T> NoValidation()
-        {
-            ValidationRules.Clear();
-            return this;
-        }
-
-        /// <summary>
-        /// Adds validation rule.
-        /// </summary>
-        /// <param name="createValidationRule">Rule factory.</param>
-        /// <returns>The same instance.</returns>
-        public PropertyExtractContext<T> WithValidation(Func<IProperty<T>, IPropertyValidationRule<T>> createValidationRule)
-        {
-            IPropertyValidationRule<T> propertyValidationRule = createValidationRule(Property);
-            ValidationRules.Add(propertyValidationRule);
-            return this;
-        }
-
-        /// <summary>
-        /// Adds validation rules.
-        /// </summary>
-        /// <param name="validationRules">Validation rules.</param>
-        /// <returns>The same instance.</returns>
-        public PropertyExtractContext<T> WithValidationRules(IEnumerable<IPropertyValidationRule<T>> validationRules)
-        {
-            ValidationRules.AddRange(validationRules);
-            return this;
-        }
     }
 
     public class PropertyExtractMapContext<T1, T2> : IPropertyExtractContext<T2>
@@ -302,7 +269,7 @@ namespace MicroElements.Metadata.Mapping
             return new ExtractValidateMapContext(propertyContainer, settings);
         }
 
-        public static PropertyExtractContext<T> Extract<T>(this IExtractValidateMapContext extractValidateMapContext, IProperty<T> property)
+        public static IPropertyExtractContext<T> Extract<T>(this IExtractValidateMapContext extractValidateMapContext, IProperty<T> property)
         {
             return new PropertyExtractContext<T>(extractValidateMapContext, property);
         }
@@ -434,7 +401,7 @@ namespace MicroElements.Metadata.Mapping
             return propertyContext.Context;
         }
 
-        public static PropertyExtractMapContext<T, T?> Optional<T>(this PropertyExtractContext<T> context)
+        public static PropertyExtractMapContext<T, T?> Optional<T>(this IPropertyExtractContext<T> context)
             where T : struct
         {
             static T? Nullify(IPropertyValue<T> propertyValue)
@@ -445,18 +412,18 @@ namespace MicroElements.Metadata.Mapping
             return Map<T, T?>(context, arg => Nullify(arg));
         }
 
-        public static PropertyExtractContext<T> ExcludeValidationRule<T>(this PropertyExtractContext<T> context, Func<IPropertyValidationRule<T>, bool> excludePredicate)
+        public static IPropertyExtractContext<T> ExcludeValidationRule<T>(this IPropertyExtractContext<T> context, Func<IPropertyValidationRule<T>, bool> excludePredicate)
         {
             var withoutExcluded = context.ValidationRules.Where(rule => !excludePredicate(rule));
             return context.WithValidationRules(withoutExcluded);
         }
 
-        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<T1, T2> map)
+        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this IPropertyExtractContext<T1> context, Func<T1, T2> map)
         {
             return new PropertyExtractMapContext<T1, T2>(context, pv => map(pv.Value));
         }
 
-        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this PropertyExtractContext<T1> context, Func<IPropertyValue<T1>, T2> map)
+        public static PropertyExtractMapContext<T1, T2> Map<T1, T2>(this IPropertyExtractContext<T1> context, Func<IPropertyValue<T1>, T2> map)
         {
             return new PropertyExtractMapContext<T1, T2>(context, map);
         }
@@ -471,7 +438,7 @@ namespace MicroElements.Metadata.Mapping
             return new PropertyExtractMapContext<T2, T3>(context, pv => map(pv.Value));
         }
 
-        public static PropertyExtractMapContext<string, TEnum> MapToEnum<TEnum>(this PropertyExtractContext<string> context)
+        public static PropertyExtractMapContext<string, TEnum> MapToEnum<TEnum>(this IPropertyExtractContext<string> context)
             where TEnum : struct
         {
             static TEnum Parse(string text, IExtractValidateMapContext extractValidateMapContext)

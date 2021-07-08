@@ -4,6 +4,8 @@
 - Required validation rule extended with SearchOptions and assertValueIsNull argument, added IRequiredPropertyValidationRule marker interface
 - ExtractValidateMap initial functionality
 - MapToTuple extensions methods
+- 7.6.4: SetAllowedValuesFromEnum for string schemas ignores case by default
+- 7.6.4: JsonSchemaGenerator initial, added option: MetadataJsonSerializationOptions.UseJsonSchema
 
 # 7.5.0
 - Added Property<T> Clone method

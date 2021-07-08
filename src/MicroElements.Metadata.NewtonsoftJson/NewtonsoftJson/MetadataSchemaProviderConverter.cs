@@ -77,8 +77,8 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                     if (Options.UseJsonSchema)
                     {
-                        JObject schemaObject2 = (JObject)new JsonSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
-                        schemaObject.Add(schemaObject2.Properties());
+                        JObject jsonSchemaObject = (JObject)new JsonSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
+                        schemaObject.Add(jsonSchemaObject.Properties());
                     }
                 }
 

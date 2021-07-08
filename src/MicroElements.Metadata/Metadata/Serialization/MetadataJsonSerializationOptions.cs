@@ -23,6 +23,11 @@ namespace MicroElements.Metadata.Serialization
         public bool WriteArraysInOneRow { get; set; } = true;
 
         /// <summary>
+        /// Writes Json Schema (experimental).
+        /// </summary>
+        public bool UseJsonSchema { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets a value indicating whether the serializer will write compact schema definition in the start of the serialized metadata properties.
         /// TagName: "$metadata.schema.compact".
         /// </summary>
@@ -115,6 +120,7 @@ namespace MicroElements.Metadata.Serialization
                 SchemasRootName = source.SchemasRootName,
                 UseSchemasRoot = source.UseSchemasRoot,
                 WriteSchemaOnceForKnownTypes = source.WriteSchemaOnceForKnownTypes,
+                UseJsonSchema = source.UseJsonSchema,
             };
         }
     }

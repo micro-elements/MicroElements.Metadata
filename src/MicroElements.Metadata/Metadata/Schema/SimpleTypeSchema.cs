@@ -76,4 +76,16 @@ namespace MicroElements.Metadata.Schema
             Description = description;
         }
     }
+
+    public class NullTypeSchema : ISchema
+    {
+        /// <inheritdoc />
+        public string Name => "null";
+
+        /// <inheritdoc />
+        public Type Type => typeof(object);
+
+        /// <inheritdoc />
+        public string? Description => "Null type.";
+    }
 }

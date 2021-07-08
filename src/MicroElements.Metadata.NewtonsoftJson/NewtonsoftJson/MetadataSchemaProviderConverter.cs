@@ -63,9 +63,23 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                 foreach (KeyValuePair<string, ISchema> valuePair in schemaRepository.GetSchemas())
                 {
-                    object schema = new CompactSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
-                    JProperty schemaProperty = new JProperty(valuePair.Key, new JObject(new JProperty("$metadata.schema.compact", JArray.FromObject(schema))));
+                    string schemaId = valuePair.Key;
+
+                    JObject schemaObject = new JObject();
+                    JProperty schemaProperty = new JProperty(schemaId, schemaObject);
                     defsContent.Add(schemaProperty);
+
+                    if (Options.WriteSchemaCompact)
+                    {
+                        object schema = new CompactSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
+                        schemaObject.Add(new JProperty("$metadata.schema.compact", JArray.FromObject(schema)));
+                    }
+
+                    if (Options.UseJsonSchema)
+                    {
+                        JObject schemaObject2 = (JObject)new JsonSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
+                        schemaObject.Add(schemaObject2.Properties());
+                    }
                 }
 
                 // Stage2: Add "$defs" section to json.

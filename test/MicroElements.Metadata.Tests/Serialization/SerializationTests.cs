@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,7 @@ using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.NewtonsoftJson;
 using MicroElements.Metadata.Schema;
@@ -202,8 +204,20 @@ namespace MicroElements.Metadata.Tests.Serialization
                 Data2 = CreateTestContainer()
             };
 
-            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = false);
-            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = true);
+            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = false;
+            });
+            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = true;
+                options.UseJsonSchema = false;
+            });
+            string jsonWithNewtonsoftJson3 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = true;
+                options.UseJsonSchema = true;
+            });
         }
 
         class TestPerson
@@ -422,4 +436,14 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
         public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");
     }
+
+    public class aaaaa
+    {
+        public static ITypeMapper Create()
+        {
+            return new JsonTypeMapper();
+        }
+    }
+
+
 }

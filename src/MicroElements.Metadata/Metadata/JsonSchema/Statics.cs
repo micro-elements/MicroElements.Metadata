@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using MicroElements.Functional;
-using MicroElements.Metadata.Schema;
-using MicroElements.Metadata.Serialization;
 
 namespace MicroElements.Metadata.JsonSchema
 {
@@ -21,115 +16,22 @@ namespace MicroElements.Metadata.JsonSchema
         public static string String = "string";
     }
 
-    public class JsonTypeMapper : ITypeMapper
+    public class JsonSimpleType
     {
-        public static JsonTypeMapper Instance { get; } = new JsonTypeMapper();
+        public string Name { get; }
 
-        /// <inheritdoc />
-        public string GetTypeName(Type type)
+        public JsonSimpleType(string name)
         {
-            if (type == null)
-                return SimpleType.Null;
-
-            if (type == typeof(string))
-                return SimpleType.String;
-
-            if (type == typeof(int))
-                return SimpleType.Integer;
-
-            if (type == typeof(double) || type == typeof(decimal))
-                return SimpleType.Number;
-
-            if (type == typeof(bool))
-                return SimpleType.Boolean;
-
-            if (type.IsArray || IsSupportedCollection(type, out var itemType))
-                return SimpleType.Array;
-
-            if (type == typeof(DateTime))
-                return SimpleType.String;//format=date-time
-
-            if (type.IsNullableStruct())
-            {
-                type = Nullable.GetUnderlyingType(type);
-                return GetTypeName(type);
-            }
-
-            return SimpleType.Object;
+            Name = name;
         }
 
-        public ISchema GetTypeNameExt(Type? type)
-        {
-            if (type == null)
-                return new NullTypeSchema();
-
-            if (type == typeof(string))
-                return new SimpleTypeSchema(SimpleType.String, type);
-
-            if (type == typeof(int))
-                return new SimpleTypeSchema(SimpleType.Integer, type);
-
-            if (type == typeof(double) || type == typeof(decimal))
-                return new SimpleTypeSchema(SimpleType.Number, type);
-
-            if (type == typeof(bool))
-                return new SimpleTypeSchema(SimpleType.Boolean, type);
-
-            if (IsSupportedCollection(type, out Type itemType))
-            {
-                return new ArraySchema()
-                {
-                    Items = GetTypeNameExt(type: itemType)
-                };
-            }
-
-            if (type == typeof(DateTime))
-                return new SimpleTypeSchema(SimpleType.String, type)
-                    .SetStringFormat("date-time");
-
-            if (type.IsNullableStruct())
-            {
-                type = Nullable.GetUnderlyingType(type);
-                return GetTypeNameExt(type);
-            }
-
-            return new MutableObjectSchema();
-        }
-
-        /// <inheritdoc />
-        public Type? GetTypeByName(string typeName)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// See JsonSerializerDataContractResolver from Swagger
-        /// </summary>
-        public bool IsSupportedCollection(Type type, out Type itemType)
-        {
-            if (type.IsConstructedFrom(typeof(IEnumerable<>), out Type constructedType))
-            {
-                itemType = constructedType.GenericTypeArguments[0];
-                return true;
-            }
-
-            //#if (!NETSTANDARD2_0)
-            //            if (type.IsConstructedFrom(typeof(IAsyncEnumerable<>), out constructedType))
-            //            {
-            //                itemType = constructedType.GenericTypeArguments[0];
-            //                return true;
-            //            }
-            //#endif
-
-            if (typeof(IEnumerable).IsAssignableFrom(type))
-            {
-                itemType = typeof(object);
-                return true;
-            }
-
-            itemType = null;
-            return false;
-        }
+        public static JsonSimpleType Array = new JsonSimpleType("array");
+        public static JsonSimpleType Boolean = new JsonSimpleType("boolean");
+        public static JsonSimpleType Integer = new JsonSimpleType("integer");
+        public static JsonSimpleType Null = new JsonSimpleType("null");
+        public static JsonSimpleType Number = new JsonSimpleType("number");
+        public static JsonSimpleType Object = new JsonSimpleType("object");
+        public static JsonSimpleType String = new JsonSimpleType("string");
     }
 
     [Obsolete("move to ME.Reflection")]

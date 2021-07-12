@@ -66,14 +66,15 @@ namespace MicroElements.Metadata.NewtonsoftJson
                 JObject propsObject = new JObject();
                 foreach (IProperty property in properties)
                 {
-                    string propertyName = GetJsonPropertyName(property.Name);
-                    Type propertyType = property.Type;
+                    JObject propertyObject = new JObject();
 
-                    // "simpleTypes": {"enum": [ "array", "boolean", "integer", "null", "number", "object", "string" ] }
-                    // TODO: evaluate json type
-                    string jsonTypeName = JsonTypeMapper.Instance.GetTypeName(propertyType);
+                    ISchema jsonType = JsonTypeMapper.Instance.GetTypeNameExt(property.Type);
+                    propertyObject.Add(new JProperty("type", jsonType.Name));
 
-                    JObject propertyObject = new JObject(new JProperty("type", jsonTypeName));
+                    if (jsonType.GetStringFormat() is { } stringFormat)
+                    {
+                        propertyObject.Add(new JProperty("format", stringFormat.Format));
+                    }
 
                     // TODO: $ref на другие типы
                     if (property.Description != null)
@@ -85,6 +86,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     bool isNullAllowed = property.GetOrEvaluateNullability().IsNullAllowed;
                     propertyObject.Add("nullable", isNullAllowed);
 
+                    string propertyName = GetJsonPropertyName(property.Name);
                     propsObject.Add(propertyName, propertyObject);
                 }
 

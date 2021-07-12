@@ -13,7 +13,7 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <para>https://json-schema.org/understanding-json-schema/reference/string.html#format</para>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IStringFormat : IMetadata
+    public interface IStringFormat : ISchemaComponent
     {
         /// <summary>
         /// Gets one of built-in or custom formats.

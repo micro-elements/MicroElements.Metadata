@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MicroElements.Metadata.Schema;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,6 +45,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         public string? Name { get; set; }
         public string? Sex { get; set; }
         public int Age { get; set; }
+        public DateTime BirthDate { get; set; }
     }
 
     public class PersonView
@@ -98,6 +100,9 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         public static IProperty<int> Age = new Property<int>("Age")
             .WithDescription("Person age in years.");
 
+        public static IProperty<DateTime> BirthDate = new Property<DateTime>("BirthDate")
+            .WithDescription("BirthDate.");
+
         /// <inheritdoc />
         public IEnumerable<IProperty> GetProperties()
         {
@@ -106,6 +111,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
             yield return Sex2;
             yield return Sex3;
             yield return Age;
+            yield return BirthDate;
         }
 
         /// <inheritdoc />

@@ -12,7 +12,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema pattern.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IStringPattern : IMetadata
+    public interface IStringPattern : ISchemaComponent
     {
         /// <summary>
         /// Gets regex pattern for string values.

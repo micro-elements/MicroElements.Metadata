@@ -19,7 +19,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema enum.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property | MetadataTargets.SimpleSchema)]
-    public interface IAllowedValues : IMetadata
+    public interface IAllowedValues : ISchemaComponent
     {
         /// <summary>
         /// Gets all possible values that can be accepted by property.

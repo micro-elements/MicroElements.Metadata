@@ -5,6 +5,9 @@
 - Added ISchemaBuilder to allow create copies of schema components;
 - Added ISchemaBuilder extension WithDescription that creates schema component copy with desired description
 - Added ISchemaComponent to allow more precise control on schema building
+- 7.7.1: IAllowedValues, INumericInterval, IProperties, IStringFormat, IStringMaxLength, IStringMinLength, IStringPattern, INullability become ISchemaComponent
+- 7.7.1: PropertyContainerSchemaFilter all ISchemaComponent support
+- 7.7.1: JsonTypeMapper returns types with format
 
 # 7.6.0
 - IAllowedValues: added IEqualityComparer

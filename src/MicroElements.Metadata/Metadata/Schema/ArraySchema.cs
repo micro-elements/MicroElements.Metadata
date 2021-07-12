@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.JsonSchema;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -13,7 +14,7 @@ namespace MicroElements.Metadata.Schema
         public ISchema Items { get; set; }
 
         /// <inheritdoc />
-        public string Name { get; set; }
+        public string Name => JsonSimpleType.Array.Name;
 
         /// <inheritdoc />
         public Type Type { get; set; }

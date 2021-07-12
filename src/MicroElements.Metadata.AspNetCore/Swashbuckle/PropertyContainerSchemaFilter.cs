@@ -79,7 +79,7 @@ namespace MicroElements.Metadata.Swashbuckle
                     {
                         // Generate and fill knownSchema once for type.
                         knownSchema = context.SchemaGenerator.GenerateSchema(knownSchemaType, context.SchemaRepository);
-                        FillSchema(knownSchema, context, propertySet);
+                        FillObjectSchema(knownSchema, context, propertySet);
                         context.SchemaRepository.Schemas[knownSchemaId] = knownSchema;
                     }
 
@@ -97,7 +97,7 @@ namespace MicroElements.Metadata.Swashbuckle
                 else if (propertySet != null)
                 {
                     // Generate inlined schema
-                    FillSchema(schema, context, propertySet);
+                    FillObjectSchema(schema, context, propertySet);
                 }
                 else
                 {
@@ -110,49 +110,7 @@ namespace MicroElements.Metadata.Swashbuckle
             }
         }
 
-        private string JsonConverterFunc(object value)
-        {
-            return JsonSerializer.Serialize(value, _serializerOptions);
-        }
-
-        public string GetJsonSchemaType(ISchema schema)
-        {
-            return JsonTypeMapper.Instance.GetTypeName(schema.Type);
-        }
-
-        public OpenApiSchema GenerateSchema(SchemaFilterContext context, ISchema schema)
-        {
-            OpenApiSchema openApiSchema = new OpenApiSchema();
-            openApiSchema.Type = GetJsonSchemaType(schema);
-            openApiSchema.Items = null;
-            openApiSchema.Properties = new Dictionary<string, OpenApiSchema>();
-
-            //openApiSchema.Title = schema.Type.FullName;
-            openApiSchema.Description = schema.Description;
-
-            if (schema.GetNullability() is { } allowNull)
-                openApiSchema.Nullable = allowNull.IsNullAllowed;
-
-            if (schema.GetAllowedValuesUntyped() is { } allowedValues)
-            {
-                if (schema.Type.IsEnum)
-                {
-                    openApiSchema.Type = "string";
-                }
-
-                openApiSchema.Enum = new List<IOpenApiAny>();
-                foreach (object allowedValue in allowedValues.ValuesUntyped)
-                {
-                    string jsonValue = JsonConverterFunc(allowedValue);
-                    IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
-                    openApiSchema.Enum.Add(openApiAny);
-                }
-            }
-
-            return openApiSchema;
-        }
-
-        private void FillSchema(OpenApiSchema schema, SchemaFilterContext context, IPropertySet propertySet)
+        private void FillObjectSchema(OpenApiSchema schema, SchemaFilterContext context, IPropertySet propertySet)
         {
             schema.Type = "object";
             schema.Items = null;
@@ -173,7 +131,7 @@ namespace MicroElements.Metadata.Swashbuckle
                     if (!context.SchemaRepository.Schemas.TryGetValue(knownSchemaId, out OpenApiSchema knownSchema))
                     {
                         // Generate and fill knownSchema once for type.
-                        knownSchema = GenerateSchema(context, separateSchema);
+                        knownSchema = GenerateSchema(separateSchema);
                         context.SchemaRepository.Schemas[knownSchemaId] = knownSchema;
                     }
 
@@ -200,26 +158,93 @@ namespace MicroElements.Metadata.Swashbuckle
                 }
                 else
                 {
-                    if (property.GetAllowedValuesUntyped() is { } allowedValues)
-                    {
-                        if (property.Type.IsEnum)
-                        {
-                            propertySchema.Type = "string";
-                        }
-
-                        propertySchema.Enum = new List<IOpenApiAny>();
-                        foreach (object allowedValue in allowedValues.ValuesUntyped)
-                        {
-                            string jsonValue = JsonConverterFunc(allowedValue);
-                            IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
-                            propertySchema.Enum.Add(openApiAny);
-                        }
-                    }
+                    propertySchema = FillDataSchema(propertySchema, property);
                 }
 
                 string? propertyName = _options.ResolvePropertyName!(property.Name);
                 schema.Properties.Add(propertyName, propertySchema);
             }
+        }
+
+        private OpenApiSchema GenerateSchema(ISchema schema)
+        {
+            OpenApiSchema openApiSchema = new OpenApiSchema();
+            openApiSchema = FillDataSchema(openApiSchema, schema);
+            return openApiSchema;
+        }
+
+        private OpenApiSchema FillDataSchema(OpenApiSchema openApiSchema, ISchema schema)
+        {
+            if (openApiSchema.Type == null)
+            {
+                ISchema schemaForType = JsonTypeMapper.Instance.GetTypeNameExt(schema.Type);
+                openApiSchema.Type = schemaForType.Name;
+
+                if (schemaForType.GetStringFormat() is { } defaultStringFormat)
+                {
+                    openApiSchema.Format = defaultStringFormat.Format;
+                }
+            }
+
+            openApiSchema.Properties ??= new Dictionary<string, OpenApiSchema>();
+
+            openApiSchema.Description ??= schema.Description;
+
+            if (schema.GetNullability() is { } allowNull)
+            {
+                openApiSchema.Nullable = allowNull.IsNullAllowed;
+            }
+
+            if (schema.GetAllowedValuesUntyped() is { } allowedValues)
+            {
+                if (schema.Type.IsEnum)
+                {
+                    openApiSchema.Type = "string";
+                }
+
+                openApiSchema.Enum = new List<IOpenApiAny>();
+                foreach (object allowedValue in allowedValues.ValuesUntyped)
+                {
+                    string jsonValue = JsonConverterFunc(allowedValue);
+                    IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
+                    openApiSchema.Enum.Add(openApiAny);
+                }
+            }
+
+            if (schema.GetNumericInterval() is { } numericInterval)
+            {
+                openApiSchema.Minimum = numericInterval.Minimum;
+                openApiSchema.ExclusiveMinimum = numericInterval.ExclusiveMinimum;
+                openApiSchema.Maximum = numericInterval.Maximum;
+                openApiSchema.ExclusiveMaximum = numericInterval.ExclusiveMaximum;
+            }
+
+            if (schema.GetStringMinLength() is { } stringMinLength)
+            {
+                openApiSchema.MinLength = stringMinLength.MinLength;
+            }
+
+            if (schema.GetStringMaxLength() is { } stringMaxLength)
+            {
+                openApiSchema.MaxLength = stringMaxLength.MaxLength;
+            }
+
+            if (schema.GetStringFormat() is { } stringFormat)
+            {
+                openApiSchema.Format = stringFormat.Format;
+            }
+
+            if (schema.GetStringPattern() is { } stringPattern)
+            {
+                openApiSchema.Pattern = stringPattern.Expression;
+            }
+
+            return openApiSchema;
+        }
+
+        private string JsonConverterFunc(object value)
+        {
+            return JsonSerializer.Serialize(value, _serializerOptions);
         }
     }
 }

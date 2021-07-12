@@ -15,7 +15,7 @@ namespace MicroElements.Metadata.Schema
     /// Aligned with JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface INumericInterval : IMetadata
+    public interface INumericInterval : ISchemaComponent
     {
         /// <summary>
         /// Minimum value allowed for the property value.

@@ -13,7 +13,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema maxLength.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IStringMaxLength : IMetadata
+    public interface IStringMaxLength : ISchemaComponent
     {
         /// <summary>
         /// Gets maximum allowed length for string values.

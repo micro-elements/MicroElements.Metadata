@@ -46,8 +46,10 @@ namespace MicroElements.Metadata.NewtonsoftJson
             // than in JSON Schema, and additional keywords are introduced.
             // https://swagger.io/docs/specification/data-models/keywords/
 
+            string jsonMetaSchemaUri = "http://json-schema.org/draft-04/schema";
+
             JObject schemaObject = new JObject();
-            JToken schemaProperty = new JProperty("$schema", "http://json-schema.org/draft-04/schema");
+            JToken schemaProperty = new JProperty("$schema", jsonMetaSchemaUri);
             JToken typeProperty = new JProperty("type", "object");
             JToken propertiesObject = new JProperty("properties", PropertiesObject());
 

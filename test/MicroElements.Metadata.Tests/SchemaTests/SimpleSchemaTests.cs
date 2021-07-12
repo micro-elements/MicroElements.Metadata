@@ -11,9 +11,11 @@ namespace MicroElements.Metadata.Tests.SchemaTests
         public void SimpleSchema()
         {
             var schema = new SimpleTypeSchema("Currency", typeof(string))
+                .WithDescription("ISO 4217 3-Letter Currency Code")
                 .SetStringMinLength(3);
 
             schema.Name.Should().Be("Currency");
+            schema.Description.Should().Be("ISO 4217 3-Letter Currency Code");
             schema.Type.Should().Be(typeof(string));
 
             schema.AsMetadataProvider().GetMetadataContainer().Count.Should().Be(1);

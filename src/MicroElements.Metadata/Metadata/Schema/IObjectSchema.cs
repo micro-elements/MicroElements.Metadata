@@ -30,6 +30,17 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
+    /// Properties for object schemas.
+    /// </summary>
+    public interface IProperties : ISchemaComponent
+    {
+        /// <summary>
+        /// Gets object properties.
+        /// </summary>
+        IReadOnlyCollection<IProperty> Properties { get; }
+    }
+
+    /// <summary>
     /// Schema extensions.
     /// </summary>
     public static partial class SchemaExtensions

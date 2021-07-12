@@ -11,6 +11,13 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
+    /// Marker interface for schema components (keywords in terms of JsonSchema.org).
+    /// </summary>
+    public interface ISchemaComponent : IMetadata
+    {
+    }
+
+    /// <summary>
     /// Marks metadata as ReadOnly.
     /// - ReadOnly objects can have methods for object modification but modifications are prohibited.
     /// - ReadOnly objects can be cached and shared with cautions (if object can not be modified outside).

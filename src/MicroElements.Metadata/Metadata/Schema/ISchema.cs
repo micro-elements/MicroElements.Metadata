@@ -11,17 +11,17 @@ namespace MicroElements.Metadata.Schema
     public interface ISchema : IMetadataProvider
     {
         /// <summary>
-        /// Gets property name.
+        /// Gets name.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Gets property value type.
+        /// Gets value type.
         /// </summary>
         Type Type { get; }
 
         /// <summary>
-        /// Gets property description.
+        /// Gets description.
         /// </summary>
         string? Description { get; }
     }

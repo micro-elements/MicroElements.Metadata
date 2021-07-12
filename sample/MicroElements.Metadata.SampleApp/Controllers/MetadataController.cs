@@ -67,8 +67,19 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         }
     }
 
+    public enum SexTypeEnum
+    {
+        Male,
+        Female
+    }
+
     public class PersonMetadata : IPropertySet, IModelMapper<Person>
     {
+        public static ISchema<string> SexType = new Property<string>("SexType")
+            .WithDescription("Person sex")
+            .SetAllowedValues("Male", "Female");
+
+
         public static IProperty<string> Name = new Property<string>("Name")
             .WithDescription("Person name.")
             .SetNotNull();
@@ -76,6 +87,13 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         public static IProperty<string> Sex = new Property<string>("Sex")
             .WithDescription("Person sex")
             .SetAllowedValues("Male", "Female");
+
+        public static IProperty<string> Sex2 = new Property<string>("Sex2")
+            .SetSchema(SexType);
+
+        public static IProperty<SexTypeEnum> Sex3 = new Property<SexTypeEnum>("Sex3")
+            .WithDescription("Person sex")
+            .SetAllowedValuesFromEnum<SexTypeEnum>();
 
         public static IProperty<int> Age = new Property<int>("Age")
             .WithDescription("Person age in years.");
@@ -85,6 +103,8 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         {
             yield return Name;
             yield return Sex;
+            yield return Sex2;
+            yield return Sex3;
             yield return Age;
         }
 
@@ -94,6 +114,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
             return new MutablePropertyContainer()
                 .WithValue(Name, model.Name)
                 .WithValue(Sex, model.Sex)
+                .WithValue(Sex2, model.Sex)
                 .WithValue(Age, model.Age);
         }
 

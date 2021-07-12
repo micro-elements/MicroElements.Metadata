@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
 using MicroElements.Functional;
+using MicroElements.Metadata.AspNetCore;
+using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Schema;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -32,7 +33,7 @@ namespace MicroElements.Metadata.Swashbuckle
         /// <param name="generatorOptions">Swagger generator options.</param>
         public PropertyContainerSchemaFilter(
             PropertyContainerSchemaFilterOptions? options,
-            IOptions<JsonSerializerOptions> serializerOptions,
+            AspNetJsonSerializerOptions serializerOptions,
             SwaggerGenOptions generatorOptions)
         {
             _options = options?.Clone() ?? new PropertyContainerSchemaFilterOptions();
@@ -114,6 +115,43 @@ namespace MicroElements.Metadata.Swashbuckle
             return JsonSerializer.Serialize(value, _serializerOptions);
         }
 
+        public string GetJsonSchemaType(ISchema schema)
+        {
+            return JsonTypeMapper.Instance.GetTypeName(schema.Type);
+        }
+
+        public OpenApiSchema GenerateSchema(SchemaFilterContext context, ISchema schema)
+        {
+            OpenApiSchema openApiSchema = new OpenApiSchema();
+            openApiSchema.Type = GetJsonSchemaType(schema);
+            openApiSchema.Items = null;
+            openApiSchema.Properties = new Dictionary<string, OpenApiSchema>();
+
+            //openApiSchema.Title = schema.Type.FullName;
+            openApiSchema.Description = schema.Description;
+
+            if (schema.GetNullability() is { } allowNull)
+                openApiSchema.Nullable = allowNull.IsNullAllowed;
+
+            if (schema.GetAllowedValuesUntyped() is { } allowedValues)
+            {
+                if (schema.Type.IsEnum)
+                {
+                    openApiSchema.Type = "string";
+                }
+
+                openApiSchema.Enum = new List<IOpenApiAny>();
+                foreach (object allowedValue in allowedValues.ValuesUntyped)
+                {
+                    string jsonValue = JsonConverterFunc(allowedValue);
+                    IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
+                    openApiSchema.Enum.Add(openApiAny);
+                }
+            }
+
+            return openApiSchema;
+        }
+
         private void FillSchema(OpenApiSchema schema, SchemaFilterContext context, IPropertySet propertySet)
         {
             schema.Type = "object";
@@ -128,14 +166,54 @@ namespace MicroElements.Metadata.Swashbuckle
                 if (property.GetOrEvaluateNullability() is { } allowNull)
                     propertySchema.Nullable = allowNull.IsNullAllowed;
 
-                if (property.GetAllowedValuesUntyped() is { } allowedValues)
+                if (_options.GenerateKnownSchemasAsRefs && property.GetSchema() is { } separateSchema)
                 {
-                    propertySchema.Enum = new List<IOpenApiAny>();
-                    foreach (object allowedValue in allowedValues.ValuesUntyped)
+                    string knownSchemaId = separateSchema.Name;
+
+                    if (!context.SchemaRepository.Schemas.TryGetValue(knownSchemaId, out OpenApiSchema knownSchema))
                     {
-                        string jsonValue = JsonConverterFunc(allowedValue);
-                        IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
-                        propertySchema.Enum.Add(openApiAny);
+                        // Generate and fill knownSchema once for type.
+                        knownSchema = GenerateSchema(context, separateSchema);
+                        context.SchemaRepository.Schemas[knownSchemaId] = knownSchema;
+                    }
+
+                    // "$ref": "#/components/schemas/knownSchemaId"
+                    OpenApiReference schemaRef = new OpenApiReference
+                    {
+                        Type = ReferenceType.Schema,
+                        Id = knownSchemaId,
+                    };
+
+                    if (propertySchema.Reference != null)
+                    {
+                        propertySchema.AllOf.Add(new OpenApiSchema { Reference = propertySchema.Reference });
+                        propertySchema.Reference = null;
+                    }
+
+                    propertySchema.AllOf.Add(new OpenApiSchema { Reference = schemaRef });
+
+                    if (knownSchema.Type == propertySchema.Type)
+                    {
+                        // No need to duplicate type from known schema
+                        propertySchema.Type = null;
+                    }
+                }
+                else
+                {
+                    if (property.GetAllowedValuesUntyped() is { } allowedValues)
+                    {
+                        if (property.Type.IsEnum)
+                        {
+                            propertySchema.Type = "string";
+                        }
+
+                        propertySchema.Enum = new List<IOpenApiAny>();
+                        foreach (object allowedValue in allowedValues.ValuesUntyped)
+                        {
+                            string jsonValue = JsonConverterFunc(allowedValue);
+                            IOpenApiAny openApiAny = OpenApiAnyFactory.CreateFromJson(jsonValue);
+                            propertySchema.Enum.Add(openApiAny);
+                        }
                     }
                 }
 

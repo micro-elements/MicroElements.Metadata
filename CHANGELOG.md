@@ -1,3 +1,11 @@
+# 7.7.0
+- PropertyContainerSchemaFilter: GenerateKnownSchemasAsRefs uses for properties with separate schema
+- PropertyContainerSchemaFilter: Uses AspNetJsonSerializerOptions to reuse AspNet JsonSerializerOptions
+- Added extension method SetMetadataFrom to copy metadata from source object
+- Added ISchemaBuilder to allow create copies of schema components;
+- Added ISchemaBuilder extension WithDescription that creates schema component copy with desired description
+- Added ISchemaComponent to allow more precise control on schema building
+
 # 7.6.0
 - IAllowedValues: added IEqualityComparer
 - NumericInterval extension methods returns the same type where possible

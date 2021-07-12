@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
 using MicroElements.Metadata.AspNetCore;
+using MicroElements.Metadata.SystemTextJson;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,8 +35,8 @@ namespace MicroElements.Metadata.SampleApp
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
             });
 
-            //services.Configure<JsonOptions>(options =>
-            //    options.JsonSerializerOptions.ConfigureJsonForPropertyContainers());
+            services.Configure<JsonOptions>(options =>
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
             // All in one configure for Metadata (json serialization and swagger).
             services.AddMetadata();

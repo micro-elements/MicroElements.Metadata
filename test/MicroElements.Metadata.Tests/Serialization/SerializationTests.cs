@@ -319,6 +319,16 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
+        public void PropertyContainerInvalidCast()
+        {
+            Action invalidCast = () => CreateTestContainer().ToPropertyContainerOfType(typeof(TestMeta));
+            invalidCast.Should().Throw<ArgumentException>();
+
+            Action goodCast = () => CreateTestContainer().ToPropertyContainerOfType(typeof(PropertyContainer<TestMeta>));
+            goodCast.Should().NotThrow();
+        }
+
+        [Fact]
         public void SerializeDeserializeTypedPropertyContainerCollection()
         {
             var initialContainer = CreateTestContainer()

@@ -69,5 +69,17 @@ namespace MicroElements.Metadata
         /// Gets default search options for metadata providers.
         /// </summary>
         public static SearchOptions DefaultSearchOptions { get; } = SearchOptions.Default.WithPropertyComparer(DefaultMetadataComparer);
+
+        /// <summary>
+        /// Creates new property container with default metadata search options.
+        /// </summary>
+        /// <param name="concurrent">Use concurrent version.</param>
+        /// <returns>New instance.</returns>
+        public static IMutablePropertyContainer CreateMutableContainer(bool concurrent = false)
+        {
+            return concurrent
+                ? new ConcurrentMutablePropertyContainer(searchOptions: DefaultSearchOptions)
+                : new MutablePropertyContainer(searchOptions: DefaultSearchOptions);
+        }
     }
 }

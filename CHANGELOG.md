@@ -1,3 +1,9 @@
+# 7.8.0
+- Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)
+- Added MetadataGlobalCache.GetOrCreateInstanceMetadata
+- Added MetadataProvider.CreateMutableContainer
+- Change: ToPropertyContainerOfType throws exceptions if output type is not property container and when conversion can not be done
+
 # 7.7.0
 - PropertyContainerSchemaFilter: GenerateKnownSchemasAsRefs uses for properties with separate schema
 - PropertyContainerSchemaFilter: Uses AspNetJsonSerializerOptions to reuse AspNet JsonSerializerOptions

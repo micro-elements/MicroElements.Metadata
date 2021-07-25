@@ -97,7 +97,7 @@ namespace MicroElements.Metadata.Mapping
             return this;
         }
 
-        public ExtractValidateMapContext(IPropertyContainer propertyContainer, IExtractValidateMapSettings settings)
+        public ExtractValidateMapContext(IPropertyContainer? propertyContainer, IExtractValidateMapSettings settings)
         {
             //TODO: SearchOptions? from propertyContainer?
             SearchOptions searchOptions = SearchOptions.ExistingOnlyWithParent.CalculateValue(true);
@@ -262,7 +262,7 @@ namespace MicroElements.Metadata.Mapping
 
     public static class ExtractorExtensions
     {
-        public static IExtractValidateMapContext Extractor(this IPropertyContainer propertyContainer, Action<ExtractValidateMapSettings>? configure = null)
+        public static IExtractValidateMapContext Extractor(this IPropertyContainer? propertyContainer, Action<ExtractValidateMapSettings>? configure = null)
         {
             var settings = new ExtractValidateMapSettings();
             configure?.Invoke(settings);

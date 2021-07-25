@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MicroElements.Metadata.SampleApp.Controllers
 {
     [ApiController]
-    public class MetadataController : Controller
+    internal class MetadataController : Controller
     {
         [HttpGet("[action]")]
         public Person GetPerson()

@@ -18,7 +18,29 @@ namespace MicroElements.Metadata.Tests.SchemaTests
             schema.Description.Should().Be("ISO 4217 3-Letter Currency Code");
             schema.Type.Should().Be(typeof(string));
 
+           
             schema.AsMetadataProvider().GetMetadataContainer().Count.Should().Be(1);
+        }
+
+        [Fact]
+        public void SchemaBuilder()
+        {
+            SimpleTypeSchema simpleTypeSchema = new SimpleTypeSchema("Currency", typeof(string));
+
+            ISchemaBuilder<SimpleTypeSchema, ISchemaDescription> schemaBuilder = simpleTypeSchema;
+            ISchemaBuilder<IMetadataProvider, ISchemaDescription> schemaBuilderCovariant = simpleTypeSchema;
+            ISchemaBuilder<SimpleTypeSchema, SchemaDescription> schemaBuilderComponentContravariant = simpleTypeSchema;
+
+            string description = "ISO 4217 3-Letter Currency Code";
+
+            var instance1 = schemaBuilder.With(new SchemaDescription(description));
+            instance1.Description.Should().Be(description);
+
+            var instance2 = schemaBuilderCovariant.With(new SchemaDescription(description));
+            instance2.GetDescription().Should().Be(description);
+
+            var instance3 = schemaBuilderComponentContravariant.With(new SchemaDescription(description));
+            instance3.Description.Should().Be(description);
         }
 
         [Fact]

@@ -13,7 +13,10 @@ namespace MicroElements.Metadata.Schema
     /// Example: Currency (string type with maxLength: 3).
     /// </summary>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema : ISchema, IManualMetadataProvider, ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
+    public class SimpleTypeSchema : ISchema,
+        IManualMetadataProvider,
+        ISchemaDescription,
+        ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
     {
         /// <inheritdoc />
         public string Name { get; }
@@ -61,7 +64,10 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <typeparam name="T">Schema value type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema<T> : ISchema<T>, ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
+    public class SimpleTypeSchema<T> :
+        ISchema<T>,
+        ISchemaDescription,
+        ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
     {
         /// <inheritdoc />
         public Type Type => typeof(T);

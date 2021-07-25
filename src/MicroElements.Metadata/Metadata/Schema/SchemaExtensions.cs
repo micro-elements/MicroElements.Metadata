@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using MicroElements.Functional;
@@ -37,11 +36,6 @@ namespace MicroElements.Metadata.Schema
                     }
                 }
             }
-        }
-
-        public static class SchemaCache
-        {
-
         }
 
         /// <summary>
@@ -88,8 +82,11 @@ namespace MicroElements.Metadata.Schema
 
             if (schema == null)
             {
-                var properties = propertyContainer.Properties.Select(value => value.PropertyUntyped);
-                schema = new MutableObjectSchema(properties: properties, name: $"{GenerateRandomCode(8)}");
+                var properties = propertyContainer.Properties.Select(value => value.PropertyUntyped).ToArray();
+                string schemaDigest = properties.GetSchemaDigest();
+                byte[] md5HashBytes = schemaDigest.Md5HashBytes();
+                string base58Hash = Base58Encoding.Instance.GetString(md5HashBytes);
+                schema = new MutableObjectSchema(properties: properties, name: base58Hash);
             }
 
             return schema;
@@ -103,7 +100,7 @@ namespace MicroElements.Metadata.Schema
             return Enumerable
                 .Range(0, length)
                 .Select(i => random.Next(0, Symbols.Length - 1))
-                .Aggregate(new StringBuilder(), (stringBuilder, digit) => stringBuilder.Append(Symbols[digit].ToString()))
+                .Aggregate(new StringBuilder(capacity: length), (stringBuilder, digit) => stringBuilder.Append(Symbols[digit].ToString()))
                 .ToString();
         }
     }

@@ -14,7 +14,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets description.
         /// </summary>
-        string Description { get; }
+        string? Description { get; }
     }
 
     /// <summary>
@@ -23,16 +23,45 @@ namespace MicroElements.Metadata.Schema
     public record SchemaDescription : ISchemaDescription
     {
         /// <inheritdoc />
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SchemaDescription"/> class.
         /// </summary>
         /// <param name="description">Description for scheme.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="description"/> is null.</exception>
-        public SchemaDescription(string description)
+        public SchemaDescription(string? description)
         {
-            Description = description ?? throw new ArgumentNullException(nameof(description));
+            Description = description;
+        }
+    }
+
+    /// <summary>
+    /// Schema builder extensions.
+    /// </summary>
+    public static class SchemaBuilderExtensions
+    {
+        public static IMetadataProvider SetDescription(this IMetadataProvider value, ISchemaDescription description)
+        {
+            return value.SetMetadata(description);
+        }
+
+        public static string? GetDescription(this object value)
+        {
+            ISchemaDescription? schemaDescription = value.GetComponent<ISchemaDescription>();
+            return schemaDescription?.Description;
+        }
+
+        /// <summary>
+        /// Creates schema copy with provided description.
+        /// </summary>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="source">Source schema.</param>
+        /// <param name="description">Description.</param>
+        /// <returns>New schema instance with provided description.</returns>
+        public static TSchema WithDescription<TSchema>(this TSchema source, string description)
+            where TSchema : ISchemaBuilder<TSchema, ISchemaDescription>, ISchema
+        {
+            return source.With(new SchemaDescription(description));
         }
     }
 }

@@ -9,7 +9,10 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents property description.
     /// </summary>
-    public interface IProperty : ISchema
+    public interface IProperty :
+        ISchema,
+        ISchemaDescription,
+        IHasAlias
     {
     }
 
@@ -17,7 +20,7 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IProperty<T> : ISchema<T>, IProperty, IHasAlias
+    public interface IProperty<T> : ISchema<T>, IProperty
     {
         /// <summary>
         /// Gets default value for property.

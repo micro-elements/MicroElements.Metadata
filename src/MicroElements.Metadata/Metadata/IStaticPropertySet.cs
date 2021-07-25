@@ -24,6 +24,59 @@ namespace MicroElements.Metadata
         public IEnumerable<IProperty> GetProperties() => GetType().GetStaticProperties();
     }
 
+    public interface IOneOf : ISchemaComponent
+    {
+        public IEnumerable<ISchema> OneOf();
+    }
+
+    public class OneOfComponent : IOneOf
+    {
+        private IReadOnlyCollection<ISchema> Schemas { get; }
+
+        public OneOfComponent(IReadOnlyCollection<ISchema> schemas)
+        {
+            Schemas = schemas;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<ISchema> OneOf()
+        {
+            return Schemas;
+        }
+    }
+
+    /// <summary>
+    /// Schema builder extensions.
+    /// </summary>
+    public static class SchemaBuilderExtensions
+    {
+        /// <summary>
+        /// Creates schema copy with provided description.
+        /// </summary>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="source">Source schema.</param>
+        /// <param name="description">Description.</param>
+        /// <returns>New schema instance with provided description.</returns>
+        public static TSchema OneOf<TSchema>(this TSchema source, params ISchema[] schemas)
+            where TSchema : ISchemaBuilder<TSchema, IOneOf>, ISchema
+        {
+            return source.With(new OneOfComponent(schemas));
+        }
+
+        public static TComponent? GetComponent<TComponent>(this object source)
+        {
+            if (source is TComponent component)
+                return component;
+
+            return source.AsMetadataProvider().GetMetadata<TComponent>();
+        }
+    }
+
+    public interface IAllOf
+    {
+        public IEnumerable<ISchema> AllOf();
+    }
+
     /// <summary>
     /// Static schema gets properties from static fields and properties.
     /// </summary>

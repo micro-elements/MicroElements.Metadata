@@ -19,17 +19,22 @@ namespace MicroElements.Metadata.Schema
         /// Gets value type.
         /// </summary>
         Type Type { get; }
-
-        /// <summary>
-        /// Gets description.
-        /// </summary>
-        string? Description { get; }
     }
 
     /// <summary>
     /// Represents base strong typed schema interface.
     /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
     public interface ISchema<T> : ISchema
     {
+        /// <inheritdoc />
+        Type ISchema.Type => typeof(T);
+    }
+
+    public interface IDataSchema : ISchema
+    {
+        //IOneOf OneOf { get; }
+
+        //IAllOf AllOf { get; }
     }
 }

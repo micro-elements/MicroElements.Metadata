@@ -375,6 +375,17 @@ namespace MicroElements.Metadata.Tests.Serialization
 
             json2.Should().Be(json1);
         }
+
+        [Fact]
+        public void TestStaticSchema()
+        {
+            TestMeta testMeta = new TestMeta();
+            IPropertySet propertySet = testMeta;
+            propertySet.GetProperties().Should().HaveCount(8);
+
+            IObjectSchemaProvider schemaProvider = testMeta;
+            schemaProvider.GetObjectSchema().Properties.Should().HaveCount(8);
+        }
     }
 
     internal static class SerializationExtensions
@@ -434,7 +445,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
     }
 
-    public class TestMeta : IStaticPropertySet, IStaticSchema
+    public class TestMeta : IStaticSchema
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");

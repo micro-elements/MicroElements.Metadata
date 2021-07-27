@@ -69,7 +69,7 @@ namespace MicroElements.Metadata.Schema
         {
             byte[] hashBytes = content.Md5HashBytes();
 
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(hashBytes, outputMaxLength: length, alphabet: alphabet);
+            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(hashBytes, outputMaxLength: length, alphabet: alphabet));
 
             return encodingResult.Text;
         }
@@ -79,7 +79,7 @@ namespace MicroElements.Metadata.Schema
             int? length = null,
             string? alphabet = null)
         {
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(inputBytes: data, outputMaxLength: length, alphabet: alphabet);
+            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(inputBytes: data, outputMaxLength: length, alphabet: alphabet));
             return encodingResult.Text;
         }
 
@@ -160,6 +160,37 @@ namespace MicroElements.Metadata.Schema
         }
     }
 
+    public readonly struct EncodingArgs
+    {
+        public readonly byte[] InputBytes;
+        public readonly int? InputByteIndex;
+        public readonly int? InputByteCount;
+
+        public readonly int? OutputMaxLength;
+        public readonly char[]? OutputChars;
+        public readonly int? OutputCharIndex;
+
+        public readonly string? Alphabet;
+
+        public EncodingArgs(
+            byte[] inputBytes,
+            int? inputByteIndex = null,
+            int? inputByteCount = null,
+            int? outputMaxLength = null,
+            char[]? outputChars = null,
+            int? outputCharIndex = null,
+            string? alphabet = null)
+        {
+            InputBytes = inputBytes;
+            InputByteIndex = inputByteIndex;
+            InputByteCount = inputByteCount;
+            OutputMaxLength = outputMaxLength;
+            OutputChars = outputChars;
+            OutputCharIndex = outputCharIndex;
+            Alphabet = alphabet;
+        }
+    }
+
     public readonly struct EncodingResult
     {
         public readonly char[] Chars;
@@ -178,14 +209,7 @@ namespace MicroElements.Metadata.Schema
 
     public interface IEncodingAlgorithm
     {
-        EncodingResult Encode(
-            byte[] inputBytes,
-            int? inputByteIndex,
-            int? inputByteCount,
-            int? outputMaxLength,
-            char[]? outputChars,
-            int? outputCharIndex,
-            string? alphabet);
+        EncodingResult Encode(in EncodingArgs args);
     }
 
     public class Base58
@@ -200,7 +224,7 @@ namespace MicroElements.Metadata.Schema
          */
         public static readonly string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-        public static readonly Base58Encoding Encoding = new Base58Encoding();
+        public static Base58Encoding Encoding { get; } = new Base58Encoding();
     }
 
     public class Base58_BigIntImpl : IEncodingAlgorithm
@@ -208,88 +232,113 @@ namespace MicroElements.Metadata.Schema
         public static readonly Base58_BigIntImpl Instance = new Base58_BigIntImpl();
 
         /// <inheritdoc />
-        public EncodingResult Encode(
-            byte[] inputBytes,
-            int? inputByteIndex = null,
-            int? inputByteCount = null,
-            int? outputMaxLength = null,
-            char[]? outputChars = null,
-            int? outputCharIndex = null,
-            string? alphabet = null)
+        public EncodingResult Encode(in EncodingArgs args)
         {
-            inputByteIndex ??= 0;
-            inputByteCount ??= inputBytes.Length;
+            if (args.InputBytes is null)
+                throw new ArgumentNullException(nameof(args.InputBytes));
 
-            if (inputByteIndex > 0 && inputByteCount < inputBytes.Length)
-                inputBytes = inputBytes[inputByteIndex.Value..inputBytes.Length];
+            byte[] inputBytes = args.InputBytes;
+            int inputBytesLength = inputBytes.Length;
 
-            int length = inputBytes.Length;
-            alphabet ??= Base58.Alphabet;
+            var inputByteIndex = args.InputByteIndex.GetValueOrDefault(0);
+            var inputByteCount = args.InputByteCount.GetValueOrDefault(inputBytesLength - inputByteIndex);
+            int inputEndIndexInclusive = inputByteIndex + inputByteCount - 1;
+
+            if (inputByteIndex < 0)
+                throw new IndexOutOfRangeException($"{nameof(args.InputByteIndex)}: {args.InputByteIndex} is out of range.");
+            if (inputEndIndexInclusive > inputBytesLength - 1)
+                throw new IndexOutOfRangeException($"{nameof(args.InputByteCount)}: {args.InputByteCount} is out of range.");
+
+            // Input sub range.
+            if (inputByteIndex > 0 || inputEndIndexInclusive < inputBytes.Length - 1)
+            {
+                // c# range is exclusive for end index
+                var inputEndIndex = inputEndIndexInclusive + 1;
+                inputBytes = inputBytes[inputByteIndex..inputEndIndex];
+                inputBytesLength = inputBytes.Length;
+            }
+
+            // Encoding params.
+            var alphabet = args.Alphabet ?? Base58.Alphabet;
             int encodingBase = alphabet.Length;
 
             // Represent data as BigInteger.
             var bigInt = new BigInteger(inputBytes, isUnsigned: true, isBigEndian: true);
 
-            // Allocate result buffer.
-            if (outputChars == null)
+            // Result buffer.
+            char[] outputChars;
+            if (args.OutputChars != null)
             {
-                if (outputCharIndex.HasValue)
+                // Use provided buffer.
+                outputChars = args.OutputChars;
+            }
+            else
+            {
+                if (args.OutputCharIndex.HasValue)
                     throw new InvalidOperationException("outputCharIndex can be used only with provided outputChars value.");
 
-                int resultMaxLength = (length * 138 / 100) + 1;
+                int resultMaxLength = (inputBytesLength * 138 / 100) + 1;
                 int resultLength = resultMaxLength;
-                if (outputMaxLength.HasValue)
+                if (args.OutputMaxLength.HasValue)
                 {
                     // limit by outputMaxLength
-                    resultLength = Math.Min(resultMaxLength, outputMaxLength.Value);
+                    resultLength = Math.Min(resultMaxLength, args.OutputMaxLength.Value);
                 }
 
+                // Allocate result buffer.
                 outputChars = new char[resultLength];
             }
 
-            if (outputCharIndex is { } charIndex and > 0)
-                outputChars = outputChars[charIndex..];
+            // Output sub range.
+            if (args.OutputCharIndex is { } outputCharIndex and > 0)
+                outputChars = outputChars[outputCharIndex..];
 
-            int last = outputChars!.Length;
+            int outputIndex = outputChars.Length;
             int outputCharsLength;
 
             // Encode data.
             while (bigInt > 0)
             {
-                last--;
-                if (last < 0)
+                outputIndex--;
+                if (outputIndex < 0)
                 {
                     // Output buffer can be smaller then required.
                     break;
                 }
 
                 bigInt = BigInteger.DivRem(bigInt, encodingBase, out var remainder);
-                outputChars[last] = alphabet[(int)remainder];
+                outputChars[outputIndex] = alphabet[(int)remainder];
 
-                if (outputMaxLength.HasValue)
+                if (args.OutputMaxLength.HasValue)
                 {
-                    outputCharsLength = outputChars.Length - last;
-                    if (outputCharsLength >= outputMaxLength)
+                    outputCharsLength = outputChars.Length - outputIndex;
+                    if (outputCharsLength >= args.OutputMaxLength)
                         break;
                 }
             }
 
             // Append `1` for each leading 0 byte
-            for (int i = 0; i < length && inputBytes[i] == 0; i++)
+            for (int i = 0; i < inputBytesLength && inputBytes[i] == 0; i++)
             {
-                if (outputMaxLength.HasValue)
+                if (args.OutputMaxLength.HasValue)
                 {
-                    outputCharsLength = outputChars.Length - last;
-                    if (outputCharsLength >= outputMaxLength)
+                    outputCharsLength = outputChars.Length - outputIndex;
+                    if (outputCharsLength >= args.OutputMaxLength)
                         break;
                 }
 
-                last--;
-                outputChars[last] = alphabet[0];
+                outputIndex--;
+                if (outputIndex < 0)
+                {
+                    // Output buffer can be smaller then required.
+                    break;
+                }
+
+                outputChars[outputIndex] = alphabet[0];
             }
 
-            outputCharsLength = outputChars.Length - last;
-            return new EncodingResult(outputChars, last, outputCharsLength);
+            outputCharsLength = outputChars.Length - outputIndex;
+            return new EncodingResult(outputChars, outputIndex, outputCharsLength);
         }
     }
 
@@ -334,7 +383,7 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public override int GetChars(byte[] inputBytes, int byteIndex, int byteCount, char[] outputChars, int charIndex)
         {
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(inputBytes, byteIndex, byteCount, null, outputChars, charIndex, alphabet: Base58.Alphabet);
+            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(inputBytes, byteIndex, byteCount, null, outputChars, charIndex, alphabet: Base58.Alphabet));
             return encodingResult.CharCount;
         }
 

@@ -19,7 +19,7 @@ namespace MicroElements.Metadata.Schema
     public class ObjectSchema : IObjectSchema
     {
         /// <inheritdoc />
-        public string Name => $"ObjectSchema_{this.GetSchemaDigestHash()}";
+        public string Name => $"ObjectSchema_{this.GetSchemaDigestHashInBase58()}";
 
         /// <inheritdoc />
         public Type Type => typeof(object);
@@ -31,7 +31,7 @@ namespace MicroElements.Metadata.Schema
     public class ObjectSchema<T> : IObjectSchema
     {
         /// <inheritdoc />
-        public string Name => $"ObjectSchema_{this.GetSchemaDigestHash()}";
+        public string Name => $"ObjectSchema_{this.GetSchemaDigestHashInBase58()}";
 
         /// <inheritdoc />
         public Type Type => typeof(T);

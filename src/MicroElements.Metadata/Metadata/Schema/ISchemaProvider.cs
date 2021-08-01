@@ -3,7 +3,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using MicroElements.Metadata.Serialization;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -82,7 +81,7 @@ namespace MicroElements.Metadata.Schema
         {
             if (schema is IObjectSchema objectSchema)
             {
-                string schemaDigest = SchemaEqualityComparer.Instance.GetSchemaDigest(objectSchema.Properties);
+                string schemaDigest = SchemaDigest.GetSchemaDigest(objectSchema.Properties);
                 schema = _schemasByDigest.GetOrAdd(schemaDigest, s => schema);
                 _schemas[schema.Name] = objectSchema;
                 return schema.Name;

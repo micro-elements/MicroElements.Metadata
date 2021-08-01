@@ -1,3 +1,15 @@
+# NEXT
+
+- Extracted several interfaces from IProperty<T>: IHasCalculator<T>, IHasDefaultValue, IHasDefaultValue<T>, IHasExamples
+- IProperty<T>, IPropertyValue<T>, ISchema<T> become covariant
+- IPropertyCalculator<T> moved to IPropertyWithCalculator<T> (not covariant part)
+- Breaking: Use GetCalculator extension method instead Calculator property because IProperty<T> does not contain it anymore
+
+- IStaticSchema now autoimplements IStaticPropertySet 
+- OneOf initial support
+
+- Base58 encoding for hashes
+
 # 7.8.0
 - Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)
 - Added MetadataGlobalCache.GetOrCreateInstanceMetadata

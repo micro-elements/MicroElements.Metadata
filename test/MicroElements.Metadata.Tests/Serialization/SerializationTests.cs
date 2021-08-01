@@ -457,14 +457,4 @@ namespace MicroElements.Metadata.Tests.Serialization
         public static readonly IProperty<string[]> StringArray = new Property<string[]>("StringArray");
         public static readonly IProperty<int[]> IntArray = new Property<int[]>("IntArray");
     }
-
-    public class aaaaa
-    {
-        public static ITypeMapper Create()
-        {
-            return new JsonTypeMapper();
-        }
-    }
-
-
 }

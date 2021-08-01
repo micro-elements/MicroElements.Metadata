@@ -43,6 +43,43 @@ namespace MicroElements.Metadata.Tests.SchemaTests
             instance3.Description.Should().Be(description);
         }
 
+        public interface IPerson
+        {
+            string Name { get; }
+        }
+
+        public class Person : IPerson
+        {
+            /// <inheritdoc />
+            public string Name { get; }
+
+            public Person(string name) => Name = name;
+        }
+
+        [Fact]
+        public void PropertyCovariance()
+        {
+            Property<Person> propertyOfPerson= new Property<Person>("Person");
+            IProperty<IPerson> propertyOfBaseType = propertyOfPerson;
+
+            var container = new MutablePropertyContainer()
+                .WithValue(propertyOfPerson, new Person("Alex"));
+
+            Person? person = container.GetValue(propertyOfPerson);
+            IPerson? personOfBaseType = container.GetValue(propertyOfBaseType);
+            personOfBaseType.Should().BeSameAs(person);
+            personOfBaseType.Name.Should().Be("Alex");
+        }
+
+        [Fact]
+        public void DefaultValueCovariance()
+        {
+            Person person = new Person("Alex");
+            IDefaultValue<Person> defaultValue = new DefaultValue<Person>(person);
+            IDefaultValue<IPerson> covariantDefaultValue = defaultValue;
+            covariantDefaultValue.Value.Should().BeSameAs(person);
+        }
+
         [Fact]
         public void SetDefaultValueUntyped()
         {

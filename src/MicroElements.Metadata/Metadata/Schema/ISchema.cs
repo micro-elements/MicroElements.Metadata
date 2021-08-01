@@ -25,7 +25,7 @@ namespace MicroElements.Metadata.Schema
     /// Represents base strong typed schema interface.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface ISchema<T> : ISchema
+    public interface ISchema<out T> : ISchema
     {
         /// <inheritdoc />
         Type ISchema.Type => typeof(T);

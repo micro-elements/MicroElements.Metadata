@@ -173,7 +173,14 @@ namespace MicroElements.Metadata.Swashbuckle
                 {
                     string knownSchemaId = oneOfSchema.Name;
 
-                    if (oneOfSchema is IPropertySet otherPropSet)
+                    IPropertySet? otherPropSet;
+                    otherPropSet = oneOfSchema as IPropertySet;
+                    if (otherPropSet == null)
+                    {
+                        otherPropSet = (oneOfSchema as IProperty)?.Type.GetSchemaByKnownPropertySet();
+                    }
+
+                    if (otherPropSet != null)
                     {
                         if (!context.SchemaRepository.Schemas.TryGetValue(knownSchemaId, out OpenApiSchema knownSchema))
                         {
@@ -188,8 +195,6 @@ namespace MicroElements.Metadata.Swashbuckle
                             Reference = new OpenApiReference { Type = ReferenceType.Schema, Id = knownSchemaId },
                         });
                     }
-
-
                 }
             }
         }

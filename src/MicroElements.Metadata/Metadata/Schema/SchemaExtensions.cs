@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MicroElements.Functional;
+using MicroElements.Text;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -84,24 +85,11 @@ namespace MicroElements.Metadata.Schema
             {
                 var properties = propertyContainer.Properties.Select(value => value.PropertyUntyped).ToArray();
                 string schemaDigest = properties.GetSchemaDigest();
-                byte[] md5HashBytes = schemaDigest.Md5HashBytes();
-                string base58Hash = Base58Encoding.Instance.GetString(md5HashBytes);
+                string base58Hash = schemaDigest.GenerateMd5HashInBase58();
                 schema = new MutableObjectSchema(properties: properties, name: base58Hash);
             }
 
             return schema;
-        }
-
-        private static string Symbols = "abcdefghijklmnopqrstuvwxyz";
-
-        public static string GenerateRandomCode(int length = 8)
-        {
-            Random random = new Random(DateTime.Now.Millisecond);
-            return Enumerable
-                .Range(0, length)
-                .Select(i => random.Next(0, Symbols.Length - 1))
-                .Aggregate(new StringBuilder(capacity: length), (stringBuilder, digit) => stringBuilder.Append(Symbols[digit].ToString()))
-                .ToString();
         }
     }
 }

@@ -101,7 +101,7 @@ namespace MicroElements.Metadata.Tests
             property.Examples.Should().NotBeNull().And.BeEmpty();
             property.DefaultValue.Should().NotBeNull();
             property.DefaultValue.Value.Should().Be(default(T));
-            property.Calculator.Should().BeNull();
+            property.GetCalculator().Should().BeNull();
         }
 
         public static Property<int> CreateFilledProperty()
@@ -127,7 +127,7 @@ namespace MicroElements.Metadata.Tests
             property.Description.Should().Be("description");
             property.DefaultValue.Value.Should().Be(1);
             property.Examples.Should().BeEquivalentTo(new[] {0, 1});
-            property.Calculator.Should().NotBeNull();
+            property.GetCalculator().Should().NotBeNull();
         }
     }
 }

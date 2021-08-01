@@ -55,7 +55,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <typeparam name="TSchema">Schema type.</typeparam>
         /// <param name="source">Source schema.</param>
-        /// <param name="description">Description.</param>
+        /// <param name="schemas">Schemas for oneOf.</param>
         /// <returns>New schema instance with provided description.</returns>
         public static TSchema OneOf<TSchema>(this TSchema source, params ISchema[] schemas)
             where TSchema : ISchemaBuilder<TSchema, IOneOf>, ISchema
@@ -93,7 +93,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Static schema gets properties from static fields and properties.
     /// </summary>
-    public class StaticSchema : IObjectSchemaProvider
+    public class StaticSchema : IStaticSchema
     {
         /// <inheritdoc />
         public IObjectSchema GetObjectSchema()

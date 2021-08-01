@@ -125,7 +125,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             {
                 SharedStringTable sharedStringTable = documentContext.GetSharedStringTable();
 
-                SharedStringItem sharedStringItem = new SharedStringItem(new Text { Text = text });
+                SharedStringItem sharedStringItem = new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text { Text = text });
                 sharedStringTable.AppendChild(sharedStringItem);
                 sharedStringTable.Count += 1;
                 sharedStringTable.UniqueCount += 1;

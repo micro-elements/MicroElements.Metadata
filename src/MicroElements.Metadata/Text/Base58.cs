@@ -2,162 +2,32 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
-namespace MicroElements.Metadata.Schema
+namespace MicroElements.Text
 {
-    public class SchemaEqualityComparer
+    public class Base58
     {
-        public static SchemaEqualityComparer Instance = new SchemaEqualityComparer();
+        /*
+        Why base-58 instead of standard base-64 encoding?
+        - Don't want 0OIl characters that look the same in some fonts and
+          could be used to create visually identical looking data.
+        - A string with non-alphanumeric characters is not as easily accepted as input.
+        - E-mail usually won't line-break if there's no punctuation to break at.
+        - Double-clicking selects the whole string as one word if it's all alphanumeric.
+         */
+        public static readonly string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-        public string GetSchemaDigest(IEnumerable<IProperty> properties)
-        {
-            //MetadataSchema.GenerateCompactSchema(properties)
-            string digest = properties
-                .OrderBy(property => property.Name)
-                .Aggregate(
-                    new StringBuilder(),
-                    (builder, property) => builder.AppendFormat("{0}@{1};", property.Name, property.Type))
-                .ToString();
-            return digest;
-        }
+        public static Base58Encoding Encoding { get; } = new Base58Encoding();
     }
 
-    public static class DigestExtensions
+    public interface IEncodingAlgorithm
     {
-        public static string GetSchemaDigest(this IEnumerable<IProperty> properties)
-        {
-            return SchemaEqualityComparer.Instance.GetSchemaDigest(properties);
-        }
-
-        public static string GetSchemaDigest(this IObjectSchema objectSchema)
-        {
-            return objectSchema.Properties.GetSchemaDigest();
-        }
-
-        public static string GetSchemaDigestHash(this IObjectSchema objectSchema)
-        {
-            return objectSchema.GetSchemaDigest().Md5Hash();
-        }
-    }
-
-    public static class HashGenerator
-    {
-        public static readonly string Symbols = "abcdefghijklmnopqrstuvwxyz";
-        public static readonly string SymbolsUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        public static readonly string Digits = "0123456789";
-        public static readonly string SymbolsAndDigits = Symbols + Digits;
-
-        public static string GenerateRandomCode(int length = 8)
-        {
-            Random random = new Random(DateTime.Now.Millisecond);
-            return Enumerable
-                .Range(0, length)
-                .Select(i => random.Next(0, Symbols.Length - 1))
-                .Aggregate(new StringBuilder(capacity: length), (stringBuilder, digit) => stringBuilder.Append(Symbols[digit].ToString()))
-                .ToString();
-        }
-
-        public static string GenerateMd5HashInBase58(
-            this string content,
-            int? length = null,
-            string? alphabet = null)
-        {
-            byte[] hashBytes = content.Md5HashBytes();
-
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(hashBytes, outputMaxLength: length, alphabet: alphabet));
-
-            return encodingResult.Text;
-        }
-
-        public static string EncodeBase58(
-            this byte[] data,
-            int? length = null,
-            string? alphabet = null)
-        {
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(inputBytes: data, outputMaxLength: length, alphabet: alphabet));
-            return encodingResult.Text;
-        }
-
-        public static string EncodeBase58_2(this byte[] data)
-        {
-            int length = data.Length;
-            string alphabet = Base58.Alphabet;
-            int encodingBase = alphabet.Length;
-
-            // Count zeroes.
-            int zeros = 0;
-            for (int i = 0; i < length && data[i] == 0; i++)
-                zeros++;
-
-            // Allocate result buffer.
-            int resultLength = ((length - zeros) * 138 / 100) + 1;
-            char[] result = new char[resultLength + zeros];
-            int dataLength = 0;
-
-            // Debug counter.
-            int counter = 0;
-
-            // Encode data.
-            for (int dataIndex = zeros; dataIndex < length; dataIndex++)
-            {
-                int carry = data[dataIndex];
-                int i = 0;
-                for (int revIt = result.Length - 1; (carry != 0 || i < dataLength) && (revIt >= 0); revIt--, i++)
-                {
-                    carry += result[revIt] << 8;
-
-                    result[revIt] = (char)(carry % encodingBase);
-                    carry /= encodingBase;
-
-                    counter++;
-                }
-
-                dataLength = i;
-            }
-
-            for (int i = 0; i < zeros; i++)
-                result[i] = alphabet[0];
-
-            for (int i = zeros; i < result.Length; i++)
-                result[i] = alphabet[result[i]];
-
-            int start = result.Length - dataLength - zeros;
-            if (start != 0)
-                result = result[start..];
-
-            var encoded = new string(result);
-            return encoded;
-        }
-
-        public static byte[] Md5HashBytes(this string content)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(content);
-            using var cryptoServiceProvider = new MD5CryptoServiceProvider();
-            byte[] hash = cryptoServiceProvider.ComputeHash(bytes);
-            return hash;
-        }
-
-        public static string Md5Hash(this string content)
-        {
-            return content.Md5HashBytes().AsText();
-        }
-
-        public static string AsText(this byte[] hash, int predefinedLength = 32)
-        {
-            var stringBuilder = new StringBuilder(predefinedLength);
-
-            foreach (var item in hash)
-            {
-                stringBuilder.Append(item.ToString("X2"));
-            }
-
-            return stringBuilder.ToString();
-        }
+        EncodingResult Encode(in EncodingArgs args);
     }
 
     public readonly struct EncodingArgs
@@ -166,9 +36,9 @@ namespace MicroElements.Metadata.Schema
         public readonly int? InputByteIndex;
         public readonly int? InputByteCount;
 
-        public readonly int? OutputMaxLength;
         public readonly char[]? OutputChars;
         public readonly int? OutputCharIndex;
+        public readonly int? OutputMaxLength;
 
         public readonly string? Alphabet;
 
@@ -207,29 +77,9 @@ namespace MicroElements.Metadata.Schema
         }
     }
 
-    public interface IEncodingAlgorithm
+    public class Base58EncodingAlgorithm : IEncodingAlgorithm
     {
-        EncodingResult Encode(in EncodingArgs args);
-    }
-
-    public class Base58
-    {
-        /*
-        Why base-58 instead of standard base-64 encoding?
-        - Don't want 0OIl characters that look the same in some fonts and
-          could be used to create visually identical looking data.
-        - A string with non-alphanumeric characters is not as easily accepted as input.
-        - E-mail usually won't line-break if there's no punctuation to break at.
-        - Double-clicking selects the whole string as one word if it's all alphanumeric.
-         */
-        public static readonly string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-        public static Base58Encoding Encoding { get; } = new Base58Encoding();
-    }
-
-    public class Base58_BigIntImpl : IEncodingAlgorithm
-    {
-        public static readonly Base58_BigIntImpl Instance = new Base58_BigIntImpl();
+        public static readonly Base58EncodingAlgorithm Instance = new Base58EncodingAlgorithm();
 
         /// <inheritdoc />
         public EncodingResult Encode(in EncodingArgs args)
@@ -383,7 +233,7 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public override int GetChars(byte[] inputBytes, int byteIndex, int byteCount, char[] outputChars, int charIndex)
         {
-            EncodingResult encodingResult = Base58_BigIntImpl.Instance.Encode(new EncodingArgs(inputBytes, byteIndex, byteCount, null, outputChars, charIndex, alphabet: Base58.Alphabet));
+            EncodingResult encodingResult = Base58EncodingAlgorithm.Instance.Encode(new EncodingArgs(inputBytes, byteIndex, byteCount, null, outputChars, charIndex, alphabet: Base58.Alphabet));
             return encodingResult.CharCount;
         }
 
@@ -398,6 +248,175 @@ namespace MicroElements.Metadata.Schema
         {
             int resultLength = (byteCount * 138 / 100) + 1;
             return resultLength;
+        }
+    }
+
+    /// <summary>
+    /// DotNet Random is not ThreadSafe so we need ThreadSafeRandom.
+    /// See also: https://stackoverflow.com/questions/3049467/is-c-sharp-random-number-generator-thread-safe.
+    /// Design notes:
+    /// 1. Uses own Random for each thread (thread local).
+    /// 2. Seed can be set in ThreadSafeRandom ctor. Note: Be careful - one seed for all threads can lead same values for several threads.
+    /// 3. ThreadSafeRandom implements Random class for simple usage instead ordinary Random.
+    /// 4. ThreadSafeRandom can be used by global static instance. Example: `int randomInt = ThreadSafeRandom.Global.Next()`.
+    /// </summary>
+    internal class ThreadSafeRandom : Random
+    {
+        /// <summary>
+        /// Gets global static instance.
+        /// </summary>
+        public static ThreadSafeRandom Global { get; } = new ThreadSafeRandom();
+
+        // Thread local Random is safe to use on that thread.
+        private readonly ThreadLocal<Random> _threadLocalRandom;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ThreadSafeRandom"/> class.
+        /// </summary>
+        /// <param name="seed">Optional seed for <see cref="Random"/>. If not provided then random seed will be used.</param>
+        public ThreadSafeRandom(int? seed = null)
+        {
+            _threadLocalRandom = new ThreadLocal<Random>(() => seed != null ? new Random(seed.Value) : new Random());
+        }
+
+        /// <inheritdoc />
+        public override int Next() => _threadLocalRandom.Value.Next();
+
+        /// <inheritdoc />
+        public override int Next(int maxValue) => _threadLocalRandom.Value.Next(maxValue);
+
+        /// <inheritdoc />
+        public override int Next(int minValue, int maxValue) => _threadLocalRandom.Value.Next(minValue, maxValue);
+
+        /// <inheritdoc />
+        public override void NextBytes(byte[] buffer) => _threadLocalRandom.Value.NextBytes(buffer);
+
+        /// <inheritdoc />
+        public override void NextBytes(Span<byte> buffer) => _threadLocalRandom.Value.NextBytes(buffer);
+
+        /// <inheritdoc />
+        public override double NextDouble() => _threadLocalRandom.Value.NextDouble();
+    }
+
+    public static class HashGenerator
+    {
+        public static readonly string Symbols = "abcdefghijklmnopqrstuvwxyz";
+        public static readonly string SymbolsUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        public static readonly string Digits = "0123456789";
+        public static readonly string SymbolsAndDigits = Symbols + Digits;
+
+        public static string GenerateRandomCode(string? alphabet = null, int length = 8)
+        {
+            alphabet ??= Symbols;
+            return Enumerable
+                .Range(0, length)
+                .Select(i => ThreadSafeRandom.Global.Next(0, Symbols.Length - 1))
+                .Aggregate(new StringBuilder(capacity: length), (stringBuilder, digit) => stringBuilder.Append(alphabet[digit].ToString()))
+                .ToString();
+        }
+
+        public static string GenerateMd5HashInBase58(
+            this string content,
+            int? length = null,
+            string? alphabet = null)
+        {
+            byte[] hashBytes = content.Md5HashBytes();
+
+            EncodingResult encodingResult = Base58EncodingAlgorithm.Instance.Encode(new EncodingArgs(hashBytes, outputMaxLength: length, alphabet: alphabet));
+
+            return encodingResult.Text;
+        }
+
+        public static string EncodeToBase58(this string content)
+        {
+            byte[] inputBytes = Encoding.UTF8.GetBytes(content);
+            EncodingResult encodingResult = Base58EncodingAlgorithm.Instance.Encode(new EncodingArgs(inputBytes, alphabet: Base58.Alphabet));
+            return encodingResult.Text;
+        }
+
+        public static string EncodeToBase58(
+            this byte[] data,
+            int? length = null,
+            string? alphabet = null)
+        {
+            EncodingResult encodingResult = Base58EncodingAlgorithm.Instance.Encode(new EncodingArgs(inputBytes: data, outputMaxLength: length, alphabet: alphabet));
+            return encodingResult.Text;
+        }
+
+        public static byte[] Md5HashBytes(this string content)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(content);
+            using var cryptoServiceProvider = new MD5CryptoServiceProvider();
+            byte[] hash = cryptoServiceProvider.ComputeHash(bytes);
+            return hash;
+        }
+
+        public static string Md5HashAsHexText(this string content)
+        {
+            return content.Md5HashBytes().AsHexText();
+        }
+
+        public static string AsHexText(this byte[] hash, int predefinedLength = 32)
+        {
+            var stringBuilder = new StringBuilder(predefinedLength);
+
+            foreach (var item in hash)
+            {
+                stringBuilder.Append(item.ToString("X2"));
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        public static string EncodeBase58_2(this byte[] data)
+        {
+            int length = data.Length;
+            string alphabet = Base58.Alphabet;
+            int encodingBase = alphabet.Length;
+
+            // Count zeroes.
+            int zeros = 0;
+            for (int i = 0; i < length && data[i] == 0; i++)
+                zeros++;
+
+            // Allocate result buffer.
+            int resultLength = ((length - zeros) * 138 / 100) + 1;
+            char[] result = new char[resultLength + zeros];
+            int dataLength = 0;
+
+            // Debug counter.
+            int counter = 0;
+
+            // Encode data.
+            for (int dataIndex = zeros; dataIndex < length; dataIndex++)
+            {
+                int carry = data[dataIndex];
+                int i = 0;
+                for (int revIt = result.Length - 1; (carry != 0 || i < dataLength) && (revIt >= 0); revIt--, i++)
+                {
+                    carry += result[revIt] << 8;
+
+                    result[revIt] = (char)(carry % encodingBase);
+                    carry /= encodingBase;
+
+                    counter++;
+                }
+
+                dataLength = i;
+            }
+
+            for (int i = 0; i < zeros; i++)
+                result[i] = alphabet[0];
+
+            for (int i = zeros; i < result.Length; i++)
+                result[i] = alphabet[result[i]];
+
+            int start = result.Length - dataLength - zeros;
+            if (start != 0)
+                result = result[start..];
+
+            var encoded = new string(result);
+            return encoded;
         }
     }
 }

@@ -1,9 +1,11 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Runtime.CompilerServices;
 using MicroElements.CodeContracts;
 using MicroElements.Core;
+using MicroElements.Metadata.Mapping;
 
 namespace MicroElements.Metadata
 {
@@ -45,6 +47,32 @@ namespace MicroElements.Metadata
             }
 
             return metadata;
+        }
+
+        /// <summary>
+        /// Gets or creates metadata for <paramref name="instance"/>.
+        /// Uses <see cref="ConditionalWeakTable{TKey,TValue}"/> to store metadata cache.
+        /// By default creates <see cref="IMutablePropertyContainer"/>.
+        /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
+        /// <param name="instance">Source.</param>
+        /// <param name="factory">Factory method to create metadata container.</param>
+        /// <returns>Metadata for instance or Empty metadata.</returns>
+        public static TContainer GetOrCreateInstanceMetadata<TContainer>(this object instance, Func<TContainer> factory)
+            where TContainer : IPropertyContainer
+        {
+            TContainer result;
+            if (instance.GetInstanceMetadata(autoCreate: false) is { } metadata)
+            {
+                result = metadata.ToPropertyContainerOfType<TContainer>(returnTheSameIfNoNeedToConvert: true);
+            }
+            else
+            {
+                result = factory();
+                instance.SetInstanceMetadata(result);
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -11,12 +11,73 @@ namespace MicroElements.Metadata.Tests.SchemaTests
         public void SimpleSchema()
         {
             var schema = new SimpleTypeSchema("Currency", typeof(string))
+                .WithDescription("ISO 4217 3-Letter Currency Code")
                 .SetStringMinLength(3);
 
             schema.Name.Should().Be("Currency");
+            schema.Description.Should().Be("ISO 4217 3-Letter Currency Code");
             schema.Type.Should().Be(typeof(string));
 
+           
             schema.AsMetadataProvider().GetMetadataContainer().Count.Should().Be(1);
+        }
+
+        [Fact]
+        public void SchemaBuilder()
+        {
+            SimpleTypeSchema simpleTypeSchema = new SimpleTypeSchema("Currency", typeof(string));
+
+            ISchemaBuilder<SimpleTypeSchema, ISchemaDescription> schemaBuilder = simpleTypeSchema;
+            ISchemaBuilder<IMetadataProvider, ISchemaDescription> schemaBuilderCovariant = simpleTypeSchema;
+            ISchemaBuilder<SimpleTypeSchema, SchemaDescription> schemaBuilderComponentContravariant = simpleTypeSchema;
+
+            string description = "ISO 4217 3-Letter Currency Code";
+
+            var instance1 = schemaBuilder.With(new SchemaDescription(description));
+            instance1.Description.Should().Be(description);
+
+            var instance2 = schemaBuilderCovariant.With(new SchemaDescription(description));
+            instance2.GetDescription().Should().Be(description);
+
+            var instance3 = schemaBuilderComponentContravariant.With(new SchemaDescription(description));
+            instance3.Description.Should().Be(description);
+        }
+
+        public interface IPerson
+        {
+            string Name { get; }
+        }
+
+        public class Person : IPerson
+        {
+            /// <inheritdoc />
+            public string Name { get; }
+
+            public Person(string name) => Name = name;
+        }
+
+        [Fact]
+        public void PropertyCovariance()
+        {
+            Property<Person> propertyOfPerson= new Property<Person>("Person");
+            IProperty<IPerson> propertyOfBaseType = propertyOfPerson;
+
+            var container = new MutablePropertyContainer()
+                .WithValue(propertyOfPerson, new Person("Alex"));
+
+            Person? person = container.GetValue(propertyOfPerson);
+            IPerson? personOfBaseType = container.GetValue(propertyOfBaseType);
+            personOfBaseType.Should().BeSameAs(person);
+            personOfBaseType.Name.Should().Be("Alex");
+        }
+
+        [Fact]
+        public void DefaultValueCovariance()
+        {
+            Person person = new Person("Alex");
+            IDefaultValue<Person> defaultValue = new DefaultValue<Person>(person);
+            IDefaultValue<IPerson> covariantDefaultValue = defaultValue;
+            covariantDefaultValue.Value.Should().BeSameAs(person);
         }
 
         [Fact]
@@ -85,6 +146,23 @@ namespace MicroElements.Metadata.Tests.SchemaTests
                 schema.GetDefaultValue().Should().NotBeNull();
                 schema.GetDefaultValue().GetDefaultValue().Should().Be(100.0);
             }
+        }
+
+        [Fact]
+        public void MinMax()
+        {
+            {
+                ISchema<double> schema = new SimpleTypeSchema<double>("Rate")
+                    .SetMinimum(0)
+                    .SetMaximum(1);
+                schema.GetNumericInterval().Should().NotBeNull().And.BeEquivalentTo(new NumericInterval(0, false, 1, false));
+
+                IProperty<double> property = new Property<double>("Rate")
+                    .SetMinimum(0)
+                    .SetMaximum(1);
+                property.GetNumericInterval().Should().NotBeNull().And.BeEquivalentTo(new NumericInterval(0, false, 1, false));
+            }
+
         }
     }
 }

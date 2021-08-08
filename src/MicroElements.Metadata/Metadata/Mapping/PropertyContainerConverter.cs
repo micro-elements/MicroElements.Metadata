@@ -36,6 +36,9 @@ namespace MicroElements.Metadata.Mapping
             if (returnTheSameIfNoNeedToConvert && propertyContainer.IsAssignableTo(outputType))
                 return propertyContainer;
 
+            if (!outputType.IsAssignableTo<IPropertyContainer>())
+                throw new ArgumentException($"OutputType type {outputType} should be {nameof(IPropertyContainer)}.");
+
             if (outputType == typeof(IMutablePropertyContainer) || outputType == typeof(MutablePropertyContainer))
                 return new MutablePropertyContainer(propertyContainer.Properties, propertyContainer.ParentSource, propertyContainer.SearchOptions);
 
@@ -56,7 +59,7 @@ namespace MicroElements.Metadata.Mapping
             }
 
             // Return ReadOnly PropertyContainer as a result.
-            return new PropertyContainer(propertyContainer.Properties, propertyContainer.ParentSource, propertyContainer.SearchOptions);
+            throw new InvalidCastException($"PropertyContainer of type {propertyContainer.GetType()} can not be converted to PropertyContainer of type {outputType}");
         }
     }
 }

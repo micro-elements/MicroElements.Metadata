@@ -15,7 +15,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema nullable.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface INullability : IMetadata
+    public interface INullability : ISchemaComponent
     {
         /// <summary>
         /// Gets a value indicating whether the property can accept null value.

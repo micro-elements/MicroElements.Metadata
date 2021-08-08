@@ -13,7 +13,7 @@ namespace MicroElements.Metadata.Schema
     /// It's an equivalent of JsonSchema minLength.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IStringMinLength : IMetadata
+    public interface IStringMinLength : ISchemaComponent
     {
         /// <summary>
         /// Gets minimum allowed length for string values.

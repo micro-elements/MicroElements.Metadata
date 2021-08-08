@@ -12,11 +12,13 @@ namespace MicroElements.Metadata.Schema
     /// Represents format for string values.
     /// It's an equivalent of JsonSchema format.
     /// </summary>
+    /// <para>https://json-schema.org/understanding-json-schema/reference/string.html#format</para>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IStringFormat : IMetadata
+    public interface IStringFormat : ISchemaComponent
     {
         /// <summary>
-        /// Gets regex pattern for string values.
+        /// Gets one of built-in or custom formats.
+        /// Examples: date-time, date, time, email, uri, regex, etc.
         /// </summary>
         string Format { get; }
     }

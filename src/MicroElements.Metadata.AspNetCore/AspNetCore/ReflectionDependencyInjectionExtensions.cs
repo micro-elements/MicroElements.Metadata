@@ -93,5 +93,10 @@ namespace MicroElements.Metadata.AspNetCore
 
             return jsonSerializerOptions;
         }
+
+        public static JsonSerializerOptions GetJsonSerializerOptionsOrDefault(this IServiceProvider serviceProvider)
+        {
+            return serviceProvider.GetJsonSerializerOptions() ?? new JsonSerializerOptions();
+        }
     }
 }

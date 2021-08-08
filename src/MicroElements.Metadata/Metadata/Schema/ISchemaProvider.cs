@@ -3,9 +3,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using MicroElements.Metadata.Serialization;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -84,7 +81,7 @@ namespace MicroElements.Metadata.Schema
         {
             if (schema is IObjectSchema objectSchema)
             {
-                string schemaDigest = SchemaEqualityComparer.Instance.GetSchemaDigest(objectSchema.Properties);
+                string schemaDigest = SchemaDigest.GetSchemaDigest(objectSchema.Properties);
                 schema = _schemasByDigest.GetOrAdd(schemaDigest, s => schema);
                 _schemas[schema.Name] = objectSchema;
                 return schema.Name;
@@ -101,23 +98,6 @@ namespace MicroElements.Metadata.Schema
         {
             _schemas.TryGetValue(schemaId, out var result);
             return result;
-        }
-    }
-
-    public class SchemaEqualityComparer
-    {
-        public static SchemaEqualityComparer Instance = new SchemaEqualityComparer();
-
-        public string GetSchemaDigest(IReadOnlyCollection<IProperty> properties)
-        {
-            //MetadataSchema.GenerateCompactSchema(properties)
-            string digest = properties
-                .OrderBy(property => property.Name)
-                .Aggregate(
-                    new StringBuilder(),
-                    (builder, property) => builder.AppendFormat("{0}@{1};", property.Name, property.Type))
-                .ToString();
-            return digest;
         }
     }
 }

@@ -15,6 +15,40 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Source property container.</param>
         /// <param name="searchOptions">SearchOptions provided by client.</param>
         /// <returns>Value and <see cref="ValueSource"/>.</returns>
-        (T Value, ValueSource ValueSource) Calculate(IPropertyContainer propertyContainer, SearchOptions searchOptions);
+        (T Value, ValueSource ValueSource) Calculate(IPropertyContainer propertyContainer, in SearchOptions searchOptions);
+    }
+
+    /// <summary>
+    /// Represents object that has calculator.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IHasCalculator<T>
+    {
+        /// <summary>
+        /// Gets property value calculator.
+        /// </summary>
+        IPropertyCalculator<T>? Calculator { get; }
+    }
+
+    /// <summary>
+    /// PropertyCalculator extensions.
+    /// </summary>
+    public static class HasCalculatorExtensions
+    {
+        /// <summary>
+        /// Gets IPropertyCalculator for property.
+        /// Looks whether the property is <see cref="IHasCalculator{T}"/> then searches <see cref="IPropertyCalculator{T}"/> component.
+        /// </summary>
+        /// <typeparam name="T">Value type.</typeparam>
+        /// <param name="property">Source property.</param>
+        /// <returns>Optional <see cref="IHasCalculator{T}"/>.</returns>
+        public static IPropertyCalculator<T>? GetCalculator<T>(this IProperty<T> property)
+        {
+            if (property is IHasCalculator<T> hasCalculator)
+                return hasCalculator.Calculator;
+
+            var propertyCalculator = property.GetComponent<IPropertyCalculator<T>>();
+            return propertyCalculator;
+        }
     }
 }

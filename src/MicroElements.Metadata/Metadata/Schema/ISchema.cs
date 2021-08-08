@@ -11,25 +11,30 @@ namespace MicroElements.Metadata.Schema
     public interface ISchema : IMetadataProvider
     {
         /// <summary>
-        /// Gets property name.
+        /// Gets name.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Gets property value type.
+        /// Gets value type.
         /// </summary>
         Type Type { get; }
-
-        /// <summary>
-        /// Gets property description.
-        /// </summary>
-        string? Description { get; }
     }
 
     /// <summary>
     /// Represents base strong typed schema interface.
     /// </summary>
-    public interface ISchema<T> : ISchema
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface ISchema<out T> : ISchema
     {
+        /// <inheritdoc />
+        Type ISchema.Type => typeof(T);
+    }
+
+    public interface IDataSchema : ISchema
+    {
+        //IOneOf OneOf { get; }
+
+        //IAllOf AllOf { get; }
     }
 }

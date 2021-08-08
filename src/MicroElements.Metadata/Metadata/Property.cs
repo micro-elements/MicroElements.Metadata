@@ -16,7 +16,7 @@ namespace MicroElements.Metadata
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public sealed partial class Property<T> : IProperty<T>
+    public sealed partial class Property<T> : IPropertyWithCalculator<T>
     {
         /// <summary>
         /// Empty property instance.
@@ -34,6 +34,7 @@ namespace MicroElements.Metadata
             // other properties can be configured with method With
             Description = null;
             Alias = null;
+
             DefaultValue = DefaultValue<T>.Default;
             Examples = Array.Empty<T>();
             Calculator = null;
@@ -53,8 +54,8 @@ namespace MicroElements.Metadata
             string name,
             string? description,
             string? alias,
-            IDefaultValue<T> defaultValue,
-            IReadOnlyList<T> examples,
+            IDefaultValue<T>? defaultValue,
+            IReadOnlyCollection<T>? examples,
             IPropertyCalculator<T>? calculator)
         {
             defaultValue.AssertArgumentNotNull(nameof(defaultValue));
@@ -63,8 +64,9 @@ namespace MicroElements.Metadata
             Name = name;
             Description = description;
             Alias = alias;
-            DefaultValue = defaultValue;
-            Examples = examples;
+
+            DefaultValue = defaultValue ?? DefaultValue<T>.Default;
+            Examples = examples ?? Array.Empty<T>();
             Calculator = calculator;
         }
 
@@ -84,7 +86,7 @@ namespace MicroElements.Metadata
         public IDefaultValue<T> DefaultValue { get; }
 
         /// <inheritdoc />
-        public IReadOnlyList<T> Examples { get; }
+        public IReadOnlyCollection<T> Examples { get; }
 
         /// <inheritdoc />
         public IPropertyCalculator<T>? Calculator { get; }
@@ -124,18 +126,19 @@ namespace MicroElements.Metadata
             string? description = null,
             string? alias = null,
             IDefaultValue<T>? defaultValue = null,
-            IReadOnlyList<T>? examples = null,
+            IReadOnlyCollection<T>? examples = null,
             IPropertyCalculator<T>? calculator = null)
         {
             source.AssertArgumentNotNull(nameof(source));
 
+            IPropertyCalculator<T>? propertyCalculator = calculator ?? source.GetCalculator<T>();
             Property<T> property = new Property<T>(
                 name: name ?? source.Name,
                 alias: alias ?? source.Alias,
                 description: description ?? source.Description,
                 defaultValue: defaultValue ?? source.DefaultValue,
                 examples: examples ?? source.Examples,
-                calculator: calculator ?? source.Calculator);
+                calculator: propertyCalculator);
             source.CopyMetadataTo(property);
             return property;
         }

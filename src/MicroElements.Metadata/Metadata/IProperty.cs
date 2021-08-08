@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
@@ -9,7 +8,10 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents property description.
     /// </summary>
-    public interface IProperty : ISchema
+    public interface IProperty :
+        ISchema,
+        ISchemaDescription,
+        IHasAlias
     {
     }
 
@@ -17,21 +19,21 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IProperty<T> : ISchema<T>, IProperty, IHasAlias
+    public interface IProperty<out T> :
+        ISchema<T>,
+        IProperty,
+        IHasDefaultValue<T>,
+        IHasExamples<T>
     {
-        /// <summary>
-        /// Gets default value for property.
-        /// </summary>
-        IDefaultValue<T> DefaultValue { get; }
+    }
 
-        /// <summary>
-        /// Gets property value calculator.
-        /// </summary>
-        IPropertyCalculator<T>? Calculator { get; }
-
-        /// <summary>
-        /// Gets examples list.
-        /// </summary>
-        IReadOnlyList<T> Examples { get; }
+    /// <summary>
+    /// Strong typed property with calculator.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IPropertyWithCalculator<T> :
+        IProperty<T>,
+        IHasCalculator<T>
+    {
     }
 }

@@ -9,6 +9,44 @@ Metadata.NewtonsoftJson:
 - WriteSchemaToPropertyName removed from MetadataJsonSerializationOptions
 - PropertyContainerWithMetadataTypesConverter removed
 
+# NEXT
+
+- Extracted several interfaces from IProperty<T>: IHasCalculator<T>, IHasDefaultValue, IHasDefaultValue<T>, IHasExamples
+- IProperty<T>, IPropertyValue<T>, ISchema<T> become covariant
+- IPropertyCalculator<T> moved to IPropertyWithCalculator<T> (not covariant part)
+- Breaking: Use GetCalculator extension method instead Calculator property because IProperty<T> does not contain it anymore
+
+- IStaticSchema now autoimplements IStaticPropertySet 
+- OneOf initial support
+
+- Base58 encoding for hashes
+
+# 7.8.0
+- Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)
+- Added MetadataGlobalCache.GetOrCreateInstanceMetadata
+- Added MetadataProvider.CreateMutableContainer
+- Change: ToPropertyContainerOfType throws exceptions if output type is not property container and when conversion can not be done
+
+# 7.7.0
+- PropertyContainerSchemaFilter: GenerateKnownSchemasAsRefs uses for properties with separate schema
+- PropertyContainerSchemaFilter: Uses AspNetJsonSerializerOptions to reuse AspNet JsonSerializerOptions
+- Added extension method SetMetadataFrom to copy metadata from source object
+- Added ISchemaBuilder to allow create copies of schema components;
+- Added ISchemaBuilder extension WithDescription that creates schema component copy with desired description
+- Added ISchemaComponent to allow more precise control on schema building
+- 7.7.1: IAllowedValues, INumericInterval, IProperties, IStringFormat, IStringMaxLength, IStringMinLength, IStringPattern, INullability become ISchemaComponent
+- 7.7.1: PropertyContainerSchemaFilter all ISchemaComponent support
+- 7.7.1: JsonTypeMapper returns types with format
+
+# 7.6.0
+- IAllowedValues: added IEqualityComparer
+- NumericInterval extension methods returns the same type where possible
+- Required validation rule extended with SearchOptions and assertValueIsNull argument, added IRequiredPropertyValidationRule marker interface
+- ExtractValidateMap initial functionality
+- MapToTuple extensions methods
+- 7.6.4: SetAllowedValuesFromEnum for string schemas ignores case by default
+- 7.6.4: JsonSchemaGenerator initial, added option: MetadataJsonSerializationOptions.UseJsonSchema
+
 # 7.5.0
 - Added Property<T> Clone method
 - Added IPropertyContainer extensions: CloneAsMutable and CloneAsReadOnly

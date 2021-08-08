@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Schema
     /// Aligned with JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00.
     /// </summary>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface INumericInterval : IMetadata
+    public interface INumericInterval : ISchemaComponent
     {
         /// <summary>
         /// Minimum value allowed for the property value.
@@ -56,9 +56,9 @@ namespace MicroElements.Metadata.Schema
             return !interval.ExclusiveMaximum.HasValue || interval.ExclusiveMaximum == false;
         }
 
-        public static string ToIntervalString(this INumericInterval interval, string? intervalDelimeter = "..")
+        public static string ToIntervalString(this INumericInterval interval, string? intervalDelimeter = ", ")
         {
-            intervalDelimeter ??= "..";
+            intervalDelimeter ??= ", ";
             string left = interval.Minimum.HasValue ? interval.Minimum.Value.ToString(NumberFormatInfo.InvariantInfo) : "-Infinity";
             string right = interval.Maximum.HasValue ? interval.Maximum.Value.ToString(NumberFormatInfo.InvariantInfo) : "+Infinity";
             string leftBracket = interval.IsLeftIncluded() ? "[" : "(";
@@ -128,6 +128,7 @@ namespace MicroElements.Metadata.Schema
         /// <typeparam name="TSchema">Schema type.</typeparam>
         /// <param name="schema">Source property.</param>
         /// <param name="numericInterval">Numeric interval for property values.</param>
+        /// <param name="mergeMode">Merge mode.</param>
         /// <returns>The same property.</returns>
         public static TSchema SetNumericInterval<TSchema>(this TSchema schema, INumericInterval numericInterval, MetadataMergeMode mergeMode = MetadataMergeMode.Set)
             where TSchema : ISchema
@@ -161,15 +162,17 @@ namespace MicroElements.Metadata.Schema
             return schema.GetSchemaMetadata<INumericInterval>();
         }
 
-        public static ISchema<T> SetMinimum<T>(this ISchema<T> schema, T minimum, bool exclusiveMinimum = false)
+        public static TSchema SetMinimum<TSchema>(this TSchema schema, decimal minimum, bool exclusiveMinimum = false)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();
 
-            return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: exclusiveMinimum, null, null));
+            return schema.MergeNumericInterval(new NumericInterval(minimum, exclusiveMinimum: exclusiveMinimum, null, null));
         }
 
-        public static ISchema<T> SetMaximum<T>(this ISchema<T> schema, T maximum, bool exclusiveMaximum = false)
+        public static TSchema SetMaximum<TSchema>(this TSchema schema, decimal maximum, bool exclusiveMaximum = false)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();
@@ -177,7 +180,8 @@ namespace MicroElements.Metadata.Schema
             return schema.MergeNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: exclusiveMaximum));
         }
 
-        public static ISchema<T> GreaterThan<T>(this ISchema<T> schema, T minimum)
+        public static TSchema GreaterThan<TSchema>(this TSchema schema, decimal minimum)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();
@@ -185,7 +189,8 @@ namespace MicroElements.Metadata.Schema
             return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: true, null, null));
         }
 
-        public static ISchema<T> GreaterThanOrEqual<T>(this ISchema<T> schema, T minimum)
+        public static TSchema GreaterThanOrEqual<TSchema>(this TSchema schema, decimal minimum)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();
@@ -193,7 +198,8 @@ namespace MicroElements.Metadata.Schema
             return schema.MergeNumericInterval(new NumericInterval(Convert.ToDecimal(minimum), exclusiveMinimum: false, null, null));
         }
 
-        public static ISchema<T> LessThan<T>(this ISchema<T> schema, T maximum)
+        public static TSchema LessThan<TSchema>(this TSchema schema, decimal maximum)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();
@@ -201,7 +207,8 @@ namespace MicroElements.Metadata.Schema
             return schema.MergeNumericInterval(new NumericInterval(null, null, Convert.ToDecimal(maximum), exclusiveMaximum: true));
         }
 
-        public static ISchema<T> LessThanOrEqual<T>(this ISchema<T> schema, T maximum)
+        public static TSchema LessThanOrEqual<TSchema>(this TSchema schema, decimal maximum)
+            where TSchema : ISchema
         {
             schema.AssertArgumentNotNull(nameof(schema));
             schema.AssertPropertyIsNumeric();

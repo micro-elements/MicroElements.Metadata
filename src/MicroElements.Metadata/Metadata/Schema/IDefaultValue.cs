@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Formatting;
@@ -32,7 +33,7 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <typeparam name="T">Type.</typeparam>
     [MetadataUsage(ValidOn = MetadataTargets.Property)]
-    public interface IDefaultValue<T> : IDefaultValue
+    public interface IDefaultValue<out T> : IDefaultValue
     {
         /// <summary>
         /// Gets strong typed default value.
@@ -41,6 +42,32 @@ namespace MicroElements.Metadata.Schema
 
         /// <inheritdoc />
         object? IDefaultValue.GetDefaultValue() => Value;
+    }
+
+    /// <summary>
+    /// Represents object that has default value.
+    /// </summary>
+    public interface IHasDefaultValue
+    {
+        /// <summary>
+        /// Gets default value for property.
+        /// </summary>
+        IDefaultValue? DefaultValueUntyped { get; }
+    }
+
+    /// <summary>
+    /// Represents object that has default value.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IHasDefaultValue<out T> : IHasDefaultValue
+    {
+        /// <summary>
+        /// Gets default value for property.
+        /// </summary>
+        IDefaultValue<T>? DefaultValue { get; }
+
+        /// <inheritdoc />
+        IDefaultValue? IHasDefaultValue.DefaultValueUntyped => DefaultValue;
     }
 
     /// <summary>

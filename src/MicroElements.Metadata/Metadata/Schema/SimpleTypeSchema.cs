@@ -14,7 +14,10 @@ namespace MicroElements.Metadata.Schema
     /// Example: Currency (string type with maxLength: 3).
     /// </summary>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema : ISchema, IManualMetadataProvider
+    public class SimpleTypeSchema : ISchema,
+        IManualMetadataProvider,
+        ISchemaDescription,
+        ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
     {
         /// <inheritdoc />
         public string Name { get; }
@@ -25,13 +28,17 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public string? Description { get; }
 
+        /// <inheritdoc />
+        public IPropertyContainer Metadata { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SimpleTypeSchema"/> class.
         /// </summary>
         /// <param name="name">Type name.</param>
         /// <param name="type">Base type for schema.</param>
         /// <param name="description">Optional schema description.</param>
-        public SimpleTypeSchema(string name, Type type, string? description = null)
+        /// <param name="metadata">Optional metadata for schema.</param>
+        public SimpleTypeSchema(string name, Type type, string? description = null, IPropertyContainer? metadata = null)
         {
             name.AssertArgumentNotNull(nameof(name));
             type.AssertArgumentNotNull(nameof(type));
@@ -40,11 +47,15 @@ namespace MicroElements.Metadata.Schema
             Type = type;
             Description = description;
 
-            Metadata = new ConcurrentMutablePropertyContainer(searchOptions: MetadataProvider.DefaultSearchOptions);
+            Metadata = new ConcurrentMutablePropertyContainer(metadata, searchOptions: MetadataProvider.DefaultSearchOptions);
         }
 
         /// <inheritdoc />
-        public IPropertyContainer Metadata { get; }
+        public SimpleTypeSchema With(ISchemaDescription schemaDescription)
+        {
+            var source = this;
+            return new SimpleTypeSchema(source.Name, source.Type, schemaDescription.Description, source.Metadata);
+        }
     }
 
     /// <summary>
@@ -52,8 +63,12 @@ namespace MicroElements.Metadata.Schema
     /// Simple type does not have own properties but has some restrictions for vase type.
     /// Example: Currency (string type with maxLength: 3).
     /// </summary>
+    /// <typeparam name="T">Schema value type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema<T> : ISchema<T>
+    public class SimpleTypeSchema<T> :
+        ISchema<T>,
+        ISchemaDescription,
+        ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
     {
         /// <inheritdoc />
         public Type Type => typeof(T);
@@ -75,6 +90,13 @@ namespace MicroElements.Metadata.Schema
 
             Name = name;
             Description = description;
+        }
+
+        /// <inheritdoc />
+        public SimpleTypeSchema<T> With(ISchemaDescription schemaDescription)
+        {
+            var source = this;
+            return new SimpleTypeSchema<T>(source.Name, schemaDescription.Description).SetMetadataFrom(source);
         }
     }
 }

@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
+using MicroElements.Validation;
+using MicroElements.Validation.Rules;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MicroElements.Metadata.SampleApp.Controllers
 {
     [ApiController]
-    public class MetadataController : Controller
+    internal class MetadataController : Controller
     {
         [HttpGet("[action]")]
         public Person GetPerson()
@@ -13,7 +18,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
             Person person = new Person()
             {
                 Name = "Alex",
-                Sex = "Male",
+                Sex = SexTypeEnum.Male,
                 Age = 42
             };
 
@@ -26,7 +31,7 @@ namespace MicroElements.Metadata.SampleApp.Controllers
             Person person = new Person()
             {
                 Name = "Alex",
-                Sex = "Male",
+                Sex = SexTypeEnum.Male,
                 Age = 42
             };
 
@@ -37,13 +42,46 @@ namespace MicroElements.Metadata.SampleApp.Controllers
                 Person = new PropertyContainer<PersonMetadata>(propertyContainer)
             };
         }
+
+        [HttpGet("[action]")]
+        public PersonView GetPersonView2()
+        {
+            PropertyContainer<PersonMetadata> propertyContainer = new PropertyContainer<PersonMetadata>()
+                .WithValue(PersonMetadata.Name, "Alex")
+                .WithValue(PersonMetadata.Sex, "UNKNOWN")
+                .WithValue(PersonMetadata.Age, 42);
+
+            var validationRules = new PersonMetadata()
+                .GetProperties()
+                .SelectMany(ValidationProvider.Instance.GetValidationRules)
+                .ToArray();
+
+            var messages = propertyContainer.Validate(validationRules).ToArray();
+
+            return new PersonView
+            {
+                Person = new PropertyContainer<PersonMetadata>(propertyContainer),
+                Messages = messages.Select(message => message.FormattedMessage).ToArray(),
+            };
+        }
+
     }
 
     public class Person
     {
         public string? Name { get; set; }
-        public string? Sex { get; set; }
+
+        /// <summary>
+        /// Person sex.
+        /// </summary>
+        public SexTypeEnum? Sex { get; set; }
+
+        /// <summary>
+        /// Person age.
+        /// </summary>
         public int Age { get; set; }
+
+        public DateTime BirthDate { get; set; }
     }
 
     public class PersonView
@@ -52,6 +90,8 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         public IPropertyContainer Database { get; set; }
 
         public PropertyContainer<PersonMetadata> Person { get; set; }
+
+        public string[] Messages { get; set; }
     }
 
     public class DatabaseMeta : IPropertySet
@@ -67,8 +107,19 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         }
     }
 
+    public enum SexTypeEnum
+    {
+        Male,
+        Female
+    }
+
     public class PersonMetadata : IPropertySet, IModelMapper<Person>
     {
+        public static ISchema<string> SexType = new Property<string>("SexType")
+            .WithDescription("Person sex")
+            .SetAllowedValues("Male", "Female");
+
+
         public static IProperty<string> Name = new Property<string>("Name")
             .WithDescription("Person name.")
             .SetNotNull();
@@ -77,15 +128,28 @@ namespace MicroElements.Metadata.SampleApp.Controllers
             .WithDescription("Person sex")
             .SetAllowedValues("Male", "Female");
 
+        public static IProperty<string> Sex2 = new Property<string>("Sex2")
+            .SetSchema(SexType);
+
+        public static IProperty<SexTypeEnum> Sex3 = new Property<SexTypeEnum>("Sex3")
+            .WithDescription("Person sex")
+            .SetAllowedValuesFromEnum<SexTypeEnum>();
+
         public static IProperty<int> Age = new Property<int>("Age")
             .WithDescription("Person age in years.");
+
+        public static IProperty<DateTime> BirthDate = new Property<DateTime>("BirthDate")
+            .WithDescription("BirthDate.");
 
         /// <inheritdoc />
         public IEnumerable<IProperty> GetProperties()
         {
             yield return Name;
             yield return Sex;
+            yield return Sex2;
+            yield return Sex3;
             yield return Age;
+            yield return BirthDate;
         }
 
         /// <inheritdoc />
@@ -93,7 +157,8 @@ namespace MicroElements.Metadata.SampleApp.Controllers
         {
             return new MutablePropertyContainer()
                 .WithValue(Name, model.Name)
-                .WithValue(Sex, model.Sex)
+                .WithValue(Sex, model.Sex?.ToString())
+                .WithValue(Sex2, model.Sex?.ToString())
                 .WithValue(Age, model.Age);
         }
 

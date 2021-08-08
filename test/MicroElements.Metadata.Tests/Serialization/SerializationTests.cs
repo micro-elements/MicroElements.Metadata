@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +12,7 @@ using AutoFixture.Kernel;
 using FluentAssertions;
 using MicroElements.Reflection;
 using MicroElements.Metadata.Diff;
+using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.NewtonsoftJson;
@@ -202,8 +204,20 @@ namespace MicroElements.Metadata.Tests.Serialization
                 Data2 = CreateTestContainer()
             };
 
-            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = false);
-            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options => options.UseSchemasRoot = true);
+            string jsonWithNewtonsoftJson1 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = false;
+            });
+            string jsonWithNewtonsoftJson2 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = true;
+                options.UseJsonSchema = false;
+            });
+            string jsonWithNewtonsoftJson3 = complexObject.ToJsonWithNewtonsoftJson(configureSerialization: options =>
+            {
+                options.UseSchemasRoot = true;
+                options.UseJsonSchema = true;
+            });
         }
 
         class TestPerson
@@ -305,6 +319,16 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
+        public void PropertyContainerInvalidCast()
+        {
+            Action invalidCast = () => CreateTestContainer().ToPropertyContainerOfType(typeof(TestMeta));
+            invalidCast.Should().Throw<ArgumentException>();
+
+            Action goodCast = () => CreateTestContainer().ToPropertyContainerOfType(typeof(PropertyContainer<TestMeta>));
+            goodCast.Should().NotThrow();
+        }
+
+        [Fact]
         public void SerializeDeserializeTypedPropertyContainerCollection()
         {
             var initialContainer = CreateTestContainer()
@@ -350,6 +374,17 @@ namespace MicroElements.Metadata.Tests.Serialization
             string json2 = stringBuilder2.ToString();
 
             json2.Should().Be(json1);
+        }
+
+        [Fact]
+        public void TestStaticSchema()
+        {
+            TestMeta testMeta = new TestMeta();
+            IPropertySet propertySet = testMeta;
+            propertySet.GetProperties().Should().HaveCount(8);
+
+            IObjectSchemaProvider schemaProvider = testMeta;
+            schemaProvider.GetObjectSchema().Properties.Should().HaveCount(8);
         }
     }
 
@@ -410,7 +445,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
     }
 
-    public class TestMeta : IStaticPropertySet, IStaticSchema
+    public class TestMeta : IStaticSchema
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");

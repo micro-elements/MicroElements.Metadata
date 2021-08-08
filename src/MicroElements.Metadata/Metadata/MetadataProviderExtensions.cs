@@ -319,6 +319,20 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
+        /// Sets metadata from <paramref name="metadataSource"/>.
+        /// This is inverted version of <see cref="CopyMetadataTo"/>.
+        /// </summary>
+        /// <typeparam name="T">Type.</typeparam>
+        /// <param name="target">Metadata target.</param>
+        /// <param name="metadataSource">Metadata source.</param>
+        /// <returns>The same instance.</returns>
+        public static T SetMetadataFrom<T>(this T target, object metadataSource)
+        {
+            metadataSource.CopyMetadataTo(target);
+            return target;
+        }
+
+        /// <summary>
         /// Returns provider metadata.
         /// </summary>
         /// <param name="metadataProvider">Source metadata provider.</param>

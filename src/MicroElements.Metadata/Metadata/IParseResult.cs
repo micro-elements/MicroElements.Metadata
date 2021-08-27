@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using MicroElements.Functional;
 
 namespace MicroElements.Metadata
@@ -64,9 +63,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets result value.
         /// </summary>
-        [AllowNull]
-        [MaybeNull]
-        public T Value { get; }
+        public T? Value { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ParseResult{T}"/> struct.
@@ -74,12 +71,24 @@ namespace MicroElements.Metadata
         /// <param name="isSuccess">Is success.</param>
         /// <param name="value">Parse result.</param>
         /// <param name="error">Error.</param>
-        internal ParseResult(bool isSuccess, [AllowNull] T value, Message? error)
+        internal ParseResult(bool isSuccess, T? value, Message? error)
         {
             IsSuccess = isSuccess;
             Value = value;
             Error = error;
         }
+
+        /// <summary>
+        /// Implicit conversion of value to success ParseResult.
+        /// </summary>
+        /// <param name="value">Value.</param>
+        public static implicit operator ParseResult<T>(T? value) => ParseResult.Success(value);
+
+        /// <summary>
+        /// Implicit conversion of Message to failed ParseResult.
+        /// </summary>
+        /// <param name="message">Value.</param>
+        public static implicit operator ParseResult<T>(Message message) => ParseResult.Failed<T>(message);
     }
 
     /// <summary>
@@ -100,7 +109,7 @@ namespace MicroElements.Metadata
         /// <typeparam name="T">Result type.</typeparam>
         /// <param name="value">Value.</param>
         /// <returns>Success <see cref="ParseResult{T}"/> instance.</returns>
-        public static ParseResult<T> Success<T>([AllowNull] T value)
+        public static ParseResult<T> Success<T>(T? value)
         {
             return new ParseResult<T>(isSuccess: true, value: value, error: null);
         }
@@ -138,17 +147,37 @@ namespace MicroElements.Metadata
         /// <param name="source">Source result.</param>
         /// <param name="map">Map function.</param>
         /// <returns><see cref="ParseResult{T}"/> of type <typeparamref name="B"/>.</returns>
-        public static ParseResult<B> Map<A, B>(this in ParseResult<A> source, Func<A, B> map)
+        public static ParseResult<B> Map<A, B>(this in ParseResult<A> source, Func<A?, B?> map)
         {
             map.AssertArgumentNotNull(nameof(map));
 
             if (source.IsSuccess)
             {
-                B valueB = map(source.Value!);
+                B? valueB = map(source.Value!);
                 return Success(valueB);
             }
 
-            return ParseResult<B>.Failed;
+            return Failed<B>(source.Error);
+        }
+
+        /// <summary>
+        /// Binds result to other result type with <paramref name="bind"/> func.
+        /// </summary>
+        /// <typeparam name="A">Source type.</typeparam>
+        /// <typeparam name="B">Target type.</typeparam>
+        /// <param name="source">Source result.</param>
+        /// <param name="bind">Bind function.</param>
+        /// <returns><see cref="ParseResult{T}"/> of type <typeparamref name="B"/>.</returns>
+        public static ParseResult<B> Bind<A, B>(this in ParseResult<A> source, Func<A?, ParseResult<B>> bind)
+        {
+            bind.AssertArgumentNotNull(nameof(bind));
+
+            if (source.IsSuccess)
+            {
+                return bind(source.Value!);
+            }
+
+            return Failed<B>(source.Error);
         }
     }
 }

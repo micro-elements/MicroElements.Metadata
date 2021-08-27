@@ -1,3 +1,9 @@
+# 7.9.0
+- ParseResult implicit conversion from value and from Message
+- ParseResult.Map and ParseResult.Bind methods now transfers error to the next result
+- ParseResult nullable declarations instead attributes
+- Added ParserProvider.Source override with ParseResult function
+
 # 7.8.0
 - Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)
 - Added MetadataGlobalCache.GetOrCreateInstanceMetadata

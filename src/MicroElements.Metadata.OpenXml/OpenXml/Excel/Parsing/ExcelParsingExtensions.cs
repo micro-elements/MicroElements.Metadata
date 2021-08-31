@@ -11,6 +11,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.Functional;
+using MicroElements.Validation;
 using NodaTime;
 using NodaTime.Text;
 
@@ -466,6 +467,64 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 .AsDictionaryList(parserProvider)
                 .Select(parserProvider.ParseProperties)
                 .Select(factory);
+        }
+
+        public readonly struct MapContext
+        {
+            public readonly IReadOnlyList<IPropertyValue> Values;
+            public readonly IReadOnlyList<Message>? Errors;
+
+            public MapContext(IReadOnlyList<IPropertyValue> values, IReadOnlyList<Message>? errors)
+            {
+                Values = values;
+                Errors = errors;
+            }
+        }
+
+        public static IEnumerable<ValidationResult<T>> MapAndValidateRows<T>(
+            this IEnumerable<ExcelElement<Row>> rows,
+            IParserProvider parserProvider,
+            Func<MapContext, T>? factory = null)
+        {
+            rows.AssertArgumentNotNull(nameof(rows));
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+
+            if (factory == null)
+                factory = (context) => (T)Activator.CreateInstance(typeof(T), context.Values);
+
+            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = rows
+                .AsDictionaryList(parserProvider)
+                .Select(parserProvider.ParsePropertiesAsParseResults);
+
+            foreach (IReadOnlyList<ParseResult<IPropertyValue>> parseResult in parseResults)
+            {
+                IPropertyValue[] resultArray = new IPropertyValue[parseResult.Count];
+                Message[]? errorArray = null;
+                int iResult = 0;
+                int iError = 0;
+
+                for (int i = 0; i < parseResult.Count; i++)
+                {
+                    ParseResult<IPropertyValue> result = parseResult[i];
+                    if (result.IsSuccess)
+                    {
+                        resultArray[iResult++] = result.Value!;
+                    }
+                    else
+                    {
+                        if (errorArray == null)
+                            errorArray = new Message[parseResult.Count];
+                        errorArray[iError++] = result.Error!;
+                    }
+                }
+
+                var results = resultArray[0..iResult];
+                var errors = errorArray?[0..iError];
+                var mapContext = new MapContext(results, errors);
+
+                T data = factory(mapContext);
+                yield return new ValidationResult<T>(data, errors);
+            }
         }
 
         public static bool NeedFillCellReferences(this ExcelElement<Sheet> sheet)

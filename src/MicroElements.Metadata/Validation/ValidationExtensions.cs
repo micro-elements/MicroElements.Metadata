@@ -84,7 +84,8 @@ namespace MicroElements.Validation
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             validationRules.AssertArgumentNotNull(nameof(validationRules));
 
-            return new ValidationResult<T>(propertyContainer, propertyContainer.Validate(validationRules));
+            var messages = propertyContainer.Validate(validationRules).ToArray();
+            return new ValidationResult<T>(propertyContainer, messages);
         }
 
         /// <summary>
@@ -101,7 +102,8 @@ namespace MicroElements.Validation
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
             validator.AssertArgumentNotNull(nameof(validator));
 
-            return new ValidationResult<T>(propertyContainer, propertyContainer.Validate(validator));
+            var messages = propertyContainer.Validate(validator).ToArray();
+            return new ValidationResult<T>(propertyContainer, messages);
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyParser">Source property parser.</param>
         /// <param name="sourceRow">Value to parse.</param>
         /// <returns>Optional parse result.</returns>
-        public static ParseResult<IPropertyValue> ParseRowUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
+        public static ParseResult<IPropertyValue> ParsePropertyUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
         {
             return sourceRow
                 .GetValueAsOption(propertyParser.SourceName)

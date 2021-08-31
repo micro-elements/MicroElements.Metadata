@@ -29,10 +29,10 @@ namespace MicroElements.Validation
         /// </summary>
         /// <param name="data">Data that was validated.</param>
         /// <param name="validationMessages">Validation messages.</param>
-        public ValidationResult(T data, IEnumerable<Message> validationMessages)
+        public ValidationResult(T data, IReadOnlyCollection<Message>? validationMessages)
         {
             Data = data.AssertArgumentNotNull(nameof(data));
-            ValidationMessages = validationMessages?.ToArray() ?? Array.Empty<Message>();
+            ValidationMessages = validationMessages ?? Array.Empty<Message>();
         }
 
         /// <summary>

@@ -16,12 +16,19 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="propertyParser">Source property parser.</param>
         /// <param name="sourceRow">Value to parse.</param>
+        /// <param name="useDefaultValueForAbsent">Return default value if value is absent.</param>
         /// <returns>Optional parse result.</returns>
-        public static ParseResult<IPropertyValue> ParsePropertyUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow)
+        public static ParseResult<IPropertyValue> ParseRowUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow, bool useDefaultValueForAbsent = true)
         {
-            return sourceRow
-                .GetValueAsOption(propertyParser.SourceName)
-                .Match(textValue => ParseUntyped(propertyParser, textValue), propertyParser.GetDefaultValueUntyped);
+            if (sourceRow.TryGetValue(propertyParser.SourceName, out var value) && value.IsNotNull())
+            {
+                return ParseUntyped(propertyParser, value);
+            }
+
+            if (useDefaultValueForAbsent)
+                return propertyParser.GetDefaultValueUntyped();
+
+            return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent."));
         }
 
         /// <summary>
@@ -58,14 +65,17 @@ namespace MicroElements.Metadata
 
             static ParseResult<IPropertyValue> GetDefaultValue<T>(IPropertyParser propertyParserUntyped)
             {
+                IPropertyValue? propertyValue = null;
                 IPropertyParser<T> propertyParser = (IPropertyParser<T>)propertyParserUntyped;
                 if (propertyParser.DefaultValue != null)
                 {
                     var defaultValue = propertyParser.DefaultValue.Value;
-                    return ParseResult.Success<IPropertyValue>(new PropertyValue<T>(propertyParser.TargetProperty, defaultValue, ValueSource.DefaultValue));
+                    propertyValue = new PropertyValue<T>(propertyParser.TargetProperty, defaultValue, ValueSource.DefaultValue);
+                    return ParseResult.Success(propertyValue);
                 }
 
-                return ParseResult<IPropertyValue>.Failed;
+                propertyValue = PropertyValue.Default(propertyParser.TargetProperty);
+                return ParseResult.Success(propertyValue);
             }
         }
     }

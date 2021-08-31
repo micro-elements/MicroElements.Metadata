@@ -489,11 +489,23 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             rows.AssertArgumentNotNull(nameof(rows));
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
 
+            var dictionaryList = rows.AsDictionaryList(parserProvider);
+
+            return dictionaryList.MapAndValidateRows(parserProvider, factory);
+        }
+
+        public static IEnumerable<ValidationResult<T>> MapAndValidateRows<T>(
+            this IEnumerable<IReadOnlyDictionary<string, string>> dictionaryList,
+            IParserProvider parserProvider,
+            Func<MapContext, T>? factory = null)
+        {
+            dictionaryList.AssertArgumentNotNull(nameof(dictionaryList));
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+
             if (factory == null)
                 factory = (context) => (T)Activator.CreateInstance(typeof(T), context.Values);
 
-            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = rows
-                .AsDictionaryList(parserProvider)
+            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = dictionaryList
                 .Select(parserProvider.ParsePropertiesAsParseResults);
 
             foreach (IReadOnlyList<ParseResult<IPropertyValue>> parseResult in parseResults)

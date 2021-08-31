@@ -4,6 +4,7 @@
 - ParseResult nullable declarations instead attributes
 - Added ParserProvider.Source override with ParseResult function
 - 7.9.1: Added MapAndValidateRows
+- 7.9.2: ParseRowUntyped pricise control for absent value
 
 # 7.8.0
 - Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)

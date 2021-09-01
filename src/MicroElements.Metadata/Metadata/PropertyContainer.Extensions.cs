@@ -286,5 +286,27 @@ namespace MicroElements.Metadata
 
             return joinedItems;
         }
+
+        /// <summary>
+        /// Filters source property container by provided properties and comparer.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <param name="properties">Properties that should be copied to new container.</param>
+        /// <param name="propertyComparer">Property comparer.</param>
+        /// <returns>New property container.</returns>
+        public static IPropertyContainer FilterByProperties(
+            this IPropertyContainer propertyContainer,
+            IEnumerable<IProperty> properties,
+            IEqualityComparer<IProperty>? propertyComparer = null)
+        {
+            propertyComparer ??= PropertyComparer.DefaultEqualityComparer;
+            var propertySet = properties.ToHashSet(propertyComparer);
+
+            var propertyValues = propertyContainer
+                .Properties
+                .Where(pv => propertySet.Contains(pv.PropertyUntyped));
+
+            return new PropertyContainer(sourceValues: propertyValues, searchOptions: propertyContainer.SearchOptions);
+        }
     }
 }

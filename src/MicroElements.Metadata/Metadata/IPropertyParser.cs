@@ -25,6 +25,16 @@ namespace MicroElements.Metadata
         /// Gets target property.
         /// </summary>
         IProperty TargetPropertyUntyped { get; }
+
+        /// <summary>
+        /// Gets default value that can used if source value is absent or null.
+        /// </summary>
+        IDefaultValue<string>? DefaultSourceValue { get; }
+
+        /// <summary>
+        /// Gets default property value (untyped).
+        /// </summary>
+        IDefaultValue? DefaultValueUntyped { get; }
     }
 
     /// <summary>
@@ -33,6 +43,9 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Property type.</typeparam>
     public interface IPropertyParser<T> : IPropertyParser
     {
+        /// <inheritdoc />
+        IDefaultValue? IPropertyParser.DefaultValueUntyped => DefaultValue;
+
         /// <summary>
         /// Gets value parser.
         /// </summary>

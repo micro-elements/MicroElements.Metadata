@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MicroElements.Functional;
 using MicroElements.Metadata;
+using MicroElements.Validation.Rules;
 
 namespace MicroElements.Validation
 {
@@ -181,6 +182,72 @@ namespace MicroElements.Validation
                 }
 
                 onValidationError?.Invoke(validationResult);
+            }
+        }
+
+        public static IEnumerable<Message> ValidateBySchema(
+            this IPropertyContainer propertyContainer,
+            IPropertySet schema,
+            IValidationProvider? validationProvider = null)
+        {
+            validationProvider ??= ValidationProvider.Instance;
+
+            IValidationRule[] validationRules = schema
+                .GetProperties()
+                .SelectMany(property => validationProvider.GetValidationRules(property))
+                .ToArray();
+
+            IEnumerable<Message> messages = propertyContainer.Validate(validationRules);
+            return messages;
+        }
+
+        public static IEnumerable<Message> ValidateBySchema<TSchema>(
+            this PropertyContainer<TSchema> propertyContainer,
+            IValidationProvider? validationProvider = null)
+            where TSchema : IPropertySet, new()
+        {
+            return ValidateBySchema(propertyContainer, new TSchema(), validationProvider);
+        }
+
+        public static ValidationResult<PropertyContainer<TSchema>> ValidateBySchema<TSchema>(
+            this ValidationResult<PropertyContainer<TSchema>> containerResult,
+            IValidationProvider? validationProvider = null)
+            where TSchema : IPropertySet, new()
+        {
+            Message[] schemaValidationErrors = containerResult.Data.ValidateBySchema(validationProvider).ToArray();
+            Message[] messages = containerResult.ValidationMessages.Concat(schemaValidationErrors).ToArray();
+            return new ValidationResult<PropertyContainer<TSchema>>(containerResult.Data, messages);
+        }
+
+        public static ValidationResult<IPropertyContainer> ValidateBySchema(
+            this ValidationResult<IPropertyContainer> containerResult,
+            IPropertySet schema,
+            IValidationProvider? validationProvider = null)
+        {
+            Message[] schemaValidationErrors = containerResult.Data.ValidateBySchema(schema, validationProvider).ToArray();
+            Message[] messages = containerResult.ValidationMessages.Concat(schemaValidationErrors).ToArray();
+            return new ValidationResult<IPropertyContainer>(containerResult.Data, messages);
+        }
+
+        public static IEnumerable<ValidationResult<PropertyContainer<TSchema>>> ValidateBySchema<TSchema>(
+            this IEnumerable<ValidationResult<PropertyContainer<TSchema>>> propertyContainers,
+            IValidationProvider? validationProvider = null)
+            where TSchema : IPropertySet, new()
+        {
+            foreach (ValidationResult<PropertyContainer<TSchema>> containerResult in propertyContainers)
+            {
+                yield return containerResult.ValidateBySchema(validationProvider);
+            }
+        }
+
+        public static IEnumerable<ValidationResult<IPropertyContainer>> ValidateBySchema(
+            this IEnumerable<ValidationResult<IPropertyContainer>> propertyContainers,
+            IPropertySet schema,
+            IValidationProvider? validationProvider = null)
+        {
+            foreach (var containerResult in propertyContainers)
+            {
+                yield return containerResult.ValidateBySchema(schema, validationProvider);
             }
         }
     }

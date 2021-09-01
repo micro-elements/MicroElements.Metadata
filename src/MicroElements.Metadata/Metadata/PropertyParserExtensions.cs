@@ -12,22 +12,60 @@ namespace MicroElements.Metadata
     public static class PropertyParserExtensions
     {
         /// <summary>
-        /// Searches value to parse in <paramref name="sourceRow"/> than parses and returns optional parse result.
+        /// Searches value to parse in <paramref name="sourceRow"/> then parses and returns optional parse result.
         /// </summary>
         /// <param name="propertyParser">Source property parser.</param>
         /// <param name="sourceRow">Value to parse.</param>
-        /// <param name="useDefaultValueForAbsent">Return default value if value is absent.</param>
-        /// <returns>Optional parse result.</returns>
-        public static ParseResult<IPropertyValue> ParseRowUntyped(this IPropertyParser propertyParser, IReadOnlyDictionary<string, string> sourceRow, bool useDefaultValueForAbsent = true)
+        /// <returns>Parse result.</returns>
+        public static ParseResult<IPropertyValue> ParseRowUntyped(
+            this IPropertyParser propertyParser,
+            IReadOnlyDictionary<string, string?> sourceRow)
         {
-            if (sourceRow.TryGetValue(propertyParser.SourceName, out var value) && value.IsNotNull())
+            bool isValuePresent = sourceRow.TryGetValue(propertyParser.SourceName, out string? valueToParse);
+            return ParseValueUntyped(propertyParser, valueToParse, isValuePresent);
+        }
+
+        /// <summary>
+        /// Parses text value according <paramref name="propertyParser"/>.
+        /// </summary>
+        /// <param name="propertyParser">Property parser.</param>
+        /// <param name="valueToParse">Value to parse. Can be null.</param>
+        /// <param name="isValuePresent">valueToParse was provided whether it is not null or null.</param>
+        /// <returns>Parse result.</returns>
+        public static ParseResult<IPropertyValue> ParseValueUntyped(
+            this IPropertyParser propertyParser,
+            string? valueToParse,
+            bool isValuePresent = true)
+        {
+            bool isValueAbsent = !isValuePresent;
+            bool isValueNull = valueToParse is null;
+
+            if ((isValueAbsent || isValueNull) && propertyParser.DefaultSourceValue is { Value: { } defaultSourceValue })
             {
-                return ParseUntyped(propertyParser, value);
+                // Use provided value as source value.
+                valueToParse = defaultSourceValue;
+
+                isValueNull = valueToParse is null;
+                isValuePresent = true;
+                isValueAbsent = false;
             }
 
-            if (useDefaultValueForAbsent)
+            if (isValueAbsent && propertyParser.DefaultValueUntyped != null)
+            {
                 return propertyParser.GetDefaultValueUntyped();
+            }
 
+            if (isValueNull && propertyParser.DefaultValueUntyped != null)
+            {
+                return propertyParser.GetDefaultValueUntyped();
+            }
+
+            if (isValuePresent)
+            {
+                return ParseUntyped(propertyParser, valueToParse);
+            }
+
+            // Return failed result.
             return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent."));
         }
 
@@ -37,12 +75,12 @@ namespace MicroElements.Metadata
         /// <param name="propertyParser">Source property parser.</param>
         /// <param name="textValue">Value to parse.</param>
         /// <returns>Optional parse result.</returns>
-        public static ParseResult<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string textValue)
+        public static ParseResult<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string? textValue)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string, ParseResult<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string?, ParseResult<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<CodeCompiler.GenericType>);
             return func(propertyParser, textValue);
 
-            static ParseResult<IPropertyValue> Parse<T>(IPropertyParser propertyParserUntyped, string textValue)
+            static ParseResult<IPropertyValue> Parse<T>(IPropertyParser propertyParserUntyped, string? textValue)
             {
                 var propertyParserTyped = (IPropertyParser<T>)propertyParserUntyped;
 

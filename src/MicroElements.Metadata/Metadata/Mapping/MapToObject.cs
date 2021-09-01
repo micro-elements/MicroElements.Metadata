@@ -36,18 +36,29 @@ namespace MicroElements.Metadata.Mapping
                 if (settings.SourceFilter?.Invoke(propertyValue.PropertyUntyped) == false)
                     continue;
 
-                (PropertyInfo? propertyInfo, object? value) = TryGetTargetPropertyAndValue(propertyValue, typeof(TModel), propertyInfos, settings);
+                (PropertyInfo? propertyInfo, object? value, Message? error) = TryGetTargetPropertyAndValue(propertyValue, typeof(TModel), propertyInfos, settings);
 
                 if (propertyInfo != null)
                 {
-                    if (propertyInfo.CanWrite)
+                    if (error != null)
                     {
-                        propertyInfo.SetValue(model, value);
+                        settings.LogMessage?.Invoke(error);
+                        continue;
                     }
-                    else
+
+                    if (!propertyInfo.CanWrite)
                     {
                         settings.LogMessage?.Invoke(new Message($"Property {propertyInfo.Name} is not writable", MessageSeverity.Error));
+                        continue;
                     }
+
+                    if (value != null && !value.GetType().IsAssignableTo(propertyInfo.PropertyType))
+                    {
+                        settings.LogMessage?.Invoke(new Message($"Value '{value}' of type '{value.GetType()}' can not be set to Property '{propertyInfo.Name}' of type '{propertyInfo.PropertyType}'", MessageSeverity.Error));
+                        continue;
+                    }
+
+                    propertyInfo.SetValue(model, value);
                 }
             }
 
@@ -75,13 +86,14 @@ namespace MicroElements.Metadata.Mapping
             return MapToObject(propertyContainer, context);
         }
 
-        public static (PropertyInfo? PropertyInfo, object? Value) TryGetTargetPropertyAndValue(
+        public static (PropertyInfo? PropertyInfo, object? Value, Message? Error) TryGetTargetPropertyAndValue(
             IPropertyValue propertyValue,
             Type modelType,
             PropertyInfo[]? propertyInfos,
             IMapToObjectSettings settings)
         {
             object? value = propertyValue.ValueUntyped;
+            Message? error = null;
 
             string targetPropertyName = settings.TargetName?.Invoke(propertyValue.PropertyUntyped) ?? propertyValue.PropertyUntyped.Name;
 
@@ -107,7 +119,8 @@ namespace MicroElements.Metadata.Mapping
                     }
                     else
                     {
-                        settings.LogMessage?.Invoke(MappingError.NotEnumValue(propertyInfo.PropertyType, textValue));
+                        error = MappingError.NotEnumValue(propertyInfo.PropertyType, textValue);
+                        return (propertyInfo, value, error);
                     }
                 }
 
@@ -122,19 +135,20 @@ namespace MicroElements.Metadata.Mapping
                         }
                         else
                         {
-                            settings.LogMessage?.Invoke(MappingError.NotEnumValue(propertyInfo.PropertyType, textValue));
+                            error = MappingError.NotEnumValue(propertyInfo.PropertyType, textValue);
+                            return (propertyInfo, value, error);
                         }
                     }
                 }
 
                 if (propertyInfo == null)
                 {
-                    settings.LogMessage?.Invoke(new Message("Property {propertyName} was not found in type {modelType}", MessageSeverity.Error)
-                        .WithArgs(targetPropertyName, modelType.FullName));
+                    error = new Message("Property {propertyName} was not found in type {modelType}", MessageSeverity.Error)
+                        .WithArgs(targetPropertyName, modelType.FullName);
                 }
             }
 
-            return (propertyInfo, value);
+            return (propertyInfo, value, error);
         }
 
         /// <summary>
@@ -160,7 +174,7 @@ namespace MicroElements.Metadata.Mapping
         public static Message NotEnumValue(Type enumType, string? text)
         {
             return new Message(
-                $"Can not convert value {text} to enum {enumType.GetFriendlyName()}",
+                $"Can not convert value '{text}' to enum {enumType.GetFriendlyName()}",
                 MessageSeverity.Error);
         }
     }

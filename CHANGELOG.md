@@ -1,10 +1,17 @@
+# 7.10.0
+- Added FilterByProperties extension method for IPropertyContainer
+- Added DefaultSourceValue to IPropertyParser to allow set source value before parsing and mapping to target property
+- ParseRowUntyped precise control for absent or null values
+- MapToObject more diagnostics, more safe
+- ValidateBySchema methods family
+
 # 7.9.0
 - ParseResult implicit conversion from value and from Message
 - ParseResult.Map and ParseResult.Bind methods now transfers error to the next result
 - ParseResult nullable declarations instead attributes
 - Added ParserProvider.Source override with ParseResult function
 - 7.9.1: Added MapAndValidateRows
-- 7.9.2: ParseRowUntyped pricise control for absent value
+- 7.9.2: ParseRowUntyped precise control for absent value
 
 # 7.8.0
 - Added WithValue extensions for ReadOnly containers (PropertyContainer and PropertyContainer<T>)

@@ -22,6 +22,15 @@ namespace MicroElements.Metadata.Tests.Mapping
             public Sex Sex { get; set; }
         }
 
+        public class Model2
+        {
+            public string? TextValue { get; set; }
+
+            public int? IntValue { get; set; }
+
+            public Sex? Sex { get; set; }
+        }
+
         public class ModelScheme : IStaticSchema, IStaticPropertySet
         {
             public static IProperty<string> TextValue = new Property<string>("TextValue");
@@ -39,6 +48,27 @@ namespace MicroElements.Metadata.Tests.Mapping
             PropertyContainer<ModelScheme> container = model1.MapToContainer<ModelScheme>();
             Model model2 = container.MapToObject<Model>();
             model2.Should().BeEquivalentTo(model1);
+        }
+
+        [Fact]
+        public void MapSimple2()
+        {
+            Model2 model1 = new Model2() { TextValue = "text", IntValue = 42, Sex = Sex.Female };
+            PropertyContainer<ModelScheme> container = model1.MapToContainer<ModelScheme>();
+            Model2 model2 = container.MapToObject<Model2>();
+            model2.Should().BeEquivalentTo(model1);
+        }
+
+        [Fact]
+        public void MapToObjectWrong()
+        {
+            var container = new PropertyContainer().WithValue(ModelScheme.Sex, "Wrong");
+            Model2 model2 = container.MapToObject<Model2>();
+            model2.Sex.Should().Be(null);
+
+            container = new PropertyContainer().WithValue(ModelScheme.Sex, "Male");
+            model2 = container.MapToObject<Model2>();
+            model2.Sex.Should().Be(Sex.Male);
         }
 
         [Fact]

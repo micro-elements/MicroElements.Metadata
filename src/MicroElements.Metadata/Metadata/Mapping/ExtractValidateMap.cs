@@ -386,7 +386,7 @@ namespace MicroElements.Metadata.Mapping
             // Output.
             if (result.PropertyValue.HasValue())
             {
-                (PropertyInfo? propertyInfo, object? value) = PropertyContainerMapper.TryGetTargetPropertyAndValue(
+                (PropertyInfo? propertyInfo, object? value, Message? error) = PropertyContainerMapper.TryGetTargetPropertyAndValue(
                     result.PropertyValue,
                     target.GetType(),
                     null,

@@ -31,6 +31,9 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public IDefaultValue<T>? DefaultValue { get; private set; }
 
+        /// <inheritdoc />
+        public IDefaultValue<string>? DefaultSourceValue { get; private set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
         /// </summary>
@@ -67,6 +70,17 @@ namespace MicroElements.Metadata
         public PropertyParser<T> SetDefaultValue(T defaultValue)
         {
             DefaultValue = new DefaultValue<T>(defaultValue);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets default value that can used if source value is absent or null.
+        /// </summary>
+        /// <param name="defaultSourceValue">Default source value.</param>
+        /// <returns>The same instance.</returns>
+        public PropertyParser<T> SetDefaultSourceValue(string defaultSourceValue)
+        {
+            DefaultSourceValue = new DefaultValue<string>(defaultSourceValue);
             return this;
         }
     }

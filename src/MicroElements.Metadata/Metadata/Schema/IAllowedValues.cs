@@ -10,6 +10,7 @@ using System.Reflection;
 using MicroElements.Functional;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
+using TypeExtensions = MicroElements.Core.TypeExtensions;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -286,6 +287,7 @@ namespace MicroElements.Metadata.Schema
     public class OnlyAllowedValuesRule<T> : PropertyValidationRule<T>
     {
         private readonly IAllowedValues<T>? _allowedValues;
+        private readonly bool _canAcceptNull;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OnlyAllowedValuesRule{T}"/> class.
@@ -293,20 +295,26 @@ namespace MicroElements.Metadata.Schema
         /// <param name="property">Property to check.</param>
         /// <param name="allowedValues">Optional <see cref="IAllowedValues{T}"/>.</param>
         public OnlyAllowedValuesRule(IProperty<T> property, IAllowedValues<T>? allowedValues = null)
-            : base(property, "{propertyName} can not be '{value}' because it is not in allowed values list.")
+            : base(property, "{propertyName} can not be '{value}' because it is not in allowed values list. Allowed values: {allowedValues}.")
         {
             _allowedValues = allowedValues ?? Property.GetAllowedValues();
+            _canAcceptNull = TypeExtensions.CanAcceptNull(typeof(T));
+
+            Lazy<string> allowedValuesText = new (() => _allowedValues?.Values.NotNull().FormatAsTuple() ?? "()");
+            this.ConfigureMessage(message => message.WithProperty("allowedValues", allowedValuesText.Value));
         }
 
         /// <inheritdoc />
         protected override bool IsValid(T? value)
         {
-            if (_allowedValues != null)
-            {
-                return _allowedValues.Values.Contains(value, _allowedValues.Comparer);
-            }
+            if (_allowedValues is null)
+                return true;
 
-            return true;
+            // Null value should be checked with INullability
+            if (_canAcceptNull && value is null)
+                return true;
+
+            return _allowedValues.Values.Contains(value, _allowedValues.Comparer);
         }
     }
 

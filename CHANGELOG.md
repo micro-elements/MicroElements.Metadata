@@ -1,3 +1,7 @@
+# 7.11.0
+- OnlyAllowedValuesRule more detailed message
+- Validation messages uses 'null' placeholder instead of null value
+
 # 7.10.0
 - Added FilterByProperties extension method for IPropertyContainer
 - Added DefaultSourceValue to IPropertyParser to allow set source value before parsing and mapping to target property

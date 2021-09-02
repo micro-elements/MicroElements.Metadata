@@ -240,7 +240,9 @@ namespace MicroElements.Metadata.Schema
             : base(property, "{propertyName} should be in range {range}.")
         {
             _numericInterval = numericInterval ?? Property.GetNumericInterval();
-            this.ConfigureMessage(message => message.WithProperty("range", _numericInterval.ToIntervalString()));
+
+            if (_numericInterval != null)
+                this.ConfigureMessage(message => message.WithProperty("range", _numericInterval.ToIntervalString()));
         }
 
         /// <inheritdoc />

@@ -36,7 +36,7 @@ namespace MicroElements.Metadata.Tests
             var messages = container.Validate(Rules().Cached()).ToList();
             messages.Should().HaveCount(2);
             messages[0].FormattedMessage.Should().Be("Age should be over 18! but was 9");
-            messages[1].FormattedMessage.Should().Be("Sex can not be 'Undefined' because it is not in allowed values list.");
+            messages[1].FormattedMessage.Should().Be("Sex can not be 'Undefined' because it is not in allowed values list. Allowed values: (Male, Female).");
         }
 
         [Fact]

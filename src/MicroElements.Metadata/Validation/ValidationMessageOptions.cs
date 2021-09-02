@@ -82,8 +82,8 @@ namespace MicroElements.Validation
                 {
                     new KeyValuePair<string, object>("propertyName", property.Name),
                     new KeyValuePair<string, object>("propertyType", property.Type),
-                    new KeyValuePair<string, object>("propertyDescription", property.Description),
-                    new KeyValuePair<string, object>("value", propertyValue.ValueUntyped),
+                    new KeyValuePair<string, object>("propertyDescription", property.Description ?? string.Empty),
+                    new KeyValuePair<string, object>("value", propertyValue.ValueUntyped ?? "null"),
                 };
             }
 

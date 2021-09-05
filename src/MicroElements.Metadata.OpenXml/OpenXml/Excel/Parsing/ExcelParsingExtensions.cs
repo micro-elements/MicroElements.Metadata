@@ -20,7 +20,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
     /// <summary>
     /// Excel extensions.
     /// </summary>
-    public static class ExcelParsingExtensions
+    public static partial class ExcelParsingExtensions
     {
         /// <summary>
         /// Gets sheet by name.
@@ -156,45 +156,6 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         }
 
         /// <summary>
-        /// Gets rows as enumeration of dictionaries.
-        /// </summary>
-        /// <param name="rows">Source rows.</param>
-        /// <param name="parserProvider"></param>
-        /// <returns></returns>
-        public static IEnumerable<IReadOnlyDictionary<string, string>> AsDictionaryList(
-            this IEnumerable<ExcelElement<Row>> rows,
-            IParserProvider parserProvider)
-        {
-            rows.AssertArgumentNotNull(nameof(rows));
-            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
-
-            ExcelElement<HeaderCell>[]? headers = null;
-            foreach (var row in rows)
-            {
-                if (headers == null)
-                {
-                    // Use first row as headers
-                    headers = row.GetHeaders();
-                    continue;
-                }
-
-                //TODO: Use cached parserProvider
-                var rowValues = row.GetRowValues(headers: headers, parserProvider: parserProvider);
-
-                // skip empty line
-                if (rowValues.All(string.IsNullOrWhiteSpace))
-                    continue;
-
-                var headerNames = headers.Select(header => header.Data.Name ?? header.Data.ColumnReference).ToArrayDebug();
-                var expandoObject = headerNames
-                    .Zip(rowValues, (header, value) => (header, value))
-                    .ToDictionary(tuple => tuple.header, tuple => tuple.value);
-
-                yield return expandoObject;
-            }
-        }
-
-        /// <summary>
         /// Gets row cells.
         /// </summary>
         /// <param name="row">Source row.</param>
@@ -265,10 +226,13 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// Gets value for each header.
         /// <see cref="IPropertyParser"/> will be attached to cells where cell header name same as <see cref="IPropertyParser.SourceName"/>.
         /// </summary>
-        public static string[] GetRowValues(
+        /// <param name="row">Source excel row.</param>
+        /// <param name="headers">Headers to use.</param>
+        /// <param name="nullValue">Null value for absent cells.</param>
+        /// <returns>Cell values for provided headers.</returns>
+        public static string?[] GetRowValues(
             this ExcelElement<Row> row,
             ExcelElement<HeaderCell>[] headers,
-            IParserProvider parserProvider,
             string? nullValue = null)
         {
             if (row.IsEmpty())
@@ -276,7 +240,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
             var cells = row.GetRowCells();
 
-            string[] rowValues = new string[headers.Length];
+            string?[] rowValues = new string?[headers.Length];
             for (int i = 0; i < headers.Length; i++)
             {
                 var header = headers[i];
@@ -286,17 +250,14 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
                 if (cell != null)
                 {
-                    // Set propertyParser for cell according column name
-                    var propertyParser = parserProvider.GetParsers().FirstOrDefault(parser => parser.SourceName == header.Data.Name);
-                    if (propertyParser != null)
-                    {
-                        cell.SetMetadata(propertyParser);
-                    }
+                    IPropertyParser? propertyParser = header.GetMetadata<IPropertyParser>();
+                    rowValues[i] = cell.GetCellValue(nullValue, propertyParser);
 
-                    rowValues[i] = cell.GetCellValue(nullValue);
+                    //StringValue cellReference = cell.Data.CellReference;
                 }
                 else
                 {
+                    // TODO: NULL string has no knowledge about value: absent or null as value
                     rowValues[i] = nullValue;
                 }
             }
@@ -346,7 +307,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// Uses SharedStringTable if needed.
         /// For DateTime, LocalDate and LocalTime tries to convert double excel value to ISO format.
         /// </summary>
-        public static string? GetCellValue(this ExcelElement<Cell> cell, string? nullValue = null)
+        public static string? GetCellValue(this ExcelElement<Cell> cell, string? nullValue = null, IPropertyParser? propertyParser = null)
         {
             Cell? cellData = cell.Data;
             string? cellValue = cellData?.CellValue?.InnerText ?? nullValue;
@@ -364,7 +325,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
             if (cellTextValue == null && cellValue != null)
             {
-                var propertyParser = cell.GetMetadata<IPropertyParser>();
+                propertyParser ??= cell.GetMetadata<IPropertyParser>();
 
                 if (propertyParser != null)
                     cellTextValue = TryParseAsDateType(cellValue, propertyParser.TargetType);
@@ -429,6 +390,19 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         }
 
         /// <summary>
+        /// Gets rows as enumeration of dictionaries.
+        /// </summary>
+        /// <param name="rows">Source rows.</param>
+        /// <param name="parserProvider">Parser provider.</param>
+        /// <returns>List of dictionaries.</returns>
+        public static IEnumerable<IReadOnlyDictionary<string, string?>> AsDictionaryList(
+            this IEnumerable<ExcelElement<Row>> rows,
+            IParserProvider parserProvider)
+        {
+            return ExtractRowValues(rows, parserProvider);
+        }
+
+        /// <summary>
         /// Maps rows to entities with specified <paramref name="parserProvider"/>.
         /// </summary>
         /// <typeparam name="T">Entity type.</typeparam>
@@ -469,22 +443,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 .Select(factory);
         }
 
-        public readonly struct MapContext
-        {
-            public readonly IReadOnlyList<IPropertyValue> Values;
-            public readonly IReadOnlyList<Message>? Errors;
-
-            public MapContext(IReadOnlyList<IPropertyValue> values, IReadOnlyList<Message>? errors)
-            {
-                Values = values;
-                Errors = errors;
-            }
-        }
-
         public static IEnumerable<ValidationResult<T>> MapAndValidateRows<T>(
             this IEnumerable<ExcelElement<Row>> rows,
             IParserProvider parserProvider,
-            Func<MapContext, T>? factory = null)
+            Func<ParsedData, T>? factory = null)
         {
             rows.AssertArgumentNotNull(nameof(rows));
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
@@ -495,9 +457,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         }
 
         public static IEnumerable<ValidationResult<T>> MapAndValidateRows<T>(
-            this IEnumerable<IReadOnlyDictionary<string, string>> dictionaryList,
+            this IEnumerable<IReadOnlyDictionary<string, string?>> dictionaryList,
             IParserProvider parserProvider,
-            Func<MapContext, T>? factory = null)
+            Func<ParsedData, T>? factory = null)
         {
             dictionaryList.AssertArgumentNotNull(nameof(dictionaryList));
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
@@ -505,8 +467,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             if (factory == null)
                 factory = (context) => (T)Activator.CreateInstance(typeof(T), context.Values);
 
-            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = dictionaryList
-                .Select(parserProvider.ParsePropertiesAsParseResults);
+            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults =
+                ParseRowValues(dictionaryList, parserProvider);
 
             foreach (IReadOnlyList<ParseResult<IPropertyValue>> parseResult in parseResults)
             {
@@ -532,7 +494,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
                 var results = resultArray[0..iResult];
                 var errors = errorArray?[0..iError];
-                var mapContext = new MapContext(results, errors);
+                var mapContext = new ParsedData(results, errors);
 
                 T data = factory(mapContext);
                 yield return new ValidationResult<T>(data, errors);
@@ -587,50 +549,125 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 colIndexZeroBased++;
             }
         }
+    }
 
-        #region Unused
-
-        public class TableDataRow
-        {
-            public IReadOnlyDictionary<string, string> Data { get; }
-
-            public ExcelElement<Row> Row { get; }
-
-            public TableDataRow(IReadOnlyDictionary<string, string> data, ExcelElement<Row> row)
-            {
-                Data = data;
-                Row = row;
-            }
-        }
-
-        public static IEnumerable<TableDataRow> AsParsedRows(
+    public static partial class ExcelParsingExtensions
+    {
+        /// <summary>
+        /// Extracts rows as enumeration of dictionaries.
+        /// </summary>
+        /// <param name="rows">Source rows.</param>
+        /// <param name="parserProvider">Parser provider.</param>
+        /// <returns>List of dictionaries.</returns>
+        public static IEnumerable<IReadOnlyDictionary<string, string?>> ExtractRowValues(
             this IEnumerable<ExcelElement<Row>> rows,
-            IParserProvider parserProvider = null)
+            IParserProvider parserProvider)
         {
-            ExcelElement<HeaderCell>[] headers = null;
+            rows.AssertArgumentNotNull(nameof(rows));
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+
+            ExcelElement<HeaderCell>[]? headers = null;
+            string[]? headerNames = null;
+
             foreach (var row in rows)
             {
                 if (headers == null)
                 {
+                    // Use first row as headers
                     headers = row.GetHeaders();
+
+                    // Associate parser for each header
+                    foreach (var header in headers)
+                    {
+                        // TODO: RIGID SEARCH. Use predicate?
+                        var propertyParser = parserProvider.GetParsers().FirstOrDefault(parser => parser.SourceName == header.Data.Name);
+                        if (propertyParser != null)
+                        {
+                            header.SetMetadata(propertyParser);
+                        }
+                    }
+
+                    headerNames = headers.Select(header => header.Data.Name ?? header.Data.ColumnReference).ToArray();
+
                     continue;
                 }
 
-                var rowValues = row.GetRowValues(headers: headers, parserProvider: parserProvider);
+                // TODO: CellReference can be extracted here!!!
+                var rowValues = row.GetRowValues(headers);
 
                 // skip empty line
                 if (rowValues.All(string.IsNullOrWhiteSpace))
                     continue;
 
-                var headerNames = headers.Select(header => header.Data.Name ?? header.Data.ColumnReference).ToArrayDebug();
                 var expandoObject = headerNames
                     .Zip(rowValues, (header, value) => (header, value))
                     .ToDictionary(tuple => tuple.header, tuple => tuple.value);
 
-                yield return new TableDataRow(expandoObject, row);
+                //expandoObject.AsMetadataProvider().SetMetadata("RowReference", row.Data.RowIndex);
+
+                yield return expandoObject;
             }
         }
 
-        #endregion
+        public static IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> ParseRowValues(
+            this IEnumerable<IReadOnlyDictionary<string, string?>> dictionaryList,
+            IParserProvider parserProvider)
+        {
+            dictionaryList.AssertArgumentNotNull(nameof(dictionaryList));
+            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
+
+            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = dictionaryList
+                .Select(parserProvider.ParsePropertiesAsParseResults);
+
+            return parseResults;
+        }
+
+        public readonly struct ParsedData
+        {
+            public readonly IReadOnlyList<IPropertyValue> Values;
+            public readonly IReadOnlyList<Message>? Errors;
+
+            public ParsedData(IReadOnlyList<IPropertyValue> values, IReadOnlyList<Message>? errors)
+            {
+                Values = values;
+                Errors = errors;
+            }
+        }
+
+        public static ParsedData Merge(this IReadOnlyList<ParseResult<IPropertyValue>> parseResultList)
+        {
+            IPropertyValue[] resultArray = new IPropertyValue[parseResultList.Count];
+            Message[]? errorArray = null;
+            int iResult = 0;
+            int iError = 0;
+
+            for (int i = 0; i < parseResultList.Count; i++)
+            {
+                ParseResult<IPropertyValue> parseResult = parseResultList[i];
+                if (parseResult.IsSuccess)
+                {
+                    resultArray[iResult++] = parseResult.Value!;
+                }
+                else
+                {
+                    if (errorArray == null)
+                        errorArray = new Message[parseResultList.Count];
+                    errorArray[iError++] = parseResult.Error!;
+                }
+            }
+
+            var results = resultArray[0..iResult];
+            var errors = errorArray?[0..iError];
+            var mapContext = new ParsedData(results, errors);
+
+            return mapContext;
+        }
+
+        public static IEnumerable<ParsedData> Merge(this IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResultLists)
+        {
+            parseResultLists.AssertArgumentNotNull(nameof(parseResultLists));
+
+            return parseResultLists.Select(list => list.Merge());
+        }
     }
 }

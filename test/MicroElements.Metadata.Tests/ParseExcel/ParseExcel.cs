@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Packaging;
 using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 using NodaTime;
@@ -221,6 +222,15 @@ namespace MicroElements.Metadata.Tests.ParseExcel
         {
             ExcelParsingExtensions.GetCellReference(0, 0, zeroBased: true).Should().Be(new StringValue("A1"));
             ExcelParsingExtensions.GetCellReference(1, 1, zeroBased: false).Should().Be(new StringValue("A1"));
+        }
+
+        [Fact]
+        public void ParseDouble()
+        {
+            ParseResult<double> parseResult1 = Parser.ParseDouble("1");
+            ParseResult<double> parseResult2 = Parser.ParseDouble("a");
+            ParseResult<double> parseResult3 = Parser.ParseDouble(null).WrapError(message => message);
+
         }
     }
 }

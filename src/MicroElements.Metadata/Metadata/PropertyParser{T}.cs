@@ -11,7 +11,10 @@ namespace MicroElements.Metadata
     /// Generic property parser.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public sealed class PropertyParser<T> : IPropertyParser<T>
+    public sealed class PropertyParser<T> :
+        IPropertyParser<T>,
+        IPropertyParserCondition,
+        IPropertyParserNotifier
     {
         /// <inheritdoc />
         public Type TargetType => typeof(T);
@@ -34,6 +37,15 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public IDefaultValue<string>? DefaultSourceValue { get; private set; }
 
+        /// <inheritdoc />
+        public Func<PropertyParserContext, bool>? ExcludeCondition { get; private set; }
+
+        /// <inheritdoc />
+        public Func<PropertyParserContext, bool>? IncludeCondition { get; private set; }
+
+        /// <inheritdoc />
+        public Action<PropertyParserContext, ParseResult<IPropertyValue>>? PropertyParsed { get; private set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyParser{T}"/> class.
         /// </summary>
@@ -48,8 +60,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public override string ToString() =>
-            $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
+        public override string ToString() => $"{nameof(SourceName)}: {SourceName}, {nameof(TargetProperty)}: {TargetProperty}";
 
         /// <summary>
         /// Sets <see cref="TargetProperty"/> and returns this.
@@ -82,6 +93,62 @@ namespace MicroElements.Metadata
         {
             DefaultSourceValue = new DefaultValue<string>(defaultSourceValue);
             return this;
+        }
+
+        public PropertyParser<T> SkipNull()
+        {
+            ExcludeCondition = context => context.IsValueNull();
+            return this;
+        }
+
+        public PropertyParser<T> SkipAbsent()
+        {
+            ExcludeCondition = context => context.IsValueAbsent();
+            return this;
+        }
+
+        public PropertyParser<T> SkipAbsentAndNull()
+        {
+            ExcludeCondition = context => context.IsValueAbsentOrNull();
+            return this;
+        }
+
+        public PropertyParser<T> SetNotifier(IPropertyParserNotifier notifier)
+        {
+            PropertyParsed = notifier.PropertyParsed;
+            return this;
+        }
+
+        public PropertyParser<T> SetNotifier(Action<PropertyParserContext, ParseResult<IPropertyValue>>? propertyParsed)
+        {
+            PropertyParsed = propertyParsed;
+            return this;
+        }
+
+        public PropertyParser<T> Condition(Func<PropertyParserContext, bool>? condition)
+        {
+            IncludeCondition = condition;
+            return this;
+        }
+
+        public PropertyParser<T> Discriminator(Func<IPropertyValue, bool> condition)
+        {
+            return Condition(context =>
+            {
+                if (context.ParseContext.ParserProvider is IParserProviderWithDiscriminator { Discriminator: { } discriminator })
+                {
+                    var propertyValue = context.PropertyContainer.GetPropertyValueUntyped(discriminator);
+                    if (propertyValue != null)
+                        return condition(propertyValue);
+                }
+
+                return true;
+            });
+        }
+
+        public PropertyParser<T> Discriminator(object discriminatorValue)
+        {
+            return Discriminator(pv => Equals(pv.ValueUntyped, discriminatorValue));
         }
     }
 }

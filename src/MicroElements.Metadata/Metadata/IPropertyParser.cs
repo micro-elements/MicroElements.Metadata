@@ -9,7 +9,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represent parser for property.
     /// </summary>
-    public interface IPropertyParser
+    public interface IPropertyParser : IMetadataProvider
     {
         /// <summary>
         /// Gets source name.

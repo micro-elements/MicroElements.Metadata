@@ -62,11 +62,17 @@ namespace MicroElements.Metadata
 
             if (isValuePresent)
             {
-                return ParseUntyped(propertyParser, valueToParse);
+                ParseResult<IPropertyValue> parseResult = ParseUntyped(propertyParser, valueToParse);
+                parseResult = parseResult.WrapError(message =>
+                {
+                    string errorCause = message != null ? $" ParseError: '{message.FormattedMessage}'" : string.Empty;
+                    return new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed from source '{valueToParse.FormatValue()}'{errorCause}", MessageSeverity.Error);
+                });
+                return parseResult;
             }
 
             // Return failed result.
-            return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent."));
+            return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent.", MessageSeverity.Error));
         }
 
         /// <summary>

@@ -11,12 +11,18 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Base <see cref="IParserProvider"/> implementation with builder support.
     /// </summary>
-    public abstract class ParserProvider : IParserProvider
+    public abstract class ParserProvider : IParserProvider, IParserProviderWithDiscriminator
     {
         private readonly List<IPropertyParser> _parsers = new List<IPropertyParser>();
 
         /// <inheritdoc />
-        public IEnumerable<IPropertyParser> GetParsers() => _parsers;
+        public virtual IEnumerable<IPropertyParser> GetParsers()
+        {
+            return _parsers;
+        }
+
+        /// <inheritdoc />
+        public IProperty? Discriminator { get; protected set; }
 
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and <paramref name="valueParser"/>.

@@ -72,8 +72,13 @@ namespace MicroElements.Metadata.Tests.examples
             /// <inheritdoc />
             public EntityParser()
             {
+                Discriminator = EntityMeta.Name;
+
                 Source("CreatedAt", ParseDate).Target(EntityMeta.CreatedAt);
                 Source("Name").Target(EntityMeta.Name);
+                Source("Name").Target(EntityMeta.Name).Discriminator("Admin");
+
+                Source("Name").SkipNull().Target(EntityMeta.Name).Condition(context => context.IsValueExistsAndNotNull() && context.PropertyContainer.GetValue(EntityMeta.Name) == "Admin");
             }
         }
 

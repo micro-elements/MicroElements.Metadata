@@ -3,11 +3,16 @@
 
 using System;
 using MicroElements.Functional;
+using MicroElements.Validation;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
     /// Represents parse result.
+    /// 1. Result can be in two states: Success | Failed;
+    /// 2. Result knows value type.
+    /// 3. Result can hold null value as Success; (Option can not)
+    /// 4. Failed result should have error message.
     /// </summary>
     public interface IParseResult
     {
@@ -89,6 +94,14 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="message">Value.</param>
         public static implicit operator ParseResult<T>(Message message) => ParseResult.Failed<T>(message);
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            if (IsSuccess)
+                return $"Success<{Type.GetFriendlyName()}>({Value.FormatValue()})";
+            return $"Failed<{Type.GetFriendlyName()}>({Error?.FormattedMessage})";
+        }
     }
 
     /// <summary>
@@ -174,10 +187,24 @@ namespace MicroElements.Metadata
 
             if (source.IsSuccess)
             {
-                return bind(source.Value!);
+                ParseResult<B> resultB = bind(source.Value!);
+                return resultB;
             }
 
             return Failed<B>(source.Error);
+        }
+
+        public static ParseResult<A> WrapError<A>(this in ParseResult<A> source, Func<Message?, Message?> mapError)
+        {
+            mapError.AssertArgumentNotNull(nameof(mapError));
+
+            if (source.IsSuccess)
+            {
+                return source;
+            }
+
+            Message? newError = mapError(source.Error);
+            return Failed<A>(newError);
         }
     }
 }

@@ -19,7 +19,9 @@ namespace MicroElements.Metadata
         /// <param name="parserProvider"><see cref="IParserProvider"/>.</param>
         /// <param name="sourceRow">Source data.</param>
         /// <returns><see cref="IPropertyValue"/> list.</returns>
-        public static IReadOnlyList<IPropertyValue> ParseProperties(this IParserProvider parserProvider, IReadOnlyDictionary<string, string> sourceRow)
+        public static IReadOnlyList<IPropertyValue> ParseProperties(
+            this IParserProvider parserProvider,
+            IReadOnlyDictionary<string, string?> sourceRow)
         {
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
             sourceRow.AssertArgumentNotNull(nameof(sourceRow));
@@ -40,17 +42,11 @@ namespace MicroElements.Metadata
         /// <param name="parserProvider"><see cref="IParserProvider"/>.</param>
         /// <param name="sourceRow">Source data.</param>
         /// <returns><see cref="IPropertyValue"/> list.</returns>
-        public static IReadOnlyList<ParseResult<IPropertyValue>> ParsePropertiesAsParseResults(this IParserProvider parserProvider, IReadOnlyDictionary<string, string?> sourceRow)
+        public static IReadOnlyList<ParseResult<IPropertyValue>> ParsePropertiesAsParseResults(
+            this IParserProvider parserProvider,
+            IReadOnlyDictionary<string, string?> sourceRow)
         {
-            parserProvider.AssertArgumentNotNull(nameof(parserProvider));
-            sourceRow.AssertArgumentNotNull(nameof(sourceRow));
-
-            List<ParseResult<IPropertyValue>> parseResults = parserProvider
-                .GetParsers()
-                .Select(parser => parser.ParseRowUntyped(sourceRow))
-                .ToList();
-
-            return parseResults;
+            return ParserBehavior.Default.ParseProperties(sourceRow, parserProvider);
         }
     }
 }

@@ -1,3 +1,9 @@
+# 7.12.0 (beta)
+Experimental release that extends parsing with conditinal logic
+- IParserBehavior initial
+- IPropertyParserCondition, IPropertyParserNotifier extensions for IPropertyParser initial
+- IParserProviderWithDiscriminator
+
 # 7.11.0
 - OnlyAllowedValuesRule more detailed message
 - Validation messages uses 'null' placeholder instead of null value

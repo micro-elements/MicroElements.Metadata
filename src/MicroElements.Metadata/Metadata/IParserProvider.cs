@@ -16,4 +16,15 @@ namespace MicroElements.Metadata
         /// <returns>Enumerable of <see cref="IPropertyParser"/>.</returns>
         IEnumerable<IPropertyParser> GetParsers();
     }
+
+    /// <summary>
+    /// Represents parser provider with discriminator.
+    /// </summary>
+    public interface IParserProviderWithDiscriminator
+    {
+        /// <summary>
+        /// Gets the property that can be used to determine one of parse conditions.
+        /// </summary>
+        IProperty? Discriminator { get; }
+    }
 }

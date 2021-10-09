@@ -13,6 +13,11 @@ namespace MicroElements.Metadata
         where TSchema : IPropertySet, new()
     {
         /// <summary>
+        /// Gets empty container of desired type.
+        /// </summary>
+        public static new PropertyContainer<TSchema> Empty { get; } = new PropertyContainer<TSchema>();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainer{TSchema}"/> class.
         /// </summary>
         /// <param name="sourceValues">Source property values.</param>

@@ -23,7 +23,7 @@ namespace MicroElements.Metadata
         public IProperty PropertyUntyped => Property;
 
         /// <inheritdoc />
-        public object? ValueUntyped => Value;
+        public object? ValueUntyped => Source == ValueSource.NotDefined ? null : Value;
 
         /// <inheritdoc />
         public ValueSource Source { get; }

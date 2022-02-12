@@ -34,34 +34,42 @@ namespace MicroElements.Metadata
         /// <param name="map">Function that maps value of type <typeparamref name="TSource"/> to type <typeparamref name="TResult"/>.
         /// TSource MayBeNull, TResult MayBeNull but Func at the current moment does not support nullability.</param>
         /// <param name="allowMapNull">By default false: does not calls <paramref name="map"/> if <paramref name="property"/> value is null.</param>
+        /// <param name="allowMapUndefined">Allows to map undefined value (treats it as default). Disabled by default.</param>
         /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
         /// <returns>New property of type <typeparamref name="TResult"/>.</returns>
-        public static IProperty<TResult> Map<TSource, TResult>(
+        public static IProperty<TResult?> Map<TSource, TResult>(
             this IProperty<TSource> property,
-            Func<TSource, TResult> map,
+            Func<TSource?, TResult?> map,
             bool allowMapNull = false,
+            bool allowMapUndefined = false,
             Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (TResult, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
+            (TResult?, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
                 search = configureSearch?.Invoke(search) ?? search;
                 IPropertyValue<TSource>? sourcePropertyValue = container.GetPropertyValue(property, search);
                 if (sourcePropertyValue.HasValue())
                 {
-                    TSource sourceValue = sourcePropertyValue.Value;
-                    bool shouldMap = !sourceValue.IsNull() || (sourceValue.IsNull() && allowMapNull);
-                    if (shouldMap)
+                    TSource? sourceValue = sourcePropertyValue.Value;
+                    if (!sourceValue.IsNull() || allowMapNull)
                     {
-                        // TSource MayBeNull, TResult MayBeNull but Func at the current moment does not support nullability.
-                        TResult resultValue = map(sourceValue);
+                        TResult? resultValue = map(sourceValue);
+                        return (resultValue, ValueSource.Calculated);
+                    }
+                }
+                else
+                {
+                    if (allowMapUndefined)
+                    {
+                        TResult? resultValue = map(default);
                         return (resultValue, ValueSource.Calculated);
                     }
                 }
 
-                return (default(TResult), ValueSource.NotDefined);
+                return (default, ValueSource.NotDefined);
             }
 
-            return new Property<TResult>(property.Name)
+            return new Property<TResult?>(property.Name)
                 .With(description: property.Description, alias: property.Alias)
                 .WithCalculate(ConvertValue);
         }
@@ -76,20 +84,20 @@ namespace MicroElements.Metadata
         /// <param name="map">Function that maps value of type <typeparamref name="TSource"/> to type <typeparamref name="TResult"/>.</param>
         /// <param name="configureSearch">Allows to reconfigure user search options for current call.</param>
         /// <returns>New property of type <typeparamref name="TResult"/>.</returns>
-        public static IProperty<TResult> Map<TSource, TResult>(
+        public static IProperty<TResult?> Map<TSource, TResult>(
             this IProperty<TSource> property,
-            Func<IPropertyValue<TSource>, (TResult Value, ValueSource ValueSource)> map,
+            Func<IPropertyValue<TSource>?, (TResult? Value, ValueSource ValueSource)> map,
             Func<SearchOptions, SearchOptions>? configureSearch = null)
         {
-            (TResult, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
+            (TResult?, ValueSource) ConvertValue(IPropertyContainer container, SearchOptions search)
             {
                 search = configureSearch?.Invoke(search) ?? search;
-                var sourcePropertyValue = container.GetPropertyValue(property, search);
-                var resultValue = map(sourcePropertyValue);
+                IPropertyValue<TSource>? sourcePropertyValue = container.GetPropertyValue(property, search);
+                (TResult? Value, ValueSource ValueSource) resultValue = map(sourcePropertyValue);
                 return resultValue;
             }
 
-            return new Property<TResult>(property.Name)
+            return new Property<TResult?>(property.Name)
                 .With(description: property.Description, alias: property.Alias)
                 .WithCalculate(ConvertValue);
         }
@@ -103,8 +111,7 @@ namespace MicroElements.Metadata
         public static IProperty<TSource> DeNullify<TSource>(this IProperty<TSource?> property)
             where TSource : struct
         {
-            // ReSharper disable once PossibleInvalidOperationException
-            return property.Map(map: a => a!.Value, allowMapNull: false);
+            return property.Map(map: a => a!.Value, allowMapNull: false, allowMapUndefined: false);
         }
 
         /// <summary>

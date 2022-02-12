@@ -17,6 +17,7 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Gets property value.
+        /// Returns <see langword="null"/> if <see cref="Source"/> is <see cref="ValueSource.NotDefined"/>.
         /// </summary>
         object? ValueUntyped { get; }
 
@@ -66,6 +67,16 @@ namespace MicroElements.Metadata
         public static bool IsNullOrNotDefined(this IPropertyValue? propertyValue)
         {
             return propertyValue == null || propertyValue.Source == ValueSource.NotDefined;
+        }
+
+        /// <summary>
+        /// PropertyValue is in <see cref="ValueSource.NotDefined"/> state.
+        /// </summary>
+        /// <param name="propertyValue">PropertyValue instance.</param>
+        /// <returns>true if PropertyValue is in <see cref="ValueSource.NotDefined"/> state.</returns>
+        public static bool IsNotDefined(this IPropertyValue propertyValue)
+        {
+            return propertyValue.Source == ValueSource.NotDefined;
         }
     }
 }

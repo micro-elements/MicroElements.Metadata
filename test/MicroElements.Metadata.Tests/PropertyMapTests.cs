@@ -50,7 +50,7 @@ namespace MicroElements.Metadata.Tests
         {
             var container = new MutablePropertyContainer();
 
-            container.GetValue(Name.Map(name => $"Name {name ?? "undefined"}", allowMapNull: true)).Should().Be("Name undefined");
+            container.GetValue(Name.Map(name => $"Name {name ?? "undefined"}", allowMapNull: true, allowMapUndefined: true)).Should().Be("Name undefined");
         }
 
         [Fact]
@@ -117,7 +117,7 @@ namespace MicroElements.Metadata.Tests
                 propertyContainer.GetValue(notNullableInt).Should().Be(0);
                 propertyContainer.GetValue(notNullableInt.Nullify()).Should().Be(null);
 
-                propertyContainer.GetValue(nullableInt.Map(value => value ?? 42, allowMapNull: true)).Should().Be(42);
+                propertyContainer.GetValue(nullableInt.Map(value => value ?? 42, allowMapNull: true, allowMapUndefined: true)).Should().Be(42);
 
                 var propertyValue = propertyContainer.GetPropertyValue(nullableInt.Map(pv =>
                 {

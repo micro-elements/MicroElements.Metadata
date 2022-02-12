@@ -30,10 +30,10 @@ namespace MicroElements.Metadata
         {
             Name = name;
 
-            // other properties can be configured with method With
+            // Other properties can be configured with method With
             Description = null;
             Alias = null;
-            DefaultValue = DefaultValue<T>.Default;
+            DefaultValue = DefaultValue<T>.DefaultNotAllowed;
             Examples = Array.Empty<T>();
             Calculator = null;
         }

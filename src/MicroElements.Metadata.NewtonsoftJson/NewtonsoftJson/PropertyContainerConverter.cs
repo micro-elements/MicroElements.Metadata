@@ -248,6 +248,9 @@ namespace MicroElements.Metadata.NewtonsoftJson
 
                 foreach (IPropertyValue propertyValue in container.Properties)
                 {
+                    if (!propertyValue.HasValue())
+                        continue;
+
                     string jsonPropertyName = namingStrategy.GetPropertyName(propertyValue.PropertyUntyped.Name, false);
                     Type propertyType = propertyValue.PropertyUntyped.Type;
 

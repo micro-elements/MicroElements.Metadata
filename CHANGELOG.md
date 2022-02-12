@@ -1,4 +1,11 @@
-# 7.12.0 (beta)
+# 7.13.0
+- IPropertyValue.ValueUntyped should return 'null' if Source is NotDefined
+- NotDefined fix for DynamicContainer, Json serialization
+- Property<T>.DefaultValue changed to DefaultValue<T>.DefaultNotAllowed because default value shouild be defined explicitly.
+- Added 'defaultValue' param to 'PropertyContainer.GetValue' and 'MutablePropertyContainer.GetValue' to have the same signature as common 'GetValue'
+- Added 'allowMapUndefined' param to PropertyExtensions.Map
+
+# 7.12.0
 Experimental release that extends parsing with conditinal logic
 - IParserBehavior initial
 - IPropertyParserCondition, IPropertyParserNotifier extensions for IPropertyParser initial
@@ -75,7 +82,7 @@ Schema serialization and utility release
 - 7.3.3: MetadataSchema.AppendAbsentProperties fix
 - 7.3.3: PropertyContainerMapper.ToObject nullable and enum support
 - 7.3.4: Added HierarchicalContainer that merges two hierarchies
-- 7.3.4: GetMetadata can get metadata from attached ISchema (see 'searchInSchema'' arg)
+- 7.3.4: GetMetadata can get metadata from attached ISchema (see 'searchInSchema' arg)
 - 7.3.4: Added GetSchemaMetadata that always uses GetMetadata with searchInSchema: true
 - 7.3.4: More metadata types that can be set to ISchema (not only IProperty): IAllowedValues, INumericInterval 
 - 7.3.4: PropertyContainerMapper more customization

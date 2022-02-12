@@ -137,16 +137,16 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Gets or calculates value for property.
-        /// For use in derived classes.
+        /// It's a shortcut for <see cref="SearchExtensions.GetValue{T}"/> for use in derived classes without keyword this.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
         /// <param name="property">Property to find.</param>
         /// <param name="search">Search options.</param>
+        /// <param name="defaultValue">Default value that returns if property value was not found.</param>
         /// <returns>The value for property.</returns>
-        [return: MaybeNull]
-        protected T GetValue<T>(IProperty<T> property, SearchOptions? search = null)
+        protected T? GetValue<T>(IProperty<T> property, SearchOptions? search = null, T? defaultValue = default)
         {
-            return SearchExtensions.GetValue(this, property, search);
+            return SearchExtensions.GetValue(this, property, search, defaultValue);
         }
     }
 }

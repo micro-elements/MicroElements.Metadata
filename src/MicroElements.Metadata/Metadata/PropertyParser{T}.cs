@@ -148,7 +148,7 @@ namespace MicroElements.Metadata
 
         public PropertyParser<T> Discriminator(object discriminatorValue)
         {
-            return Discriminator(pv => Equals(pv.ValueUntyped, discriminatorValue));
+            return Discriminator(pv => Equals(pv.ValueUntypedOrNull(), discriminatorValue));
         }
     }
 }

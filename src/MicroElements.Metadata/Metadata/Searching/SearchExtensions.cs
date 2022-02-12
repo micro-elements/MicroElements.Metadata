@@ -120,7 +120,10 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
 
             IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(property, search);
-            return propertyValue?.ValueUntyped;
+            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
+                return null;
+
+            return propertyValue.ValueUntyped;
         }
 
         /// <summary>

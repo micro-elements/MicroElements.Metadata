@@ -47,6 +47,7 @@ namespace MicroElements.Metadata.Tests
         public void PropertyContainer()
         {
             var propertyContainer = new MutablePropertyContainer();
+
             var propertyValueA = propertyContainer.SetValue("PropertyA", "ValueA");
             var propertyValueB = propertyContainer.SetValue(new Property<int>("PropertyB"), 42);
 
@@ -56,35 +57,7 @@ namespace MicroElements.Metadata.Tests
             propertyContainer.GetValue(propertyValueA.Property).Should().Be("ValueA");
             propertyContainer.GetValueUntypedByName("PropertyA").Should().Be("ValueA");
 
-            dynamic dynamicContainer = propertyContainer.AsDynamic();
-            object valueA = dynamicContainer.PropertyA;
-            valueA.Should().Be("ValueA");
-
-            object valueB = dynamicContainer.PropertyB;
-            valueB.Should().Be(42);
-
-            object notFoundProperty = dynamicContainer.NotFoundProperty;
-            notFoundProperty.Should().BeNull();
-
             //TODO: override, parent
-        }
-
-        [Fact]
-        public void DynamicContainer()
-        {
-            var propertyContainer = new MutablePropertyContainer();
-            propertyContainer.SetValue("PropertyA", "ValueA");
-            propertyContainer.SetValue(new Property<int>("PropertyB"), 42);
-
-            dynamic dynamicContainer = propertyContainer.AsDynamic();
-            object valueA = dynamicContainer.PropertyA;
-            valueA.Should().Be("ValueA");
-
-            object valueB = dynamicContainer.PropertyB;
-            valueB.Should().Be(42);
-
-            object notFoundProperty = dynamicContainer.NotFoundProperty;
-            notFoundProperty.Should().BeNull();
         }
 
         [Fact]

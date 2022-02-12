@@ -216,6 +216,9 @@ namespace MicroElements.Metadata.SystemTextJson
 
                 foreach (IPropertyValue propertyValue in container.Properties)
                 {
+                    if (!propertyValue.HasValue())
+                        continue;
+
                     string jsonPropertyName = GetJsonPropertyName(propertyValue.PropertyUntyped.Name);
                     Type propertyType = propertyValue.PropertyUntyped.Type;
 

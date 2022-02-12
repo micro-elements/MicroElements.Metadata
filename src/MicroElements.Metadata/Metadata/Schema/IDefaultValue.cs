@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using MicroElements.Functional;
+using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -73,6 +74,9 @@ namespace MicroElements.Metadata.Schema
             Value = defaultValue;
             IsDefaultValueAllowed = isDefaultValueAllowed;
         }
+
+        /// <inheritdoc />
+        public override string ToString() => IsDefaultValueAllowed ? $"DefaultValue: {Value.FormatValue("null")}, Type: {typeof(T).GetFriendlyName()}" : "(DefaultNotAllowed)";
     }
 
     /// <summary>

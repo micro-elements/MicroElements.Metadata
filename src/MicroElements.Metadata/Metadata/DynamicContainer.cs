@@ -44,7 +44,7 @@ namespace MicroElements.Metadata
                 .SearchInParent(_searchInParent)
                 .ReturnNull());
 
-            if (propertyValue != null)
+            if (propertyValue.HasValue())
             {
                 result = propertyValue.ValueUntyped;
                 return true;

@@ -50,8 +50,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <param name="source3">Source 3.</param>
         /// <param name="source4">Source 4.</param>
         /// <returns>Property value or default value.</returns>
-        [return: MaybeNull]
-        public static T GetFirstDefinedValue<T>(
+        public static T? GetFirstDefinedValue<T>(
             this IProperty<T> property,
             IPropertyContainer? source1 = null,
             IPropertyContainer? source2 = null,
@@ -88,7 +87,12 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     return propertyValue.Value;
             }
 
-            return property.DefaultValue.Value;
+            if (property.DefaultValue is { } defaultValue)
+            {
+                return defaultValue.Value;
+            }
+
+            return default;
         }
     }
 

@@ -25,7 +25,17 @@ namespace MicroElements.Validation.Rules
         /// </summary>
         /// <param name="value">Property value.</param>
         /// <returns>True if value is valid.</returns>
-        protected abstract bool IsValid(T? value);
+        protected virtual bool IsValid(T? value) => true;
+
+        /// <summary>
+        /// Checks that property value is valid.
+        /// </summary>
+        /// <param name="propertyValue">Property value.</param>
+        /// <returns>True if propertyValue is valid.</returns>
+        protected virtual bool IsValidPropertyValue(IPropertyValue<T> propertyValue)
+        {
+            return IsValid(propertyValue.Value);
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyValidationRule{T}"/> class.
@@ -41,11 +51,11 @@ namespace MicroElements.Validation.Rules
         /// <inheritdoc />
         public IEnumerable<Message> Validate(IPropertyValue<T>? propertyValue, IPropertyContainer propertyContainer)
         {
-            // Search is from container. NotDefined uses to assure that propertyValue is always not null.
+            // Search is from container. ReturnNotDefined is used to assure that propertyValue is always not null.
             // Also default value can be property defined (not always default(T)).
             propertyValue ??= propertyContainer.GetPropertyValue(Property, propertyContainer.SearchOptions.ReturnNotDefined())!;
 
-            if (!IsValid(propertyValue.Value))
+            if (!IsValidPropertyValue(propertyValue))
                 yield return this.GetConfiguredMessage(propertyValue, propertyContainer);
         }
 

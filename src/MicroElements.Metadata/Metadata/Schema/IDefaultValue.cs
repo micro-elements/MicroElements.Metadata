@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using MicroElements.Functional;
+using MicroElements.Metadata.Exceptions;
 using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Schema
@@ -11,35 +13,31 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Provides default value for type, schema.
     /// </summary>
-    [MetadataUsage(ValidOn = MetadataTargets.Property)]
+    [MetadataUsage(ValidOn = MetadataTargets.Property | MetadataTargets.SimpleSchema)]
     public interface IDefaultValue : IMetadata
     {
-        /// <summary>
-        /// Gets a value indicating whether the default value is allowed for the property value.
-        /// </summary>
-        bool IsDefaultValueAllowed { get; }
-
         /// <summary>
         /// Gets default value for type, schema.
         /// </summary>
         /// <returns>Default value.</returns>
-        object? GetDefaultValue();
+        object? Value { get; }
     }
 
     /// <summary>
     /// Provides strong typed default value for type, schema.
     /// </summary>
     /// <typeparam name="T">Type.</typeparam>
-    [MetadataUsage(ValidOn = MetadataTargets.Property)]
+    [MetadataUsage(ValidOn = MetadataTargets.Property | MetadataTargets.SimpleSchema)]
+    [SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "Default value can not be variant.")]
     public interface IDefaultValue<T> : IDefaultValue
     {
+        /// <inheritdoc />
+        object? IDefaultValue.Value => Value;
+
         /// <summary>
         /// Gets strong typed default value.
         /// </summary>
-        T? Value { get; }
-
-        /// <inheritdoc />
-        object? IDefaultValue.GetDefaultValue() => Value;
+        new T? Value { get; }
     }
 
     /// <summary>
@@ -51,57 +49,22 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets default value for type.
         /// </summary>
-        public static IDefaultValue<T> Default { get; } = new DefaultValue<T>(defaultValue: default, isDefaultValueAllowed: true);
-
-        /// <summary>
-        /// Gets <see cref="IDefaultValue"/> for type that prohibits default value.
-        /// </summary>
-        public static IDefaultValue<T> DefaultNotAllowed { get; } = new DefaultValue<T>(defaultValue: default, isDefaultValueAllowed: false);
+        public static IDefaultValue<T> Default { get; } = new DefaultValue<T>(defaultValue: default);
 
         /// <inheritdoc />
         public T? Value { get; }
-
-        /// <inheritdoc />
-        public bool IsDefaultValueAllowed { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultValue{T}"/> class.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
-        /// <param name="isDefaultValueAllowed">Is default value is allowed for the property value.</param>
-        public DefaultValue(T? defaultValue = default, bool isDefaultValueAllowed = true)
+        public DefaultValue(T? defaultValue = default)
         {
             Value = defaultValue;
-            IsDefaultValueAllowed = isDefaultValueAllowed;
         }
 
         /// <inheritdoc />
-        public override string ToString() => IsDefaultValueAllowed ? $"DefaultValue: {Value.FormatValue("null")}, Type: {typeof(T).GetFriendlyName()}" : "(DefaultNotAllowed)";
-    }
-
-    /// <summary>
-    /// Default value metadata.
-    /// </summary>
-    public class DefaultValueUntyped : IDefaultValue, IImmutable
-    {
-        private readonly object? _defaultValue;
-
-        /// <inheritdoc />
-        public bool IsDefaultValueAllowed { get; }
-
-        /// <inheritdoc />
-        public object? GetDefaultValue() => _defaultValue;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultValueUntyped"/> class.
-        /// </summary>
-        /// <param name="defaultValue">Default value.</param>
-        /// <param name="isDefaultValueAllowed">Is default value is allowed for the property value.</param>
-        public DefaultValueUntyped(object? defaultValue, bool isDefaultValueAllowed = true)
-        {
-            _defaultValue = defaultValue;
-            IsDefaultValueAllowed = isDefaultValueAllowed;
-        }
+        public override string ToString() => $"DefaultValue: {Value.FormatValue("null")}, Type: {typeof(T).GetFriendlyName()}";
     }
 
     /// <summary>
@@ -115,47 +78,21 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public T? Value => _defaultValue();
 
-        /// <inheritdoc />
-        public bool IsDefaultValueAllowed { get; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultValueLazy{T}"/> class.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
-        /// <param name="isDefaultValueAllowed">Is default value is allowed for the property value.</param>
-        public DefaultValueLazy(Func<T> defaultValue, bool isDefaultValueAllowed = true)
+        public DefaultValueLazy(Func<T> defaultValue)
         {
             _defaultValue = defaultValue;
-            IsDefaultValueAllowed = isDefaultValueAllowed;
         }
     }
 
     /// <summary>
     /// DefaultValue statics.
     /// </summary>
-    public static class DefaultValue
+    public static partial class DefaultValue
     {
-        /// <summary>
-        /// Gets <see cref="IDefaultValue"/> that treats as "Default value is not allowed".
-        /// </summary>
-        public static IDefaultValue NotAllowed { get; } = new DefaultValueUntyped(null, isDefaultValueAllowed: false);
-
-        /// <summary>
-        /// Gets <see cref="IDefaultValue"/> for type.
-        /// </summary>
-        /// <typeparam name="T">Value type.</typeparam>
-        /// <param name="isDefaultValueAllowed">IsDefaultValueAllowed or not.</param>
-        /// <returns><seealso cref="IDefaultValue"/> instance.</returns>
-        public static IDefaultValue<T> ForType<T>(bool isDefaultValueAllowed = true) => isDefaultValueAllowed ? DefaultValue<T>.Default : DefaultValue<T>.DefaultNotAllowed;
-
-        /// <summary>
-        /// Gets <see cref="IDefaultValue"/> for type.
-        /// </summary>
-        /// <param name="type">Type to get default value.</param>
-        /// <param name="isDefaultValueAllowed">IsDefaultValueAllowed or not.</param>
-        /// <returns><seealso cref="IDefaultValue"/> instance.</returns>
-        public static IDefaultValue ForType(Type type, bool isDefaultValueAllowed = true) => new DefaultValueUntyped(type.GetDefaultValue(), isDefaultValueAllowed);
-
         /// <summary>
         /// Gets default value for type.
         /// </summary>
@@ -170,6 +107,32 @@ namespace MicroElements.Metadata.Schema
 
             // For reference types always returns null.
             return null;
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if <paramref name="defaultValue"/> can not be used as default value for <paramref name="type"/>.
+        /// </summary>
+        /// <param name="type">Type to check.</param>
+        /// <param name="defaultValue">Value to check.</param>
+        /// <returns>The same value if it can be used as default value for type.</returns>
+        /// <exception cref="ArgumentException">Value can not be used as default value for type.</exception>
+        public static object? CheckDefaultIsValidForType(this Type type, object? defaultValue)
+        {
+            type.AssertArgumentNotNull(nameof(type));
+
+            if (defaultValue != null)
+            {
+                bool isAssignableType = defaultValue.IsAssignableTo(type);
+                if (!isAssignableType)
+                    throw new ArgumentException($"Value '{defaultValue.FormatValue()}' can not be set as default value for type '{type}'");
+
+                return defaultValue;
+            }
+
+            if (!type.CanAcceptNull())
+                throw new ArgumentException($"Value 'null' can not be set as default value for type '{type}'");
+
+            return defaultValue;
         }
     }
 
@@ -191,6 +154,11 @@ namespace MicroElements.Metadata.Schema
             schema.AssertArgumentNotNull(nameof(schema));
             defaultValue.AssertArgumentNotNull(nameof(defaultValue));
 
+            if (schema is ISchemaBuilder<TSchema, IDefaultValue> schemaBuilder)
+            {
+                return schemaBuilder.With(defaultValue);
+            }
+
             return schema.SetMetadata(defaultValue);
         }
 
@@ -200,27 +168,40 @@ namespace MicroElements.Metadata.Schema
         /// <param name="schema">Source schema.</param>
         /// <returns>Optional <see cref="IDefaultValue"/> metadata.</returns>
         [Pure]
-        public static IDefaultValue? GetDefaultValue(this ISchema schema)
+        public static IDefaultValue? GetDefaultValueMetadata(this ISchema schema)
         {
             schema.AssertArgumentNotNull(nameof(schema));
+
+            if (schema is IHas<IDefaultValue> hasDefaultValue)
+            {
+                return hasDefaultValue.Component;
+            }
 
             return schema.GetSchemaMetadata<IDefaultValue>();
         }
 
-        /// <summary>
-        /// Sets <see cref="IDefaultValue"/> metadata for the schema.
-        /// </summary>
-        /// <typeparam name="TSchema">Schema.</typeparam>
-        /// <param name="schema">Source schema.</param>
-        /// <param name="allowDefaultValue">Value indicating that property can contain null value.</param>
-        /// <returns>The same schema.</returns>
-        public static TSchema SetAllowDefault<TSchema>(this TSchema schema, bool allowDefaultValue = true)
-            where TSchema : ISchema
+        public static object? GetDefaultValueUntyped(this ISchema schema, object? defaultValue = null)
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            IDefaultValue defaultValue = DefaultValue.ForType(schema.Type, allowDefaultValue);
-            return schema.SetDefaultValueMetadata(defaultValue);
+            IDefaultValue? defaultValueMetadata = GetDefaultValueMetadata(schema);
+            return defaultValueMetadata != null ? defaultValueMetadata.Value : defaultValue;
+        }
+
+        public static T? GetDefaultValue<T>(this ISchema<T> schema, T? defaultValue = default)
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            IDefaultValue? defaultValueMetadata = GetDefaultValueMetadata(schema);
+            return defaultValueMetadata != null ? (T?)defaultValueMetadata.Value : defaultValue;
+        }
+
+        public static T? GetDefaultValueOrThrow<T>(this ISchema<T> schema)
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+
+            IDefaultValue? defaultValueMetadata = GetDefaultValueMetadata(schema);
+            return defaultValueMetadata != null ? (T?)defaultValueMetadata.Value : throw new MetadataIsNullException($"Metadata of type '{typeof(T).GetFriendlyName()}' was not found in '{schema}'");
         }
 
         /// <summary>
@@ -236,19 +217,9 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            if (defaultValue != null)
-            {
-                bool isAssignableType = defaultValue.IsAssignableTo(schema.Type);
-                if (!isAssignableType)
-                    throw new ArgumentException($"Value {defaultValue.FormatValue()} can not be set as default value for type {schema.Type}");
+            IDefaultValue defaultValueUntyped = DefaultValue.GetOrCreateDefaultValue(schema.Type, defaultValue);
 
-                return schema.SetDefaultValueMetadata(new DefaultValueUntyped(defaultValue));
-            }
-
-            if (!schema.Type.CanAcceptNull())
-                throw new ArgumentException($"null value can not be set as default value for type {schema.Type}");
-
-            return schema.SetDefaultValueMetadata(DefaultValue.ForType(schema.Type));
+            return schema.SetDefaultValueMetadata(defaultValueUntyped);
         }
 
         /// <summary>

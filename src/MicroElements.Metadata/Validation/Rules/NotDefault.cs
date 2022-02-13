@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using MicroElements.Metadata;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Validation.Rules
 {
@@ -22,13 +23,17 @@ namespace MicroElements.Validation.Rules
         public NotDefault(IProperty<T> property)
             : base(property, "{propertyName} should not have default value {value}.")
         {
-            _defaultValue = Property.DefaultValue.Value;
+            _defaultValue = Property.GetDefaultValue();
         }
 
         /// <inheritdoc />
-        protected override bool IsValid(T? value)
+        protected override bool IsValidPropertyValue(IPropertyValue<T> propertyValue)
         {
-            bool equalsToDefaultValue = EqualityComparer<T>.Default.Equals(value, _defaultValue);
+            // skip NotDefined because it has no value at all.
+            if (propertyValue.IsNotDefined())
+                return true;
+
+            bool equalsToDefaultValue = EqualityComparer<T?>.Default.Equals(propertyValue.Value, _defaultValue);
             return equalsToDefaultValue is false;
         }
     }

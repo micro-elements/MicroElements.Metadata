@@ -27,7 +27,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Static schema gets properties from static fields and properties.
     /// </summary>
-    public interface IStaticSchema : IObjectSchemaProvider
+    public interface IStaticSchema : IObjectSchemaProvider, IStaticPropertySet
     {
         /// <inheritdoc />
         IObjectSchema IObjectSchemaProvider.GetObjectSchema()

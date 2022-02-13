@@ -90,6 +90,32 @@ namespace MicroElements.Metadata.Tests
         }
 
         private static Property<int> CreateFilledProperty() => PropertyTestsExtensions.CreateFilledProperty();
+
+
+        [Fact]
+        public void property_1()
+        {
+            new Property<int>("int_default_42")
+                .With(new DefaultValue<int>(42))
+                .GetDefaultValueMetadata().Should().NotBeNull();
+
+            new Property<int>("int_default_42")
+                .With(new DefaultValue<int>(42))
+                .GetDefaultValueMetadata()!.Value.Should().Be(42);
+
+            new Property<int>("int_default_42")
+                .With(new DefaultValue<int>(42))
+                .GetDefaultValue().Should().Be(42);
+
+            new Property<int>("int_no_default")
+                .GetDefaultValueMetadata().Should().BeNull();
+
+            new Property<int>("int_no_default")
+                .GetDefaultValue().Should().Be(0);
+
+            new Property<int>("int_no_default")
+                .GetDefaultValue(defaultValue: -1).Should().Be(-1);
+        }
     }
 
     internal static class PropertyTestsExtensions
@@ -99,8 +125,7 @@ namespace MicroElements.Metadata.Tests
             property.Description.Should().BeNull();
             property.Alias.Should().BeNull();
             property.Examples.Should().NotBeNull().And.BeEmpty();
-            property.DefaultValue.Should().NotBeNull();
-            property.DefaultValue.Value.Should().Be(default(T));
+            property.DefaultValue.Should().BeNull();
             property.Calculator.Should().BeNull();
         }
 

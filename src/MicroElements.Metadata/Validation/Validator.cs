@@ -8,29 +8,28 @@ using MicroElements.Functional;
 namespace MicroElements.Validation
 {
     /// <summary>
-    /// Validator that caches rules from other validator.
-    /// Use it for lazy validators to reduce memory allocation.
+    /// Validator that provides cached rules.
     /// </summary>
-    public class CachedValidator : IValidator
+    public class Validator : IValidator
     {
         private readonly IReadOnlyCollection<IValidationRule> _rules;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedValidator"/> class.
+        /// Initializes a new instance of the <see cref="Validator"/> class.
         /// </summary>
-        /// <param name="validator">Validator to wrap.</param>
-        public CachedValidator(IValidator validator)
+        /// <param name="validationRules">Rules to cache.</param>
+        public Validator(IEnumerable<IValidationRule> validationRules)
         {
-            validator.AssertArgumentNotNull(nameof(validator));
+            validationRules.AssertArgumentNotNull(nameof(validationRules));
 
-            _rules = validator.GetRules().ToArray();
+            _rules = validationRules.ToArray();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedValidator"/> class.
+        /// Initializes a new instance of the <see cref="Validator"/> class.
         /// </summary>
         /// <param name="validationRules">Rules to cache.</param>
-        public CachedValidator(IEnumerable<IValidationRule> validationRules)
+        public Validator(params IValidationRule[] validationRules)
         {
             validationRules.AssertArgumentNotNull(nameof(validationRules));
 
@@ -53,7 +52,7 @@ namespace MicroElements.Validation
         /// <returns>New validator with cached rules.</returns>
         public static IValidator Cached(this IValidator validator)
         {
-            return new CachedValidator(validator);
+            return new Validator(validator.GetRules().ToArray());
         }
 
         /// <summary>
@@ -63,7 +62,7 @@ namespace MicroElements.Validation
         /// <returns>New validator with cached rules.</returns>
         public static IValidator Cached(this IEnumerable<IValidationRule> validationRules)
         {
-            return new CachedValidator(validationRules);
+            return new Validator(validationRules.ToArray());
         }
     }
 }

@@ -78,8 +78,7 @@ namespace MicroElements.Metadata.Diff
 
         private static string FormatForDiff(IPropertyValue propertyValue)
         {
-            string formatAsTuple = propertyValue.ValueUntyped.DefaultFormatValue();
-            return formatAsTuple;
+            return propertyValue.ValueUntyped.DefaultFormatValue();
         }
     }
 
@@ -125,6 +124,7 @@ namespace MicroElements.Metadata.Diff
         public string? NewValue { get; }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyDiff"/> class.
         /// Creates new diff.
         /// </summary>
         /// <param name="property">Property name.</param>

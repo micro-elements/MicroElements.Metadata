@@ -10,7 +10,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Extension methods for search.
     /// </summary>
-    public static class SearchExtensions
+    public static partial class SearchExtensions
     {
         /// <summary>
         /// Gets or calculates typed property and value for property using search conditions.
@@ -98,10 +98,7 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
 
             IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
-            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
-                return defaultValue;
-
-            return propertyValue.Value;
+            return propertyValue.HasValue() ? propertyValue.Value : defaultValue;
         }
 
         /// <summary>
@@ -120,10 +117,7 @@ namespace MicroElements.Metadata
             property.AssertArgumentNotNull(nameof(property));
 
             IPropertyValue? propertyValue = propertyContainer.GetPropertyValueUntyped(property, search);
-            if (propertyValue == null || propertyValue.Source == ValueSource.NotDefined)
-                return null;
-
-            return propertyValue.ValueUntyped;
+            return propertyValue.HasValue() ? propertyValue.ValueUntyped : null;
         }
 
         /// <summary>
@@ -240,7 +234,7 @@ namespace MicroElements.Metadata
                 .SearchInParent(searchInParent)
                 .ReturnNull());
 
-            return propertyValue?.ValueUntyped;
+            return propertyValue?.ValueUntypedOrNull();
         }
 
         /// <summary>

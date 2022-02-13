@@ -1,9 +1,11 @@
 # 7.13.0
 - IPropertyValue.ValueUntyped should return 'null' if Source is NotDefined
 - NotDefined fix for DynamicContainer, Json serialization
-- Property<T>.DefaultValue changed to DefaultValue<T>.DefaultNotAllowed because default value shouild be defined explicitly.
+
 - Added 'defaultValue' param to 'PropertyContainer.GetValue' and 'MutablePropertyContainer.GetValue' to have the same signature as common 'GetValue'
 - Added 'allowMapUndefined' param to PropertyExtensions.Map
+
+- BREAKING CHANGE: Property<T>.DefaultValue become optional. Default value for property should be defined explicitly.
 
 # 7.12.0
 Experimental release that extends parsing with conditinal logic

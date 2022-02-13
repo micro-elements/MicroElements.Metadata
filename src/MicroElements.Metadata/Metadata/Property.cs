@@ -15,7 +15,10 @@ namespace MicroElements.Metadata
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public sealed partial class Property<T> : IProperty<T>
+    public sealed partial class Property<T> :
+        IProperty<T>,
+        ISchemaBuilder<Property<T>, IDefaultValue<T>>,
+        ISchemaBuilder<Property<T>, IDefaultValue>
     {
         /// <summary>
         /// Empty property instance.
@@ -33,7 +36,7 @@ namespace MicroElements.Metadata
             // Other properties can be configured with method With
             Description = null;
             Alias = null;
-            DefaultValue = DefaultValue<T>.DefaultNotAllowed;
+            DefaultValue = null;
             Examples = Array.Empty<T>();
             Calculator = null;
         }
@@ -52,7 +55,7 @@ namespace MicroElements.Metadata
             string name,
             string? description,
             string? alias,
-            IDefaultValue<T> defaultValue,
+            IDefaultValue<T>? defaultValue,
             IReadOnlyList<T> examples,
             IPropertyCalculator<T>? calculator)
         {
@@ -60,7 +63,7 @@ namespace MicroElements.Metadata
 
             Description = description;
             Alias = alias;
-            DefaultValue = defaultValue.AssertArgumentNotNull(nameof(defaultValue));
+            DefaultValue = defaultValue;
             Examples = examples.AssertArgumentNotNull(nameof(examples));
             Calculator = calculator;
         }
@@ -78,7 +81,7 @@ namespace MicroElements.Metadata
         public string? Alias { get; }
 
         /// <inheritdoc />
-        public IDefaultValue<T> DefaultValue { get; }
+        public IDefaultValue<T>? DefaultValue { get; }
 
         /// <inheritdoc />
         public IReadOnlyList<T> Examples { get; }
@@ -88,6 +91,29 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public override string ToString() => Name;
+
+        /// <inheritdoc />
+        public Property<T> With(IDefaultValue<T> defaultValue)
+        {
+            return Property.With(this, defaultValue: defaultValue);
+        }
+
+        /// <inheritdoc />
+        Property<T> ISchemaBuilder<Property<T>, IDefaultValue>.With(IDefaultValue defaultValueUntyped)
+        {
+            IDefaultValue<T> defaultValue;
+            if (defaultValueUntyped is IDefaultValue<T> value)
+            {
+                defaultValue = value;
+            }
+            else
+            {
+                object? valueUntyped = Type.CheckDefaultIsValidForType(defaultValueUntyped.Value);
+                defaultValue = new DefaultValue<T>((T?)valueUntyped);
+            }
+
+            return Property.With(this, defaultValue: defaultValue);
+        }
     }
 
     /// <summary>
@@ -133,7 +159,9 @@ namespace MicroElements.Metadata
                 defaultValue: defaultValue ?? source.DefaultValue,
                 examples: examples ?? source.Examples,
                 calculator: calculator ?? source.Calculator);
+
             source.CopyMetadataTo(property);
+
             return property;
         }
 

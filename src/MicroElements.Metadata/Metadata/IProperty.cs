@@ -17,12 +17,17 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IProperty<T> : ISchema<T>, IProperty, IHasAlias
+    public interface IProperty<T> :
+        ISchema<T>,
+        IProperty,
+        IHasAlias,
+        IHas<IDefaultValue<T>>,
+        IHas<IPropertyCalculator<T>>
     {
         /// <summary>
         /// Gets default value for property.
         /// </summary>
-        IDefaultValue<T> DefaultValue { get; }
+        IDefaultValue<T>? DefaultValue { get; }
 
         /// <summary>
         /// Gets property value calculator.
@@ -33,5 +38,11 @@ namespace MicroElements.Metadata
         /// Gets examples list.
         /// </summary>
         IReadOnlyList<T> Examples { get; }
+
+        /// <inheritdoc />
+        IDefaultValue<T>? IHas<IDefaultValue<T>>.Component => DefaultValue ?? this.GetMetadata<IDefaultValue<T>>();
+
+        /// <inheritdoc />
+        IPropertyCalculator<T>? IHas<IPropertyCalculator<T>>.Component => Calculator ?? this.GetMetadata<IPropertyCalculator<T>>();
     }
 }

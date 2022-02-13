@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using MicroElements.Metadata.Schema;
+using MicroElements.Validation.Rules;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -36,6 +38,24 @@ namespace MicroElements.Metadata.Tests
 
             var hierarchicalContainer = new HierarchicalContainer(container1, container3);
             hierarchicalContainer.ToString().Should().Be("[Name: Container1] -> [Name: Container2] -> [Name: Container3]");
+        }
+
+        [Fact]
+        public void match()
+        {
+            IProperty<string> name = new Property<string>("Name");
+            IProperty<int> age = new Property<int>("Age");
+            IProperty<string> name2 = new Property<string>("Name2");
+            IProperty<int> age2 = new Property<int>("Age2");
+
+            var existingOnly = SearchOptions.ExistingOnly;
+            IPropertyContainer container = new MutablePropertyContainer(searchOptions: existingOnly)
+                .WithValue(name, "Alex")
+                .WithValue(age, 42);
+
+            container.MatchValue(name, s => s.ToUpper()).Should().Be("ALEX");
+            container.MatchValue(name2, s => s.ToUpper(), () => "NONE").Should().Be("NONE");
+            
         }
     }
 }

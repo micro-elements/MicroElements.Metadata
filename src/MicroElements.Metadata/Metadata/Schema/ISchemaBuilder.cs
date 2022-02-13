@@ -11,11 +11,23 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
+    /// Provides a knowledge that object has component of type.
+    /// </summary>
+    /// <typeparam name="T">Component type.</typeparam>
+    public interface IHas<out T>
+    {
+        /// <summary>
+        /// Gets component.
+        /// </summary>
+        T? Component { get; }
+    }
+
+    /// <summary>
     /// Strong typed schema builder that accepts concrete metadata type.
     /// </summary>
     /// <typeparam name="TSchema">Schema type.</typeparam>
     /// <typeparam name="TMetadata">Schema part.</typeparam>
-    public interface ISchemaBuilder<TSchema, TMetadata> : ISchemaBuilder
+    public interface ISchemaBuilder<out TSchema, in TMetadata> : ISchemaBuilder
         where TSchema : ISchema
         where TMetadata : IMetadata
     {

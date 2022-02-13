@@ -58,6 +58,64 @@ namespace MicroElements.Metadata.Tests
         }
 
         [Fact]
+        public void validate_nullable_not_default()
+        {
+            IValidator notDefault = new Validator(NullableInt.NotDefault());
+
+            var messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, null)
+                .Validate(notDefault)
+                .ToList();
+            messages.Should().HaveCount(1);
+            messages[0].FormattedMessage.Should().Be("NullableInt should not have default value null.");
+
+            messages = new MutablePropertyContainer()
+                .Validate(notDefault)
+                .ToList();
+            messages.Should().BeEmpty(because: "Property is absent and can not be default");
+
+            messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, 0)
+                .Validate(notDefault)
+                .ToList();
+            messages.Should().BeEmpty(because: "Property is nullable and 0 is not default value for Nullable<int>");
+
+            messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, 42)
+                .Validate(notDefault)
+                .ToList();
+            messages.Should().BeEmpty();
+
+            IValidator existsAndNotDefault =
+                new Validator(NullableInt.Exists().And(breakOnFirstError: false).NotDefault());
+
+            messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, null)
+                .Validate(existsAndNotDefault)
+                .ToList();
+            messages.Should().HaveCount(1);
+            messages[0].FormattedMessage.Should().Be("NullableInt should not have default value null.");
+
+            messages = new MutablePropertyContainer()
+                .Validate(existsAndNotDefault)
+                .ToList();
+            messages.Should().HaveCount(1);
+            messages[0].FormattedMessage.Should().Be("NullableInt is not exists.");
+
+            messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, 0)
+                .Validate(existsAndNotDefault)
+                .ToList();
+            messages.Should().BeEmpty(because: "Property is nullable and 0 is not default value for Nullable<int>");
+
+            messages = new MutablePropertyContainer()
+                .WithValue(NullableInt, 42)
+                .Validate(existsAndNotDefault)
+                .ToList();
+            messages.Should().BeEmpty();
+        }
+
+        [Fact]
         public void validate_nullable_exists()
         {
             IEnumerable<IValidationRule> Rules()
@@ -168,7 +226,6 @@ namespace MicroElements.Metadata.Tests
 
             messages[0].FormattedMessage.Should().Be("Age should not have default value 0.");
         }
-
 
         [Fact]
         public void validate_string_length()

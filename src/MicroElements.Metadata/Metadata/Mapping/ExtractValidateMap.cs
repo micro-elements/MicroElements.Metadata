@@ -244,6 +244,7 @@ namespace MicroElements.Metadata.Mapping
             if (result1.Messages is { Count: 0 } && result1.PropertyValue.HasValue())
             {
                 // Output value.
+                // TODO: RESULT
                 var value2 = MapFunc(result1.PropertyValue);
 
                 propertyValue2 = new PropertyValue<T2>(Property, value2, ValueSource.Calculated);

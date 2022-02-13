@@ -172,23 +172,6 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Sets property value if property is not set.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValueIfNotSet<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, [AllowNull] T value)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
-
-            var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
-            if (propertyValue.IsNullOrNotDefined())
-                propertyContainer.SetValue(property, value!);
-        }
-
-        /// <summary>
         /// Sets optional value if <paramref name="value"/> is in Some state.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
@@ -300,6 +283,64 @@ namespace MicroElements.Metadata
             }
 
             return propertyContainer;
+        }
+
+        /// <summary>
+        /// Sets property value if property is not set.
+        /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">Property container.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        /// <returns>The same container for chaining.</returns>
+        public static TContainer SetValueIfNotSet<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value)
+            where TContainer : IMutablePropertyContainer
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
+            var propertyValue = propertyContainer.GetPropertyValueUntyped(property, SearchOptions.ExistingOnly);
+            if (propertyValue.IsNullOrNotDefined())
+                propertyContainer.SetValue(property, value!);
+
+            return propertyContainer;
+        }
+
+        /// <summary>
+        /// Sets property value if value is not default and returns the same container.
+        /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">MutablePropertyContainer.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        /// <returns>The same container for chaining.</returns>
+        public static TContainer SetValueIfNotDefault<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value)
+            where TContainer : IMutablePropertyContainer
+        {
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+            property.AssertArgumentNotNull(nameof(property));
+
+            if (!value.IsDefault())
+                propertyContainer.SetValue(property, value);
+
+            return propertyContainer;
+        }
+
+        /// <summary>
+        /// Sets property value if value is not default and returns the same container.
+        /// </summary>
+        /// <typeparam name="TContainer">Property container type.</typeparam>
+        /// <typeparam name="T">Property type.</typeparam>
+        /// <param name="propertyContainer">MutablePropertyContainer.</param>
+        /// <param name="property">Property to set.</param>
+        /// <param name="value">Value to set.</param>
+        /// <returns>The same container for chaining.</returns>
+        public static TContainer WithValueIfNotDefault<TContainer, T>(this TContainer propertyContainer, IProperty<T> property, T value)
+            where TContainer : IMutablePropertyContainer
+        {
+            return SetValueIfNotDefault(propertyContainer, property, value);
         }
     }
 }

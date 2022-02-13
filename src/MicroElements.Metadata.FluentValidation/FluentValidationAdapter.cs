@@ -24,8 +24,6 @@ namespace MicroElements.Metadata.FluentValidation
 
                 if (property is ICollection)
                     property.SetStringMinLength(1);
-
-                property.SetAllowDefault(false);
             }
 
             if (propertyValidator is ILengthValidator lengthValidator)

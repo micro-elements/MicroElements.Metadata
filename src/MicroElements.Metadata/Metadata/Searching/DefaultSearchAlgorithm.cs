@@ -123,8 +123,8 @@ namespace MicroElements.Metadata
                 return (IPropertyValue<T>)propertyValue;
 
             // Maybe default value?
-            if (search.UseDefaultValue && property.DefaultValue.IsDefaultValueAllowed)
-                return _propertyValueFactory.Create(property, property.DefaultValue.Value, ValueSource.DefaultValue);
+            if (search.UseDefaultValue && property.DefaultValue is { } defaultValue)
+                return _propertyValueFactory.Create(property, defaultValue.Value, ValueSource.DefaultValue);
 
             // Return null or NotDefined
             return search.ReturnNotDefined ? _propertyValueFactory.Create(property, default, ValueSource.NotDefined) : null;

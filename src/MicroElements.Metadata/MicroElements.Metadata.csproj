@@ -10,11 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MicroElements.Functional" Version="1.10.0" />
-    <PackageReference Include="MicroElements.Shared.Sources" Version="1.0.0">
+    <PackageReference Include="MicroElements.CodeContracts.Sources" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.Collections.Extensions.Sources" Version="1.1.0" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.Formatting.Sources" Version="1.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MicroElements.Reflection.Sources" Version="1.1.0" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

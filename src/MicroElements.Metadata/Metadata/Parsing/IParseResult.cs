@@ -3,10 +3,13 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
-using MicroElements.Diagnostics;
-using MicroElements.Diagnostics.ErrorModel;
-using MicroElements.Reflection;
+
+using Message = MicroElements.Diagnostics.Message;
+using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
+using ObjectExtensions = MicroElements.Reflection.ObjectExtensions.ObjectExtensions;
 
 namespace MicroElements.Metadata.Parsing
 {
@@ -149,7 +152,7 @@ namespace MicroElements.Metadata.Parsing
         /// <returns>Success <see cref="ParseResult{T}"/> instance.</returns>
         public static ParseResult<T> Success<T>(T? value)
         {
-            if (value.IsDefault())
+            if (ObjectExtensions.IsDefault(value))
                 return Cache<T>.SuccessDefault;
 
             return new ParseResult<T>(isSuccess: true, value: value, error: null);
@@ -186,7 +189,7 @@ namespace MicroElements.Metadata.Parsing
 
         public static ParseResult<T> ToParseResult<T>(this T value, bool allowNull = false)
         {
-            if (value.IsNull())
+            if (ObjectExtensions.IsNull(value))
             {
                 if (!allowNull)
                     return Cache<T>.FailedNullNotAllowed;
@@ -198,7 +201,7 @@ namespace MicroElements.Metadata.Parsing
 
         public static ParseResult<T> ParseNotNull<T>(this T? value)
         {
-            if (value.IsNull())
+            if (ObjectExtensions.IsNull(value))
             {
                 return Cache<T>.FailedNullNotAllowed;
             }
@@ -208,7 +211,7 @@ namespace MicroElements.Metadata.Parsing
 
         public static ParseResult<T> Parse<T>(this T value)
         {
-            if (value.IsNull())
+            if (ObjectExtensions.IsNull(value))
             {
                 return Cache<T>.SuccessDefault;
             }
@@ -239,7 +242,7 @@ namespace MicroElements.Metadata.Parsing
 
         public static IParseResult<T> MapNotNull<T>(this IParseResult<T?> source)
         {
-            if (source.IsSuccess && source.Value.IsNotNull())
+            if (source.IsSuccess && ObjectExtensions.IsNotNull(source.Value))
             {
                 return source;
             }
@@ -251,7 +254,7 @@ namespace MicroElements.Metadata.Parsing
         {
             map.AssertArgumentNotNull(nameof(map));
 
-            if (source.IsSuccess && source.Value.IsNotNull())
+            if (source.IsSuccess && ObjectExtensions.IsNotNull(source.Value))
             {
                 B valueB = map(source.Value!);
                 return Success(valueB);
@@ -272,12 +275,57 @@ namespace MicroElements.Metadata.Parsing
             return ParseResult.Failed<B>(source.Error);
         }
 
+        [Pure]
+        public static B Match<A, B>(
+            this IParseResult<A> source,
+            Func<A?, B> mapResult,
+            Func<Message, B> mapError)
+        {
+            source.AssertArgumentNotNull(nameof(source));
+            mapResult.AssertArgumentNotNull(nameof(mapResult));
+            mapError.AssertArgumentNotNull(nameof(mapError));
+
+            if (source.IsSuccess)
+                return mapResult(source.Value);
+
+            return mapError(source.Error!);
+        }
+
+        public static void Match<A>(
+            this IParseResult<A> source,
+            Action<A?> onResult,
+            Action<Message> onError)
+        {
+            source.AssertArgumentNotNull(nameof(source));
+            onResult.AssertArgumentNotNull(nameof(onResult));
+            onError.AssertArgumentNotNull(nameof(onError));
+
+            if (source.IsSuccess)
+                onResult(source.Value);
+            else
+                onError(source.Error!);
+        }
+
+        public static T? GetValueOrDefault<T>(this IParseResult<T> source, T? defaultValue = default)
+        {
+            if (source.IsSuccess)
+                return source.Value;
+            return defaultValue;
+        }
+
+        public static T? GetValueOrDefault<T>(this IParseResult<T> source, Func<T?> getDefaultValue)
+        {
+            if (source.IsSuccess)
+                return source.Value;
+            return getDefaultValue();
+        }
+
         public static T? GetValueOrThrow<T>(this IParseResult<T> source, bool allowNullResult = true)
         {
             if (source.IsSuccess)
             {
                 T? value = source.Value;
-                if (!allowNullResult && value.IsNull())
+                if (!allowNullResult && ObjectExtensions.IsNull(value))
                     throw new Exception();
 
                 return value;
@@ -292,7 +340,7 @@ namespace MicroElements.Metadata.Parsing
             if (source.IsSuccess)
             {
                 var value = source.ValueUntyped;
-                if (!allowNullResult && value.IsNull())
+                if (!allowNullResult && ObjectExtensions.IsNull(value))
                     throw new Exception();
 
                 return value;
@@ -304,8 +352,8 @@ namespace MicroElements.Metadata.Parsing
 
         public static Exception ToException(this Message message)
         {
-            Error<string> error = new Error<string>(message.EventName ?? "ERROR", message.FormattedMessage);
-            return new ExceptionWithError<string>(error);
+            Diagnostics.ErrorModel.Error<string> error = new Diagnostics.ErrorModel.Error<string>(message.EventName ?? "ERROR", message.FormattedMessage);
+            return new Diagnostics.ErrorModel.ExceptionWithError<string>(error);
         }
     }
 }

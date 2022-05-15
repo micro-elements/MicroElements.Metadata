@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using MicroElements.CodeContracts;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.Schema
 {

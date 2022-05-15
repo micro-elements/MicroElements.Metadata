@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using MicroElements.CodeContracts;
-using MicroElements.Core;
 
 namespace MicroElements.Metadata
 {
@@ -14,16 +14,59 @@ namespace MicroElements.Metadata
     public static partial class PropertyContainerExtensions
     {
         /// <summary>
+        /// Gets <see cref="IPropertyValue"/> enumeration as KeyValuePair enumeration.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>KeyValuePair enumeration.</returns>
+        [Pure]
+        public static IEnumerable<KeyValuePair<string, object?>> AsKeyValuePairs(this IEnumerable<IPropertyValue> propertyContainer)
+        {
+            return propertyContainer
+                .AssertArgumentNotNull(nameof(propertyContainer))
+                .Select(propertyValue => new KeyValuePair<string, object?>(propertyValue.PropertyUntyped.Name, propertyValue.ValueUntyped));
+        }
+
+        /// <summary>
         /// Gets <see cref="IPropertyContainer"/> as KeyValuePair enumeration.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>
         /// <returns>KeyValuePair enumeration.</returns>
+        [Pure]
         public static IEnumerable<KeyValuePair<string, object?>> AsKeyValuePairs(this IPropertyContainer propertyContainer)
+        {
+            return propertyContainer
+                .AssertArgumentNotNull(nameof(propertyContainer))
+                .Properties
+                .AsKeyValuePairs();
+        }
+
+        /// <summary>
+        /// Gets <see cref="IPropertyContainer"/> as Dictionary with string key.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>Dictionary.</returns>
+        [Pure]
+        public static IReadOnlyDictionary<string, object?> AsReadOnlyDictionary(this IPropertyContainer propertyContainer)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
-            return propertyContainer.Properties.Select(propertyValue =>
-                new KeyValuePair<string, object?>(propertyValue.PropertyUntyped.Name, propertyValue.ValueUntyped));
+            return propertyContainer
+                .AsKeyValuePairs()
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        /// <summary>
+        /// Gets <see cref="IPropertyValue"/> enumeration as Dictionary with string key.
+        /// </summary>
+        /// <param name="propertyContainer">Source property container.</param>
+        /// <returns>Dictionary.</returns>
+        [Pure]
+        public static IReadOnlyDictionary<string, object?> AsReadOnlyDictionary(this IEnumerable<IPropertyValue> propertyContainer)
+        {
+            return propertyContainer
+                .AssertArgumentNotNull(nameof(propertyContainer))
+                .AsKeyValuePairs()
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         /// <summary>

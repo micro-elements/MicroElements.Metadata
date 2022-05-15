@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Formatting;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {

@@ -59,7 +59,7 @@ namespace MicroElements.Metadata.Schema
         /// <param name="description">Description.</param>
         /// <returns>New schema instance with provided description.</returns>
         public static TSchema WithDescription<TSchema>(this TSchema source, string description)
-            where TSchema : ISchemaBuilder<TSchema, ISchemaDescription>, ISchema
+            where TSchema : ICompositeBuilder<TSchema, ISchemaDescription>, ISchema
         {
             return source.With(new SchemaDescription(description));
         }

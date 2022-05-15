@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using MicroElements.CodeContracts;
 using MicroElements.Diagnostics;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

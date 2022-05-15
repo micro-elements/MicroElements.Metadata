@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.JsonSchema
 {

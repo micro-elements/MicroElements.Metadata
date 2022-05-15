@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using FluentAssertions;
+using MicroElements.Metadata;
 using Xunit;
 
 namespace MicroElements.Functional.Tests
@@ -28,6 +30,19 @@ namespace MicroElements.Functional.Tests
             message.FormattedMessage.Should().Be("User Alex created in 145 ms.");
             message.GetProperty("Name").GetValueOrThrow().Should().Be("Alex");
             message.GetProperty("Elapsed").GetValueOrThrow().Should().Be(145);
+        }
+
+        [Fact]
+        public void Test11()
+        {
+            var message =
+                new StructuredMessage.StructuredMessage("User {Name} created in {Elapsed} ms.")
+                    .With(new KeyValuePair<string, object?>("Name", "Alex"))
+                    .With(new KeyValuePair<string, object?>("Elapsed", 145));
+
+            message.FormattedMessage.Should().Be("User Alex created in 145 ms.");
+            message.GetValueUntypedByName("Name").Should().Be("Alex");
+            message.GetValueUntypedByName("Elapsed").Should().Be(145);
         }
 
         [Fact]

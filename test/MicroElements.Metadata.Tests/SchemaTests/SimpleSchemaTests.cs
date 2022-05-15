@@ -27,9 +27,9 @@ namespace MicroElements.Metadata.Tests.SchemaTests
         {
             SimpleTypeSchema simpleTypeSchema = new SimpleTypeSchema("Currency", typeof(string));
 
-            ISchemaBuilder<SimpleTypeSchema, ISchemaDescription> schemaBuilder = simpleTypeSchema;
-            ISchemaBuilder<IMetadataProvider, ISchemaDescription> schemaBuilderCovariant = simpleTypeSchema;
-            ISchemaBuilder<SimpleTypeSchema, SchemaDescription> schemaBuilderComponentContravariant = simpleTypeSchema;
+            ICompositeBuilder<SimpleTypeSchema, ISchemaDescription> schemaBuilder = simpleTypeSchema;
+            ICompositeBuilder<IMetadataProvider, ISchemaDescription> schemaBuilderCovariant = simpleTypeSchema;
+            ICompositeBuilder<SimpleTypeSchema, SchemaDescription> schemaBuilderComponentContravariant = simpleTypeSchema;
 
             string description = "ISO 4217 3-Letter Currency Code";
 
@@ -41,6 +41,8 @@ namespace MicroElements.Metadata.Tests.SchemaTests
 
             var instance3 = schemaBuilderComponentContravariant.With(new SchemaDescription(description));
             instance3.Description.Should().Be(description);
+
+            bool aa = simpleTypeSchema is ICompositeBuilder<object, ISchemaDescription>;
         }
 
         public interface IPerson

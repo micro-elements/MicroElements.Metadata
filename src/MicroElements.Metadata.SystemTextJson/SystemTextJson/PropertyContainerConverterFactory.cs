@@ -5,7 +5,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MicroElements.Metadata.Serialization;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.SystemTextJson
 {

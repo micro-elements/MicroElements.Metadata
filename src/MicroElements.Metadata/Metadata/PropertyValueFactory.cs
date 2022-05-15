@@ -7,10 +7,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using MicroElements.CodeContracts;
+using MicroElements.Collections.TwoLayerCache;
 using MicroElements.Core;
-using MicroElements.Reflection;
-
-using MicroElements.Metadata.Schema;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -162,7 +161,7 @@ namespace MicroElements.Metadata
             }
         }
 
-        private readonly ICache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
+        private readonly TwoLayerCache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
 
         private readonly IPropertyValueFactory _propertyValueFactory;
 
@@ -184,16 +183,8 @@ namespace MicroElements.Metadata
 
             var propertyValueKeyComparer = new PropertyValueKeyComparer(propertyComparer);
 
-            if (maxItemCount == null)
-            {
-                // unlimited cache
-                _propertyValuesCache = new ConcurrentDictionaryAdapter<PropertyValueInfo, IPropertyValue>(new ConcurrentDictionary<PropertyValueInfo, IPropertyValue>(propertyValueKeyComparer));
-            }
-            else
-            {
-                // limited cache
-                _propertyValuesCache = new Core.TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.Value, propertyValueKeyComparer);
-            }
+            // limited cache
+            _propertyValuesCache = new TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.GetValueOrDefault(5000), propertyValueKeyComparer);
         }
 
         /// <inheritdoc />

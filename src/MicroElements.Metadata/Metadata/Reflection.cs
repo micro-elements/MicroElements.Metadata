@@ -76,6 +76,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Performs the specified action on each element of <see cref="IEnumerable{T}"/>
         /// </summary>
+        [Obsolete("Use Iterate from shared")]
         public static void Foreach<T>(this IEnumerable<T> sequence, Action<T> action)
         {
             foreach (T item in sequence)

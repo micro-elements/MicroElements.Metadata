@@ -1,5 +1,5 @@
 ﻿using System;
-using MicroElements.Shared;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Functional
 {
@@ -8,7 +8,6 @@ namespace MicroElements.Metadata.Functional
         public static Type GetByFullName(string fullTypeName)
         {
             Type byFullName = TypeCache.Default.Value.GetByFullName(fullTypeName);
-            Type type = Type.GetType(fullTypeName, throwOnError: false);
             return byFullName;
         }
     }

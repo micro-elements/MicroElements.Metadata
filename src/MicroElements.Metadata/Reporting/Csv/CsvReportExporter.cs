@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using MicroElements.Extensions;
+using MicroElements.Collections.Extensions.NotNull;
 using MicroElements.Metadata;
 
 namespace MicroElements.Reporting.Csv

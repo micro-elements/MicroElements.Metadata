@@ -9,10 +9,15 @@ namespace MicroElements.Diagnostics
     // IError<TErrorCode>
     // Validation
     // Logging
+    // ParseResult messages
+    // Formatting messages
 
     // Use IPropertyContainer, Formatters, Parsers?
     // TODO: IReadOnlyList<KeyValuePair<string, object>> remove?
     // TODO: Immutability? see [Immutable] and ParseResult in NodaTime
+
+    // TODO: Serilog uses: IEnumerable<KeyValuePair<string, object>>
+    // TODO: NLog uses: IReadOnlyList<KeyValuePair<string, object>>
 
     /// <summary>
     /// Represents message.

@@ -3,7 +3,8 @@
 
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
-using MicroElements.Reflection;
+using MicroElements.Reflection.ObjectExtensions;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

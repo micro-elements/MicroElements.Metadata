@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Schema
     public class SimpleTypeSchema : ISchema,
         IManualMetadataProvider,
         ISchemaDescription,
-        ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
+        ICompositeBuilder<SimpleTypeSchema, ISchemaDescription>
     {
         /// <inheritdoc />
         public string Name { get; }
@@ -51,10 +51,10 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
-        public SimpleTypeSchema With(ISchemaDescription schemaDescription)
+        public SimpleTypeSchema With(ISchemaDescription part)
         {
             var source = this;
-            return new SimpleTypeSchema(source.Name, source.Type, schemaDescription.Description, source.Metadata);
+            return new SimpleTypeSchema(source.Name, source.Type, part.Description, source.Metadata);
         }
     }
 
@@ -68,7 +68,7 @@ namespace MicroElements.Metadata.Schema
     public class SimpleTypeSchema<T> :
         ISchema<T>,
         ISchemaDescription,
-        ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
+        ICompositeBuilder<SimpleTypeSchema<T>, ISchemaDescription>
     {
         /// <inheritdoc />
         public Type Type => typeof(T);
@@ -93,10 +93,10 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
-        public SimpleTypeSchema<T> With(ISchemaDescription schemaDescription)
+        public SimpleTypeSchema<T> With(ISchemaDescription part)
         {
             var source = this;
-            return new SimpleTypeSchema<T>(source.Name, schemaDescription.Description).SetMetadataFrom(source);
+            return new SimpleTypeSchema<T>(source.Name, part.Description).SetMetadataFrom(source);
         }
     }
 }

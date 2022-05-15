@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;

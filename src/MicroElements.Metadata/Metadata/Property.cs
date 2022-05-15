@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
-using MicroElements.Reflection;
+using MicroElements.Reflection.CodeCompiler;
 
 namespace MicroElements.Metadata
 {

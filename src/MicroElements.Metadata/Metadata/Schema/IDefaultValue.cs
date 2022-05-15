@@ -2,11 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Formatting;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -52,7 +51,7 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets default value for property.
         /// </summary>
-        IDefaultValue? DefaultValueUntyped { get; }
+        IDefaultValue? DefaultValue { get; }
     }
 
     /// <summary>
@@ -64,10 +63,10 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets default value for property.
         /// </summary>
-        IDefaultValue<T>? DefaultValue { get; }
+        new IDefaultValue<T>? DefaultValue { get; }
 
         /// <inheritdoc />
-        IDefaultValue? IHasDefaultValue.DefaultValueUntyped => DefaultValue;
+        IDefaultValue? IHasDefaultValue.DefaultValue => DefaultValue;
     }
 
     /// <summary>

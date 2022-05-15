@@ -3,7 +3,7 @@
 
 using System;
 using MicroElements.Metadata.Serialization;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MicroElements.Metadata.Swashbuckle

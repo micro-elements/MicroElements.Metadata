@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using MicroElements.Shared;
+using MicroElements.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 

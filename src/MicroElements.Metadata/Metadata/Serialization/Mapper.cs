@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MicroElements.Collections.Extensions.NotNull;
 using MicroElements.Diagnostics;
-using MicroElements.Extensions;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.Parsing;
 

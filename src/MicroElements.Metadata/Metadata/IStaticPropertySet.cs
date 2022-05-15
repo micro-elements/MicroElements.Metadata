@@ -58,7 +58,7 @@ namespace MicroElements.Metadata
         /// <param name="schemas">Schemas for oneOf.</param>
         /// <returns>New schema instance with provided description.</returns>
         public static TSchema OneOf<TSchema>(this TSchema source, params ISchema[] schemas)
-            where TSchema : ISchemaBuilder<TSchema, IOneOf>, ISchema
+            where TSchema : ICompositeBuilder<TSchema, IOneOf>, ISchema
         {
             return source.With(new OneOfComponent(schemas));
         }

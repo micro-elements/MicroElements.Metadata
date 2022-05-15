@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MicroElements.Collections.Extensions.NotNull;
 using MicroElements.Diagnostics;
-using MicroElements.Extensions;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

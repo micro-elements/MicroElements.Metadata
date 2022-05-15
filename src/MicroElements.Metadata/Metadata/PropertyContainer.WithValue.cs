@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata
 {

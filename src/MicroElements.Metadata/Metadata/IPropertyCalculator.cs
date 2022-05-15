@@ -6,8 +6,15 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Property value calculator.
     /// </summary>
+    public interface IPropertyCalculator
+    {
+    }
+
+    /// <summary>
+    /// Property value calculator.
+    /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IPropertyCalculator<T>
+    public interface IPropertyCalculator<T> : IPropertyCalculator
     {
         /// <summary>
         /// Calculates value.
@@ -19,15 +26,29 @@ namespace MicroElements.Metadata
     }
 
     /// <summary>
-    /// Represents object that has calculator.
+    /// Represents property that has calculator.
     /// </summary>
-    /// <typeparam name="T">Value type.</typeparam>
-    public interface IHasCalculator<T>
+    public interface IHasCalculator
     {
         /// <summary>
         /// Gets property value calculator.
         /// </summary>
-        IPropertyCalculator<T>? Calculator { get; }
+        IPropertyCalculator? Calculator { get; }
+    }
+
+    /// <summary>
+    /// Represents property that has calculator.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IHasCalculator<T> : IHasCalculator
+    {
+        /// <inheritdoc />
+        IPropertyCalculator? IHasCalculator.Calculator => Calculator;
+
+        /// <summary>
+        /// Gets property value calculator.
+        /// </summary>
+        new IPropertyCalculator<T>? Calculator { get; }
     }
 
     /// <summary>

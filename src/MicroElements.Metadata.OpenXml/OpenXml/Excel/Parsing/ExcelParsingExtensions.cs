@@ -5,14 +5,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
+using MicroElements.Collections.Extensions.Iterate;
 using MicroElements.Core;
-using MicroElements.Functional;
+using MicroElements.Metadata.Parsing;
 using NodaTime;
 using NodaTime.Text;
 
@@ -387,11 +387,11 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 }
                 else
                 {
-                    Prelude
-                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                    cellTextValue = Parser
+                        .ParseDouble(cellValue)
                         .Map(d => d.FromExcelSerialDate())
                         .Map(dt => dt.ToString("yyyy-MM-dd"))
-                        .Match(s => cellTextValue = s, () => { });
+                        .GetValueOrDefault();
                 }
             }
             else if (targetType == typeof(LocalTime) || targetType == typeof(LocalTime?))
@@ -403,11 +403,11 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 }
                 else
                 {
-                    Prelude
-                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                    cellTextValue = Parser
+                        .ParseDouble(cellValue)
                         .Map(d => d.FromExcelSerialDate())
                         .Map(dt => dt.ToString("HH:mm:ss"))
-                        .Match(s => cellTextValue = s, () => { });
+                        .GetValueOrDefault();
                 }
             }
             else if (targetType == typeof(DateTime) || targetType == typeof(DateTime?))
@@ -418,11 +418,11 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 }
                 else
                 {
-                    Prelude
-                        .ParseDouble(cellValue, NumberStyles.Any, CultureInfo.InvariantCulture)
+                    cellTextValue = Parser
+                        .ParseDouble(cellValue)
                         .Map(d => d.FromExcelSerialDate())
                         .Map(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.FFFFFFF"))
-                        .Match(s => cellTextValue = s, () => { });
+                        .GetValueOrDefault();
                 }
             }
 

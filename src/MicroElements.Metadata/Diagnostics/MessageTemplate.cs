@@ -496,8 +496,11 @@ namespace MicroElements.Diagnostics
             return RenderToString(propValue);
         }
 
-        private static string RenderToString(object propValue, string format = null)
+        private static string RenderToString(object propValue, string? format = null)
         {
+            if (propValue is null)
+                return null;
+
             if (propValue is string textValue)
             {
                 return textValue;

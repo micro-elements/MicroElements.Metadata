@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata;
-using MicroElements.Reflection;
+using MicroElements.Reflection.ObjectExtensions;
 using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Validation.Rules

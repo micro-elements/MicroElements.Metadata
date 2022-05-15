@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {

@@ -4,6 +4,7 @@ using FluentAssertions;
 using MicroElements.Functional;
 using MicroElements.Metadata.OpenXml.Excel;
 using MicroElements.Metadata.OpenXml.Excel.Reporting;
+using MicroElements.Metadata.Parsing;
 using NodaTime;
 using NodaTime.Extensions;
 using Xunit;
@@ -135,6 +136,13 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
                 .Map(d => d.FromExcelSerialDate())
                 .Map(fromDateTime)
                 .GetValueOrThrow();
+
+            throw new Exception("Check code with parse");
+            string cellTextValue = Parser
+                .ParseDouble(initial.ToExcelSerialDateAsString())
+                .Map(d => d.FromExcelSerialDate())
+                .Map(dt => dt.ToString("yyyy-MM-dd"))
+                .GetValueOrDefault();
 
             restored.Should().Be(initial);
         }

@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 using MicroElements.Metadata.Parsing;
-using MicroElements.Reflection;
+using MicroElements.Reflection.CodeCompiler;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {

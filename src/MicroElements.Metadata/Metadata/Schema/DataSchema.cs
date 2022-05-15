@@ -8,9 +8,9 @@ namespace MicroElements.Metadata.Schema
     public class DataSchema :
         ISchema,
         IManualMetadataProvider,
-        ISchemaBuilder<DataSchema, ISchemaDescription>,
-        ISchemaBuilder<DataSchema, IOneOf>,
-        ISchemaBuilder<DataSchema, IProperties>
+        ICompositeBuilder<DataSchema, ISchemaDescription>,
+        ICompositeBuilder<DataSchema, IOneOf>,
+        ICompositeBuilder<DataSchema, IProperties>
     {
         /// <inheritdoc />
         public IPropertyContainer Metadata => this.GetOrCreateInstanceMetadata(() => MetadataProvider.CreateMutableContainer());
@@ -27,23 +27,23 @@ namespace MicroElements.Metadata.Schema
             Type = typeof(object);
         }
 
-        public DataSchema With(ISchemaDescription schemaDescription)
+        public DataSchema With(ISchemaDescription part)
         {
-            this.AsMetadataProvider().SetMetadata(schemaDescription);
+            this.AsMetadataProvider().SetMetadata(part);
             return this;
         }
 
         /// <inheritdoc />
-        public DataSchema With(IOneOf oneOf)
+        public DataSchema With(IOneOf part)
         {
-            this.AsMetadataProvider().SetMetadata(oneOf);
+            this.AsMetadataProvider().SetMetadata(part);
             return this;
         }
 
         /// <inheritdoc />
-        public DataSchema With(IProperties schemaProperties)
+        public DataSchema With(IProperties part)
         {
-            this.AsMetadataProvider().SetMetadata(schemaProperties);
+            this.AsMetadataProvider().SetMetadata(part);
             return this;
         }
     }

@@ -3,7 +3,6 @@
 
 using System;
 using MicroElements.Metadata.Functional;
-using MicroElements.Shared;
 using Error = MicroElements.Diagnostics.ErrorModel.Error;
 using Message = MicroElements.Diagnostics.Message;
 

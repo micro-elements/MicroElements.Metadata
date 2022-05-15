@@ -4,7 +4,7 @@
 using System;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
-using MicroElements.Reflection;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {

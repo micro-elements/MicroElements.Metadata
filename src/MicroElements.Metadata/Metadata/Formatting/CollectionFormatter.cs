@@ -4,7 +4,7 @@
 using System;
 using System.Collections;
 using MicroElements.CodeContracts;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.Formatting
 {

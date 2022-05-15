@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Diagnostics;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Mapping

@@ -3,7 +3,7 @@
 
 using System;
 using System.Linq;
-using MicroElements.Shared;
+using MicroElements.Reflection;
 
 namespace MicroElements.Metadata.Serialization
 {
@@ -21,7 +21,7 @@ namespace MicroElements.Metadata.Serialization
         /// </summary>
         public static DefaultTypeMapper Instance { get; } = new DefaultTypeMapper();
 
-        private readonly TypeCache _typeCache;
+        private readonly ITypeCache _typeCache;
 
         private DefaultTypeMapper()
         {

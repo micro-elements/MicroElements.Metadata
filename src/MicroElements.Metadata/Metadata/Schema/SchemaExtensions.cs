@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using MicroElements.CodeContracts;
-using MicroElements.Reflection;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Text;
 
 namespace MicroElements.Metadata.Schema

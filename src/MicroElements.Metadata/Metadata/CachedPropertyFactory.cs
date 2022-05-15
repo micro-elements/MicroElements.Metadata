@@ -2,8 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
-using MicroElements.Core;
+using MicroElements.Collections.TwoLayerCache;
 
 namespace MicroElements.Metadata
 {
@@ -12,34 +11,13 @@ namespace MicroElements.Metadata
     /// </summary>
     public class CachedPropertyFactory : IPropertyFactory
     {
-        private readonly struct CacheKey : IEquatable<CacheKey>
-        {
-            public readonly Type Type;
-            public readonly string Name;
-            public readonly IPropertyFactory PropertyFactory;
-
-            public CacheKey(Type type, string name, IPropertyFactory propertyFactory)
-            {
-                Type = type;
-                Name = name;
-                PropertyFactory = propertyFactory;
-            }
-
-            /// <inheritdoc />
-            public bool Equals(CacheKey other)
-            {
-                return Type == other.Type && Name == other.Name;
-            }
-
-            /// <inheritdoc />
-            public override bool Equals(object? obj) => obj is CacheKey other && Equals(other);
-
-            /// <inheritdoc />
-            public override int GetHashCode() => HashCode.Combine(Type, Name);
-        }
+        /// <summary>
+        /// Default max size for cache.
+        /// </summary>
+        public const int DefaultCacheMaxItemsCount = 256;
 
         private readonly IPropertyFactory _propertyFactory;
-        private readonly Core.ICache<CacheKey, IProperty> _propertyValuesCache;
+        private readonly TwoLayerCache<(Type Type, string Name), IProperty> _propertiesCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedPropertyFactory"/> class.
@@ -48,43 +26,35 @@ namespace MicroElements.Metadata
         /// <param name="maxItemCount">If maxItemCount is set that <see cref="TwoLayerCache{TKey,TValue}"/> uses for caching.</param>
         public CachedPropertyFactory(
             IPropertyFactory? propertyFactory = null,
-            int? maxItemCount = null)
+            int maxItemCount = DefaultCacheMaxItemsCount)
         {
             _propertyFactory = propertyFactory ?? new PropertyFactory();
-
-            if (maxItemCount == null)
-            {
-                // unlimited cache
-                _propertyValuesCache = new Core.ConcurrentDictionaryAdapter<CacheKey, IProperty>(new ConcurrentDictionary<CacheKey, IProperty>());
-            }
-            else
-            {
-                // limited cache
-                _propertyValuesCache = new Core.TwoLayerCache<CacheKey, IProperty>(maxItemCount.Value);
-            }
+            _propertiesCache = new TwoLayerCache<(Type, string), IProperty>(maxItemCount);
         }
 
         /// <inheritdoc />
         public IProperty<T> Create<T>(string name)
         {
-            return (IProperty<T>)_propertyValuesCache.GetOrAdd(
-                new CacheKey(typeof(T), name, _propertyFactory),
-                node => node.PropertyFactory.Create<T>(node.Name));
+            return (IProperty<T>)_propertiesCache.GetOrAdd(
+                (typeof(T), name),
+                (node, factory) => factory.Create<T>(node.Name),
+                _propertyFactory);
         }
 
         /// <inheritdoc />
         public IProperty Create(Type type, string name)
         {
-            return _propertyValuesCache.GetOrAdd(
-                new CacheKey(type, name, _propertyFactory),
-                node => node.PropertyFactory.Create(node.Type, node.Name));
+            return _propertiesCache.GetOrAdd(
+                (type, name),
+                (node, factory) => factory.Create(node.Type, node.Name),
+                _propertyFactory);
         }
     }
 
     /// <summary>
     /// Extensions for <see cref="IPropertyFactory"/>.
     /// </summary>
-    public static class PropertyFactoryExtensions
+    public static partial class PropertyFactoryExtensions
     {
         /// <summary>
         /// Creates factory that caches <see cref="IProperty"/> for the same property type and name.
@@ -92,9 +62,9 @@ namespace MicroElements.Metadata
         /// <param name="propertyFactory">Factory.</param>
         /// <param name="maxItemCount">Max item count in cache.</param>
         /// <returns>New cached <see cref="IPropertyFactory"/>.</returns>
-        public static IPropertyFactory Cached(this IPropertyFactory propertyFactory, int? maxItemCount = null)
+        public static IPropertyFactory Cached(this IPropertyFactory propertyFactory, int maxItemCount = CachedPropertyFactory.DefaultCacheMaxItemsCount)
         {
-            return new CachedPropertyFactory(propertyFactory, maxItemCount: maxItemCount);
+            return new CachedPropertyFactory(propertyFactory,  maxItemCount);
         }
     }
 }

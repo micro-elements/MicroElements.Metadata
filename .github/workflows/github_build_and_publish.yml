@@ -1,27 +1,33 @@
-name: Build and publish
+name: Build and Publish
 
 on:
-  push:
-    branches:
-      - master
-      - 'release/**'
-  pull_request:
-    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      BUILD_PATTERN:
+        description: "Projects to build. Project will be build if project name is in build pattern."
+        required: false
+      UPLOAD_PATTERN:
+        description: "Projects to upload. Project will be uploaded if project name is in upload pattern."
+        required: false
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.300
-    - name: Build
-      env:
-        UPLOAD_NUGET: ${{ secrets.UPLOAD_NUGET }}
-        UPLOAD_NUGET_API_KEY: ${{ secrets.UPLOAD_NUGET_API_KEY }}
-      run: |
-        chmod a+x ./build.sh
-        ./build.sh --target=Travis --verbosity=normal --ForceUploadPackages=false --RunCodeCoverage=false
+      #------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      #------------------------------
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.300
+      #-------------------------------
+      - name: Build and Publish
+        env:
+          UPLOAD_NUGET: ${{ secrets.UPLOAD_NUGET }}
+          UPLOAD_NUGET_API_KEY: ${{ secrets.UPLOAD_NUGET_API_KEY }}
+          BUILD_PATTERN: ${{ inputs.BUILD_PATTERN }}
+          UPLOAD_PATTERN: ${{ inputs.UPLOAD_PATTERN }}
+        run: ./build.sh --target Travis
+      #-------------------------------

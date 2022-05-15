@@ -1,11 +1,23 @@
 # 7.13.0
+- SchemaBuilder functionality allows to use varios WithXXX methods in generic way
+- MessageBuilder used for reducing memory allocations
+
 - IPropertyValue.ValueUntyped should return 'null' if Source is NotDefined
 - NotDefined fix for DynamicContainer, Json serialization
 
 - Added 'defaultValue' param to 'PropertyContainer.GetValue' and 'MutablePropertyContainer.GetValue' to have the same signature as common 'GetValue'
 - Added 'allowMapUndefined' param to PropertyExtensions.Map
+- Added: SetValueIfNotDefault, WithValueIfNotDefault for IMutablePropertyContainer
+
+- Change: 'IStaticSchema' now implements 'IStaticPropertySet'
+
+- Change: Property.WithDefaultValue methods replaced with SchemaBuilder methods
 
 - BREAKING CHANGE: Property<T>.DefaultValue become optional. Default value for property should be defined explicitly.
+
+IExamples
+IDefaultValue covariant
+ISachema covariant
 
 # 7.12.0
 Experimental release that extends parsing with conditinal logic

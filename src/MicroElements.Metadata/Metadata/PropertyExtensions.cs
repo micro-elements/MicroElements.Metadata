@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using MicroElements.Functional;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {
@@ -20,7 +21,7 @@ namespace MicroElements.Metadata
         public static IEnumerable<string> GetNameAndAliases(this IProperty property)
         {
             yield return property.Name;
-            if (property.GetAlias() is { } alias)
+            if (property.Alias is { } alias)
                 yield return alias;
         }
 

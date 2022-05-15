@@ -3,7 +3,7 @@
 
 using System;
 using System.Linq.Expressions;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.Formatters
 {

@@ -167,8 +167,13 @@ namespace MicroElements.Metadata.Xml
                             bool isNullAllowed = property.GetOrEvaluateNullability().IsNullAllowed;
                             if (!isNullAllowed)
                             {
-                                context.Messages.AddError(
-                                    $"Property '{property.Name}' can not be null but xml element has no value.{GetXmlLineInfo(propertyElement)}");
+                                Message message = ValueMessageBuilder
+                                    .Error("Property '{PropertyName}' can not be null but xml element has no value.")
+                                    .AddProperty("PropertyName", property.Name)
+                                    .AppendXmlLineInfo(propertyElement)
+                                    .Build();
+
+                                context.Messages.Add(message);
                             }
 
                             continue;
@@ -207,15 +212,32 @@ namespace MicroElements.Metadata.Xml
                             else
                             {
                                 string? parseResultErrorMessage = parseResult.Error?.FormattedMessage;
-                                string parseResultError = parseResultErrorMessage != null ? $" Error: '{parseResultErrorMessage}'." : string.Empty;
-                                string errorMessage = $"Property '{property.Name}' failed to parse from string '{elementValue}'.{parseResultError}{GetXmlLineInfo(propertyElement)}";
-                                context.Messages.AddError(errorMessage);
+
+                                var message =
+                                    ValueMessageBuilder
+                                        .Error("Property '{PropertyName}' failed to parse from string '{PropertyValue}'.")
+                                        .AddProperty("PropertyName", property.Name)
+                                        .AddProperty("PropertyValue", elementValue)
+                                        .If(parseResultErrorMessage != null)
+                                          .AppendToOriginalMessage(" Error: '{ParseResultError}'.")
+                                          .AddProperty("ParseResultError", parseResultErrorMessage)
+                                        .EndIf()
+                                        .AppendXmlLineInfo(propertyElement)
+                                        .Build();
+
+                                context.Messages.Add(message);
                             }
                         }
                         else
                         {
-                            string errorMessage = $"Property '{property.Name}' can not be parsed because no parser found for type {property.Type}.{GetXmlLineInfo(propertyElement)}";
-                            context.Messages.AddError(errorMessage);
+                            Message message = ValueMessageBuilder
+                                .Error("Property '{PropertyName}' can not be parsed because no parser found for type '{PropertyType}'.}")
+                                .AddProperty("PropertyName", property.Name)
+                                .AddProperty("PropertyType", property.Type)
+                                .AppendXmlLineInfo(propertyElement)
+                                .Build();
+
+                            context.Messages.Add(message);
                         }
                     }
                 }
@@ -238,20 +260,38 @@ namespace MicroElements.Metadata.Xml
                 IEnumerable<Message> messages = container.Validate(validationRules.Rules);
                 foreach (Message message in messages)
                 {
-                    context.Messages.Add(message.WithText(string.Concat(message.OriginalMessage, GetXmlLineInfo(propertyElement))));
+                    context.Messages.Add(message.AppendXmlLineInfo(propertyElement));
                 }
             }
         }
 
-        private static string GetXmlLineInfo(this XElement element)
+        public static ValueMessageBuilder AppendXmlLineInfo(this ValueMessageBuilder messageBuilder, IXmlLineInfo xmlLineInfo)
+        {
+            if (xmlLineInfo.HasLineInfo())
+            {
+                return messageBuilder
+                    .AppendToOriginalMessage(" LineNumber: {LineNumber}, LinePosition: {LinePosition}.")
+                    .AddProperty("LineNumber", xmlLineInfo.LineNumber)
+                    .AddProperty("LinePosition", xmlLineInfo.LinePosition);
+            }
+
+            return messageBuilder;
+        }
+
+        private static Message AppendXmlLineInfo(this Message message, XElement element)
         {
             if (element is IXmlLineInfo xmlLineInfo)
             {
                 if (xmlLineInfo.HasLineInfo())
-                    return $" LineNumber: {xmlLineInfo.LineNumber}, LinePosition: {xmlLineInfo.LinePosition}.";
+                {
+                    return ValueMessageBuilder
+                        .FromMessage(message)
+                        .AppendXmlLineInfo(element)
+                        .Build();
+                }
             }
 
-            return string.Empty;
+            return message;
         }
 
         /// <summary>

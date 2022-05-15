@@ -9,6 +9,14 @@ using MicroElements.Metadata;
 namespace MicroElements.Validation
 {
     /// <summary>
+    /// Delegate for configuring validation message.
+    /// </summary>
+    /// <param name="builder">Message builder.</param>
+    /// <param name="propertyValue">Property value (can be absent).</param>
+    /// <param name="propertyContainer">Property container.</param>
+    public delegate void ConfigureValidationMessage(IMessageBuilder builder, IPropertyValue? propertyValue, IPropertyContainer propertyContainer);
+
+    /// <summary>
     /// Validation message options.
     /// Can be used as external behavior in <see cref="IValidationRule"/>.
     /// </summary>
@@ -32,7 +40,7 @@ namespace MicroElements.Validation
         /// <summary>
         /// Optional message configuration chain.
         /// </summary>
-        private readonly Lazy<List<Func<Message, IPropertyValue, IPropertyContainer, Message>>> _configureMessageChainLazy = new ();
+        private readonly Lazy<List<ConfigureValidationMessage>> _configureMessageChainLazy = new();
 
         /// <summary>
         /// Sets default message format.
@@ -47,7 +55,7 @@ namespace MicroElements.Validation
         /// Adds configure message.
         /// </summary>
         /// <param name="configureMessage">Configure message function.</param>
-        public void ConfigureMessage(Func<Message, IPropertyValue, IPropertyContainer, Message> configureMessage)
+        public void ConfigureMessage(ConfigureValidationMessage configureMessage)
         {
             _configureMessageChainLazy.Value.Add(configureMessage);
         }
@@ -56,7 +64,7 @@ namespace MicroElements.Validation
         /// Adds configure message.
         /// </summary>
         /// <param name="configureMessage">Configure message function.</param>
-        public void ConfigureMessage(Func<Message, Message> configureMessage)
+        public void ConfigureMessage(ConfigureMessage configureMessage)
         {
             _configureMessageChainLazy.Value.Add((message, propertyValue, container) => configureMessage(message));
         }
@@ -73,31 +81,27 @@ namespace MicroElements.Validation
         /// <returns>Configured message.</returns>
         public Message GetConfiguredMessage(IPropertyValue? propertyValue, IPropertyContainer propertyContainer, string? messageFormat = null)
         {
-            KeyValuePair<string, object>[]? properties = null;
+            var messageBuilder = MessageBuilder.Error(messageFormat ?? MessageFormat, capacity: 8);
 
-            if (propertyValue != null)
+            if (propertyValue?.PropertyUntyped is { } property)
             {
-                IProperty property = propertyValue.PropertyUntyped;
-                properties = new[]
-                {
-                    new KeyValuePair<string, object>("propertyName", property.Name),
-                    new KeyValuePair<string, object>("propertyType", property.Type),
-                    new KeyValuePair<string, object>("propertyDescription", property.Description ?? string.Empty),
-                    new KeyValuePair<string, object>("value", propertyValue.ValueUntyped ?? "null"),
-                };
+                messageBuilder
+                    .AddProperty("propertyName", property.Name)
+                    .AddProperty("propertyType", property.Type)
+                    .AddProperty("propertyDescription", property.Description ?? string.Empty)
+                    .AddProperty("value", propertyValue.ValueUntyped ?? "null");
             }
-
-            Message message = new Message(messageFormat ?? MessageFormat, MessageSeverity.Error, properties: properties);
 
             if (_configureMessageChainLazy.IsValueCreated)
             {
                 foreach (var configureMessage in _configureMessageChainLazy.Value)
                 {
-                    message = configureMessage(message, propertyValue, propertyContainer);
+                    configureMessage(messageBuilder, propertyValue, propertyContainer);
                 }
             }
 
-            return message;
+            Message configuredMessage = messageBuilder.Build();
+            return configuredMessage;
         }
     }
 }

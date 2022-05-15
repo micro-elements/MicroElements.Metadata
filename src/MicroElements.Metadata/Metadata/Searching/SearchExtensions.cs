@@ -3,7 +3,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.CodeCompiler;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -122,7 +124,7 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Gets or calculates optional not null value.
-        /// Returns option in <see cref="OptionState.Some"/> state if property value exists and not null.
+        /// Returns option in <see cref="MicroElements.Functional.OptionState.Some"/> state if property value exists and not null.
         /// Returns None if value was not found.
         /// </summary>
         /// <typeparam name="T">Property type.</typeparam>
@@ -130,7 +132,7 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search options.</param>
         /// <returns>Optional property value.</returns>
-        public static Option<T> GetValueAsOption<T>(
+        public static MicroElements.Functional.Option<T> GetValueAsOption<T>(
             this IPropertyContainer propertyContainer,
             IProperty<T> property,
             SearchOptions? search = null)
@@ -144,7 +146,7 @@ namespace MicroElements.Metadata
                 return propertyValue.Value;
             }
 
-            return Option<T>.None;
+            return MicroElements.Functional.Option<T>.None;
         }
 
         /// <summary>
@@ -277,7 +279,7 @@ namespace MicroElements.Metadata
             if (property == null || name == null)
                 return false;
 
-            return name.Equals(property.Name, stringComparison) || name.Equals(property.GetAlias(), stringComparison);
+            return name.Equals(property.Name, stringComparison) || name.Equals(property.Alias, stringComparison);
         }
     }
 }

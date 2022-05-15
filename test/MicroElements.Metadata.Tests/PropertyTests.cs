@@ -1,5 +1,9 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Xml;
+using FluentAssertions;
+using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
+using MicroElements.Metadata.Xml;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -93,7 +97,7 @@ namespace MicroElements.Metadata.Tests
 
 
         [Fact]
-        public void property_1()
+        public void property_default_value_should_be_correct()
         {
             new Property<int>("int_default_42")
                 .With(new DefaultValue<int>(42))
@@ -107,6 +111,18 @@ namespace MicroElements.Metadata.Tests
                 .With(new DefaultValue<int>(42))
                 .GetDefaultValue().Should().Be(42);
 
+            new Property<int>("int_default_42")
+                .WithDefaultValue(42)
+                .GetDefaultValue().Should().Be(42);
+
+            new Property<int>("int_default_42")
+                .WithDefaultValueUntyped(new DefaultValue<int>(42))
+                .GetDefaultValue().Should().Be(42);
+
+            new Property<int>("int_default_42")
+                .WithDefaultValue(new DefaultValue<int>(42))
+                .GetDefaultValue().Should().Be(42);
+
             new Property<int>("int_no_default")
                 .GetDefaultValueMetadata().Should().BeNull();
 
@@ -115,6 +131,173 @@ namespace MicroElements.Metadata.Tests
 
             new Property<int>("int_no_default")
                 .GetDefaultValue(defaultValue: -1).Should().Be(-1);
+
+
+        }
+
+        class XmlLineInfo : IXmlLineInfo
+        {
+            /// <inheritdoc />
+            public bool HasLineInfo() => true;
+
+            /// <inheritdoc />
+            public int LineNumber { get; }
+
+            /// <inheritdoc />
+            public int LinePosition { get; }
+
+            public XmlLineInfo(int lineNumber, int linePosition)
+            {
+                LineNumber = lineNumber;
+                LinePosition = linePosition;
+            }
+        }
+
+        [Fact]
+        public void message_builder1()
+        { 
+            string? parseResultErrorMessage = "ParseError";
+            var message =
+                ValueMessageBuilder
+                    .Error("Property '{PropertyName}' failed to parse from string '{PropertyValue}'.", 3)
+                    .AddProperty("PropertyName", "AAA")
+                    .AddProperty("PropertyValue", "BBB")
+                    .If(parseResultErrorMessage != null)
+                        .AppendToOriginalMessage(" Error: '{ParseResultError}'.")
+                        .AddProperty("ParseResultError", parseResultErrorMessage)
+                    .EndIf()
+                    .AppendXmlLineInfo(new XmlLineInfo(10, 5))
+                    .Build();
+
+            message.FormattedMessage.Should()
+                .Be("Property 'AAA' failed to parse from string 'BBB'. Error: 'ParseError'. LineNumber: 10, LinePosition: 5.");
+        }
+
+        [Fact]
+        public void message_builder2()
+        {
+            Message message = ValueMessageBuilder
+                .Error("Hello {name}")
+                .AddProperty("name", "Alex")
+                .WithSeverity(MessageSeverity.Warning)
+                .If(true)
+                    .AppendToOriginalMessage(" Good morning!")
+                    .SetProperty("name", "Alexey")
+                .EndIf();
+
+            message.FormattedMessage.Should()
+                .Be("Hello Alexey Good morning!");
+        }
+
+        [Fact]
+        public void property_builder()
+        {
+            ValueMessageBuilder messageBuilder = ValueMessageBuilder
+                .Error("Hello {name}")
+                .AddProperty("name", "Alex")
+                .WithSeverity(MessageSeverity.Warning)
+                .SetProperty("name", "Alexey");
+
+            Message message = messageBuilder.Build();
+            message.FormattedMessage.Should().Be("Hello Alexey");
+            message.Severity.Should().Be(MessageSeverity.Warning);
+
+            IMessageBuilder builder = new MessageBuilder(messageBuilder);
+
+            void ChangeFunc2(ref ValueMessageBuilder messageBuilder, ConfigureMessageRef configureMessage)
+            {
+                configureMessage(ref messageBuilder);
+            }
+
+            void ChangeFunc4(IMessageBuilder messageBuilder, ConfigureMessage configureMessage)
+            {
+                configureMessage(messageBuilder);
+            }
+
+            ChangeFunc2(ref messageBuilder, (ref ValueMessageBuilder builder) => builder.WithOriginalMessage("Func2"));
+            messageBuilder.State.OriginalMessage.Should().Be("Func2");
+
+            ChangeFunc4(builder, builder => builder.WithOriginalMessage("Func4"));
+            builder.State.OriginalMessage.Should().Be("Func4");
+
+            new Property<string>("Name1")
+                .WithRewriteFast((ref PropertyData<string> data) => data.Name = "Name2")
+                .Name.Should().Be("Name2");
+
+            new Property<string>("Name1")
+                .WithRewrite(data => data.Name = "Name2")
+                .Name.Should().Be("Name2");
+
+            new Property<string>("Name1")
+                .WithRewriteFast((ref PropertyData<string> data) => data.Description = "Description2")
+                .Description.Should().Be("Description2");
+
+            new Property<string>("Name1")
+                .WithDescription("Description2")
+                .Description.Should().Be("Description2");
+
+            new Property<string>("Name1")
+                .WithRewriteFast((ref PropertyData<string> data) => data.Description = "Description2")
+                .WithRewriteFast((ref PropertyData<string> data) => data.Description = null)
+                .Description.Should().Be(null, because: "Property should be rewritten twice");
+
+            new Property<string>("Name1")
+                .WithRewrite(data => data.Description = "Description2")
+                .WithRewrite(data => data.Description = null)
+                .Description.Should().Be(null, because: "Property should be rewritten twice");
+
+            new Property<string>("Name1")
+                .With(description: "DescriptionNoRewrite")
+                .With(description: null)
+                .Description.Should().Be("DescriptionNoRewrite");
+
+
+        }
+
+        [Fact]
+        public void schema_builder_description()
+        {
+            Property<string> property = new Property<string>("Name1");
+            Property<string> desc1 = property.WithDescription("desc1");
+            desc1.Description.Should().Be("desc1");
+
+            IProperty<string> propInterface = property;
+            IProperty<string> desc2 = propInterface.WithDescription("desc2");
+            desc2.Description.Should().Be("desc2");
+
+            IProperty propInterface2 = property;
+            IProperty desc3 = propInterface2.WithDescription("desc3");
+            desc3.Description.Should().Be("desc3");
+
+            var instance1 = new NotImplementedSchemaBuilder("Int", typeof(int), "IntValue");
+            var instance2 = instance1.WithDescription("aaaa!");
+            instance1.Description.Should().Be("IntValue");
+            instance2.Description.Should().Be("aaaa!");
+        }
+
+        public class NotImplementedSchemaBuilder : ISchemaBuilder<ISchemaDescription>, ISchema
+        {
+            /// <inheritdoc />
+            public string Name { get; }
+
+            /// <inheritdoc />
+            public Type Type { get; }
+
+            /// <inheritdoc />
+            public string? Description { get; }
+
+            public NotImplementedSchemaBuilder(string name, Type type, string? description)
+            {
+                Name = name;
+                Type = type;
+                Description = description;
+            }
+
+            /// <inheritdoc />
+            public object With(ISchemaDescription schemaPart)
+            {
+                return new NotImplementedSchemaBuilder(Name, Type, schemaPart.Description);
+            }
         }
     }
 
@@ -124,7 +307,7 @@ namespace MicroElements.Metadata.Tests
         {
             property.Description.Should().BeNull();
             property.Alias.Should().BeNull();
-            property.Examples.Should().NotBeNull().And.BeEmpty();
+            property.Examples.Should().BeNull();
             property.DefaultValue.Should().BeNull();
             property.Calculator.Should().BeNull();
         }
@@ -137,7 +320,7 @@ namespace MicroElements.Metadata.Tests
                 .With(alias: "alias")
                 .With(description: "description")
                 .With(defaultValue: new DefaultValueLazy<int>(() => 1))
-                .With(examples: new[] { 0, 1 })
+                .WithExamples(examples: new[] { 0, 1 })
                 .With(calculator: new PropertyCalculator<int>(container => 2));
             return property;
         }
@@ -151,7 +334,7 @@ namespace MicroElements.Metadata.Tests
             property.Alias.Should().Be(alias);
             property.Description.Should().Be("description");
             property.DefaultValue.Value.Should().Be(1);
-            property.Examples.Should().BeEquivalentTo(new[] {0, 1});
+            property.Examples.Examples.Should().BeEquivalentTo(new[] {0, 1});
             property.Calculator.Should().NotBeNull();
         }
     }

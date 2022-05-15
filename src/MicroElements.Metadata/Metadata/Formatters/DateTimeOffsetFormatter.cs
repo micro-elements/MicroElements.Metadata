@@ -1,5 +1,5 @@
 ﻿using System;
-using MicroElements.Core;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.Formatters
 {

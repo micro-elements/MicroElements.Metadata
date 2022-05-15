@@ -109,7 +109,19 @@ namespace MicroElements.Metadata.Tests.SchemaTests
                     .SetMaximum(1);
                 property.GetNumericInterval().Should().NotBeNull().And.BeEquivalentTo(new NumericInterval(0, false, 1, false));
             }
+        }
 
+        public interface IPerson
+        {
+            string Name { get; }
+        }
+
+        public class Person : IPerson
+        {
+            /// <inheritdoc />
+            public string Name { get; }
+
+            public Person(string name) => Name = name;
         }
     }
 }

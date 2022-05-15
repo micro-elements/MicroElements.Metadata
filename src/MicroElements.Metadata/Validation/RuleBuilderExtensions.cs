@@ -87,7 +87,7 @@ namespace MicroElements.Validation
         /// <param name="validationRule">Rule to configure.</param>
         /// <param name="configureMessage">Configure message function.</param>
         /// <returns>The same rule.</returns>
-        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, IPropertyValue, IPropertyContainer, Message> configureMessage)
+        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, ConfigureValidationMessage configureMessage)
             where TValidationRule : IValidationRule
         {
             validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(configureMessage));
@@ -101,7 +101,7 @@ namespace MicroElements.Validation
         /// <param name="validationRule">Rule to configure.</param>
         /// <param name="configureMessage">Configure message function.</param>
         /// <returns>The same rule.</returns>
-        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, Func<Message, Message> configureMessage)
+        public static TValidationRule ConfigureMessage<TValidationRule>(this TValidationRule validationRule, ConfigureMessage configureMessage)
             where TValidationRule : IValidationRule
         {
             validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(configureMessage));
@@ -118,7 +118,7 @@ namespace MicroElements.Validation
         public static TValidationRule WithMessage<TValidationRule>(this TValidationRule validationRule, string messageFormat)
             where TValidationRule : IValidationRule
         {
-            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(message => message.WithText(messageFormat)));
+            validationRule.ConfigureValidationMessageOptions(options => options.ConfigureMessage(message => message.WithOriginalMessage(messageFormat)));
             return validationRule;
         }
 

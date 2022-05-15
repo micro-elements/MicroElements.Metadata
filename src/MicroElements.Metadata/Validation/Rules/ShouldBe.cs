@@ -34,8 +34,8 @@ namespace MicroElements.Validation.Rules
             this.SetDefaultMessageFormat("{propertyName} should match expression: {condition} but {valueName} is '{value}'.");
 
             this.ConfigureMessage(message => message
-                .WithProperty("condition", condition)
-                .WithProperty("valueName", valueName));
+                .AddProperty("condition", condition)
+                .AddProperty("valueName", valueName));
         }
 
         /// <inheritdoc />

@@ -188,7 +188,7 @@ namespace MicroElements.Metadata.Swashbuckle
 
             openApiSchema.Properties ??= new Dictionary<string, OpenApiSchema>();
 
-            openApiSchema.Description ??= schema.Description;
+            openApiSchema.Description ??= schema.GetComponent<ISchemaDescription>()?.Description;
 
             if (schema.GetNullability() is { } allowNull)
             {

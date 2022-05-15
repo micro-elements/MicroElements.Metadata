@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -178,7 +178,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in Option<T> value)
+        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in MicroElements.Functional.Option<T> value)
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
@@ -192,7 +192,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="property">Property to set.</param>
         /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in Option<T> value)
+        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in MicroElements.Functional.Option<T> value)
             where T : struct
         {
             propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));

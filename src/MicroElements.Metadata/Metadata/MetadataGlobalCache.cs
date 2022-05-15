@@ -3,7 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using MicroElements.Core;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.Mapping;
 
 namespace MicroElements.Metadata

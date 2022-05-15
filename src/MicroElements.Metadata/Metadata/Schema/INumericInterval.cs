@@ -242,7 +242,7 @@ namespace MicroElements.Metadata.Schema
             _numericInterval = numericInterval ?? Property.GetNumericInterval();
 
             if (_numericInterval != null)
-                this.ConfigureMessage(message => message.WithProperty("range", _numericInterval.ToIntervalString()));
+                this.ConfigureMessage(message => message.AddProperty("range", _numericInterval.ToIntervalString()));
         }
 
         /// <inheritdoc />

@@ -29,8 +29,8 @@ namespace MicroElements.Validation.Rules
                 this.SetDefaultMessageFormat("Value '{value}' is too long (length: {length}, maxLength: {maxLength})");
                 this.ConfigureMessage((message, value, pc) =>
                     message
-                        .WithProperty("length", GetLength(value.ValueUntyped as string))
-                        .WithProperty("maxLength", _maxLength.MaxLength));
+                        .AddProperty("length", GetLength(value.ValueUntyped as string))
+                        .AddProperty("maxLength", _maxLength.MaxLength));
             }
         }
 

@@ -46,12 +46,12 @@ namespace MicroElements.Metadata
         public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseIgnoreNullability { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: true);
 
         /// <summary>
-        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/> ignore case.
+        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="INameAlias.Alias"/> ignore case.
         /// </summary>
         public static IEqualityComparer<IProperty> ByNameOrAliasIgnoreCase { get; } = ByNameOrAliasPropertyComparer.IgnoreCase;
 
         /// <summary>
-        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/> ignore case.
+        /// Property comparer by <see cref="ISchema.Name"/> or <see cref="INameAlias.Alias"/> ignore case.
         /// </summary>
         public static IEqualityComparer<IProperty> ByNameOrAliasOrdinal { get; } = ByNameOrAliasPropertyComparer.Ordinal;
 

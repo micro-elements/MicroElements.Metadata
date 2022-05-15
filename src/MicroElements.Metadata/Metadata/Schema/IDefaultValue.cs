@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.Exceptions;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Schema
@@ -28,8 +28,7 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <typeparam name="T">Type.</typeparam>
     [MetadataUsage(ValidOn = MetadataTargets.Property | MetadataTargets.SimpleSchema)]
-    [SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "Default value can not be variant.")]
-    public interface IDefaultValue<T> : IDefaultValue
+    public interface IDefaultValue<out T> : IDefaultValue
     {
         /// <inheritdoc />
         object? IDefaultValue.Value => Value;
@@ -73,7 +72,7 @@ namespace MicroElements.Metadata.Schema
     /// <typeparam name="T">Value type.</typeparam>
     public class DefaultValueLazy<T> : IDefaultValue<T>
     {
-        private readonly Func<T> _defaultValue;
+        private readonly Func<T?> _defaultValue;
 
         /// <inheritdoc />
         public T? Value => _defaultValue();
@@ -82,7 +81,7 @@ namespace MicroElements.Metadata.Schema
         /// Initializes a new instance of the <see cref="DefaultValueLazy{T}"/> class.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
-        public DefaultValueLazy(Func<T> defaultValue)
+        public DefaultValueLazy(Func<T?> defaultValue)
         {
             _defaultValue = defaultValue;
         }
@@ -94,45 +93,29 @@ namespace MicroElements.Metadata.Schema
     public static partial class DefaultValue
     {
         /// <summary>
-        /// Gets default value for type.
+        /// Throws an <see cref="ArgumentException"/> if <paramref name="value"/> can not be used as default value for <paramref name="type"/>.
         /// </summary>
-        /// <param name="type">Source type.</param>
-        /// <returns>Default value.</returns>
-        public static object? GetDefaultValue(this Type type)
-        {
-            type.AssertArgumentNotNull(nameof(type));
-
-            if (type.IsValueType)
-                return Activator.CreateInstance(type);
-
-            // For reference types always returns null.
-            return null;
-        }
-
-        /// <summary>
-        /// Throws an <see cref="ArgumentException"/> if <paramref name="defaultValue"/> can not be used as default value for <paramref name="type"/>.
-        /// </summary>
+        /// <param name="value">Value to check.</param>
         /// <param name="type">Type to check.</param>
-        /// <param name="defaultValue">Value to check.</param>
         /// <returns>The same value if it can be used as default value for type.</returns>
         /// <exception cref="ArgumentException">Value can not be used as default value for type.</exception>
-        public static object? CheckDefaultIsValidForType(this Type type, object? defaultValue)
+        public static object? ThrowIfValueCanNotBeAssignedToType(this object? value, Type type)
         {
             type.AssertArgumentNotNull(nameof(type));
 
-            if (defaultValue != null)
+            if (value != null)
             {
-                bool isAssignableType = defaultValue.IsAssignableTo(type);
+                bool isAssignableType = value.IsAssignableTo(type);
                 if (!isAssignableType)
-                    throw new ArgumentException($"Value '{defaultValue.FormatValue()}' can not be set as default value for type '{type}'");
+                    throw new ArgumentException($"Value '{value.FormatValue()}' can not be set as default value for type '{type}'");
 
-                return defaultValue;
+                return value;
             }
 
             if (!type.CanAcceptNull())
                 throw new ArgumentException($"Value 'null' can not be set as default value for type '{type}'");
 
-            return defaultValue;
+            return value;
         }
     }
 
@@ -154,11 +137,6 @@ namespace MicroElements.Metadata.Schema
             schema.AssertArgumentNotNull(nameof(schema));
             defaultValue.AssertArgumentNotNull(nameof(defaultValue));
 
-            if (schema is ISchemaBuilder<TSchema, IDefaultValue> schemaBuilder)
-            {
-                return schemaBuilder.With(defaultValue);
-            }
-
             return schema.SetMetadata(defaultValue);
         }
 
@@ -172,12 +150,7 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            if (schema is IHas<IDefaultValue> hasDefaultValue)
-            {
-                return hasDefaultValue.Component;
-            }
-
-            return schema.GetSchemaMetadata<IDefaultValue>();
+            return schema.GetComponent<IDefaultValue>();
         }
 
         public static object? GetDefaultValueUntyped(this ISchema schema, object? defaultValue = null)

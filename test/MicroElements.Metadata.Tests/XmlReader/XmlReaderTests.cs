@@ -40,7 +40,7 @@ namespace MicroElements.Metadata.Tests
             public static readonly IProperty<string> FirstName = new Property<string>("FirstName")
                 .AddValidation(property => property
                     .ShouldBe(s => s.Length > 1)
-                    .ConfigureMessage((message, value, container) => message.WithProperty("length", value.ValueUntyped?.ToString()?.Length ?? 0))
+                    .ConfigureMessage((message, value, container) => message.AddProperty("length", value.ValueUntyped?.ToString()?.Length ?? 0))
                     .WithMessage("{propertyName} length should be greater then 1 but was {length}"));
 
             public static readonly IProperty<string> LastName = new Property<string>("LastName")

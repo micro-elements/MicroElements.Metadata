@@ -38,11 +38,6 @@ namespace MicroElements.Metadata.Schema
             }
         }
 
-        public static class SchemaCache
-        {
-
-        }
-
         /// <summary>
         /// Gets optional <see cref="IObjectSchema"/> from <see cref="IHasSchema"/> metadata.
         /// </summary>

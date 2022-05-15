@@ -8,7 +8,7 @@ using MicroElements.Metadata.Schema;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/>.
+    /// Property comparer by <see cref="ISchema.Name"/> or <see cref="INameAlias.Alias"/>.
     /// </summary>
     public sealed partial class ByNameOrAliasPropertyComparer : IEqualityComparer<IProperty>
     {
@@ -26,7 +26,7 @@ namespace MicroElements.Metadata
         /// <inheritdoc/>
         public bool Equals(IProperty x, IProperty y)
         {
-            return x.IsMatchesByNameOrAlias(y?.Name, _ignoreCase) || x.IsMatchesByNameOrAlias(y?.GetAlias(), _ignoreCase);
+            return x.IsMatchesByNameOrAlias(y?.Name, _ignoreCase) || x.IsMatchesByNameOrAlias(y?.Alias, _ignoreCase);
         }
 
         /// <inheritdoc/>
@@ -39,7 +39,7 @@ namespace MicroElements.Metadata
     }
 
     /// <summary>
-    /// Property comparer by <see cref="ISchema.Name"/> or <see cref="IHasAlias.Alias"/>.
+    /// Property comparer by <see cref="ISchema.Name"/> or <see cref="INameAlias.Alias"/>.
     /// </summary>
     public sealed partial class ByNameOrAliasPropertyComparer
     {

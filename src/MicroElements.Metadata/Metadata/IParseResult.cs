@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Validation;
+using Message = MicroElements.Functional.Message;
 
 namespace MicroElements.Metadata
 {
@@ -139,12 +140,12 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Converts <see cref="Option{A}"/> to <see cref="ParseResult{T}"/>.
+        /// Converts <see cref="MicroElements.Functional.Option{A}"/> to <see cref="ParseResult{T}"/>.
         /// </summary>
         /// <typeparam name="T">Result type.</typeparam>
         /// <param name="option">Source option.</param>
         /// <returns><see cref="ParseResult{T}"/> instance.</returns>
-        public static ParseResult<T> ToParseResult<T>(this in Option<T> option)
+        public static ParseResult<T> ToParseResult<T>(this in MicroElements.Functional.Option<T> option)
         {
             if (option.IsSome)
                 return Success((T)option);

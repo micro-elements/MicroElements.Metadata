@@ -1,7 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using MicroElements.Collections.TwoLayerCache;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -14,25 +14,26 @@ namespace MicroElements.Metadata.Schema
         /// <summary>
         /// Gets description.
         /// </summary>
-        string Description { get; }
+        string? Description { get; }
     }
 
     /// <summary>
     /// Provides description for schema, property.
     /// </summary>
-    public record SchemaDescription : ISchemaDescription
-    {
-        /// <inheritdoc />
-        public string Description { get; }
+    public partial record SchemaDescription(string? Description) : ISchemaDescription;
 
+    public partial record SchemaDescription
+    {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SchemaDescription"/> class.
+        /// Gets cached <see cref="ISchemaDescription"/>.
         /// </summary>
-        /// <param name="description">Description for scheme.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="description"/> is null.</exception>
-        public SchemaDescription(string description)
+        /// <param name="description">Description.</param>
+        /// <returns>Cached description.</returns>
+        public static ISchemaDescription FromStringCached(string description)
         {
-            Description = description ?? throw new ArgumentNullException(nameof(description));
+            return TwoLayerCache
+                .Instance<string, ISchemaDescription>(nameof(ISchemaDescription))
+                .GetOrAdd(description, s => new SchemaDescription(s));
         }
     }
 }

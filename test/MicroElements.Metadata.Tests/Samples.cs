@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using MicroElements.Metadata.Schema;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -21,7 +22,10 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void TypedPropertyCreation()
         {
-            IProperty<string> property = Property.Create<string>("StringSample").WithAlias("SampleAlias");
+            IProperty<string> property = Property
+                .Create<string>("StringSample")
+                .WithAlias("SampleAlias");
+
             property.Type.Should().Be(typeof(string));
             property.Name.Should().Be("StringSample");
             property.Alias.Should().Be("SampleAlias");
@@ -30,11 +34,13 @@ namespace MicroElements.Metadata.Tests
         [Fact]
         public void UntypedPropertyCreation()
         {
-            IProperty property = Property.Create(typeof(string), "StringSample").WithAliasUntyped("SampleAlias");
+            IProperty property = Property
+                .Create(typeof(string), "StringSample")
+                .WithAliasUntyped("SampleAlias");
+
             property.Type.Should().Be(typeof(string));
             property.Name.Should().Be("StringSample");
-            property.GetAlias().Should().Be("SampleAlias");
+            property.Alias.Should().Be("SampleAlias");
         }
     }
-
 }

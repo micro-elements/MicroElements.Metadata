@@ -37,7 +37,7 @@ namespace MicroElements.Metadata.Schema
         /// <exception cref="ArgumentException">Value can not be used as default value for type.</exception>
         public static IDefaultValue GetOrCreateDefaultValue(Type type, object? value)
         {
-            value = type.CheckDefaultIsValidForType(value);
+            value = value.ThrowIfValueCanNotBeAssignedToType(type);
 
             Func<object?, IDefaultValue> cachedCompiledFunc = CodeCompiler.CachedCompiledFunc<object?, IDefaultValue>(type, "CreateDefaultValue", CreateDefaultValueInternal<CodeCompiler.GenericType>);
             return cachedCompiledFunc(value);

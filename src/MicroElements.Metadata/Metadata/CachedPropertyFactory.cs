@@ -2,8 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
-using MicroElements.Functional;
+using MicroElements.Collections.TwoLayerCache;
 
 namespace MicroElements.Metadata
 {
@@ -39,7 +38,7 @@ namespace MicroElements.Metadata
         }
 
         private readonly IPropertyFactory _propertyFactory;
-        private readonly Core.ICache<CacheKey, IProperty> _propertyValuesCache;
+        private readonly TwoLayerCache<CacheKey, IProperty> _propertyValuesCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedPropertyFactory"/> class.
@@ -51,17 +50,7 @@ namespace MicroElements.Metadata
             int? maxItemCount = null)
         {
             _propertyFactory = propertyFactory ?? new PropertyFactory();
-
-            if (maxItemCount == null)
-            {
-                // unlimited cache
-                _propertyValuesCache = new Core.ConcurrentDictionaryAdapter<CacheKey, IProperty>(new ConcurrentDictionary<CacheKey, IProperty>());
-            }
-            else
-            {
-                // limited cache
-                _propertyValuesCache = new Core.TwoLayerCache<CacheKey, IProperty>(maxItemCount.Value);
-            }
+            _propertyValuesCache = new TwoLayerCache<CacheKey, IProperty>(maxItemCount.GetValueOrDefault(4000));
         }
 
         /// <inheritdoc />

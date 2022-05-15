@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Collections.Extensions.NotNull;
 
 namespace MicroElements.Metadata
 {
@@ -307,6 +308,14 @@ namespace MicroElements.Metadata
                 .Where(pv => propertySet.Contains(pv.PropertyUntyped));
 
             return new PropertyContainer(sourceValues: propertyValues, searchOptions: propertyContainer.SearchOptions);
+        }
+
+        public static IPropertyContainer ToPropertyContainer(
+            this IEnumerable<IPropertyValue> propertyValues,
+            IPropertyContainer? parentPropertySource = null,
+            SearchOptions? searchOptions = null)
+        {
+            return new PropertyContainer(propertyValues, parentPropertySource, searchOptions);
         }
     }
 }

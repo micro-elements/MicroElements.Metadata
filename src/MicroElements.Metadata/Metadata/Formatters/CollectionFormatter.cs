@@ -4,7 +4,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.TypeExtensions;
+using MicroElements.Text.StringFormatter;
 
 namespace MicroElements.Metadata.Formatters
 {

@@ -11,15 +11,18 @@ namespace MicroElements.Metadata.Schema
     }
 
     /// <summary>
-    /// Provides a knowledge that object has component of type.
+    /// Schema builder with knowledge of metadata type.
     /// </summary>
-    /// <typeparam name="T">Component type.</typeparam>
-    public interface IHas<out T>
+    /// <typeparam name="TMetadata">Metadata type.</typeparam>
+    public interface ISchemaBuilder<in TMetadata> : ISchemaBuilder
+        where TMetadata : IMetadata
     {
         /// <summary>
-        /// Gets component.
+        /// Creates a copy of the source with provided <paramref name="schemaPart"/>.
         /// </summary>
-        T? Component { get; }
+        /// <param name="schemaPart">Schema part.</param>
+        /// <returns>A copy of the source.</returns>
+        object With(TMetadata schemaPart);
     }
 
     /// <summary>
@@ -27,34 +30,18 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <typeparam name="TSchema">Schema type.</typeparam>
     /// <typeparam name="TMetadata">Schema part.</typeparam>
-    public interface ISchemaBuilder<out TSchema, in TMetadata> : ISchemaBuilder
+    public interface ISchemaBuilder<out TSchema, in TMetadata> : ISchemaBuilder<TMetadata>
         where TSchema : ISchema
         where TMetadata : IMetadata
     {
+        /// <inheritdoc />
+        object ISchemaBuilder<TMetadata>.With(TMetadata schemaPart) => With(schemaPart);
+
         /// <summary>
-        /// Creates copy of source schema with provided <paramref name="schemaPart"/>.
+        /// Creates a copy of the source with provided <paramref name="schemaPart"/>.
         /// </summary>
         /// <param name="schemaPart">Schema part.</param>
         /// <returns>Schema copy.</returns>
-        TSchema With(TMetadata schemaPart);
-    }
-
-    /// <summary>
-    /// Schema builder extensions.
-    /// </summary>
-    public static class SchemaBuilderExtensions
-    {
-        /// <summary>
-        /// Creates schema copy with provided description.
-        /// </summary>
-        /// <typeparam name="TSchema">Schema type.</typeparam>
-        /// <param name="source">Source schema.</param>
-        /// <param name="description">Description.</param>
-        /// <returns>New schema instance with provided description.</returns>
-        public static TSchema WithDescription<TSchema>(this TSchema source, string description)
-            where TSchema : ISchemaBuilder<TSchema, ISchemaDescription>, ISchema
-        {
-            return source.With(new SchemaDescription(description));
-        }
+        new TSchema With(TMetadata schemaPart);
     }
 }

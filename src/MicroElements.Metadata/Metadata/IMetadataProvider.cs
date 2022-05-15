@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Core;
+using MicroElements.Reflection.Expressions;
 
 namespace MicroElements.Metadata
 {
@@ -39,7 +39,7 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         IPropertyContainer IMetadataProvider.GetMetadataContainer(bool autoCreate)
         {
-            if (autoCreate && Metadata is null!)
+            if (autoCreate && Metadata == null!)
             {
                 SetMetadataContainer(MetadataGlobalCacheStorage.Instance.GetInstanceMetadata(this, autoCreate: true));
             }
@@ -50,7 +50,7 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         void IMetadataProvider.SetMetadataContainer(IPropertyContainer metadata)
         {
-            Action<object, IPropertyContainer> propertySetter = ExpressionUtils.GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata));
+            Action<object, IPropertyContainer> propertySetter = Expressions.GetPropertySetter<IPropertyContainer>(this.GetType(), nameof(Metadata));
             propertySetter.Invoke(this, metadata);
         }
     }

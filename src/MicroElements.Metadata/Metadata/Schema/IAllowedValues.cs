@@ -7,10 +7,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Collections.Extensions.NotNull;
+using MicroElements.Reflection.TypeExtensions;
+using MicroElements.Text.StringFormatter;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
-using TypeExtensions = MicroElements.Core.TypeExtensions;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -168,7 +170,7 @@ namespace MicroElements.Metadata.Schema
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetSchemaMetadata<IAllowedValues>() as IAllowedValues<T>;
+            return property.GetComponent<IAllowedValues>() as IAllowedValues<T>;
         }
 
         /// <summary>
@@ -181,7 +183,7 @@ namespace MicroElements.Metadata.Schema
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return property.GetSchemaMetadata<IAllowedValues>();
+            return property.GetComponent<IAllowedValues>();
         }
 
         /// <summary>
@@ -298,10 +300,10 @@ namespace MicroElements.Metadata.Schema
             : base(property, "{propertyName} can not be '{value}' because it is not in allowed values list. Allowed values: {allowedValues}.")
         {
             _allowedValues = allowedValues ?? Property.GetAllowedValues();
-            _canAcceptNull = TypeExtensions.CanAcceptNull(typeof(T));
+            _canAcceptNull = typeof(T).CanAcceptNull();
 
             Lazy<string> allowedValuesText = new (() => _allowedValues?.Values.NotNull().FormatAsTuple() ?? "()");
-            this.ConfigureMessage(message => message.WithProperty("allowedValues", allowedValuesText.Value));
+            this.ConfigureMessage(message => message.AddProperty("allowedValues", allowedValuesText.Value));
         }
 
         /// <inheritdoc />

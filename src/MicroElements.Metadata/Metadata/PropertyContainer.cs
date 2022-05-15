@@ -43,9 +43,11 @@ namespace MicroElements.Metadata
                 {
                     Properties = readOnlyCollection;
                 }
-
-                // Protective copy because external collection can be changed outside
-                Properties = sourceValues.ToArray();
+                else
+                {
+                    // Protective copy because external collection can be changed outside
+                    Properties = sourceValues.ToArray();
+                }
             }
 
             ParentSource = parentPropertySource;

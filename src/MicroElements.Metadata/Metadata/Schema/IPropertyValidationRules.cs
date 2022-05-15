@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Validation;
 
 namespace MicroElements.Metadata.Schema

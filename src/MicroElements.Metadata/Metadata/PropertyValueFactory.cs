@@ -6,8 +6,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using MicroElements.Core;
+using MicroElements.CodeContracts;
+using MicroElements.Collections.TwoLayerCache;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -52,7 +54,7 @@ namespace MicroElements.Metadata
             {
                 if (_assumeNullForNotNullableAsNotDefined)
                 {
-                    value = propertyType.GetDefaultValue();
+                    value = TypeExtensions.GetDefaultValue(propertyType);
                     valueSource = ValueSource.NotDefined;
                 }
                 else
@@ -159,7 +161,7 @@ namespace MicroElements.Metadata
             }
         }
 
-        private readonly ICache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
+        private readonly TwoLayerCache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
 
         private readonly IPropertyValueFactory _propertyValueFactory;
 
@@ -178,19 +180,7 @@ namespace MicroElements.Metadata
             propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
 
             _propertyValueFactory = propertyValueFactory;
-
-            var propertyValueKeyComparer = new PropertyValueKeyComparer(propertyComparer);
-
-            if (maxItemCount == null)
-            {
-                // unlimited cache
-                _propertyValuesCache = new ConcurrentDictionaryAdapter<PropertyValueInfo, IPropertyValue>(new ConcurrentDictionary<PropertyValueInfo, IPropertyValue>(propertyValueKeyComparer));
-            }
-            else
-            {
-                // limited cache
-                _propertyValuesCache = new Core.TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.Value, propertyValueKeyComparer);
-            }
+            _propertyValuesCache = new TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.GetValueOrDefault(4000), new PropertyValueKeyComparer(propertyComparer));
         }
 
         /// <inheritdoc />

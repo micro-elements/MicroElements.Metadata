@@ -57,16 +57,50 @@ namespace MicroElements.Metadata.Tests
         }
 
         [Fact]
-        public void default_values_variance()
+        public void default_values_covariance()
         {
             IDefaultValue<string> defaultValue = new DefaultValue<string>("42");
 
-            // not variance
-            typeof(DefaultValue<string>).Should().NotBeAssignableTo(typeof(IDefaultValue<object>));
+            IDefaultValue<object> covariantDefaultValue = defaultValue;
+            covariantDefaultValue.Value.Should().Be("42");
 
-            // can assign to base interface
-            IDefaultValue defaultValueUntyped = defaultValue;
+            IDefaultValue defaultValueUntyped = covariantDefaultValue;
             defaultValueUntyped.Value.Should().Be("42");
+
+            defaultValueUntyped.Should().BeSameAs(defaultValue);
+        }
+
+        [Fact]
+        public void DefaultValueCovariance2()
+        {
+            Property<int> property = new Property<int>("Int42")
+                .WithDefaultValue(42);
+
+            IDefaultValue<int> defValueInt = property.GetComponent<IDefaultValue<int>>();
+            IDefaultValue defValueBase = property.GetComponent<IDefaultValue>();
+            defValueBase.Should().BeSameAs(defValueInt);
+
+            IDefaultValue defaultValue = property.GetDefaultValueMetadata()!;
+            defaultValue.Value.Should().Be(42);
+
+            IProperty baseProp = property;
+            defaultValue = baseProp.GetDefaultValueMetadata()!;
+            defaultValue.Value.Should().Be(42);
+        }
+
+        [Fact]
+        public void DefaultValueCovariance3()
+        {
+            Property<int> property = new Property<int>("Int42")
+                .WithDefaultValue(42);
+
+            property.GetComponent<IDefaultValue>()!.Value.Should().Be(42);
+
+            Property<int> property2 = new Property<int>("Int42");
+            property2.SetDefaultValueMetadata(new DefaultValue<int>(42));
+            property2.GetComponent<IDefaultValue>()!.Value.Should().Be(42);
+            
+
         }
     }
 }

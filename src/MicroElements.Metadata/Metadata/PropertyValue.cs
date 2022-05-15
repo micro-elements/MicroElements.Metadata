@@ -3,7 +3,8 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {

@@ -3,7 +3,7 @@
 
 using System;
 using System.Diagnostics;
-using MicroElements.Core;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -61,7 +61,7 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     /// <typeparam name="T">Schema value type.</typeparam>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema<T> : ISchema<T>, ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
+    public partial class SimpleTypeSchema<T> : ISchema<T>
     {
         /// <inheritdoc />
         public Type Type => typeof(T);
@@ -84,7 +84,13 @@ namespace MicroElements.Metadata.Schema
             Name = name;
             Description = description;
         }
+    }
 
+    /// <content>
+    /// SimpleTypeSchema builder methods.
+    /// </content>
+    public partial class SimpleTypeSchema<T> : ISchemaBuilder<SimpleTypeSchema<T>, ISchemaDescription>
+    {
         /// <inheritdoc />
         public SimpleTypeSchema<T> With(ISchemaDescription schemaDescription)
         {

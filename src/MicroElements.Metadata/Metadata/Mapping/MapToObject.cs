@@ -5,8 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MicroElements.CodeContracts;
 using MicroElements.Functional;
 using MicroElements.Validation;
+using Message = MicroElements.Functional.Message;
+using MessageSeverity = MicroElements.Functional.MessageSeverity;
+using TypeExtensions = MicroElements.Reflection.TypeExtensions.TypeExtensions;
 
 namespace MicroElements.Metadata.Mapping
 {
@@ -52,7 +56,7 @@ namespace MicroElements.Metadata.Mapping
                         continue;
                     }
 
-                    if (value != null && !value.GetType().IsAssignableTo(propertyInfo.PropertyType))
+                    if (value != null && !TypeExtensions.IsAssignableTo(value.GetType(), propertyInfo.PropertyType))
                     {
                         settings.LogMessage?.Invoke(new Message($"Value '{value}' of type '{value.GetType()}' can not be set to Property '{propertyInfo.Name}' of type '{propertyInfo.PropertyType}'", MessageSeverity.Error));
                         continue;
@@ -77,7 +81,7 @@ namespace MicroElements.Metadata.Mapping
             TModel model,
             MapToObjectSettings<TModel>? settings = null)
         {
-            model.AssertArgumentNotNull(nameof(model));
+            Assertions.AssertArgumentNotNull(model, nameof(model));
 
             // Override factory with provided object.
             MapToObjectSettings<TModel> context = settings ?? new MapToObjectSettings<TModel>();
@@ -102,7 +106,7 @@ namespace MicroElements.Metadata.Mapping
             // Search by name and type (best choice, no map required)
             PropertyInfo? propertyInfo = propertyInfos.FirstOrDefault(info =>
                 string.Equals(info.Name, targetPropertyName, StringComparison.OrdinalIgnoreCase) &&
-                propertyValue.PropertyUntyped.Type.IsAssignableTo(info.PropertyType));
+                TypeExtensions.IsAssignableTo(propertyValue.PropertyUntyped.Type, info.PropertyType));
 
             if (propertyInfo == null)
             {
@@ -124,7 +128,7 @@ namespace MicroElements.Metadata.Mapping
                     }
                 }
 
-                if (propertyInfo != null && propertyInfo.PropertyType.IsNullableStruct())
+                if (propertyInfo != null && TypeExtensions.IsNullableStruct(propertyInfo.PropertyType))
                 {
                     Type underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType)!;
                     if (underlyingType.IsEnum)
@@ -143,8 +147,10 @@ namespace MicroElements.Metadata.Mapping
 
                 if (propertyInfo == null)
                 {
-                    error = new Message("Property {propertyName} was not found in type {modelType}", MessageSeverity.Error)
-                        .WithArgs(targetPropertyName, modelType.FullName);
+                    error = ValueMessageBuilder
+                        .Error("Property {propertyName} was not found in type {modelType}")
+                        .AddProperty("propertyName", targetPropertyName)
+                        .AddProperty("modelType", modelType.FullName);
                 }
             }
 

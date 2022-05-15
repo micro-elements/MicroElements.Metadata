@@ -29,8 +29,8 @@ namespace MicroElements.Validation.Rules
                 this.SetDefaultMessageFormat("Value '{value}' is too short (length: {length}, minLength: {minLength})");
                 this.ConfigureMessage((message, value, pc) =>
                     message
-                        .WithProperty("length", GetLength(value.ValueUntyped as string))
-                        .WithProperty("minLength", _minLength.MinLength));
+                        .AddProperty("length", GetLength(value.ValueUntyped as string))
+                        .AddProperty("minLength", _minLength.MinLength));
             }
         }
 

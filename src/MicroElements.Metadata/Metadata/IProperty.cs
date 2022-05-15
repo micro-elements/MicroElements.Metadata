@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
@@ -9,7 +8,17 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents property description.
     /// </summary>
-    public interface IProperty : ISchema
+    public interface IProperty :
+        ISchema,
+
+        ISchemaDescription,
+        IHas<ISchemaDescription>,
+        ISchemaBuilder<ISchemaDescription>,
+
+        INameAlias,
+        IHas<INameAlias>,
+
+        ISchemaBuilder<IDefaultValue>
     {
     }
 
@@ -18,11 +27,17 @@ namespace MicroElements.Metadata
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
     public interface IProperty<T> :
-        ISchema<T>,
         IProperty,
-        IHasAlias,
+        ISchema<T>,
+
+        IHas<IExamples<T>>,
+        ISchemaBuilder<IExamples<T>>,
+
         IHas<IDefaultValue<T>>,
-        IHas<IPropertyCalculator<T>>
+        ISchemaBuilder<IDefaultValue<T>>,
+
+        IHas<IPropertyCalculator<T>>,
+        ISchemaBuilder<IPropertyCalculator<T>>
     {
         /// <summary>
         /// Gets default value for property.
@@ -35,14 +50,23 @@ namespace MicroElements.Metadata
         IPropertyCalculator<T>? Calculator { get; }
 
         /// <summary>
-        /// Gets examples list.
+        /// Gets property example values.
         /// </summary>
-        IReadOnlyList<T> Examples { get; }
+        IExamples<T>? Examples { get; }
+
+        /// <inheritdoc />
+        ISchemaDescription? IHas<ISchemaDescription>.Component => Description != null ? SchemaDescription.FromStringCached(Description) : this.GetMetadata<ISchemaDescription>();
+
+        /// <inheritdoc />
+        INameAlias? IHas<INameAlias>.Component => Alias != null ? NameAlias.FromStringCached(Alias) : this.GetMetadata<INameAlias>();
 
         /// <inheritdoc />
         IDefaultValue<T>? IHas<IDefaultValue<T>>.Component => DefaultValue ?? this.GetMetadata<IDefaultValue<T>>();
 
         /// <inheritdoc />
         IPropertyCalculator<T>? IHas<IPropertyCalculator<T>>.Component => Calculator ?? this.GetMetadata<IPropertyCalculator<T>>();
+
+        /// <inheritdoc />
+        IExamples<T>? IHas<IExamples<T>>.Component => Examples ?? this.GetMetadata<IExamples<T>>();
     }
 }

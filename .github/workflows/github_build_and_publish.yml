@@ -31,5 +31,5 @@ jobs:
           UPLOAD_PATTERN: ${{ inputs.UPLOAD_PATTERN }}
         run: |
           chmod a+x ./build.sh
-          ./build.sh --target Travis --ForceUploadPackages=true --RunCodeCoverage=false
+          ./build.sh --target=Travis --ForceUploadPackages=true --RunCodeCoverage=false
       #-------------------------------

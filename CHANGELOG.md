@@ -1,3 +1,9 @@
+# UNRELEASED
+- Added: FormatterBuilder that can create non static recursive formatters
+- Change: CollectionFormatter can use optional configuration
+- Change: KeyValuePairFormatter, ValueTuplePairFormatter can use optional format string
+
+
 # 7.13.0
 - SchemaBuilder functionality allows to use varios WithXXX methods in generic way
 - MessageBuilder used for reducing memory allocations
@@ -8,16 +14,15 @@
 - Added 'defaultValue' param to 'PropertyContainer.GetValue' and 'MutablePropertyContainer.GetValue' to have the same signature as common 'GetValue'
 - Added 'allowMapUndefined' param to PropertyExtensions.Map
 - Added: SetValueIfNotDefault, WithValueIfNotDefault for IMutablePropertyContainer
-
-- Change: 'IStaticSchema' now implements 'IStaticPropertySet'
-
 - Change: Property.WithDefaultValue methods replaced with SchemaBuilder methods
 
 - BREAKING CHANGE: Property<T>.DefaultValue become optional. Default value for property should be defined explicitly.
 
-IExamples
-IDefaultValue covariant
-ISachema covariant
+- Added: IExamples component. Property<T> uses IExamples.
+- Change: IDefaultValue become covariant
+
+- Change: 'IStaticSchema' now implements 'IStaticPropertySet'
+- Change: ISchema become covariant
 
 # 7.12.0
 Experimental release that extends parsing with conditinal logic

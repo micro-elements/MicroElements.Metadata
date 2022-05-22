@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using MicroElements.CodeContracts;
+using MicroElements.CompositeBuilder;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Text.StringFormatter;
 
@@ -13,123 +13,120 @@ namespace MicroElements.Metadata.Formatters
     /// <summary>
     /// Formatter for collection types.
     /// </summary>
-    public class CollectionFormatter : IValueFormatter
+    public class CollectionFormatter :
+        IValueFormatter,
+        ICompositeBuilder<CollectionFormatter, IConfigure<CollectionFormatterSettings>>
     {
-        private readonly IValueFormatter _valueFormatter;
+        private readonly CollectionFormatterSettings _formatterSetting;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CollectionFormatter"/> class.
+        /// Initializes a new instance of the <see cref="CollectionFormatter" /> class.
+        /// </summary>
+        /// <param name="formatterSetting">Formatting settings.</param>
+        public CollectionFormatter(CollectionFormatterSettings formatterSetting)
+        {
+            _formatterSetting = formatterSetting.AssertArgumentNotNull(nameof(formatterSetting)).Clone();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CollectionFormatter" /> class.
         /// </summary>
         /// <param name="valueFormatter">Collection values formatter.</param>
-        public CollectionFormatter(IValueFormatter valueFormatter)
+        /// <param name="configure">Optional formatting settings.</param>
+        public CollectionFormatter(IValueFormatter valueFormatter, Action<CollectionFormatterSettings>? configure = null)
         {
             valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
 
-            _valueFormatter = valueFormatter;
+            var formatterSetting = new CollectionFormatterSettings { ValueFormatter = valueFormatter };
+            configure?.Invoke(formatterSetting);
+
+            _formatterSetting = formatterSetting.Clone();
         }
 
         /// <inheritdoc />
-        public bool CanFormat(Type valueType)
+        public CollectionFormatter With(IConfigure<CollectionFormatterSettings> configure)
         {
-            return valueType.IsAssignableTo(typeof(ICollection)) || valueType.Name.StartsWith("IReadOnlyCollection");
+            var settings = _formatterSetting.Clone();
+            configure.Configure(settings);
+            return new CollectionFormatter(settings);
         }
+
+        /// <inheritdoc />
+        public bool CanFormat(Type valueType) => valueType.IsAssignableTo(typeof(ICollection)) || valueType.Name.StartsWith("IReadOnlyCollection");
 
         /// <inheritdoc />
         public string? Format(object? value, Type valueType)
         {
-            if (value is ICollection collection)
+            if (value is ICollection values)
             {
-                return collection.FormatAsTuple(
-                    startSymbol: "[",
-                    endSymbol: "]",
-                    formatValue: item => _valueFormatter.Format(item, typeof(object)));
+                return values.FormatAsTuple(
+                    startSymbol: _formatterSetting.StartSymbol,
+                    endSymbol: _formatterSetting.EndSymbol,
+                    separator: _formatterSetting.Separator,
+                    nullPlaceholder: _formatterSetting.NullPlaceholder,
+                    maxItems: _formatterSetting.MaxItems,
+                    maxTextLength: _formatterSetting.MaxTextLength,
+                    trimmedPlaceholder: _formatterSetting.TrimmedPlaceholder,
+                    formatValue: item => FormatCollectionItem(item));
             }
 
             return null;
         }
+
+        private string FormatCollectionItem(object item)
+        {
+            return _formatterSetting.ValueFormatter.Format(item, typeof(object)) ?? _formatterSetting.NullPlaceholder;
+        }
     }
 
-    public class KeyValuePairFormatter : IValueFormatter
+    /// <summary>
+    /// Format settings to be used in collection formatting.
+    /// </summary>
+    public class CollectionFormatterSettings
     {
-        private readonly IValueFormatter _valueFormatter;
+        /// <summary> The value that uses to separate items. DefaultValue = ', '. </summary>
+        public string Separator { get; set; } = ", ";
+
+        /// <summary> The value that renders if item is <see langword="null"/>. DefaultValue = `"null"`. </summary>
+        public string NullPlaceholder { get; set; } = "null";
+
+        /// <summary> Start symbol. DefaultValue = '['. </summary>
+        public string StartSymbol { get; set; } = "[";
+
+        /// <summary> End symbol. DefaultValue = ']'. </summary>
+        public string EndSymbol { get; set; } = "]";
+
+        /// <summary> The max number of items that will be formatted. By default not limited. </summary>
+        public int? MaxItems { get; set; } = null;
+
+        /// <summary> Max result text length. Used to limit result text size. DefaultValue=`4000`. </summary>
+        public int MaxTextLength { get; set; } = 4000;
+
+        /// <summary> The value that replaces trimmed part of sequence. DefaultValue = `"..."`. </summary>
+        public string TrimmedPlaceholder { get; set; } = "...";
+
+        /// <summary> Formatter for every single item. </summary>
+        public IValueFormatter ValueFormatter { get; set; } = null!;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="KeyValuePairFormatter"/> class.
+        /// Creates a copy of the settings.
         /// </summary>
-        /// <param name="valueFormatter">Value formatter.</param>
-        public KeyValuePairFormatter(IValueFormatter valueFormatter)
-        {
-            valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
-
-            _valueFormatter = valueFormatter;
-        }
-
-        /// <inheritdoc />
-        public bool CanFormat(Type valueType)
-        {
-            return valueType.IsAssignableTo(typeof(KeyValuePair<string, object>));
-        }
-
-        /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
-        {
-            if (value is KeyValuePair<string, object?> keyValuePair)
-                return $"({keyValuePair.Key}: {_valueFormatter.TryFormat(keyValuePair.Value)})";
-
-            return null;
-        }
+        /// <returns>Shallow copy of the settings.</returns>
+        public CollectionFormatterSettings Clone() => (CollectionFormatterSettings)MemberwiseClone();
     }
 
-    public class ValueTuplePairFormatter : IValueFormatter
+    /// <summary>
+    /// <see cref="FormatterBuilder"/> extensions.
+    /// </summary>
+    public static partial class FormatterBuilderExtensions
     {
-        private readonly IValueFormatter _valueFormatter;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValueTuplePairFormatter"/> class.
+        /// Configures <see cref="CollectionFormatter"/>.
+        /// Can be called multiple times.
         /// </summary>
-        /// <param name="valueFormatter">Value formatter.</param>
-        public ValueTuplePairFormatter(IValueFormatter valueFormatter)
+        public static FormatterBuilder ConfigureCollectionFormatter(this FormatterBuilder builder, Action<CollectionFormatterSettings> configure)
         {
-            valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
-
-            _valueFormatter = valueFormatter;
-        }
-
-        /// <inheritdoc />
-        public bool CanFormat(Type valueType)
-        {
-            return valueType.IsAssignableTo(typeof(ValueTuple<string, object>));
-        }
-
-        /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
-        {
-            if (value is ValueTuple<string, object?> nameValueTuple)
-                return $"({nameValueTuple.Item1}: {_valueFormatter.TryFormat(nameValueTuple.Item2)})";
-
-            return null;
-        }
-    }
-
-    public class RuntimeFormatter : IValueFormatter
-    {
-        private Func<IValueFormatter> _formatterGetter;
-
-        public RuntimeFormatter(Func<IValueFormatter> formatterGetter)
-        {
-            _formatterGetter = formatterGetter;
-        }
-
-        /// <inheritdoc />
-        public bool CanFormat(Type valueType)
-        {
-            return _formatterGetter().CanFormat(valueType);
-        }
-
-        /// <inheritdoc />
-        public string? Format(object? value, Type valueType)
-        {
-            return _formatterGetter().Format(value, valueType);
+            return builder.ConfigureFormatter<CollectionFormatterSettings>(configure);
         }
     }
 }

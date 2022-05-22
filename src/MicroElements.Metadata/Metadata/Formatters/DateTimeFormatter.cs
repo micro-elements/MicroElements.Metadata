@@ -48,4 +48,13 @@ namespace MicroElements.Metadata.Formatters
                 : dateTime.ToString(DateOnlyFormat);
         }
     }
+
+    public sealed class TimeSpanFormatter : IValueFormatter<TimeSpan>
+    {
+        /// <inheritdoc />
+        public string? Format(TimeSpan value)
+        {
+            return value.ToString("c");
+        }
+    }
 }

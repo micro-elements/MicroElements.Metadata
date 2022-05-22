@@ -1,15 +1,90 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata;
+using MicroElements.Metadata.Schema;
 
-namespace MicroElements.Metadata.Schema
+namespace MicroElements.CompositeBuilder
 {
+    /// <summary>
+    /// Schema builder interface.
+    /// </summary>
+    public interface ICompositeBuilder
+    {
+    }
+
+    /// <summary>
+    /// Schema builder with knowledge of metadata type.
+    /// </summary>
+    /// <typeparam name="TBuildData">Metadata type.</typeparam>
+    public interface ICompositeBuilder<in TBuildData> : ICompositeBuilder
+    {
+        /// <summary>
+        /// Creates a copy of the source with provided <paramref name="buildData"/>.
+        /// </summary>
+        /// <param name="buildData">Schema part.</param>
+        /// <returns>A copy of the source.</returns>
+        object With(TBuildData buildData);
+    }
+
+    public interface ICompositeSetter<in TPart> : ICompositeBuilder
+    {
+        /// <summary>
+        /// Creates a copy of the source with provided <paramref name="part"/>.
+        /// </summary>
+        /// <param name="part">Schema part.</param>
+        void Append(TPart part);
+    }
+
+    /// <summary>
+    /// Strong typed schema builder that accepts concrete metadata type.
+    /// </summary>
+    /// <typeparam name="TComposite">Schema type.</typeparam>
+    /// <typeparam name="TBuildData">Schema part.</typeparam>
+    public interface ICompositeBuilder<out TComposite, in TBuildData> : ICompositeBuilder<TBuildData>
+    {
+        /// <inheritdoc />
+        object ICompositeBuilder<TBuildData>.With(TBuildData buildData) => With(buildData);
+
+        /// <summary>
+        /// Creates a copy of the source with provided <paramref name="buildData"/>.
+        /// </summary>
+        /// <param name="buildData">Schema part.</param>
+        /// <returns>Schema copy.</returns>
+        new TComposite With(TBuildData buildData);
+    }
+
+
+    public interface IConfigure
+    {
+        Type OptionType { get; }
+    }
+
+    public interface IConfigure<in TOptions> : IConfigure
+    {
+        /// <inheritdoc />
+        Type IConfigure.OptionType => typeof(TOptions);
+
+        void Configure(TOptions options);
+    }
+
+    class Configure<TOptions> : IConfigure<TOptions>
+    {
+        private readonly Action<TOptions> _configure;
+
+        public Configure(Action<TOptions> configure) => _configure = configure;
+
+        /// <inheritdoc />
+        void IConfigure<TOptions>.Configure(TOptions options) => _configure(options);
+    }
+
     /// <summary>
     /// Schema builder extensions.
     /// </summary>
-    public static partial class SchemaBuilder
+    public static partial class CompositeBuilder
     {
         /// <summary>
         /// Creates a new copy of the source with new default value.
@@ -21,20 +96,19 @@ namespace MicroElements.Metadata.Schema
         /// <returns>A new copy of the source schema.</returns>
         [Pure]
         public static TSchema WithComponent<TSchema, TComponent>(this TSchema schema, TComponent component)
-            where TSchema : ISchemaBuilder<TComponent>, ISchema
-            where TComponent : IMetadata
+            where TSchema : ICompositeBuilder<TComponent>
         {
             schema.AssertArgumentNotNull(nameof(schema));
             component.AssertArgumentNotNull(nameof(component));
 
             // More specific interface implemented
-            if (schema is ISchemaBuilder<TSchema, TComponent> schemaBuilder)
+            if (schema is ICompositeBuilder<TSchema, TComponent> schemaBuilder)
             {
                 return schemaBuilder.With(component);
             }
 
             // Less specific interface
-            ISchemaBuilder<TComponent> schemaBuilderUntyped = schema;
+            ICompositeBuilder<TComponent> schemaBuilderUntyped = schema;
             object copy = schemaBuilderUntyped.With(component);
 
             // NOTE: No guarantee that return type will be TSchema

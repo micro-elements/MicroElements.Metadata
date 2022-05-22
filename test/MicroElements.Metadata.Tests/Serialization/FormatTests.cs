@@ -244,5 +244,37 @@ namespace MicroElements.Metadata.Tests.Serialization
             string? formattedValue = fullToStringFormatter.TryFormat(list);
             formattedValue.Should().Be("[(Key1: 2021-01-23), (Key2: [a1, a2]), (Key3: (Internal, 5))]");
         }
+
+        [Fact]
+        public void RecursiveFormatting2()
+        {
+            List<KeyValuePair<string, object>> list = new List<KeyValuePair<string, object>>();
+
+            list.Add(new KeyValuePair<string, object>("Key1", new LocalDate(2021, 01, 23)));
+            list.Add(new KeyValuePair<string, object>("Key2", new[] { "a1", "a2" }));
+            list.Add(new KeyValuePair<string, object>("Key3", ("Internal", 5)));
+
+            IValueFormatter fullToStringFormatter = FormatterBuilder
+                .Create()
+                .WithFormatters(DefaultFormatProvider.Instance)
+                .AddStandardFormatters()
+                .Build();
+
+            string? formattedValue = fullToStringFormatter.TryFormat(list);
+            formattedValue.Should().Be("[(Key1: 2021-01-23), (Key2: [a1, a2]), (Key3: (Internal, 5))]");
+
+            fullToStringFormatter = FormatterBuilder
+                .Create()
+                .WithFormatters(DefaultFormatProvider.Instance)
+                .AddStandardFormatters()
+                .ConfigureFormatter<CollectionFormatterSettings>(settings => settings.StartSymbol = "{")
+                .ConfigureFormatter<CollectionFormatterSettings>(settings => settings.EndSymbol = "}")
+                .ConfigureFormatter<KeyValuePairFormatterSettings>(format => format.Format = "{0}={1}")
+                .Build();
+
+            formattedValue = fullToStringFormatter.TryFormat(list);
+            formattedValue.Should().Be("{Key1=2021-01-23, Key2={a1, a2}, Key3=(Internal, 5)}");
+
+        }
     }
 }

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Collections.Extensions.NotNull;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Text.StringFormatter;
 using MicroElements.Validation;

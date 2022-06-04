@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.Json;
 using MicroElements.Functional;
 using MicroElements.Metadata.AspNetCore;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Schema;
 using Microsoft.OpenApi.Any;

@@ -4,7 +4,7 @@
 using System;
 using System.Collections;
 using MicroElements.CodeContracts;
-using MicroElements.CompositeBuilder;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Text.StringFormatter;
 

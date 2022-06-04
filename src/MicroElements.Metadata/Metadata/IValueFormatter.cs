@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Represents value formatter.
-    /// Formats value to string.
+    /// Represents a formatter that formats values to string.
     /// </summary>
     public interface IValueFormatter
     {
@@ -26,12 +25,12 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="value">Value to format.</param>
         /// <param name="valueType">Value type.</param>
-        /// <returns>Formatted string.</returns>
+        /// <returns>Formatted string or <see langword="null"/>.</returns>
         string? Format(object? value, Type valueType);
     }
 
     /// <summary>
-    /// Represents strong typed value formatter.
+    /// Represents a strong typed value formatter.
     /// Implements <see cref="IValueFormatter"/> methods.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
@@ -45,10 +44,7 @@ namespace MicroElements.Metadata
         string? Format(T? value);
 
         /// <inheritdoc />
-        bool IValueFormatter.CanFormat(Type valueType)
-        {
-            return typeof(T).IsAssignableFrom(valueType);
-        }
+        bool IValueFormatter.CanFormat(Type valueType) => valueType.IsAssignableTo<T>();
 
         /// <inheritdoc />
         string? IValueFormatter.Format(object? value, Type valueType)
@@ -56,8 +52,31 @@ namespace MicroElements.Metadata
             if (value is T valueTyped)
                 return Format(valueTyped);
 
+            // If type can accept null let formatter to format it too.
             if (value is null && ValueFormatterTypeCache<T>.CanAcceptNull)
                 return Format(default);
+
+            return null;
+        }
+    }
+
+    public interface INotNullValueFormatter<T> : IValueFormatter
+    {
+        /// <summary>
+        /// Formats <paramref name="value"/> to string.
+        /// </summary>
+        /// <param name="value">Value to format.</param>
+        /// <returns>Formatted string.</returns>
+        string? Format(T value);
+
+        /// <inheritdoc />
+        bool IValueFormatter.CanFormat(Type valueType) => typeof(T).IsAssignableFrom(valueType);
+
+        /// <inheritdoc />
+        string? IValueFormatter.Format(object? value, Type valueType)
+        {
+            if (value is T valueTyped and not null)
+                return Format(valueTyped);
 
             return null;
         }

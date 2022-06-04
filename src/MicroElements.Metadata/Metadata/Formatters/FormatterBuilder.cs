@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.CodeContracts;
-using MicroElements.CompositeBuilder;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.Formatters

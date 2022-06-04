@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using MicroElements.CodeContracts;
-using MicroElements.CompositeBuilder;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Formatters
 {

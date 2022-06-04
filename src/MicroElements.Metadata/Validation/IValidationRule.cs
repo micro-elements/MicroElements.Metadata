@@ -72,7 +72,6 @@ namespace MicroElements.Validation
         public static string GetTypeName(this Type type)
         {
             return GetFriendlyName(type);
-            return DefaultMapperSettings.Instance.GetTypeName(type);
         }
 
         public static string GetFriendlyName(this Type type)

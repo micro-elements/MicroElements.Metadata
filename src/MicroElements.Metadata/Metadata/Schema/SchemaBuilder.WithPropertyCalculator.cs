@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -23,7 +24,7 @@ namespace MicroElements.Metadata.Schema
         public static TSchema WithPropertyCalculator<TSchema, T>(this TSchema schema, IPropertyCalculator<T> calculator)
             where TSchema : ISchemaBuilder<IPropertyCalculator<T>>, ISchema<T>
         {
-            return WithComponent(schema, calculator);
+            return schema.WithComponent(calculator);
         }
 
         /// <summary>

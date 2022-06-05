@@ -251,4 +251,66 @@ namespace MicroElements.Validation
             }
         }
     }
+
+    public static class ValidatorExtensions
+    {
+        public static IPropertyValidationRule<T> ValidateIf<T>
+        (
+            this IProperty<T> property,
+            Func<IPropertyValue<T>, IPropertyContainer, bool> shouldValidate,
+            Func<IProperty<T>, IPropertyValidationRule<T>> rule
+        )
+            => new IfValidator<T>(property, shouldValidate, rule);
+
+        public static IPropertyValidationRule<T> ShouldBe<T>
+        (
+            this IProperty<T> property,
+            Func<IPropertyContainer, T, bool> lambda
+        )
+            => new ShouldBeValidator<T>(property, lambda);
+
+        private class IfValidator<T> : IPropertyValidationRule<T>
+        {
+            private readonly Func<IPropertyValue<T>, IPropertyContainer, bool> _shouldValidate;
+            private readonly IPropertyValidationRule<T> _rule;
+            public IProperty<T> Property { get; }
+
+            public IfValidator
+            (
+                IProperty<T> property,
+                Func<IPropertyValue<T>, IPropertyContainer, bool> shouldValidate,
+                Func<IProperty<T>, IPropertyValidationRule<T>> rule
+            )
+            {
+                _shouldValidate = shouldValidate;
+                _rule = rule(property);
+                Property = property;
+            }
+
+            public IEnumerable<Message> Validate(IPropertyValue<T> propertyValue, IPropertyContainer propertyContainer)
+                => _shouldValidate(propertyValue, propertyContainer)
+                ? _rule.Validate(propertyValue, propertyContainer)
+                : Array.Empty<Message>();
+        }
+
+        private class ShouldBeValidator<T> : IPropertyValidationRule<T>
+        {
+            private readonly Func<IPropertyContainer, T, bool> _condition;
+            public IProperty<T> Property { get; }
+
+            public ShouldBeValidator(IProperty<T> property, Func<IPropertyContainer, T, bool> condition)
+            {
+                _condition = condition;
+                Property = property;
+            }
+
+            public IEnumerable<Message> Validate(IPropertyValue<T> propertyValue, IPropertyContainer propertyContainer)
+            {
+                propertyValue ??= propertyContainer.GetPropertyValue(Property, propertyContainer.SearchOptions.ReturnNotDefined())!;
+
+                if (!_condition(propertyContainer, propertyValue.Value))
+                    yield return this.GetConfiguredMessage(propertyValue, propertyContainer);
+            }
+        }
+    }
 }

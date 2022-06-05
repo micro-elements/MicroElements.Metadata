@@ -7,9 +7,19 @@ namespace MicroElements.Metadata.Formatters
 {
     /// <summary>
     /// Default format provider.
+    /// Provides:
+    /// - string formatting
+    /// - floating numbers formatting (float, double, decimal)
+    /// - DateTime, DateTimeOffset formatters
+    /// - NodaTime formatters.
     /// </summary>
     public class DefaultFormatProvider : IValueFormatterProvider
     {
+        /// <summary>
+        /// Gets default format provider instance.
+        /// </summary>
+        public static DefaultFormatProvider Instance { get; } = new DefaultFormatProvider();
+
         /// <inheritdoc />
         public IEnumerable<IValueFormatter> GetFormatters()
         {

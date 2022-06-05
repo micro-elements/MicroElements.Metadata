@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Exceptions;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
@@ -173,8 +174,8 @@ namespace MicroElements.Metadata.Schema
         {
             schema.AssertArgumentNotNull(nameof(schema));
 
-            IDefaultValue? defaultValueMetadata = GetDefaultValueMetadata(schema);
-            return defaultValueMetadata != null ? (T?)defaultValueMetadata.Value : throw new MetadataIsNullException($"Metadata of type '{typeof(T).GetFriendlyName()}' was not found in '{schema}'");
+            IDefaultValue defaultValueMetadata = GetDefaultValueMetadata(schema) ?? throw new NotFoundException($"Metadata of type '{typeof(T).GetFriendlyName()}' was not found in '{schema}'");
+            return (T?)defaultValueMetadata.Value;
         }
 
         /// <summary>

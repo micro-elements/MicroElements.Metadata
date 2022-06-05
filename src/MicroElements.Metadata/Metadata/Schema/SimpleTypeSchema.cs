@@ -13,7 +13,10 @@ namespace MicroElements.Metadata.Schema
     /// Example: Currency (string type with maxLength: 3).
     /// </summary>
     [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
-    public class SimpleTypeSchema : ISchema, IManualMetadataProvider, ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
+    public class SimpleTypeSchema :
+        ISchema,
+        IManualMetadataProvider,
+        ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
     {
         /// <inheritdoc />
         public string Name { get; }

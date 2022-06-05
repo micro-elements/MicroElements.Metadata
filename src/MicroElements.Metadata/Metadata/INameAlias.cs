@@ -3,6 +3,7 @@
 
 using MicroElements.CodeContracts;
 using MicroElements.Collections.TwoLayerCache;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata

@@ -57,6 +57,10 @@ namespace MicroElements.Metadata.Serialization
                     new TypeRegistration(typeof(bool?), "bool?"),
                     new TypeRegistration(typeof(DateTime), "DateTime"),
                     new TypeRegistration(typeof(DateTime?), "DateTime?"),
+                    new TypeRegistration(typeof(DateTimeOffset), "DateTimeOffset"),
+                    new TypeRegistration(typeof(DateTimeOffset?), "DateTimeOffset?"),
+                    new TypeRegistration(typeof(TimeSpan), "TimeSpan"),
+                    new TypeRegistration(typeof(TimeSpan?), "TimeSpan?"),
                 })
                 .ToArray();
 

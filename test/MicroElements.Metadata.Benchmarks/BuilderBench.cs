@@ -29,7 +29,7 @@ namespace MicroElements.Metadata.Benchmarks
         [Benchmark]
         public Property<string> WithMutableStruct()
         {
-            return Property.WithRewriteFast((ref PropertyData<string> data) => data.Name = "Name2");
+            return Property.WithRewriteFast((ref PropRefData<string> data) => data.Name = "Name2");
         }
 
         [Benchmark]

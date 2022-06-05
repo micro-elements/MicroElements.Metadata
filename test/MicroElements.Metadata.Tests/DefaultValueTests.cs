@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Schema;
 using Xunit;
 
@@ -89,18 +90,22 @@ namespace MicroElements.Metadata.Tests
         }
 
         [Fact]
-        public void DefaultValueCovariance3()
+        public void DefaultValueAsExternalMetadata()
         {
             Property<int> property = new Property<int>("Int42")
                 .WithDefaultValue(42);
 
+            property.DefaultValue.Should().NotBeNull();
+            property.Component<IDefaultValue>().Should().NotBeNull();
+            property.Component<IDefaultValue>().Value.Should().Be(42);
             property.GetComponent<IDefaultValue>()!.Value.Should().Be(42);
 
             Property<int> property2 = new Property<int>("Int42");
             property2.SetDefaultValueMetadata(new DefaultValue<int>(42));
-            property2.GetComponent<IDefaultValue>()!.Value.Should().Be(42);
-            
 
+            property2.DefaultValue.Should().BeNull();
+            property2.Component<IDefaultValue>().Should().BeNull();
+            property2.GetComponent<IDefaultValue>()!.Value.Should().Be(42);
         }
     }
 }

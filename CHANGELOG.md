@@ -1,8 +1,10 @@
-# UNRELEASED
+# 7.14.0
+- Added ICloneable<T> with default implementation
+- Added: IComposite, ICompositeBuilder, IConfigurableBuilder
 - Added: FormatterBuilder that can create non static recursive formatters
 - Change: CollectionFormatter can use optional configuration
+- Change: CollectionFormatter can be configured with Configure
 - Change: KeyValuePairFormatter, ValueTuplePairFormatter can use optional format string
-
 
 # 7.13.0
 - SchemaBuilder functionality allows to use varios WithXXX methods in generic way

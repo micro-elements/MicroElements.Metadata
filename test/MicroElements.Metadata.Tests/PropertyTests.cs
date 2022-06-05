@@ -2,6 +2,7 @@
 using System.Xml;
 using FluentAssertions;
 using MicroElements.Functional;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Xml;
 using Xunit;
@@ -123,6 +124,10 @@ namespace MicroElements.Metadata.Tests
                 .WithDefaultValue(new DefaultValue<int>(42))
                 .GetDefaultValue().Should().Be(42);
 
+            new Property<int>("int_default_42")
+                .Configure(settings => settings.DefaultValue = new DefaultValue<int>(42))
+                .GetDefaultValueMetadata()!.Value.Should().Be(42);
+
             new Property<int>("int_no_default")
                 .GetDefaultValueMetadata().Should().BeNull();
 
@@ -131,8 +136,6 @@ namespace MicroElements.Metadata.Tests
 
             new Property<int>("int_no_default")
                 .GetDefaultValue(defaultValue: -1).Should().Be(-1);
-
-
         }
 
         class XmlLineInfo : IXmlLineInfo
@@ -221,7 +224,7 @@ namespace MicroElements.Metadata.Tests
             builder.State.OriginalMessage.Should().Be("Func4");
 
             new Property<string>("Name1")
-                .WithRewriteFast((ref PropertyData<string> data) => data.Name = "Name2")
+                .WithRewriteFast((ref PropRefData<string> data) => data.Name = "Name2")
                 .Name.Should().Be("Name2");
 
             new Property<string>("Name1")
@@ -229,7 +232,7 @@ namespace MicroElements.Metadata.Tests
                 .Name.Should().Be("Name2");
 
             new Property<string>("Name1")
-                .WithRewriteFast((ref PropertyData<string> data) => data.Description = "Description2")
+                .WithRewriteFast((ref PropRefData<string> data) => data.Description = "Description2")
                 .Description.Should().Be("Description2");
 
             new Property<string>("Name1")
@@ -237,8 +240,8 @@ namespace MicroElements.Metadata.Tests
                 .Description.Should().Be("Description2");
 
             new Property<string>("Name1")
-                .WithRewriteFast((ref PropertyData<string> data) => data.Description = "Description2")
-                .WithRewriteFast((ref PropertyData<string> data) => data.Description = null)
+                .WithRewriteFast((ref PropRefData<string> data) => data.Description = "Description2")
+                .WithRewriteFast((ref PropRefData<string> data) => data.Description = null)
                 .Description.Should().Be(null, because: "Property should be rewritten twice");
 
             new Property<string>("Name1")

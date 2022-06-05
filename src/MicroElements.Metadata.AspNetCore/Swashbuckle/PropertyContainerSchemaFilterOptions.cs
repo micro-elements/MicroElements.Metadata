@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Swashbuckle
 {
     /// <summary>
     /// Options to configure <see cref="PropertyContainerSchemaFilter"/>.
     /// </summary>
-    public class PropertyContainerSchemaFilterOptions
+    public class PropertyContainerSchemaFilterOptions : ICloneable<PropertyContainerSchemaFilterOptions>
     {
         /// <summary>
         /// Gets or sets a function that resolves property name by proper naming strategy.
@@ -19,11 +20,5 @@ namespace MicroElements.Metadata.Swashbuckle
         /// Gets or sets a value indicating whether known schemas should be generated as separate schemas and should be references by ref.
         /// </summary>
         public bool GenerateKnownSchemasAsRefs { get; set; } = true;
-
-        /// <summary>
-        /// Clones options instance.
-        /// </summary>
-        /// <returns>Options clone.</returns>
-        internal PropertyContainerSchemaFilterOptions Clone() => (PropertyContainerSchemaFilterOptions)MemberwiseClone();
     }
 }

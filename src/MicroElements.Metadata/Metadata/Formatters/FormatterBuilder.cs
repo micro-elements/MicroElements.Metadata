@@ -35,11 +35,10 @@ namespace MicroElements.Metadata.Formatters
         public FormatterBuilder()
         {
             RuntimeFormatter = new RuntimeFormatter<FormatterBuilder>(this, builder => builder.FullRecursiveFormatter);
+            FullRecursiveFormatter = DefaultToStringFormatter.Instance;
         }
 
         public static FormatterBuilder Create() => new FormatterBuilder();
-
-
 
         public FormatterBuilder AddStandardFormatters(
             bool collectionFormatter = true,
@@ -55,8 +54,12 @@ namespace MicroElements.Metadata.Formatters
             if (valueTuplePairFormatter)
                 _formatters.Add(new ValueTuplePairFormatter(RuntimeFormatter));
 
-            _formatters.Add(DefaultToStringFormatter.Instance);
             return this;
+        }
+
+        public FormatterBuilder AddStandardCollectionFormatters()
+        {
+            return WithFormatters(new CollectionFormatters(RuntimeFormatter));
         }
 
         public FormatterBuilder WithFormatters(IValueFormatterProvider formatterProvider)

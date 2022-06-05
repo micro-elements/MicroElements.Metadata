@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.CodeContracts;
 using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Formatters
@@ -13,10 +12,9 @@ namespace MicroElements.Metadata.Formatters
     /// </summary>
     public class KeyValuePairFormatter :
         IValueFormatter<KeyValuePair<string, object?>>,
-        ICompositeBuilder<KeyValuePairFormatter, IConfigure<KeyValuePairFormatterSettings>>
+        IConfigurableBuilder<KeyValuePairFormatter, KeyValuePairFormatterSettings>
     {
-        private readonly IValueFormatter _valueFormatter;
-        private readonly string _format;
+        private readonly KeyValuePairFormatterSettings _settings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyValuePairFormatter"/> class.
@@ -25,30 +23,41 @@ namespace MicroElements.Metadata.Formatters
         /// <param name="format">Optional format in terms of <see cref="string.Format(IFormatProvider,string,object)"/>.</param>
         public KeyValuePairFormatter(IValueFormatter valueFormatter, string format = "({0}: {1})")
         {
-            _valueFormatter = valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
-            _format = format;
+            _settings = new KeyValuePairFormatterSettings { ValueFormatter = valueFormatter, Format = format };
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyValuePairFormatter"/> class.
+        /// </summary>
+        /// <param name="settings">Setting to be used for formatting.</param>
+        public KeyValuePairFormatter(KeyValuePairFormatterSettings? settings = null)
+        {
+            _settings = settings?.Clone() ?? new KeyValuePairFormatterSettings();
         }
 
         /// <inheritdoc />
         public string Format(KeyValuePair<string, object?> keyValuePair)
         {
-            return string.Format(_format, keyValuePair.Key, _valueFormatter.TryFormat(keyValuePair.Value));
+            return string.Format(_settings.Format, keyValuePair.Key, _settings.ValueFormatter.TryFormat(keyValuePair.Value));
         }
 
         /// <inheritdoc />
-        public KeyValuePairFormatter With(IConfigure<KeyValuePairFormatterSettings> configure)
-        {
-            KeyValuePairFormatterSettings keyValueFormat = new() { Format = _format };
-            configure.Configure(keyValueFormat);
-            return new KeyValuePairFormatter(_valueFormatter, keyValueFormat.Format);
-        }
+        public KeyValuePairFormatterSettings GetState() => _settings.Clone();
+
+        /// <inheritdoc />
+        public KeyValuePairFormatter With(KeyValuePairFormatterSettings settings) => new KeyValuePairFormatter(settings);
     }
 
     /// <summary>
     /// Settings for <see cref="KeyValuePairFormatter"/>.
     /// </summary>
-    public class KeyValuePairFormatterSettings
+    public class KeyValuePairFormatterSettings : ICloneable<KeyValuePairFormatterSettings>
     {
+        /// <summary>
+        /// Gets or sets formatter that will be used for value formatting.
+        /// </summary>
+        public IValueFormatter ValueFormatter { get; set; } = DefaultToStringFormatter.Instance;
+
         /// <summary>
         /// Gets or sets the string format in terms of <see cref="string.Format(IFormatProvider,string,object)"/>.
         /// </summary>

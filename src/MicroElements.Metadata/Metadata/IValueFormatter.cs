@@ -60,6 +60,11 @@ namespace MicroElements.Metadata
         }
     }
 
+    /// <summary>
+    /// The same as <see cref="IValueFormatter{T}"/> but that formats only not null values.
+    /// For null values will return null string.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
     public interface INotNullValueFormatter<T> : IValueFormatter
     {
         /// <summary>

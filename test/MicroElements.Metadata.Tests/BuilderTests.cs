@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using FluentAssertions;
 using MicroElements.Metadata.ComponentModel;
-using MicroElements.Metadata.Schema;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -28,7 +27,7 @@ namespace MicroElements.Metadata.Tests
             Address? IHas<Address>.Component => Address;
         }
 
-        public class ImmutablePerson:
+        public class ImmutablePerson :
             IPerson,
             ICompositeBuilder<ImmutablePerson, Name>,
             ICompositeBuilder<ImmutablePerson, Address>
@@ -48,10 +47,10 @@ namespace MicroElements.Metadata.Tests
             }
 
             /// <inheritdoc />
-            public ImmutablePerson With(Name name) => new (name, Address);
+            public ImmutablePerson With(Name name) => new(name, Address);
 
             /// <inheritdoc />
-            public ImmutablePerson With(Address address) => new (Name, address);
+            public ImmutablePerson With(Address address) => new(Name, address);
         }
 
         public class MutablePerson :
@@ -114,6 +113,32 @@ namespace MicroElements.Metadata.Tests
 
             /// <inheritdoc />
             public void Append(Address address) => this.SetMetadata(address);
+        }
+
+        public class PersonData : ICloneable<PersonData>
+        {
+            public Name? Name { get; set; }
+
+            public Address? Address { get; set; }
+        }
+
+        public class ConfigurablePerson :
+            IPerson,
+            IConfigurableBuilder<ConfigurablePerson, PersonData>
+        {
+            private readonly PersonData _data;
+
+            public Name? Name => _data.Name;
+
+            public Address? Address => _data.Address;
+
+            public ConfigurablePerson(PersonData? data = null) => _data = data?.Clone() ?? new PersonData();
+
+            /// <inheritdoc />
+            public PersonData GetState() => _data.Clone();
+
+            /// <inheritdoc />
+            public ConfigurablePerson With(PersonData data) => new ConfigurablePerson(data);
         }
 
         [Fact]
@@ -181,7 +206,7 @@ namespace MicroElements.Metadata.Tests
 
             // Address component is absent it's in external stored metadata
             person1.Address.Should().BeNull(because: "Address component is absent it's in external stored metadata");
-            
+
             // But it can be accessed with GetComponent
             person1.GetComponent<Address>().City.Should().Be("Moscow");
         }
@@ -226,6 +251,17 @@ namespace MicroElements.Metadata.Tests
 
             immutablePerson.Name.FirstName.Should().Be("Alex");
             immutablePerson.Address.City.Should().Be("Moscow");
+        }
+
+        [Fact]
+        public void build_configurable_person()
+        {
+            var person = new ConfigurablePerson()
+                .Configure(data => data.Name = new Name("Alex"))
+                .Configure(data => data.Address = new Address("Moscow"));
+
+            person.Name.FirstName.Should().Be("Alex");
+            person.Address.City.Should().Be("Moscow");
         }
     }
 }

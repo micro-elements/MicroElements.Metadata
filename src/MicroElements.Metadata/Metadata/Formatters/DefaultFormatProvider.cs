@@ -10,7 +10,8 @@ namespace MicroElements.Metadata.Formatters
     /// Provides:
     /// - string formatting
     /// - floating numbers formatting (float, double, decimal)
-    /// - 
+    /// - DateTime, DateTimeOffset formatters
+    /// - NodaTime formatters.
     /// </summary>
     public class DefaultFormatProvider : IValueFormatterProvider
     {
@@ -39,24 +40,6 @@ namespace MicroElements.Metadata.Formatters
             {
                 yield return nodaTimeFormatter;
             }
-        }
-    }
-
-    public class CollectionFormatters : IValueFormatterProvider
-    {
-        private readonly IValueFormatter _valueFormatter;
-
-        public CollectionFormatters(IValueFormatter valueFormatter)
-        {
-            _valueFormatter = valueFormatter;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IValueFormatter> GetFormatters()
-        {
-            yield return new CollectionFormatter(_valueFormatter);
-            yield return new KeyValuePairFormatter(_valueFormatter);
-            yield return new ValueTuplePairFormatter(_valueFormatter);
         }
     }
 }

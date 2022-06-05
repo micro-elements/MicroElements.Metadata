@@ -23,24 +23,19 @@ namespace MicroElements.Metadata.Formatters
         /// Initializes a new instance of the <see cref="CollectionFormatter" /> class.
         /// </summary>
         /// <param name="formatterSetting">Formatting settings.</param>
-        public CollectionFormatter(CollectionFormatterSettings formatterSetting)
+        public CollectionFormatter(CollectionFormatterSettings? formatterSetting = null)
         {
-            _formatterSetting = formatterSetting.AssertArgumentNotNull(nameof(formatterSetting)).Clone();
+            _formatterSetting = formatterSetting?.Clone() ?? new CollectionFormatterSettings();
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionFormatter" /> class.
         /// </summary>
         /// <param name="valueFormatter">Collection values formatter.</param>
-        /// <param name="configure">Optional formatting settings.</param>
-        public CollectionFormatter(IValueFormatter valueFormatter, Action<CollectionFormatterSettings>? configure = null)
+        public CollectionFormatter(IValueFormatter valueFormatter)
         {
             valueFormatter.AssertArgumentNotNull(nameof(valueFormatter));
-
-            var formatterSetting = new CollectionFormatterSettings { ValueFormatter = valueFormatter };
-            configure?.Invoke(formatterSetting);
-
-            _formatterSetting = formatterSetting.Clone();
+            _formatterSetting = new CollectionFormatterSettings { ValueFormatter = valueFormatter };
         }
 
         /// <inheritdoc />
@@ -82,7 +77,7 @@ namespace MicroElements.Metadata.Formatters
     /// <summary>
     /// Format settings to be used in collection formatting.
     /// </summary>
-    public class CollectionFormatterSettings
+    public class CollectionFormatterSettings : ICloneable<CollectionFormatterSettings>
     {
         /// <summary> The value that uses to separate items. DefaultValue = ', '. </summary>
         public string Separator { get; set; } = ", ";
@@ -107,12 +102,6 @@ namespace MicroElements.Metadata.Formatters
 
         /// <summary> Formatter for every single item. </summary>
         public IValueFormatter ValueFormatter { get; set; } = null!;
-
-        /// <summary>
-        /// Creates a copy of the settings.
-        /// </summary>
-        /// <returns>Shallow copy of the settings.</returns>
-        public CollectionFormatterSettings Clone() => (CollectionFormatterSettings)MemberwiseClone();
     }
 
     /// <summary>

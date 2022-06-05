@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using FluentAssertions;
 using MicroElements.Functional;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Formatters;
 using MicroElements.Metadata.Serialization;
 using NodaTime;
@@ -246,7 +247,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
 
         [Fact]
-        public void RecursiveFormatting2()
+        public void RecursiveFormatterBuilder()
         {
             List<KeyValuePair<string, object>> list = new List<KeyValuePair<string, object>>();
 
@@ -275,6 +276,21 @@ namespace MicroElements.Metadata.Tests.Serialization
             formattedValue = fullToStringFormatter.TryFormat(list);
             formattedValue.Should().Be("{Key1=2021-01-23, Key2={a1, a2}, Key3=(Internal, 5)}");
 
+            new KeyValuePairFormatter()
+                .Configure(settings => settings.Format = "{0}={1}")
+                .Format(new KeyValuePair<string, object?>("key", "value"))
+                .Should().Be("key=value");
+        }
+
+        [Fact]
+        public void PropertyContainerFormatter1()
+        {
+            var propertyContainer = new MutablePropertyContainer()
+                .WithValue("key1", "value1")
+                .WithValue("key2", "value2");
+
+            string format1 = propertyContainer.ToString();
+            string format2 = PropertyContainerFormatter.Instance.TryFormat(propertyContainer);
         }
     }
 }

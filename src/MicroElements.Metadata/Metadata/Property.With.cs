@@ -69,7 +69,7 @@ namespace MicroElements.Metadata
         {
             source.AssertArgumentNotNull(nameof(source));
 
-            var sourceData = new Metadata.PropertyData<T>
+            var sourceData = new PropRefData<T>
             {
                 Name = source.Name,
                 Description = source.Description,
@@ -92,31 +92,6 @@ namespace MicroElements.Metadata
             source.CopyMetadataTo(property);
 
             return property;
-        }
-
-        /// <summary>
-        /// Represents a mutable copy of <see cref="Property{T}"/> internal state.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        public class PropertyData<T>
-        {
-            /// <summary>Sets the property name.</summary>
-            public string Name;
-
-            /// <summary>Sets the property description.</summary>
-            public string? Description;
-
-            /// <summary>Sets the property alias.</summary>
-            public string? Alias;
-
-            /// <summary>Sets the property default value.</summary>
-            public IDefaultValue<T>? DefaultValue;
-
-            /// <summary>Sets the property calculator.</summary>
-            public IPropertyCalculator<T>? Calculator;
-
-            /// <summary>Sets the property examples.</summary>
-            public IExamples<T>? Examples;
         }
 
         /// <summary>
@@ -154,7 +129,7 @@ namespace MicroElements.Metadata
                 defaultValue: sourceData.DefaultValue,
                 examples: sourceData.Examples,
                 calculator: sourceData.Calculator,
-                alias: source.Alias);
+                alias: sourceData.Alias);
 
             source.CopyMetadataTo(property);
 
@@ -247,10 +222,35 @@ namespace MicroElements.Metadata
     }
 
     /// <summary>
+    /// Represents a mutable copy of <see cref="Property{T}"/> internal state.
+    /// </summary>
+    /// <typeparam name="T">Property type.</typeparam>
+    public class PropertyData<T>
+    {
+        /// <summary>Sets the property name.</summary>
+        public string Name;
+
+        /// <summary>Sets the property description.</summary>
+        public string? Description;
+
+        /// <summary>Sets the property alias.</summary>
+        public string? Alias;
+
+        /// <summary>Sets the property default value.</summary>
+        public IDefaultValue<T>? DefaultValue;
+
+        /// <summary>Sets the property calculator.</summary>
+        public IPropertyCalculator<T>? Calculator;
+
+        /// <summary>Sets the property examples.</summary>
+        public IExamples<T>? Examples;
+    }
+
+    /// <summary>
     /// Represents a mutable copy of <see cref="Property{T}"/> internal state as a value ref struct.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
-    public ref struct PropertyData<T>
+    public ref struct PropRefData<T>
     {
         /// <summary>Sets the property name.</summary>
         public string Name;
@@ -272,5 +272,5 @@ namespace MicroElements.Metadata
     }
 
     /// <summary> Configure property delegate. </summary>
-    public delegate void ConfigureProperty<T>(ref PropertyData<T> data);
+    public delegate void ConfigureProperty<T>(ref PropRefData<T> data);
 }

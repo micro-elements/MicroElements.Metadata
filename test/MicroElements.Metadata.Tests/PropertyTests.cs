@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Xml;
 using FluentAssertions;
 using MicroElements.Functional;
@@ -134,8 +135,16 @@ namespace MicroElements.Metadata.Tests
             new Property<int>("int_no_default")
                 .GetDefaultValue().Should().Be(0);
 
-            new Property<int>("int_no_default")
+            new Property<int>("int_get_default_with_fallback")
                 .GetDefaultValue(defaultValue: -1).Should().Be(-1);
+
+            object[] components = new Property<int>("int_default_42")
+                .WithDefaultValue(42)
+                .SetRequired()
+                .GetComponentsAndMetadata()
+                .ToArray();
+            components[0].Should().BeOfType<DefaultValue<int>>();
+            components[1].Should().BeOfType<Required>();
         }
 
         class XmlLineInfo : IXmlLineInfo

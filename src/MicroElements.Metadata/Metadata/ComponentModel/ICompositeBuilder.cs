@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Exceptions;
 using MicroElements.Metadata.Schema;

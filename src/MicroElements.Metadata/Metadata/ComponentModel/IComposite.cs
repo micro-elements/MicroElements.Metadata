@@ -8,7 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Collections.TwoLayerCache;
-using MicroElements.Reflection.CodeCompiler;
 using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.ComponentModel
@@ -23,7 +22,7 @@ namespace MicroElements.Metadata.ComponentModel
         /// Default implementation gets components from implemented <see cref="IHas{T}"/> interfaces.
         /// </summary>
         /// <returns>Enumeration of components.</returns>
-        IEnumerable<object> Components()
+        IEnumerable<object> GetComponents()
         {
             return GetType()
                 .GetComponentPropertiesCached()
@@ -64,15 +63,24 @@ namespace MicroElements.Metadata.ComponentModel
                 .ToArray();
 
         /// <summary>
-        /// Creates new composite of type <typeparamref name="TComposite"/> and builds it with components of the source composite.
+        /// Gets the components for the composite.
         /// </summary>
-        /// <typeparam name="TComposite">Target composite type.</typeparam>
-        /// <param name="source">The source composite.</param>
-        /// <returns>Result composite.</returns>
-        public static TComposite BuildAs<TComposite>(this IComposite source)
-            where TComposite : ICompositeBuilder, new()
+        /// <param name="composite">Source composite.</param>
+        /// <returns>Enumeration of components.</returns>
+        public static IEnumerable<object> GetComponents(this IComposite composite)
         {
-            return source.BuildAs<TComposite>(factory: () => new TComposite());
+            return composite.GetComponents();
+        }
+
+        /// <summary>
+        /// Gets the components for the composite merged with metadata components.
+        /// </summary>
+        /// <param name="composite">The source composite.</param>
+        /// <returns>Enumeration of components.</returns>
+        public static IEnumerable<object> GetComponentsAndMetadata(this IComposite composite)
+        {
+            IEnumerable<object> fromMetadata = composite is IMetadataProvider prov ? prov.GetMetadataContainer().Properties.Select(value => value.ValueUntyped).OfType<object>() : Enumerable.Empty<object>();
+            return composite.GetComponents().Concat(fromMetadata);
         }
 
         /// <summary>
@@ -82,12 +90,17 @@ namespace MicroElements.Metadata.ComponentModel
         /// <param name="source">The source composite.</param>
         /// <param name="factory">Factory that creates initial composite.</param>
         /// <returns>Result composite.</returns>
-        public static TComposite BuildAs<TComposite>(this IComposite source, Func<TComposite> factory)
+        public static TComposite BuildAs<TComposite>(this IComposite source, Func<TComposite>? factory = null)
             where TComposite : ICompositeBuilder
         {
+            factory ??= ExpressionExtensions.GetDefaultFactoryCached<TComposite>();
+
+            if (factory is null)
+                throw new InvalidOperationException($"Type {typeof(TComposite).Name} should contain default constructor or constructor where all parameters have default values or provide factory method.");
+
             TComposite compositeBuilder = factory();
 
-            foreach (object component in source.Components())
+            foreach (object component in source.GetComponents())
             {
                 compositeBuilder = (TComposite)BuildWithUntyped(compositeBuilder, component);
             }
@@ -95,6 +108,12 @@ namespace MicroElements.Metadata.ComponentModel
             return compositeBuilder;
         }
 
+        /// <summary>
+        /// Calls `With` method on `composite` if the composite type implements needed <see cref="ICompositeBuilder"/>.
+        /// </summary>
+        /// <param name="composite">Composite.</param>
+        /// <param name="component">Component to add.</param>
+        /// <returns>Result composite.</returns>
         public static object BuildWithUntyped(this object composite, object component)
         {
             Type compositeType = composite.AssertArgumentNotNull(nameof(composite)).GetType();
@@ -140,5 +159,45 @@ namespace MicroElements.Metadata.ComponentModel
         {
             return ((TComposite)composite).With((TComponent)component);
         }
+    }
+
+    internal static class ExpressionExtensions
+    {
+        internal static Func<T>? GetDefaultFactory<T>() =>
+            GetDefaultFactory(typeof(T)).Typed<T>();
+
+        internal static Func<T>? Typed<T>(this Func<object>? func) =>
+            func != null ? () => (T)func() : null;
+
+        internal static Func<object>? GetDefaultFactory(this Type type)
+        {
+            Func<object>? factory = null;
+
+            ConstructorInfo[] constructorInfos = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+            ConstructorInfo? defaultCtor = constructorInfos.FirstOrDefault(info => info.GetParameters().Length == 0);
+            if (defaultCtor != null)
+            {
+                factory = () => Activator.CreateInstance(type);
+            }
+            else
+            {
+                ConstructorInfo? ctorWithAllDefaults = constructorInfos.FirstOrDefault(info => info.GetParameters() is { Length: > 0 } args && args.All(parameterInfo => parameterInfo.HasDefaultValue));
+                if (ctorWithAllDefaults != null)
+                {
+                    object[] ctorArgs = ctorWithAllDefaults.GetParameters().Select(pi => pi.DefaultValue).ToArray();
+                    factory = () => Activator.CreateInstance(type, ctorArgs);
+                }
+            }
+
+            return factory;
+        }
+
+        internal static Func<T>? GetDefaultFactoryCached<T>() =>
+            GetDefaultFactoryCached(typeof(T)).Typed<T>();
+
+        internal static Func<object>? GetDefaultFactoryCached(this Type type) =>
+            TwoLayerCache
+                .Instance<Type, Func<object>?>("GetDefaultFactoryCache")
+                .GetOrAdd(type, type => GetDefaultFactory(type));
     }
 }

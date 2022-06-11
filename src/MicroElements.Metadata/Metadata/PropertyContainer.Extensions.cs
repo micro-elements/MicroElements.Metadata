@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.CodeContracts;
@@ -166,24 +167,28 @@ namespace MicroElements.Metadata
             this IEnumerable<IPropertyContainer?>? containers,
             PropertyAddMode mergeMode = PropertyAddMode.Set)
         {
+            if (containers is null)
+                return PropertyContainer.Empty;
+            if (containers is ICollection<IPropertyContainer?> { Count: 1 } collection)
+                return collection.First() ?? PropertyContainer.Empty;
+            if (containers is IReadOnlyCollection<IPropertyContainer?> { Count: 1 } readOnly)
+                return readOnly.First() ?? PropertyContainer.Empty;
+
             MutablePropertyContainer? merger = null;
 
-            if (containers != null)
+            foreach (var container in containers)
             {
-                foreach (var container in containers)
+                if (container != null)
                 {
-                    if (container != null)
+                    if (merger == null)
                     {
-                        if (merger == null)
-                        {
-                            merger = new MutablePropertyContainer(
-                                sourceValues: container,
-                                searchOptions: container.SearchOptions);
-                            continue;
-                        }
-
-                        merger.WithValues(container, mergeMode);
+                        merger = new MutablePropertyContainer(
+                            sourceValues: container,
+                            searchOptions: container.SearchOptions);
+                        continue;
                     }
+
+                    merger.WithValues(container, mergeMode);
                 }
             }
 

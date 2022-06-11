@@ -1,3 +1,8 @@
+# 7.14.0 (UNRELEASED)
+- Change: `IComposite.Components` renamed to `GetComponents`. Added extension `GetComponents`, `GetComponentsAndMetadata`
+- Change: `BuildAs` for `IComposite` - removed new constraint. It can use default constructor or constructor with all optional parameters
+- Added: `IStaticComponentProvider`, `IStaticMetadataProvider` that bound components and metadata to `Type` and can be accessed without type instantiation
+
 # 7.14.0
 - Added ICloneable<T> with default implementation
 - Added: IComposite, ICompositeBuilder, IConfigurableBuilder

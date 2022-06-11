@@ -23,6 +23,7 @@ namespace MicroElements.Metadata.ComponentModel
         /// <returns>A new object that is a copy of this instance.</returns>
         new T Clone()
         {
+            // Fast type check (this should be of type T).
             T @this = (T)this;
             Func<T, T> cloneFunc = Cloneable.GetMemberwiseClone<T>();
             T clone = cloneFunc(@this);

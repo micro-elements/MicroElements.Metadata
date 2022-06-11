@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using FluentAssertions;
 using MicroElements.Metadata.ComponentModel;
+using MicroElements.Metadata.Schema;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests
@@ -11,13 +13,16 @@ namespace MicroElements.Metadata.Tests
 
         public record Address(string City);
 
+        /// <summary> A person base interface. </summary>
         public interface IPerson :
             IComposite,
             IHas<Name>,
             IHas<Address>
         {
+            /// <summary> Gets the person name. </summary>
             Name? Name { get; }
 
+            /// <summary> Gets the person address. </summary>
             Address? Address { get; }
 
             /// <inheritdoc />
@@ -35,17 +40,13 @@ namespace MicroElements.Metadata.Tests
             public Name? Name { get; }
 
             public Address? Address { get; }
-
-            public ImmutablePerson()
-            {
-            }
-
+            
             public ImmutablePerson(Name? name = null, Address? address = null)
             {
                 Name = name;
                 Address = address;
             }
-
+            
             /// <inheritdoc />
             public ImmutablePerson With(Name name) => new(name, Address);
 
@@ -235,7 +236,7 @@ namespace MicroElements.Metadata.Tests
                 .WithComponent(new Name("Alex"))
                 .WithComponent(new Address("Moscow"));
 
-            object[] components = ((IComposite)person1).Components().ToArray();
+            object[] components = person1.GetComponents().ToArray();
             components[0].Should().Be(new Name("Alex"));
             components[1].Should().Be(new Address("Moscow"));
         }
@@ -262,6 +263,80 @@ namespace MicroElements.Metadata.Tests
 
             person.Name.FirstName.Should().Be("Alex");
             person.Address.City.Should().Be("Moscow");
+        }
+
+        [Fact]
+        public void get_components_and_metadata()
+        {
+            object[] components = new Property<int>("int_default_42")
+                .WithDefaultValue(42)
+                .SetRequired()
+                .GetComponentsAndMetadata()
+                .ToArray();
+            components[0].Should().BeOfType<DefaultValue<int>>();
+            components[1].Should().BeOfType<Required>();
+        }
+
+        public class Sample : IStaticComponentProvider<Sample.Metadata>
+        {
+            public class Metadata : IComposite
+            {
+                /// <inheritdoc />
+                public IEnumerable<object> GetComponents()
+                {
+                    yield return Required.Instance;
+                }
+            }
+        }
+
+        [Fact]
+        public void get_static_components()
+        {
+            object[] objects = new Sample().GetStaticComponents().ToArray();
+        }
+    }
+}
+
+namespace MicroElements.Builder1
+{
+    public record Name(string FirstName);
+
+    public record Address(string City);
+
+    /// <summary> A person base interface. </summary>
+    public interface IPerson
+    {
+        /// <summary> Gets the person name. </summary>
+        Name? Name { get; }
+
+        /// <summary> Gets the person address. </summary>
+        Address? Address { get; }
+    }
+    
+    public class Person : IPerson
+    {
+        public Name? Name { get; set; }
+
+        public Address? Address { get; set; }
+    }
+    
+    public record PersonRecord : IPerson
+    {
+        public Name? Name { get; init; }
+
+        public Address? Address { get; init; }
+    }
+    
+    public class Test
+    {
+        [Fact]
+        public void create_mutable_person()
+        {
+            Person person = new Person()
+            {
+                Name = new Name("Alex"),
+                Address = new Address("Moscow")
+            };
         }
     }
 }

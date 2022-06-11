@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Exceptions;
+using MicroElements.Reflection.FriendlyName;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 
@@ -58,10 +59,7 @@ namespace MicroElements.Metadata.Schema
         /// Initializes a new instance of the <see cref="DefaultValue{T}"/> class.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
-        public DefaultValue(T? defaultValue = default)
-        {
-            Value = defaultValue;
-        }
+        public DefaultValue(T? defaultValue = default) => Value = defaultValue;
 
         /// <inheritdoc />
         public override string ToString() => $"DefaultValue: {Value.FormatValue("null")}, Type: {typeof(T).GetFriendlyName()}";

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Functional;
+using MicroElements.Reflection.FriendlyName;
 using MicroElements.Validation;
 using Message = MicroElements.Functional.Message;
 using MessageSeverity = MicroElements.Functional.MessageSeverity;

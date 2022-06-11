@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.CodeContracts;
+using MicroElements.Reflection.FriendlyName;
 using MicroElements.Validation;
 using Message = MicroElements.Functional.Message;
 

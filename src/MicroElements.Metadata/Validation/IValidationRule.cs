@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 using MicroElements.Metadata.Serialization;
+using MicroElements.Reflection.FriendlyName;
 
 namespace MicroElements.Validation
 {
@@ -67,35 +68,7 @@ namespace MicroElements.Validation
     {
         public static IPropertyValidationRule<T> As<T>(this IValidationRule validationRule) => (IPropertyValidationRule<T>)validationRule;
 
-        public static string GetValidatorName(this IPropertyValidationRule validationRule) => $"{validationRule.GetType().GetTypeName()}({validationRule.PropertyUntyped})";
-
-        public static string GetTypeName(this Type type)
-        {
-            return GetFriendlyName(type);
-        }
-
-        public static string GetFriendlyName(this Type type)
-        {
-            string friendlyName = type.Name;
-            if (type.IsGenericType)
-            {
-                int iBacktick = friendlyName.IndexOf('`');
-                if (iBacktick > 0)
-                {
-                    friendlyName = friendlyName.Remove(iBacktick);
-                }
-                friendlyName += "<";
-                Type[] typeParameters = type.GetGenericArguments();
-                for (int i = 0; i < typeParameters.Length; ++i)
-                {
-                    string typeParamName = GetFriendlyName(typeParameters[i]);
-                    friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
-                }
-                friendlyName += ">";
-            }
-
-            return friendlyName;
-        }
+        public static string GetValidatorName(this IPropertyValidationRule validationRule) => $"{validationRule.GetType().GetFriendlyName()}({validationRule.PropertyUntyped})";
     }
 
     /// <summary>

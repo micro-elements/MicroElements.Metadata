@@ -347,9 +347,10 @@ namespace MicroElements.Metadata
 
         /// <summary>
         /// Returns provider metadata as <see cref="IMutablePropertyContainer"/>.
+        /// If current metadata is not mutable then creates a mutable copy and sets to the source metadataProvider.
         /// </summary>
         /// <param name="metadataProvider">Source metadata provider.</param>
-        /// <returns>Metadata.</returns>
+        /// <returns>Mutable metadata.</returns>
         public static IMutablePropertyContainer AsMutable(this IMetadataProvider metadataProvider)
         {
             if (metadataProvider == null)
@@ -357,11 +358,14 @@ namespace MicroElements.Metadata
 
             var metadata = metadataProvider.GetMetadataContainer(autoCreate: false);
 
+            // Already mutable
             if (metadata is IMutablePropertyContainer mutable)
                 return mutable;
 
-            var mutableFromReadOnly = new MutablePropertyContainer(metadata.Properties);
+            // Creates mutable copy and sets to provider
+            var mutableFromReadOnly = metadata.ToMutable();
             metadataProvider.SetMetadataContainer(mutableFromReadOnly);
+
             return mutableFromReadOnly;
         }
 

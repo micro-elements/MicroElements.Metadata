@@ -2,13 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Schema
 {
     /// <summary>
     /// Represents base schema interface.
     /// </summary>
-    public interface ISchema : IMetadataProvider
+    public interface ISchema :
+        IMetadataProvider,
+        IComposite
     {
         /// <summary>
         /// Gets name.

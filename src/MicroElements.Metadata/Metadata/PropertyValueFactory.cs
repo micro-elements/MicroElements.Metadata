@@ -121,49 +121,44 @@ namespace MicroElements.Metadata
     /// </summary>
     public class CachedPropertyValueFactory : IPropertyValueFactory
     {
-        private readonly struct PropertyValueInfo
+        private readonly struct PropertyValueInfo : IEquatable<PropertyValueInfo>
         {
             public readonly IProperty Property;
             public readonly object? Value;
             public readonly ValueSource? ValueSource;
             public readonly IPropertyValueFactory PropertyValueFactory;
+            public readonly IEqualityComparer<IProperty> PropertyComparer;
 
-            public PropertyValueInfo(IProperty property, object? value, ValueSource? valueSource, IPropertyValueFactory propertyValueFactory)
+            public PropertyValueInfo(
+                IProperty property,
+                object? value,
+                ValueSource? valueSource,
+                IPropertyValueFactory propertyValueFactory,
+                IEqualityComparer<IProperty> propertyComparer)
             {
                 Property = property;
                 Value = value;
                 ValueSource = valueSource;
                 PropertyValueFactory = propertyValueFactory;
+                PropertyComparer = propertyComparer;
             }
-        }
 
-        private sealed class PropertyValueKeyComparer : IEqualityComparer<PropertyValueInfo>
-        {
-            private readonly IEqualityComparer<IProperty> _propertyComparer;
-
-            public PropertyValueKeyComparer(IEqualityComparer<IProperty> propertyComparer)
+            /// <inheritdoc />
+            public bool Equals(PropertyValueInfo other)
             {
-                propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
-
-                _propertyComparer = propertyComparer;
+                return PropertyComparer.Equals(Property, other.Property) && Equals(Value, other.Value) && Equals(ValueSource, other.ValueSource);
             }
 
-            /// <inheritdoc/>
-            public bool Equals(PropertyValueInfo x, PropertyValueInfo y)
-            {
-                return _propertyComparer.Equals(x.Property, y.Property) && Equals(x.Value, y.Value) && Equals(x.ValueSource, y.ValueSource);
-            }
+            /// <inheritdoc />
+            public override bool Equals(object? obj) => obj is PropertyValueInfo other && Equals(other);
 
-            /// <inheritdoc/>
-            public int GetHashCode(PropertyValueInfo obj)
-            {
-                return HashCode.Combine(obj.Property, obj.Value, obj.ValueSource);
-            }
+            /// <inheritdoc />
+            public override int GetHashCode() => HashCode.Combine(Property, Value, ValueSource, PropertyValueFactory);
         }
 
         private readonly TwoLayerCache<PropertyValueInfo, IPropertyValue> _propertyValuesCache;
-
         private readonly IPropertyValueFactory _propertyValueFactory;
+        private readonly IEqualityComparer<IProperty> _propertyComparer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedPropertyValueFactory"/> class.
@@ -180,7 +175,8 @@ namespace MicroElements.Metadata
             propertyComparer.AssertArgumentNotNull(nameof(propertyComparer));
 
             _propertyValueFactory = propertyValueFactory;
-            _propertyValuesCache = new TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.GetValueOrDefault(4000), new PropertyValueKeyComparer(propertyComparer));
+            _propertyComparer = propertyComparer;
+            _propertyValuesCache = new TwoLayerCache<PropertyValueInfo, IPropertyValue>(maxItemCount.GetValueOrDefault(4000));
         }
 
         /// <inheritdoc />
@@ -188,7 +184,8 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return (IPropertyValue<T>)_propertyValuesCache.GetOrAdd(new PropertyValueInfo(property, value, valueSource, _propertyValueFactory), propertyValueInfo => CreatePropertyValue<T>(propertyValueInfo));
+            var cacheKey = new PropertyValueInfo(property, value, valueSource, _propertyValueFactory, _propertyComparer);
+            return (IPropertyValue<T>)_propertyValuesCache.GetOrAdd(cacheKey, propertyValueInfo => CreatePropertyValue<T>(propertyValueInfo));
         }
 
         /// <inheritdoc/>
@@ -196,7 +193,8 @@ namespace MicroElements.Metadata
         {
             property.AssertArgumentNotNull(nameof(property));
 
-            return _propertyValuesCache.GetOrAdd(new PropertyValueInfo(property, value, valueSource, _propertyValueFactory), propertyValueInfo => CreatePropertyValueUntyped(propertyValueInfo));
+            var cacheKey = new PropertyValueInfo(property, value, valueSource, _propertyValueFactory, _propertyComparer);
+            return _propertyValuesCache.GetOrAdd(cacheKey, propertyValueInfo => CreatePropertyValueUntyped(propertyValueInfo));
         }
 
         private static IPropertyValue<T> CreatePropertyValue<T>(in PropertyValueInfo info)

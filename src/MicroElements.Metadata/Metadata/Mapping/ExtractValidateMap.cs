@@ -5,7 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using MicroElements.Functional;
+using MicroElements.Collections.Extensions.NotNull;
+using MicroElements.Diagnostics;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 
@@ -97,7 +98,7 @@ namespace MicroElements.Metadata.Mapping
             return this;
         }
 
-        public ExtractValidateMapContext(IPropertyContainer propertyContainer, IExtractValidateMapSettings settings)
+        public ExtractValidateMapContext(IPropertyContainer? propertyContainer, IExtractValidateMapSettings settings)
         {
             //TODO: SearchOptions? from propertyContainer?
             SearchOptions searchOptions = SearchOptions.ExistingOnlyWithParent.CalculateValue(true);
@@ -244,7 +245,6 @@ namespace MicroElements.Metadata.Mapping
             if (result1.Messages is { Count: 0 } && result1.PropertyValue.HasValue())
             {
                 // Output value.
-                // TODO: RESULT
                 var value2 = MapFunc(result1.PropertyValue);
 
                 propertyValue2 = new PropertyValue<T2>(Property, value2, ValueSource.Calculated);
@@ -263,7 +263,7 @@ namespace MicroElements.Metadata.Mapping
 
     public static class ExtractorExtensions
     {
-        public static IExtractValidateMapContext Extractor(this IPropertyContainer propertyContainer, Action<ExtractValidateMapSettings>? configure = null)
+        public static IExtractValidateMapContext Extractor(this IPropertyContainer? propertyContainer, Action<ExtractValidateMapSettings>? configure = null)
         {
             var settings = new ExtractValidateMapSettings();
             configure?.Invoke(settings);

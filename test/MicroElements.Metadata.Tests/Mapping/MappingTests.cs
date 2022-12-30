@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.Mapping;
 using MicroElements.Metadata.Schema;
 using MicroElements.Validation.Rules;

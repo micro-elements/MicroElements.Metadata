@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -102,9 +102,9 @@ namespace MicroElements.Metadata
                 return (IPropertyValue<T>)propertyValue;
 
             // Property can be calculated.
-            if (search.CalculateValue && property.Calculator != null)
+            if (search.CalculateValue && property.GetCalculator() is { } calculator)
             {
-                var calculationResult = property.Calculator.Calculate(propertyContainer, search);
+                var calculationResult = calculator.Calculate(propertyContainer, search);
                 var calculatedValue = _propertyValueFactory.Create(property, calculationResult.Value, calculationResult.ValueSource);
 
                 if (calculatedValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)

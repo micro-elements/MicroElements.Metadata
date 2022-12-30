@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using MicroElements.CodeContracts;
 
@@ -23,6 +24,7 @@ namespace MicroElements.Metadata
         /// <param name="valueSource">Value source.</param>
         /// <param name="propertyAddMode">Property add mode. Default: PropertyAddMode.Set.</param>
         /// <returns>New container with desired property value.</returns>
+        [Pure]
         public static PropertyContainer<TSchema> WithValue<TSchema, TValue>(
             this PropertyContainer<TSchema> propertyContainer,
             IProperty<TValue> property,
@@ -43,6 +45,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyValue">Property to set.</param>
         /// <param name="propertyAddMode">Property add mode. Default: PropertyAddMode.Set.</param>
         /// <returns>New container with desired property value.</returns>
+        [Pure]
         public static PropertyContainer<TSchema> WithValue<TSchema>(
             this PropertyContainer<TSchema> propertyContainer,
             IPropertyValue propertyValue,
@@ -67,6 +70,7 @@ namespace MicroElements.Metadata
         /// <param name="valueSource">Value source.</param>
         /// <param name="propertyAddMode">Property add mode. Default: PropertyAddMode.Set.</param>
         /// <returns>New container with desired property value.</returns>
+        [Pure]
         public static IPropertyContainer WithValue<TValue>(
             this IPropertyContainer propertyContainer,
             IProperty<TValue> property,
@@ -85,6 +89,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyValue">Property to set.</param>
         /// <param name="propertyAddMode">Property add mode. Default: PropertyAddMode.Set.</param>
         /// <returns>New container with desired property value.</returns>
+        [Pure]
         public static IPropertyContainer WithValue(
             this IPropertyContainer propertyContainer,
             IPropertyValue propertyValue,
@@ -106,6 +111,7 @@ namespace MicroElements.Metadata
         /// <param name="searchOptions">Search options for replace scenarios.</param>
         /// <param name="propertyAddMode">Property add mode. Default: PropertyAddMode.Set.</param>
         /// <returns>New property value enumeration with desired property value.</returns>
+        [Pure]
         public static IEnumerable<IPropertyValue> WithValue(
             this IEnumerable<IPropertyValue> propertyValues,
             IPropertyValue propertyValue,
@@ -136,6 +142,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyValues">Source property values.</param>
         /// <param name="propertyValue">Property to set.</param>
         /// <returns>New property value enumeration with desired property value added to end.</returns>
+        [Pure]
         public static IEnumerable<IPropertyValue> AddValue(
             this IEnumerable<IPropertyValue> propertyValues,
             IPropertyValue propertyValue)
@@ -152,6 +159,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyValue">Property to set.</param>
         /// <param name="searchOptions">Search options that uses to compare properties.</param>
         /// <returns>New property value enumeration with desired property value that replaces existing.</returns>
+        [Pure]
         public static IEnumerable<IPropertyValue> SetValue(
             this IEnumerable<IPropertyValue> propertyValues,
             IPropertyValue propertyValue,
@@ -184,6 +192,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyValue">Property to set.</param>
         /// <param name="searchOptions">Search options that uses to compare properties.</param>
         /// <returns>New property value enumeration.</returns>
+        [Pure]
         public static IEnumerable<IPropertyValue> SetNotExisting(
             this IEnumerable<IPropertyValue> propertyValues,
             IPropertyValue propertyValue,

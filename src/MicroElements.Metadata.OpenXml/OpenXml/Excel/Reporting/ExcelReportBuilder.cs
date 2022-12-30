@@ -7,7 +7,7 @@ using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using NodaTime;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;

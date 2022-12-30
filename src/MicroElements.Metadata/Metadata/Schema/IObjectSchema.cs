@@ -3,30 +3,45 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MicroElements.Metadata.Schema
 {
     /// <summary>
     /// Represents complex schema for object.
     /// </summary>
-    public interface IObjectSchema : ISchema, IPropertySet
+    public interface IObjectSchema : IDataSchema, IPropertySet, IProperties
     {
-        /// <summary>
-        /// Gets object properties.
-        /// </summary>
-        IReadOnlyCollection<IProperty> Properties { get; }
+        /// <inheritdoc />
+        IEnumerable<IProperty> IPropertySet.GetProperties() => Properties;
+    }
 
-        /// <summary>
-        /// Gets optional schema combination.
-        /// </summary>
-        ISchemaCombinator? Combinator { get; }
+    public class ObjectSchema : IObjectSchema
+    {
+        /// <inheritdoc />
+        public string Name => $"ObjectSchema_{this.GetSchemaDigestHashInBase58()}";
 
-        /// <summary>
-        /// Gets property by name.
-        /// </summary>
-        /// <param name="name">Property name.</param>
-        /// <returns>Property or null.</returns>
-        IProperty? GetProperty(string name);
+        /// <inheritdoc />
+        public Type Type => typeof(object);
+
+        /// <inheritdoc />
+        public IReadOnlyCollection<IProperty> Properties { get; }
+    }
+
+    public class ObjectSchema<T> : IObjectSchema
+    {
+        /// <inheritdoc />
+        public string Name => $"ObjectSchema_{this.GetSchemaDigestHashInBase58()}";
+
+        /// <inheritdoc />
+        public Type Type => typeof(T);
+
+        /// <inheritdoc />
+        public IReadOnlyCollection<IProperty> Properties { get; }
+
+        public ObjectSchema()
+        {
+        }
     }
 
     /// <summary>
@@ -40,11 +55,42 @@ namespace MicroElements.Metadata.Schema
         IReadOnlyCollection<IProperty> Properties { get; }
     }
 
+    public interface IPropertySearchByName
+    {
+        IProperty? GetProperty(string name);
+    }
+
+    public class PropertiesComponent : IProperties
+    {
+        /// <inheritdoc />
+        public IReadOnlyCollection<IProperty> Properties { get; }
+
+        public PropertiesComponent(IReadOnlyCollection<IProperty> properties)
+        {
+            Properties = properties;
+        }
+    }
+
     /// <summary>
     /// Schema extensions.
     /// </summary>
     public static partial class SchemaExtensions
     {
+        /// <summary>
+        /// Gets property by name.
+        /// </summary>
+        /// <param name="name">Property name.</param>
+        /// <returns>Property or null.</returns>
+        public static IProperty? GetProperty(this IObjectSchema schema, string name)
+        {
+            if (schema is IPropertySearchByName searchByName)
+            {
+                return searchByName.GetProperty(name);
+            }
+
+            return schema.Properties.FirstOrDefault(property => property.IsMatchesByNameOrAlias(name, ignoreCase: true));
+        }
+
         /// <summary>
         /// Gets properties for <see cref="ISchema"/>.
         /// </summary>

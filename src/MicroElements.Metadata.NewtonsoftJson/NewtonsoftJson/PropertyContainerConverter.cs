@@ -258,7 +258,7 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     writer.WritePropertyName(jsonPropertyName);
 
                     if (Options.WriteArraysInOneRow && propertyType.IsArray)
-                        writer.Formatting = Formatting.None;
+                        writer.Formatting = Newtonsoft.Json.Formatting.None;
 
                     // PropertyValue
                     serializer.Serialize(writer, propertyValue.ValueUntyped, propertyType);

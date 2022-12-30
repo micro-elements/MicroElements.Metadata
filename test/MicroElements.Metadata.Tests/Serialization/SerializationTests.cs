@@ -10,11 +10,11 @@ using System.Text.Json;
 using AutoFixture;
 using AutoFixture.Kernel;
 using FluentAssertions;
-using MicroElements.Functional;
-using MicroElements.Metadata;
+using MicroElements.Reflection;
 using MicroElements.Metadata.Diff;
 using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Mapping;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.NewtonsoftJson;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Serialization;
@@ -66,7 +66,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         {
             var initialContainer = CreateTestContainer();
 
-            var propertyContainerContract = initialContainer.ToContract(new DefaultMapperSettings());
+            var propertyContainerContract = initialContainer.ToContract(new DefaultMetadataSerializer());
             propertyContainerContract.Should().NotBeNull();
 
             var contractJson = propertyContainerContract.ToJsonWithSystemTextJson();
@@ -259,7 +259,7 @@ namespace MicroElements.Metadata.Tests.Serialization
             {
                 JsonContract jsonContract = _defaultContractResolver.ResolveContract(type);
 
-                if (type.IsAssignableTo<IMetadataSchemaProvider>() && jsonContract is JsonObjectContract contract)
+                if (type.IsAssignableTo(typeof(IMetadataSchemaProvider)) && jsonContract is JsonObjectContract contract)
                 {
                     JsonObjectContract schemaProviderContract = (JsonObjectContract)_defaultContractResolver.ResolveContract(typeof(IMetadataSchemaProvider));
                     JsonProperty jsonProperty = schemaProviderContract.Properties[0];
@@ -375,6 +375,17 @@ namespace MicroElements.Metadata.Tests.Serialization
 
             json2.Should().Be(json1);
         }
+
+        [Fact]
+        public void TestStaticSchema()
+        {
+            TestMeta testMeta = new TestMeta();
+            IPropertySet propertySet = testMeta;
+            propertySet.GetProperties().Should().HaveCount(8);
+
+            IObjectSchemaProvider schemaProvider = testMeta;
+            schemaProvider.GetObjectSchema().Properties.Should().HaveCount(8);
+        }
     }
 
     internal static class SerializationExtensions
@@ -401,7 +412,7 @@ namespace MicroElements.Metadata.Tests.Serialization
             JsonSerializerSettings serializerSettings = new JsonSerializerSettings();
             configureJsonSerializerSettings?.Invoke(serializerSettings);
             var jsonSerializerSettings = serializerSettings.ConfigureJsonForPropertyContainers(configureSerialization);
-            return JsonConvert.SerializeObject(entity, Formatting.Indented, jsonSerializerSettings);
+            return JsonConvert.SerializeObject(entity, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings);
         }
 
         public static T DeserializeWithSystemTextJson<T>(this string json, Action<MetadataJsonSerializationOptions>? configureSerialization = null)
@@ -434,7 +445,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         }
     }
 
-    public class TestMeta : IStaticPropertySet, IStaticSchema
+    public class TestMeta : IStaticSchema
     {
         public static readonly IProperty<string> StringProperty = new Property<string>("StringProperty");
         public static readonly IProperty<int> IntProperty = new Property<int>("IntProperty");

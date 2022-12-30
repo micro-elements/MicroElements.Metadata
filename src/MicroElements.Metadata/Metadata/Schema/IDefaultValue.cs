@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Exceptions;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Reflection.FriendlyName;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;

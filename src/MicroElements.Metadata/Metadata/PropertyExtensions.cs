@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -21,7 +21,7 @@ namespace MicroElements.Metadata
         public static IEnumerable<string> GetNameAndAliases(this IProperty property)
         {
             yield return property.Name;
-            if (property.Alias is { } alias)
+            if (property.GetAlias() is { } alias)
                 yield return alias;
         }
 

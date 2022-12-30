@@ -4,8 +4,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
+using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Reflection.CodeCompiler;
-using Message = MicroElements.Functional.Message;
 
 namespace MicroElements.Metadata
 {
@@ -105,14 +107,14 @@ namespace MicroElements.Metadata
             if (context.IsValueAbsent())
             {
                 // Return failed result.
-                return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent.", MicroElements.Functional.MessageSeverity.Error));
+                return ParseResult.Failed<IPropertyValue>(new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed because source '{propertyParser.SourceName}' is absent.", MessageSeverity.Error));
             }
 
             ParseResult<IPropertyValue> parseResult = ParseUntyped(propertyParser, context.ValueToParse);
             parseResult = parseResult.WrapError(message =>
             {
                 string errorCause = message != null ? $" ParseError: '{message.FormattedMessage}'" : string.Empty;
-                return new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed from source '{context.ValueToParse.FormatValue()}'{errorCause}", MicroElements.Functional.MessageSeverity.Error);
+                return new Message($"Property '{propertyParser.TargetPropertyUntyped.Name}' not parsed from source '{context.ValueToParse.FormatValue()}'{errorCause}", MessageSeverity.Error);
             });
 
             return parseResult;

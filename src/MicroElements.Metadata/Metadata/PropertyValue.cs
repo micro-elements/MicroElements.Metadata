@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata
@@ -50,7 +51,7 @@ namespace MicroElements.Metadata
         public static implicit operator T(PropertyValue<T> propertyValue) => propertyValue.Value;
 
         /// <inheritdoc />
-        public override string ToString() => $"{Property.Name}: {Value.FormatValue()}";
+        public override string ToString() => $"{Property.Name}: {Value.FormatValue("null")}";
     }
 
     /// <summary>

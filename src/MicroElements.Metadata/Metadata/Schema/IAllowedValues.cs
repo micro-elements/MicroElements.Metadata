@@ -10,8 +10,8 @@ using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Collections.Extensions.NotNull;
 using MicroElements.Metadata.ComponentModel;
+using MicroElements.Metadata.Formatting;
 using MicroElements.Reflection.TypeExtensions;
-using MicroElements.Text.StringFormatter;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

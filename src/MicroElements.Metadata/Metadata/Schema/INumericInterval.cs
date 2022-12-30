@@ -3,7 +3,8 @@
 
 using System;
 using System.Globalization;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

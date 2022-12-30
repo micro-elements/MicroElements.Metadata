@@ -17,7 +17,7 @@ namespace MicroElements.Metadata.Parsing
         public Type Type => typeof(T);
 
         /// <inheritdoc />
-        public abstract ParseResult<T> Parse(string? source);
+        public abstract IParseResult<T> Parse(string? source);
 
         /// <inheritdoc />
         public IParseResult ParseUntyped(string? source) => Parse(source);

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MicroElements.Collections.TwoLayerCache;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -34,6 +35,14 @@ namespace MicroElements.Metadata.Schema
             return TwoLayerCache
                 .Instance<string, ISchemaDescription>(nameof(ISchemaDescription))
                 .GetOrAdd(description, s => new SchemaDescription(s));
+        }
+    }
+
+    public static class DescriptionExtensions
+    {
+        public static string? GetDescription(this IMetadataProvider provider)
+        {
+            return provider.GetSelfOrComponent<ISchemaDescription>()?.Description;
         }
     }
 }

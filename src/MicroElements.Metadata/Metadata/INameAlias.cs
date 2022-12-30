@@ -62,7 +62,7 @@ namespace MicroElements.Metadata
         /// <returns>The same metadata provider.</returns>
         public static IMetadataProvider SetAlias(this IMetadataProvider value, INameAlias nameAlias)
         {
-            return value.SetMetadata(Assertions.AssertArgumentNotNull(nameAlias, nameof(nameAlias)));
+            return value.SetMetadata(nameAlias.AssertArgumentNotNull(nameof(nameAlias)));
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="value">Source value.</param>
         /// <returns>Optional alias for object.</returns>
-        public static string? GetAlias(this object value)
+        public static string? GetAlias(this IMetadataProvider value)
         {
             return value.GetSelfOrComponent<INameAlias>()?.Alias;
         }

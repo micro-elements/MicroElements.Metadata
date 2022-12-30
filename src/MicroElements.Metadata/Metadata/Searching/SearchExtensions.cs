@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.CodeContracts;
 using MicroElements.Reflection.CodeCompiler;
-using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata
 {
@@ -132,22 +131,23 @@ namespace MicroElements.Metadata
         /// <param name="property">Property to search.</param>
         /// <param name="search">Search options.</param>
         /// <returns>Optional property value.</returns>
-        public static MicroElements.Functional.Option<T> GetValueAsOption<T>(
-            this IPropertyContainer propertyContainer,
-            IProperty<T> property,
-            SearchOptions? search = null)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-            property.AssertArgumentNotNull(nameof(property));
-
-            IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
-            if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
-            {
-                return propertyValue.Value;
-            }
-
-            return MicroElements.Functional.Option<T>.None;
-        }
+        /// TODO: Migrate
+        // public static MicroElements.Functional.Option<T> GetValueAsOption<T>(
+        //     this IPropertyContainer propertyContainer,
+        //     IProperty<T> property,
+        //     SearchOptions? search = null)
+        // {
+        //     propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
+        //     property.AssertArgumentNotNull(nameof(property));
+        //
+        //     IPropertyValue<T>? propertyValue = propertyContainer.GetPropertyValue(property, search);
+        //     if (propertyValue.HasValue() && !propertyValue.Value.IsNull())
+        //     {
+        //         return propertyValue.Value;
+        //     }
+        //
+        //     return MicroElements.Functional.Option<T>.None;
+        // }
 
         /// <summary>
         /// Gets property and value by search conditions.

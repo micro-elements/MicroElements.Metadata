@@ -16,6 +16,7 @@ namespace MicroElements.Metadata.Schema
     public class SimpleTypeSchema :
         ISchema,
         IManualMetadataProvider,
+        ISchemaDescription,
         ISchemaBuilder<SimpleTypeSchema, ISchemaDescription>
     {
         /// <inheritdoc />

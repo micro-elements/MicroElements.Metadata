@@ -26,7 +26,7 @@ namespace MicroElements.Metadata.Parsing
         }
 
         /// <inheritdoc />
-        public override ParseResult<object> Parse(string? source)
+        public override IParseResult<object> Parse(string? source)
         {
             if (source == null && _allowNull)
                 return ParseResult.Success<object>(null);
@@ -34,7 +34,7 @@ namespace MicroElements.Metadata.Parsing
             if (Enum.TryParse(_enumType, value: source, ignoreCase: true, out object result))
                 return ParseResult.Success<object>(result);
 
-            return ParseResult<object>.Failed;
+            return ParseResult.Failed<object>();
         }
     }
 }

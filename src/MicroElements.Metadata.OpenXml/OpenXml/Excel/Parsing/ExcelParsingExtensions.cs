@@ -11,11 +11,11 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
 using MicroElements.Collections.Extensions.Iterate;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.Parsing;
 using MicroElements.Validation;
 using NodaTime;
 using NodaTime.Text;
-using Message = MicroElements.Functional.Message;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 {
@@ -469,10 +469,10 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             if (factory == null)
                 factory = (context) => (T)Activator.CreateInstance(typeof(T), context.Values);
 
-            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults =
+            IEnumerable<IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>>> parseResults =
                 ParseRowValues(dictionaryList, parserProvider);
 
-            foreach (IReadOnlyList<ParseResult<IPropertyValue>> parseResult in parseResults)
+            foreach (IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>> parseResult in parseResults)
             {
                 IPropertyValue[] resultArray = new IPropertyValue[parseResult.Count];
                 Message[]? errorArray = null;
@@ -481,7 +481,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
                 for (int i = 0; i < parseResult.Count; i++)
                 {
-                    ParseResult<IPropertyValue> result = parseResult[i];
+                    Metadata.Parsing.ParseResult<IPropertyValue> result = parseResult[i];
                     if (result.IsSuccess)
                     {
                         resultArray[iResult++] = result.Value!;
@@ -611,14 +611,14 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             }
         }
 
-        public static IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> ParseRowValues(
+        public static IEnumerable<IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>>> ParseRowValues(
             this IEnumerable<IReadOnlyDictionary<string, string?>> dictionaryList,
             IParserProvider parserProvider)
         {
             dictionaryList.AssertArgumentNotNull(nameof(dictionaryList));
             parserProvider.AssertArgumentNotNull(nameof(parserProvider));
 
-            IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResults = dictionaryList
+            IEnumerable<IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>>> parseResults = dictionaryList
                 .Select(parserProvider.ParsePropertiesAsParseResults);
 
             return parseResults;
@@ -636,7 +636,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             }
         }
 
-        public static ParsedData Merge(this IReadOnlyList<ParseResult<IPropertyValue>> parseResultList)
+        public static ParsedData Merge(this IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>> parseResultList)
         {
             IPropertyValue[] resultArray = new IPropertyValue[parseResultList.Count];
             Message[]? errorArray = null;
@@ -645,7 +645,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
 
             for (int i = 0; i < parseResultList.Count; i++)
             {
-                ParseResult<IPropertyValue> parseResult = parseResultList[i];
+                Metadata.Parsing.ParseResult<IPropertyValue> parseResult = parseResultList[i];
                 if (parseResult.IsSuccess)
                 {
                     resultArray[iResult++] = parseResult.Value!;
@@ -665,7 +665,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
             return mapContext;
         }
 
-        public static IEnumerable<ParsedData> Merge(this IEnumerable<IReadOnlyList<ParseResult<IPropertyValue>>> parseResultLists)
+        public static IEnumerable<ParsedData> Merge(this IEnumerable<IReadOnlyList<Metadata.Parsing.ParseResult<IPropertyValue>>> parseResultLists)
         {
             parseResultLists.AssertArgumentNotNull(nameof(parseResultLists));
 

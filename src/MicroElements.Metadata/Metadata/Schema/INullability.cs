@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.Contracts;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.ObjectExtensions;
+using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 

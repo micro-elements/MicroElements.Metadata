@@ -27,6 +27,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MicroElements.Metadata.All\MicroElements.Metadata.All.csproj" />
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.Experimental\MicroElements.Metadata.Experimental.csproj" />
+    <ProjectReference Include="..\..\src\MicroElements.Metadata.Functional\MicroElements.Metadata.Functional.csproj" />
     <ProjectReference Include="..\..\src\MicroElements.Metadata.Xml\MicroElements.Metadata.Xml.csproj" />
   </ItemGroup>
 

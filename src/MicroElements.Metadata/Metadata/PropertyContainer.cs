@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {
@@ -75,8 +75,8 @@ namespace MicroElements.Metadata
         /// <inheritdoc />
         public override string ToString()
         {
-            if (ReferenceEquals(this, PropertyContainer.Empty) || Count == 0)
-                return PropertyContainer.EmptyName;
+            if (ReferenceEquals(this, Empty) || Count == 0)
+                return EmptyName;
 
             return Formatter.FullRecursiveFormatter.TryFormat(Properties) ?? "FormatError";
         }

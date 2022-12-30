@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
@@ -38,18 +37,19 @@ namespace MicroElements.Metadata
             return propertyParser;
         }
 
-        /// <summary>
-        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="sourceName">Source name.</param>
-        /// <param name="parseFunc">Parse value function.</param>
-        /// <returns><see cref="PropertyParser{T}"/>.</returns>
-        public static PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
-        {
-            PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
-            return propertyParser;
-        }
+        //TODO: Migrate
+        ///// <summary>
+        ///// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
+        ///// </summary>
+        ///// <typeparam name="T">Property type.</typeparam>
+        ///// <param name="sourceName">Source name.</param>
+        ///// <param name="parseFunc">Parse value function.</param>
+        ///// <returns><see cref="PropertyParser{T}"/>.</returns>
+        //public static PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
+        //{
+        //    PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
+        //    return propertyParser;
+        //}
 
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> .

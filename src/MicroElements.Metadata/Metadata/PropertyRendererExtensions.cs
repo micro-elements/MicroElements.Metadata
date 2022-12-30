@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using MicroElements.Functional;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {
@@ -133,7 +133,7 @@ namespace MicroElements.Metadata
                     return formattable.ToString(format, formatProvider ?? CultureInfo.InvariantCulture);
                 }
 
-                return valueUntyped.DefaultFormatValue();
+                return valueUntyped.FormatValue(nullPlaceholder: options.NullValue);
             }
         }
 
@@ -187,7 +187,7 @@ namespace MicroElements.Metadata
         {
             return renderer.ConfigureRenderer(options =>
             {
-                if (options.PropertyUntyped.Alias is { } alias)
+                if (options.PropertyUntyped.GetAlias() is { } alias)
                     options.TargetName = alias;
             });
         }

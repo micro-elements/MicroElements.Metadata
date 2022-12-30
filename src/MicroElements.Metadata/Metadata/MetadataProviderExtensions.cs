@@ -78,7 +78,7 @@ namespace MicroElements.Metadata
             string? metadataName = null,
             TMetadata? defaultValue = default)
         {
-            return GetMetadata(metadataProvider, metadataName, defaultValue, searchInSchema: true);
+            return metadataProvider.GetMetadata(metadataName, defaultValue, searchInSchema: true);
         }
 
         /// <summary>

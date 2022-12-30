@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Diagnostics;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata.Mapping
 {

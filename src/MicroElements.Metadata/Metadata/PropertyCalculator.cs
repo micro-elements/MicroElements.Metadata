@@ -45,7 +45,7 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public (T Value, ValueSource ValueSource) Calculate(IPropertyContainer propertyContainer, SearchOptions searchOptions)
+        public (T Value, ValueSource ValueSource) Calculate(IPropertyContainer propertyContainer, in SearchOptions searchOptions)
         {
             if (_calculateSimple != null)
             {

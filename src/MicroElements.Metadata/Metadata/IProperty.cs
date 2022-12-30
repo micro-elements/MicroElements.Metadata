@@ -27,6 +27,7 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
+    /// TODO: make IProperty covariant?
     public interface IProperty<T> :
         IProperty,
         ISchema<T>,
@@ -56,18 +57,18 @@ namespace MicroElements.Metadata
         IExamples<T>? Examples { get; }
 
         /// <inheritdoc />
-        ISchemaDescription? IHas<ISchemaDescription>.Component => Description != null ? SchemaDescription.FromStringCached(Description) : this.GetMetadata<ISchemaDescription>();
+        ISchemaDescription? IHas<ISchemaDescription>.Component => Description != null ? SchemaDescription.FromStringCached(Description) : null;
 
         /// <inheritdoc />
-        INameAlias? IHas<INameAlias>.Component => Alias != null ? NameAlias.FromStringCached(Alias) : this.GetMetadata<INameAlias>();
+        INameAlias? IHas<INameAlias>.Component => Alias != null ? NameAlias.FromStringCached(Alias) : null;
 
         /// <inheritdoc />
-        IDefaultValue<T>? IHas<IDefaultValue<T>>.Component => DefaultValue ?? this.GetMetadata<IDefaultValue<T>>();
+        IDefaultValue<T>? IHas<IDefaultValue<T>>.Component => DefaultValue;
 
         /// <inheritdoc />
-        IPropertyCalculator<T>? IHas<IPropertyCalculator<T>>.Component => Calculator ?? this.GetMetadata<IPropertyCalculator<T>>();
+        IPropertyCalculator<T>? IHas<IPropertyCalculator<T>>.Component => Calculator;
 
         /// <inheritdoc />
-        IExamples<T>? IHas<IExamples<T>>.Component => Examples ?? this.GetMetadata<IExamples<T>>();
+        IExamples<T>? IHas<IExamples<T>>.Component => Examples;
     }
 }

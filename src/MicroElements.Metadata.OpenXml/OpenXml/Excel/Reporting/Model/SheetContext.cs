@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting

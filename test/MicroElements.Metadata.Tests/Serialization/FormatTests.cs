@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.ComponentModel;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Serialization;
 using NodaTime;
 using Xunit;
+using Message = MicroElements.Diagnostics.Message;
 
 namespace MicroElements.Metadata.Tests.Serialization
 {
@@ -52,15 +54,15 @@ namespace MicroElements.Metadata.Tests.Serialization
             Formatter.FullToStringFormatter.Format(value, typeof(T));
 
         public string? SerializeValue<T>(T value) =>
-            new DefaultMapperSettings().SerializeValue(typeof(T), value);
+            new DefaultMetadataSerializer().SerializeValue(typeof(T), value);
 
         public object? DeserializeValue<T>(string text) => 
-            new DefaultMapperSettings().DeserializeValue(typeof(T), text).GetValueOrThrow(allowNullResult: true);
+            new DefaultMetadataSerializer().DeserializeValue(typeof(T), text).GetValueOrThrow(allowNullResult: true);
 
         [Fact]
         public void GetTypeNameTests()
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = new DefaultMetadataSerializer();
 
             mapperSettings.GetTypeName(typeof(string)).Should().Be("string");
 
@@ -89,7 +91,7 @@ namespace MicroElements.Metadata.Tests.Serialization
         [Fact]
         public void GetTypeByNameTests()
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = new DefaultMetadataSerializer();
 
             mapperSettings.GetTypeByName("string").Should().Be(typeof(string));
 
@@ -157,7 +159,7 @@ namespace MicroElements.Metadata.Tests.Serialization
 
         public void DeserializeProperty(string name, string value, string type, string? type2 = null)
         {
-            var mapperSettings = new DefaultMapperSettings();
+            var mapperSettings = DefaultMetadataSerializer.Instance;
             var messageList = new ConcurrentMessageList<Message>();
 
             new PropertyValueContract { Name = name, Value = value, Type = type }

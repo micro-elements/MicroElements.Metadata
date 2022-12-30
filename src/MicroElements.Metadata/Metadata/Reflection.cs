@@ -11,7 +11,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Metadata reflection helpers.
     /// </summary>
-    public static class Reflection
+    public static class ReflectionExtensions
     {
         /// <summary>
         /// Autocreates unassigned fields and properties of type <see cref="IProperty{T}"/>.
@@ -76,6 +76,7 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Performs the specified action on each element of <see cref="IEnumerable{T}"/>
         /// </summary>
+        [Obsolete("Use Iterate from shared")]
         public static void Foreach<T>(this IEnumerable<T> sequence, Action<T> action)
         {
             foreach (T item in sequence)

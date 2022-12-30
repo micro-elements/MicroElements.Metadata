@@ -5,7 +5,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using MicroElements.Shared;
+using MicroElements.Reflection;
+using MicroElements.Reflection.TypeCaching;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +17,9 @@ namespace MicroElements.Metadata.AspNetCore
     /// </summary>
     public static class ReflectionDependencyInjectionExtensions
     {
+        private static readonly Lazy<ITypeCache> AppDomainTypeCache = new(() => new TypeCache(AssemblySource.AppDomain.LoadTypes(TypeFilters.AllPublicTypes)));
+        private static readonly Func<string, Type?> GetByFullName = typeName => AppDomainTypeCache.Value.GetType(typeName);
+
         /// <summary>
         /// Calls through reflection: <c>services.Configure&lt;JsonOptions&gt;(options =&gt; configureJson(options));</c>.
         /// Can be used from netstandard.
@@ -34,10 +38,10 @@ namespace MicroElements.Metadata.AspNetCore
                 }
             };
 
-            Type? jsonOptionsType = TypeCache.Default.Value.GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
+            Type? jsonOptionsType = GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
             if (jsonOptionsType != null)
             {
-                Type? extensionsType = TypeCache.Default.Value.GetByFullName("Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions");
+                Type? extensionsType = GetByFullName("Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions");
 
                 MethodInfo? configureMethodGeneric = extensionsType
                     ?.GetTypeInfo()
@@ -65,7 +69,7 @@ namespace MicroElements.Metadata.AspNetCore
         {
             JsonSerializerOptions? jsonSerializerOptions = null;
 
-            Type? jsonOptionsType = TypeCache.Default.Value.GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
+            Type? jsonOptionsType = GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
             if (jsonOptionsType != null)
             {
                 // IOptions<JsonOptions>

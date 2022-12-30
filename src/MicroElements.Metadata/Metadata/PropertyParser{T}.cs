@@ -3,6 +3,7 @@
 
 using System;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
@@ -11,6 +12,7 @@ namespace MicroElements.Metadata
     /// Generic property parser.
     /// </summary>
     /// <typeparam name="T">Property type.</typeparam>
+    [Obsolete("Will be replaced by ParserRule")]
     public sealed class PropertyParser<T> :
         IPropertyParser<T>,
         IPropertyParserCondition,

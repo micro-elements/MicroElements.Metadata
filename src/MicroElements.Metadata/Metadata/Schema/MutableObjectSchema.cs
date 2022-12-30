@@ -10,7 +10,9 @@ namespace MicroElements.Metadata.Schema
     /// <summary>
     /// Mutable object schema.
     /// </summary>
-    public class MutableObjectSchema : IMutableObjectSchema
+    public class MutableObjectSchema :
+        IMutableObjectSchema,
+        IPropertySearchByName
     {
         private readonly List<IProperty> _properties = new List<IProperty>();
         private readonly Dictionary<string, IProperty> _dictionary;
@@ -27,22 +29,15 @@ namespace MicroElements.Metadata.Schema
         /// <inheritdoc />
         public IReadOnlyCollection<IProperty> Properties => _properties;
 
-        /// <inheritdoc />
-        public ISchemaCombinator? Combinator => this.GetSchemaCombinator(CombinatorType.AllOf);
-
         public MutableObjectSchema(
             string? name = null,
             Type? type = null,
             string? description = null,
-            IEnumerable<IProperty>? properties = null,
-            ISchemaCombinator? combinator = null)
+            IEnumerable<IProperty>? properties = null)
         {
             Name = name;
             Type = type ?? typeof(IPropertyContainer);
             Description = description;
-
-            if (combinator != null)
-                this.SetSchemaCombinator(combinator);
 
             if (properties != null)
             {
@@ -72,10 +67,7 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"{Name}. Mutable, Count: {_properties.Count}}}";
-        }
+        public override string ToString() => $"{Name}. Mutable, Count: {_properties.Count}}}";
     }
 
     /// <summary>

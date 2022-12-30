@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MicroElements.Reflection;
 using MicroElements.Reflection.Expressions;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
@@ -52,7 +53,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             internal readonly ConcurrentDictionary<(string, CellValues), CellValue> CellValues = new ConcurrentDictionary<(string, CellValues), CellValue>();
             internal readonly ConcurrentDictionary<CellValues, EnumValue<CellValues>> EnumValues = new ConcurrentDictionary<CellValues, EnumValue<CellValues>>();
 
-            internal readonly Action<CellValue, OpenXmlElement> SetParent = Expressions.GetPropertySetter<CellValue, OpenXmlElement>(value => value.Parent);
+            internal readonly Action<CellValue, OpenXmlElement> SetParent = Expressions.Cached.GetPropertyGetterAndSetter<CellValue, OpenXmlElement>(value => value.Parent).Setter;
         }
 
         private readonly Cache _cache = new Cache();

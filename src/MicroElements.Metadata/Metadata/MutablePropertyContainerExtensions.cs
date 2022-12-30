@@ -172,35 +172,6 @@ namespace MicroElements.Metadata
         }
 
         /// <summary>
-        /// Sets optional value if <paramref name="value"/> is in Some state.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T> property, in MicroElements.Functional.Option<T> value)
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            value.Match(val => propertyContainer.SetValue(property, val), () => { });
-        }
-
-        /// <summary>
-        /// Sets optional value if <paramref name="value"/> is in Some state.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="propertyContainer">Property container.</param>
-        /// <param name="property">Property to set.</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValue<T>(this IMutablePropertyContainer propertyContainer, IProperty<T?> property, in MicroElements.Functional.Option<T> value)
-            where T : struct
-        {
-            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
-
-            value.Match(val => propertyContainer.SetValue(property, val), () => { });
-        }
-
-        /// <summary>
         /// Adds property values.
         /// </summary>
         /// <param name="propertyContainer">Source property container.</param>

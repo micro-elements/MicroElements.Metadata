@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Xml;
 using FluentAssertions;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Xml;

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MicroElements.Functional;
 using MicroElements.Metadata.Parsing;
 
 namespace MicroElements.Metadata
@@ -14,12 +13,10 @@ namespace MicroElements.Metadata
     public abstract class ParserProvider : IParserProvider, IParserProviderWithDiscriminator
     {
         private readonly List<IPropertyParser> _parsers = new List<IPropertyParser>();
+        private readonly List<IParserRule> _parserRules = new List<IParserRule>();
 
         /// <inheritdoc />
-        public virtual IEnumerable<IPropertyParser> GetParsers()
-        {
-            return _parsers;
-        }
+        public IEnumerable<IPropertyParser> GetParsers() => _parsers;
 
         /// <inheritdoc />
         public IProperty? Discriminator { get; protected set; }
@@ -52,6 +49,40 @@ namespace MicroElements.Metadata
             return propertyParser;
         }
 
+        public class RuleBuilder<T> : IParserRule
+        {
+            public RuleBuilder(string sourceName, Func<string?, T> parseFunc)
+            {
+                SourceName = sourceName;
+                Parser = new ValueParser<T>(parseFunc);
+            }
+
+            /// <inheritdoc />
+            public string? SourceName { get; }
+
+            /// <inheritdoc />
+            public IValueParser Parser { get; }
+
+            /// <inheritdoc />
+            public Type? TargetType { get; }
+
+            /// <inheritdoc />
+            public IProperty? TargetProperty { get; private set; }
+
+            public RuleBuilder<T> Target(IProperty<T> property)
+            {
+                TargetProperty = property;
+                return this;
+            }
+        }
+
+        public RuleBuilder<T> Source2<T>(string sourceName, Func<string?, T> parseFunc)
+        {
+            var ruleBuilder = new RuleBuilder<T>(sourceName, parseFunc);
+            _parserRules.Add(ruleBuilder);
+            return ruleBuilder;
+        }
+
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
         /// </summary>
@@ -66,19 +97,20 @@ namespace MicroElements.Metadata
             return propertyParser;
         }
 
-        /// <summary>
-        /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
-        /// </summary>
-        /// <typeparam name="T">Property type.</typeparam>
-        /// <param name="sourceName">Source name.</param>
-        /// <param name="parseFunc">Parse value function.</param>
-        /// <returns><see cref="PropertyParser{T}"/>.</returns>
-        public PropertyParser<T> Source<T>(string sourceName, Func<string?, Option<T>> parseFunc)
-        {
-            PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
-            _parsers.Add(propertyParser);
-            return propertyParser;
-        }
+        //TODO: Migrate
+        ///// <summary>
+        ///// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> and parse func <paramref name="parseFunc"/>.
+        ///// </summary>
+        ///// <typeparam name="T">Property type.</typeparam>
+        ///// <param name="sourceName">Source name.</param>
+        ///// <param name="parseFunc">Parse value function.</param>
+        ///// <returns><see cref="PropertyParser{T}"/>.</returns>
+        //public PropertyParser<T> Source<T>(string sourceName, Func<string, Option<T>> parseFunc)
+        //{
+        //    PropertyParser<T> propertyParser = new PropertyParser<T>(sourceName, new ValueParser<T>(parseFunc), null);
+        //    _parsers.Add(propertyParser);
+        //    return propertyParser;
+        //}
 
         /// <summary>
         /// Adds new <see cref="PropertyParser{T}"/> with <paramref name="sourceName"/> .

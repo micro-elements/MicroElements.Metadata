@@ -13,11 +13,11 @@ namespace MicroElements.Metadata.Parsing
     public class EnumParser<TEnum> : ValueParserBase<TEnum>
     {
         /// <inheritdoc />
-        public override ParseResult<TEnum> Parse(string? source)
+        public override IParseResult<TEnum> Parse(string? source)
         {
             if (Enum.TryParse(typeof(TEnum), value: source, ignoreCase: true, out object result))
                 return ParseResult.Success((TEnum)result);
-            return ParseResult<TEnum>.Failed;
+            return ParseResult.Failed<TEnum>();
         }
     }
 }

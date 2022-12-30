@@ -5,7 +5,7 @@ using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using FluentAssertions;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using MicroElements.Metadata.Parsing;
 using MicroElements.Validation;
@@ -41,13 +41,9 @@ namespace MicroElements.Metadata.Tests.ParseExcel
         public class FxSheetParserProvider : ParserProvider
         {
             public int ParseInt(string text) => int.Parse(text);
-
-            public int? ParseOptionalInt(string text) => Prelude.ParseInt(text).MatchUnsafe(value => value, default(int?));
-
+            
             public double ParseDouble(string text) => double.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture);
-
-            public double? ParseOptionalDouble(string text) => Prelude.ParseDouble(text, NumberStyles.Any, CultureInfo.InvariantCulture).MatchUnsafe(value => value, default(double?));
-
+            
             public LocalDate ParseLocalDate(string text) => LocalDatePattern.Iso.Parse(text).Value;
 
             public LocalTime ParseLocalTime(string text) => LocalTimePattern.ExtendedIso.Parse(text).Value;
@@ -59,14 +55,16 @@ namespace MicroElements.Metadata.Tests.ParseExcel
                 Source("Text").Target(FxSheetMeta.Text);
 
                 Source("Date", ParseLocalDate).Target(FxSheetMeta.Date);
+                Source2("Date", ParseLocalDate).Target(FxSheetMeta.Date);
+
                 Source("Time", ParseLocalTime).Target(FxSheetMeta.Time);
                 Source("DateTime", ParseDateTime).Target(FxSheetMeta.DateTime);
 
                 Source("Integer", ParseInt).Target(FxSheetMeta.Integer);
                 Source("Double", ParseDouble).Target(FxSheetMeta.Double);
 
-                Source("Integer", ParseOptionalInt).Target(FxSheetMeta.OptionalInteger);
-                Source("Double", ParseOptionalDouble).Target(FxSheetMeta.OptionalDouble);
+                Source("Integer", Parser.NullableIntParser).Target(FxSheetMeta.OptionalInteger);
+                Source("Double", Parser.NullableDoubleParser).Target(FxSheetMeta.OptionalDouble);
             }
         }
 
@@ -227,9 +225,9 @@ namespace MicroElements.Metadata.Tests.ParseExcel
         [Fact]
         public void ParseDouble()
         {
-            ParseResult<double> parseResult1 = Parser.ParseDouble("1");
-            ParseResult<double> parseResult2 = Parser.ParseDouble("a");
-            ParseResult<double> parseResult3 = Parser.ParseDouble(null).WrapError(message => message);
+            Parsing.ParseResult<double> parseResult1 = Parser.ParseDouble("1");
+            Parsing.ParseResult<double> parseResult2 = Parser.ParseDouble("a");
+            Parsing.ParseResult<double> parseResult3 = Parser.ParseDouble(null).WrapError(message => message);
 
         }
     }

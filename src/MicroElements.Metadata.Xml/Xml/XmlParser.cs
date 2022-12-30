@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.Parsing;
 using MicroElements.Metadata.Schema;
 using MicroElements.Validation;
@@ -190,7 +191,7 @@ namespace MicroElements.Metadata.Xml
                             }
                         }
 
-                        IValueParser valueParser = context.GetParserCached(property);
+                        IValueParser valueParser = context.ParserRuleProvider.GetParserOrEmpty(property);
                         if (valueParser != EmptyParser.Instance)
                         {
                             string elementValue = propertyElement.Value;

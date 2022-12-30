@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using MicroElements.Metadata.ComponentModel;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests;

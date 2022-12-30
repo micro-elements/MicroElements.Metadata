@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using DocumentFormat.OpenXml.Spreadsheet;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {

@@ -14,11 +14,13 @@ namespace MicroElements.Metadata.Serialization
     {
         /// <summary>
         /// Gets or sets a value indicating whether the serialization should fail on serialization error.
+        /// Default: true.
         /// </summary>
         public bool DoNotFail { get; set; } = true;
 
         /// <summary>
         /// Gets or sets a value indicating whether arrays should be written in one row.
+        /// Default: true.
         /// </summary>
         public bool WriteArraysInOneRow { get; set; } = true;
 
@@ -30,6 +32,7 @@ namespace MicroElements.Metadata.Serialization
         /// <summary>
         /// Gets or sets a value indicating whether the serializer will write compact schema definition in the start of the serialized metadata properties.
         /// TagName: "$metadata.schema.compact".
+        /// Default: true.
         /// </summary>
         public bool WriteSchemaCompact { get; set; } = true;
 

@@ -59,10 +59,10 @@ dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
 # Naming rules - static fields should have PascalCase
 dotnet_naming_rule.static_fields_should_have_prefix.severity = suggestion
-dotnet_naming_rule.static_fields_should_have_prefix.symbols = static_fields
-dotnet_naming_rule.static_fields_should_have_prefix.style = static_prefix_style
+dotnet_naming_rule.static_fields_should_have_prefix.symbols  = static_fields
+dotnet_naming_rule.static_fields_should_have_prefix.style    = static_prefix_style
 
-dotnet_naming_symbols.static_fields.applicable_kinds = field
+dotnet_naming_symbols.static_fields.applicable_kinds   = field
 dotnet_naming_symbols.static_fields.required_modifiers = static
 
 dotnet_naming_style.static_prefix_style.capitalization = pascal_case

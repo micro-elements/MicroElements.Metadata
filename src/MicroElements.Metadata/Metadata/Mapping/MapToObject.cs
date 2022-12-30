@@ -6,12 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MicroElements.CodeContracts;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Reflection.FriendlyName;
-using MicroElements.Validation;
-using Message = MicroElements.Functional.Message;
-using MessageSeverity = MicroElements.Functional.MessageSeverity;
-using TypeExtensions = MicroElements.Reflection.TypeExtensions.TypeExtensions;
+using MicroElements.Reflection.TypeExtensions;
 
 namespace MicroElements.Metadata.Mapping
 {
@@ -57,7 +54,7 @@ namespace MicroElements.Metadata.Mapping
                         continue;
                     }
 
-                    if (value != null && !TypeExtensions.IsAssignableTo(value.GetType(), propertyInfo.PropertyType))
+                    if (value != null && !value.GetType().IsAssignableTo(propertyInfo.PropertyType))
                     {
                         settings.LogMessage?.Invoke(new Message($"Value '{value}' of type '{value.GetType()}' can not be set to Property '{propertyInfo.Name}' of type '{propertyInfo.PropertyType}'", MessageSeverity.Error));
                         continue;
@@ -82,7 +79,7 @@ namespace MicroElements.Metadata.Mapping
             TModel model,
             MapToObjectSettings<TModel>? settings = null)
         {
-            Assertions.AssertArgumentNotNull(model, nameof(model));
+            model.AssertArgumentNotNull(nameof(model));
 
             // Override factory with provided object.
             MapToObjectSettings<TModel> context = settings ?? new MapToObjectSettings<TModel>();
@@ -107,7 +104,7 @@ namespace MicroElements.Metadata.Mapping
             // Search by name and type (best choice, no map required)
             PropertyInfo? propertyInfo = propertyInfos.FirstOrDefault(info =>
                 string.Equals(info.Name, targetPropertyName, StringComparison.OrdinalIgnoreCase) &&
-                TypeExtensions.IsAssignableTo(propertyValue.PropertyUntyped.Type, info.PropertyType));
+                propertyValue.PropertyUntyped.Type.IsAssignableTo(info.PropertyType));
 
             if (propertyInfo == null)
             {
@@ -129,7 +126,7 @@ namespace MicroElements.Metadata.Mapping
                     }
                 }
 
-                if (propertyInfo != null && TypeExtensions.IsNullableStruct(propertyInfo.PropertyType))
+                if (propertyInfo != null && propertyInfo.PropertyType.IsNullableStruct())
                 {
                     Type underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType)!;
                     if (underlyingType.IsEnum)

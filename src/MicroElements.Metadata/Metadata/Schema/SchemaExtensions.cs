@@ -4,8 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Reflection.TypeExtensions;
+using MicroElements.Text.Base58;
 
 namespace MicroElements.Metadata.Schema
 {
@@ -82,23 +83,13 @@ namespace MicroElements.Metadata.Schema
 
             if (schema == null)
             {
-                var properties = propertyContainer.Properties.Select(value => value.PropertyUntyped);
-                schema = new MutableObjectSchema(properties: properties, name: $"{GenerateRandomCode(8)}");
+                var properties = propertyContainer.Properties.Select(value => value.PropertyUntyped).ToArray();
+                string schemaDigest = properties.GetSchemaDigest();
+                string base58Hash = schemaDigest.Md5HashInBase58();
+                schema = new MutableObjectSchema(properties: properties, name: base58Hash);
             }
 
             return schema;
-        }
-
-        private static string Symbols = "abcdefghijklmnopqrstuvwxyz";
-
-        public static string GenerateRandomCode(int length = 8)
-        {
-            Random random = new Random(DateTime.Now.Millisecond);
-            return Enumerable
-                .Range(0, length)
-                .Select(i => random.Next(0, Symbols.Length - 1))
-                .Aggregate(new StringBuilder(), (stringBuilder, digit) => stringBuilder.Append(Symbols[digit].ToString()))
-                .ToString();
         }
     }
 }

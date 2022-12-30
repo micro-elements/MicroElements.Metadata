@@ -2,7 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
+using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Parsing;
+using MicroElements.Reflection.CodeCompiler;
 
 namespace MicroElements.Metadata
 {

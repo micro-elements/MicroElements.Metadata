@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MicroElements.CodeContracts;
-using MicroElements.Metadata.Formatters;
+using MicroElements.Metadata.Formatting;
 
 namespace MicroElements.Metadata
 {

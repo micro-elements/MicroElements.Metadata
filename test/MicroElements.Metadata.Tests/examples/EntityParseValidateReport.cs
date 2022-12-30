@@ -4,9 +4,10 @@ using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using FluentAssertions;
-using MicroElements.Functional;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using MicroElements.Metadata.OpenXml.Excel.Reporting;
+using MicroElements.Metadata.Parsing;
 using MicroElements.Validation;
 using MicroElements.Validation.Rules;
 using Xunit;
@@ -67,7 +68,7 @@ namespace MicroElements.Metadata.Tests.examples
 
         public class EntityParser : ParserProvider
         {
-            protected Option<DateTime> ParseDate(string value) => Prelude.ParseDateTime(value);
+            protected ParseResult<DateTime> ParseDate(string? value) => Parser.ParseDateTime(value);
 
             /// <inheritdoc />
             public EntityParser()

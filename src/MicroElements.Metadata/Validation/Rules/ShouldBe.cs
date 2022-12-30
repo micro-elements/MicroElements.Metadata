@@ -3,7 +3,8 @@
 
 using System;
 using System.Linq.Expressions;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata;
 
 namespace MicroElements.Validation.Rules

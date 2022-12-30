@@ -3,8 +3,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 using MicroElements.Metadata;
+using MicroElements.Metadata.Formatting;
+using Message = MicroElements.Diagnostics.Message;
+using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
 
 namespace MicroElements.Validation.Rules
 {

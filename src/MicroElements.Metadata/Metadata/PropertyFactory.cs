@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using MicroElements.Metadata.ComponentModel;
 
 namespace MicroElements.Metadata
 {
@@ -70,6 +73,54 @@ namespace MicroElements.Metadata
             var expression = Expression.Lambda<Func<IPropertyFactory, string, IProperty>>(castToProperty, factoryParameter, nameArg);
 
             return expression;
+        }
+    }
+
+    /// <summary>
+    /// Property factory with predefined properties.
+    /// </summary>
+    public class PredefinedPropertyFactory : IPropertyFactory, IDecorator<IPropertyFactory>
+    {
+        private readonly Dictionary<(Type Type, string Name), IProperty> _predefinedProperties;
+
+        /// <inheritdoc />
+        public IPropertyFactory Component { get; }
+
+        public PredefinedPropertyFactory(IPropertyFactory component, IEnumerable<IProperty> properties)
+        {
+            Component = component;
+            _predefinedProperties = properties.ToDictionary(property => (property.Type, property.Name), property => property);
+        }
+
+        /// <inheritdoc />
+        public IProperty<T> Create<T>(string name)
+        {
+            if (_predefinedProperties.TryGetValue((typeof(T), name), out var property))
+                return (IProperty<T>)property;
+
+            return Component.Create<T>(name);
+        }
+
+        /// <inheritdoc />
+        public IProperty Create(Type type, string name)
+        {
+            if (_predefinedProperties.TryGetValue((type, name), out var property))
+                return property;
+
+            return Component.Create(type, name);
+        }
+    }
+
+    public static partial class PropertyFactoryExtensions
+    {
+        public static IPropertyFactory WithPredefinedProperties(this IPropertyFactory propertyFactory, IEnumerable<IProperty> properties)
+        {
+            return new PredefinedPropertyFactory(propertyFactory, properties);
+        }
+
+        public static IPropertyFactory WithPredefinedProperties(this IPropertyFactory propertyFactory, IPropertySet propertySet)
+        {
+            return new PredefinedPropertyFactory(propertyFactory, propertySet.GetProperties());
         }
     }
 }

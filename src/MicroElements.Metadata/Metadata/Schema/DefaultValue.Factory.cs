@@ -5,7 +5,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using MicroElements.Functional;
+using MicroElements.Reflection.CodeCompiler;
+using MicroElements.Reflection.ObjectExtensions;
 
 namespace MicroElements.Metadata.Schema
 {

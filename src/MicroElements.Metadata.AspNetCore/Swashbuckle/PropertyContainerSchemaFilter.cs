@@ -3,13 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using MicroElements.Functional;
 using MicroElements.Metadata.AspNetCore;
 using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Schema;
+using MicroElements.Reflection.TypeExtensions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -164,6 +165,38 @@ namespace MicroElements.Metadata.Swashbuckle
 
                 string? propertyName = _options.ResolvePropertyName!(property.Name);
                 schema.Properties.Add(propertyName, propertySchema);
+            }
+
+            if (propertySet.GetComponent<IOneOf>() is { } oneOf)
+            {
+                ISchema[] oneOfSchemas = oneOf.OneOf().ToArray();
+                foreach (ISchema oneOfSchema in oneOfSchemas)
+                {
+                    string knownSchemaId = oneOfSchema.Name;
+
+                    IPropertySet? otherPropSet;
+                    otherPropSet = oneOfSchema as IPropertySet;
+                    if (otherPropSet == null)
+                    {
+                        otherPropSet = (oneOfSchema as IProperty)?.Type.GetSchemaByKnownPropertySet();
+                    }
+
+                    if (otherPropSet != null)
+                    {
+                        if (!context.SchemaRepository.Schemas.TryGetValue(knownSchemaId, out OpenApiSchema knownSchema))
+                        {
+                            // Generate and fill knownSchema once for type.
+                            knownSchema = new OpenApiSchema();
+                            FillObjectSchema(knownSchema, context, otherPropSet);
+                            context.SchemaRepository.Schemas[knownSchemaId] = knownSchema;
+                        }
+
+                        schema.OneOf.Add(new OpenApiSchema
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.Schema, Id = knownSchemaId },
+                        });
+                    }
+                }
             }
         }
 

@@ -2,11 +2,11 @@
   <Import Project="version.props" />
   <PropertyGroup>
     <Product>MicroElements.Metadata</Product>
-    <Copyright>2020</Copyright>
+    <Copyright>2021</Copyright>
     <Authors>alexey.petriashev, MicroElements</Authors>
     <Description>Metadata model, parsing, validation and reporting.</Description>
 
-    <PackageTags>metadata property parsing parse reporting report etl</PackageTags>
+    <PackageTags>metadata schema property parsing validation parse reporting report etl</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Metadata</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Metadata/master/LICENSE</PackageLicenseUrl>

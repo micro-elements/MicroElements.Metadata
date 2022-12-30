@@ -20,9 +20,9 @@ namespace MicroElements.Metadata.Parsing
         }
 
         /// <inheritdoc />
-        public override ParseResult<string> Parse(string? source)
+        public override IParseResult<string> Parse(string? source)
         {
-            return source == null ? ParseResult<string>.Empty : ParseResult.Success(_stringProvider.GetString(source));
+            return source == null ? ParseResult.Cache<string>.SuccessDefault : ParseResult.Success(_stringProvider.GetString(source));
         }
     }
 

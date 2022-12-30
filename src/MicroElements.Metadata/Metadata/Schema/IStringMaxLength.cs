@@ -3,7 +3,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
-using MicroElements.Functional;
+using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata.Schema
 {

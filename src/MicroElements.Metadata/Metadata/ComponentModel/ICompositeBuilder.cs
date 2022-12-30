@@ -132,7 +132,7 @@ namespace MicroElements.Metadata.ComponentModel
         public static TComponent? GetComponent<TComponent>(this object source)
         {
             //TODO: Checks: source not null, immutability check
-            // Implements IHas<TComponent>. Return component if it is not null because component also can be stored in metadata.
+            // Implements IHas<TComponent>. Return component if it is not null because component also can be stored in it's metadata.
             if (source is IHas<TComponent> { Component: not null } has)
                 return has.Component;
 

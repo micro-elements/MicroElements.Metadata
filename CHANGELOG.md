@@ -4,6 +4,7 @@
 - ISchema<T>, IProperty<T>, IPropertyValue<T>, IPropertyCalculator<T> become covariant
 - OneOf initial support
 - Base58 hash for SchemaDigest
+- Added `copyMetadata` to `WithComponent`
 
 Metadata.Parsing:
 - IParserRuleProvider: search methods added, search implementation moved to ParserRuleProvider

@@ -83,25 +83,35 @@ namespace MicroElements.Metadata.ComponentModel
         /// <typeparam name="TComponent">Component type.</typeparam>
         /// <param name="source">The source composite.</param>
         /// <param name="component">Component to add.</param>
+        /// <param name="copyMetadata">Copy metadata.</param>
         /// <returns>The source copy or self.</returns>
-        public static TComposite WithComponent<TComposite, TComponent>(this TComposite source, TComponent component)
+        public static TComposite WithComponent<TComposite, TComponent>(this TComposite source, TComponent component, bool copyMetadata = true)
             where TComposite : ICompositeBuilder<TComponent>
         {
             source.AssertArgumentNotNull(nameof(source));
             component.AssertArgumentNotNull(nameof(component));
 
+            TComposite result;
+
             // More specific interface implemented
             if (source is ICompositeBuilder<TComposite, TComponent> compositeBuilder)
             {
-                return compositeBuilder.With(component);
+                result = compositeBuilder.With(component);
+            }
+            else
+            {
+                // Less specific interface
+                ICompositeBuilder<TComponent> compositeBuilderUntyped = source;
+                object composite = compositeBuilderUntyped.With(component);
+
+                // NOTE: No guarantee that return type will be TComposite
+                result = (TComposite)composite;
             }
 
-            // Less specific interface
-            ICompositeBuilder<TComponent> compositeBuilderUntyped = source;
-            object composite = compositeBuilderUntyped.With(component);
+            if (copyMetadata)
+                result.SetMetadataFrom(source);
 
-            // NOTE: No guarantee that return type will be TComposite
-            return (TComposite)composite;
+            return result;
         }
 
         /// <summary>

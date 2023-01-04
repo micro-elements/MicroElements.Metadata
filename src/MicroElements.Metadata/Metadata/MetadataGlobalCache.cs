@@ -135,9 +135,9 @@ namespace MicroElements.Metadata
         /// </summary>
         /// <param name="instance">Object instance.</param>
         /// <returns><see cref="MetadataProviderWrapper"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MetadataProviderWrapper AsMetadataProvider(this object instance)
         {
-            instance.AssertArgumentNotNull(nameof(instance));
             return new MetadataProviderWrapper(instance);
         }
     }

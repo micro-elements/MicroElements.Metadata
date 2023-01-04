@@ -308,14 +308,13 @@ namespace MicroElements.Metadata
         /// <param name="target">Target object.</param>
         public static void CopyMetadataTo(this object? source, object? target)
         {
-            if (source != null && target != null)
+            if (source == null || target == null || ReferenceEquals(source, target)) return;
+
+            IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
+            if (sourceMetadata.Count > 0)
             {
-                IPropertyContainer sourceMetadata = source.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
-                if (sourceMetadata.Count > 0)
-                {
-                    IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
-                    targetMetadata.SetValues(sourceMetadata.Properties);
-                }
+                IMutablePropertyContainer targetMetadata = target.AsMetadataProvider().AsMutable();
+                targetMetadata.SetValues(sourceMetadata.Properties);
             }
         }
 

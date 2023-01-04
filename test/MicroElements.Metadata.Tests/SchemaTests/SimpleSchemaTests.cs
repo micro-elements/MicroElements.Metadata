@@ -63,22 +63,27 @@ namespace MicroElements.Metadata.Tests.SchemaTests
         public void PropertyCovariance()
         {
             IProperty<Person> propertyOfPerson= new Property<Person>("Person")
-                .WithExamples(new Person("Bill"));
-            // TODO: Make IProperty covariant
-            // IProperty<IPerson> propertyOfBaseType = propertyOfPerson;
-            IProperty<IPerson> propertyOfBaseType = new Property<IPerson>("Person");
-            // IProperty<IPerson> withAlias = propertyOfBaseType.WithAlias("alias");
-            // IDefaultValue<IPerson>? defaultValue = propertyOfPerson.DefaultValue;
-            // IPropertyCalculator<Person>? propertyCalculator = propertyOfPerson.Calculator;
-            // IPropertyCalculator<IPerson>? propertyCalculator2 = propertyCalculator;
+                .WithExamples(new Person("PersonExample"))
+                .WithDefaultValue(new Person("PersonDefault"));
 
+            // IProperty covariant
+            IProperty<IPerson> propertyOfBaseType = propertyOfPerson;
+
+            IProperty<IPerson> withAlias = propertyOfBaseType.WithAlias("alias");
+
+            IDefaultValue<IPerson>? defaultValueCovariant = propertyOfPerson.DefaultValue;
+            defaultValueCovariant.Value.Name.Should().Be("PersonDefault");
+            
+            IPropertyCalculator<Person>? propertyCalculator = propertyOfPerson.Calculator;
+            IPropertyCalculator<IPerson>? propertyCalculatorCovariant = propertyCalculator;
+            
             var container = new MutablePropertyContainer()
                 .WithValue(propertyOfPerson, new Person("Alex"));
 
             Person? person = container.GetValue(propertyOfPerson);
             IPerson? personOfBaseType = container.GetValue(propertyOfBaseType);
-            //personOfBaseType.Should().BeSameAs(person);
-            //personOfBaseType.Name.Should().Be("Alex");
+            personOfBaseType.Should().BeSameAs(person);
+            personOfBaseType.Name.Should().Be("Alex");
         }
 
         [Fact]

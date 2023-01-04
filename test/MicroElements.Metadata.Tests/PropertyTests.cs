@@ -267,6 +267,14 @@ namespace MicroElements.Metadata.Tests
         }
 
         [Fact]
+        public void property_calculator()
+        {
+            Property<string> withCalculate = new Property<string>("Currency")
+                .WithCalculate(container => "EUR");
+            
+        }
+
+        [Fact]
         public void schema_builder_description()
         {
             Property<string> property = new Property<string>("Name1");

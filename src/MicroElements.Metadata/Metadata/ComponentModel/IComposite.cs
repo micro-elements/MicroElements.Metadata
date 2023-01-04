@@ -13,7 +13,7 @@ using MicroElements.Reflection.TypeExtensions;
 namespace MicroElements.Metadata.ComponentModel
 {
     /// <summary>
-    /// Represents an object that contains from other components and provides that components in runtime.
+    /// Represents an object that contains other components and provides that components in runtime.
     /// </summary>
     public interface IComposite
     {

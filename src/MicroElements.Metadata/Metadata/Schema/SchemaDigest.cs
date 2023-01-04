@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MicroElements.Reflection.FriendlyName;
 using MicroElements.Text.Base58;
 using MicroElements.Text.Hashing;
 
@@ -17,7 +18,7 @@ namespace MicroElements.Metadata.Schema
                 .OrderBy(property => property.Name)
                 .Aggregate(
                     new StringBuilder(),
-                    (builder, property) => builder.AppendFormat("{0}@{1};", property.Name, property.Type))
+                    (builder, property) => builder.AppendFormat("{0}@{1};", property.Name, property.Type.GetFriendlyName()))
                 .ToString();
             return digest;
         }

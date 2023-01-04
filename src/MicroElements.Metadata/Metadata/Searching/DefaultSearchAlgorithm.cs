@@ -104,13 +104,15 @@ namespace MicroElements.Metadata
             // Property can be calculated.
             if (search.CalculateValue && property.GetCalculator() is { } calculator)
             {
-                var calculationResult = calculator.Calculate(propertyContainer, search);
-                var calculatedValue = _propertyValueFactory.Create(property, calculationResult.Value, calculationResult.ValueSource);
+                var calculationContext = new CalculationContext(propertyContainer, search);
+                var calculatedValue = calculator.Calculate(ref calculationContext);
+                var calculatedValueSource = calculationContext.ValueSource ?? ValueSource.NotDefined;
+                var calculatedPropertyValue = _propertyValueFactory.Create(property, calculatedValue, calculatedValueSource);
 
-                if (calculatedValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)
-                    calculatedValue = null;
+                if (calculatedPropertyValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)
+                    calculatedPropertyValue = null;
 
-                return calculatedValue;
+                return calculatedPropertyValue;
             }
 
             // Search by provided options.

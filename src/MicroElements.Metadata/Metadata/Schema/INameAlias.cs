@@ -1,17 +1,15 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.CodeContracts;
 using MicroElements.Collections.TwoLayerCache;
 using MicroElements.Metadata.ComponentModel;
-using MicroElements.Metadata.Schema;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Schema
 {
     /// <summary>
     /// Represents object that has Alias.
     /// </summary>
-    public interface INameAlias
+    public interface INameAlias : IMetadata
     {
         /// <summary>
         /// Gets an alternative name for the object.
@@ -22,7 +20,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents object that has Alias.
     /// </summary>
-    public class NameAlias : INameAlias
+    public sealed class NameAlias : INameAlias
     {
         /// <inheritdoc />
         public string? Alias { get; }
@@ -55,14 +53,29 @@ namespace MicroElements.Metadata
     public static class AliasExtensions
     {
         /// <summary>
-        /// Sets alias for object.
+        /// Sets alias metadata for the object.
         /// </summary>
-        /// <param name="value">Target object.</param>
-        /// <param name="nameAlias">Alias name for the object.</param>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="target">Target object.</param>
+        /// <param name="nameAlias">Description.</param>
         /// <returns>The same metadata provider.</returns>
-        public static IMetadataProvider SetAlias(this IMetadataProvider value, INameAlias nameAlias)
+        public static TSchema SetNameAliasMetadata<TSchema>(this TSchema target, INameAlias nameAlias)
+            where TSchema : IMetadataProvider
         {
-            return value.SetMetadata(nameAlias.AssertArgumentNotNull(nameof(nameAlias)));
+            return target.SetMetadata(nameAlias);
+        }
+
+        /// <summary>
+        /// Creates schema copy with provided name alias.
+        /// </summary>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="source">Source schema.</param>
+        /// <param name="nameAlias">Description.</param>
+        /// <returns>New schema instance with provided name alias.</returns>
+        public static TSchema WithNameAlias<TSchema>(this TSchema source, INameAlias nameAlias)
+            where TSchema : ISchemaBuilder<INameAlias>, ISchema
+        {
+            return source.WithSchemaComponent(nameAlias);
         }
 
         /// <summary>

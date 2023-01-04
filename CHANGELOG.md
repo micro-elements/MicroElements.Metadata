@@ -1,4 +1,21 @@
-# 7.14.0 (UNRELEASED)
+# 8.0.0-beta.1
+- MicroElements.Functional dependency removed
+- MicroElements.Diagnostics extracted
+- ISchema<T>, IProperty<T>, IPropertyValue<T>, IPropertyCalculator<T> become covariant
+- OneOf initial support
+- Base58 hash for SchemaDigest
+
+Metadata.Parsing:
+- IParserRuleProvider: search methods added, search implementation moved to ParserRuleProvider
+- Added CachedParserRuleProvider
+- XmlParserContext: ParserCache changed to ParserRuleProvider (cached)
+- CollectionParser supports recursing with IParserRuleProvider
+
+Metadata.NewtonsoftJson:
+- WriteSchemaToPropertyName removed from MetadataJsonSerializationOptions
+- PropertyContainerWithMetadataTypesConverter removed
+
+# 7.15.0
 - Change: `IComposite.Components` renamed to `GetComponents`. Added extension `GetComponents`, `GetComponentsAndMetadata`
 - Change: `BuildAs` for `IComposite` - removed new constraint. It can use default constructor or constructor with all optional parameters
 - Added: `IStaticComponentProvider`, `IStaticMetadataProvider` that bound components and metadata to `Type` and can be accessed without type instantiation

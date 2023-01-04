@@ -7,6 +7,12 @@ using MicroElements.CodeContracts;
 namespace MicroElements.Metadata
 {
     /// <summary>
+    /// Calculate property value delegate.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public delegate T? CalculateDelegate<out T>(ref CalculationContext context);
+
+    /// <summary>
     /// Property calculator that accepts evaluate func in simple and full form.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
@@ -14,6 +20,16 @@ namespace MicroElements.Metadata
     {
         private readonly Func<IPropertyContainer, SearchOptions, T>? _calculateSimple;
         private readonly Func<IPropertyContainer, SearchOptions, (T Value, ValueSource ValueSource)>? _calculate;
+        private readonly CalculateDelegate<T>? _calculateDelegate;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyCalculator{T}"/> class.
+        /// </summary>
+        /// <param name="calculate">Calculate delegate.</param>
+        public PropertyCalculator(CalculateDelegate<T>? calculate)
+        {
+            _calculateDelegate = calculate.AssertArgumentNotNull(nameof(calculate));
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyCalculator{T}"/> class.
@@ -45,16 +61,30 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public (T Value, ValueSource ValueSource) Calculate(IPropertyContainer propertyContainer, in SearchOptions searchOptions)
+        public T? Calculate(ref CalculationContext context)
         {
-            if (_calculateSimple != null)
+            if (_calculateSimple is { } calculateSimple)
             {
-                T value = _calculateSimple(propertyContainer, searchOptions);
-                return (value, ValueSource.Calculated);
+                T value = calculateSimple(context.PropertyContainer, context.SearchOptions);
+                context.ValueSource = ValueSource.Calculated;
+                return value;
             }
 
-            var calculationResult = _calculate!.Invoke(propertyContainer, searchOptions);
-            return calculationResult;
+            if (_calculateDelegate is { } calculateDelegate)
+            {
+                T? value = calculateDelegate(ref context);
+                context.ValueSource = context.ValueSource;
+                return value;
+            }
+
+            if (_calculate is { } calculate)
+            {
+                var calculationResult = calculate(context.PropertyContainer, context.SearchOptions);
+                context.ValueSource = calculationResult.ValueSource;
+                return calculationResult.Value;
+            }
+
+            throw new InvalidOperationException("Invalid property calculator, no calculation delegate provided.");
         }
     }
 }

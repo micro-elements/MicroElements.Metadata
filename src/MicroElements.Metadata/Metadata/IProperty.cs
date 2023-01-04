@@ -11,14 +11,15 @@ namespace MicroElements.Metadata
     /// </summary>
     public interface IProperty :
         ISchema,
-
+        /* ISchemaDescription */
         ISchemaDescription,
         IHas<ISchemaDescription>,
         ISchemaBuilder<ISchemaDescription>,
-
+        /* INameAlias */
         INameAlias,
         IHas<INameAlias>,
-
+        ISchemaBuilder<INameAlias>,
+        /* INameAlias */
         ISchemaBuilder<IDefaultValue>
     {
     }
@@ -27,19 +28,12 @@ namespace MicroElements.Metadata
     /// Strong typed property description.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    /// TODO: make IProperty covariant?
-    public interface IProperty<T> :
+    public interface IProperty<out T> :
         IProperty,
         ISchema<T>,
-
         IHas<IExamples<T>>,
-        ISchemaBuilder<IExamples<T>>,
-
         IHas<IDefaultValue<T>>,
-        ISchemaBuilder<IDefaultValue<T>>,
-
-        IHas<IPropertyCalculator<T>>,
-        ISchemaBuilder<IPropertyCalculator<T>>
+        IHas<IPropertyCalculator<T>>
     {
         /// <summary>
         /// Gets default value for property.
@@ -47,14 +41,14 @@ namespace MicroElements.Metadata
         IDefaultValue<T>? DefaultValue { get; }
 
         /// <summary>
-        /// Gets property value calculator.
-        /// </summary>
-        IPropertyCalculator<T>? Calculator { get; }
-
-        /// <summary>
         /// Gets property example values.
         /// </summary>
         IExamples<T>? Examples { get; }
+
+        /// <summary>
+        /// Gets property value calculator.
+        /// </summary>
+        IPropertyCalculator<T>? Calculator { get; }
 
         /// <inheritdoc />
         ISchemaDescription? IHas<ISchemaDescription>.Component => Description != null ? SchemaDescription.FromStringCached(Description) : null;
@@ -70,5 +64,21 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         IExamples<T>? IHas<IExamples<T>>.Component => Examples;
+    }
+
+    /// <summary>
+    /// <see cref="IProperty{T}"/> builder interfaces.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    public interface IPropertyBuilder<T> :
+        IProperty<T>,
+
+        ISchemaBuilder<INameAlias>,
+        ISchemaBuilder<ISchemaDescription>,
+        ISchemaBuilder<IDefaultValue<T>>,
+        ISchemaBuilder<IDefaultValue>,
+        ISchemaBuilder<IPropertyCalculator<T>>,
+        ISchemaBuilder<IExamples<T>>
+    {
     }
 }

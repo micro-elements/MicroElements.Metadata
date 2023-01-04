@@ -49,7 +49,7 @@ namespace MicroElements.Metadata.Schema
         }
     }
 
-    public static class aaa
+    internal static class Example
     {
         public static DataSchema Test()
         {

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.ComponentModel;
 using MicroElements.Reflection.TypeExtensions;
 using MicroElements.Text.Base58;
 
@@ -15,6 +16,25 @@ namespace MicroElements.Metadata.Schema
     /// </summary>
     public static partial class SchemaExtensions
     {
+        public static TSchema SetSchemaMetadata<TSchema, TMetadata>(this TSchema schema, TMetadata metadata)
+            where TSchema : ISchema
+        {
+            schema.AssertArgumentNotNull(nameof(schema));
+            metadata.AssertArgumentNotNull(nameof(metadata));
+
+            return schema.SetMetadata(metadata);
+        }
+
+        /// <summary>
+        /// Returns new schema builded with provided component.
+        /// </summary>
+        public static TSchema WithSchemaComponent<TSchema, TMetadata>(this TSchema source, TMetadata metadata)
+            where TSchema : ISchemaBuilder<TMetadata>, ISchema
+            where TMetadata : IMetadata
+        {
+            return source.WithComponent(metadata);
+        }
+
         public static IEnumerable<IMetadata> GetSchemaMetadata(this ISchema schema)
         {
             var metadataProperties = schema.GetMetadataContainer(autoCreate: false).Properties;

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.Metadata.ComponentModel;
-
 namespace MicroElements.Metadata.Schema
 {
     /// <summary>
@@ -20,7 +18,7 @@ namespace MicroElements.Metadata.Schema
         public static TSchema WithDescription<TSchema>(this TSchema source, ISchemaDescription schemaDescription)
             where TSchema : ISchemaBuilder<ISchemaDescription>, ISchema
         {
-            return source.WithComponent(schemaDescription);
+            return source.WithSchemaComponent(schemaDescription);
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
   <Import Project="version.props" />
   <PropertyGroup>
     <Product>MicroElements.Metadata</Product>
-    <Copyright>2021</Copyright>
+    <Copyright>2023</Copyright>
     <Authors>alexey.petriashev, MicroElements</Authors>
     <Description>Metadata model, parsing, validation and reporting.</Description>
 

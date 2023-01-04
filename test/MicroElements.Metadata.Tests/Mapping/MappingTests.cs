@@ -182,7 +182,7 @@ namespace MicroElements.Metadata.Tests.Mapping
                 intValue.Should().Be(42);
                 sex.Should().Be(Sex.Female);
             }
-            
+
         }
 
         [Fact]

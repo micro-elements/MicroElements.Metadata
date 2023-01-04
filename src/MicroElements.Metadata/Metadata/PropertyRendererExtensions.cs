@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using MicroElements.Metadata.Formatting;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata
 {

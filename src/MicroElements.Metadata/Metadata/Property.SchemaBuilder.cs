@@ -11,6 +11,10 @@ namespace MicroElements.Metadata
     /// </summary>
     public partial class Property<T> :
         IConfigurableBuilder<Property<T>, PropertyData<T>>,
+
+        IPropertyBuilder<T>,
+
+        ISchemaBuilder<Property<T>, INameAlias>,
         ISchemaBuilder<Property<T>, ISchemaDescription>,
         ISchemaBuilder<Property<T>, IDefaultValue<T>>,
         ISchemaBuilder<Property<T>, IDefaultValue>,
@@ -45,6 +49,12 @@ namespace MicroElements.Metadata
                 .SetMetadataFrom(this);
 
             return property;
+        }
+
+        /// <inheritdoc />
+        public Property<T> With(INameAlias nameAlias)
+        {
+            return this.WithRewriteFast((ref PropRefData<T> data) => data.Alias = nameAlias.Alias);
         }
 
         /// <inheritdoc />

@@ -3,9 +3,8 @@
 
 using System.Collections.Generic;
 using MicroElements.CodeContracts;
-using MicroElements.Metadata.Schema;
 
-namespace MicroElements.Metadata
+namespace MicroElements.Metadata.Schema
 {
     /// <summary>
     /// Represents object that has example objects.

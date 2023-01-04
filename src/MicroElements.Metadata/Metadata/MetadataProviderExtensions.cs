@@ -123,6 +123,8 @@ namespace MicroElements.Metadata
             ValueSource? valueSource = null)
             where TMetadataProvider : IMetadataProvider
         {
+            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
+
             return metadataProvider.SetMetadata(typeof(TMetadata).FullName, metadata, valueSource);
         }
 
@@ -143,8 +145,7 @@ namespace MicroElements.Metadata
             ValueSource? valueSource = null)
             where TMetadataProvider : IMetadataProvider
         {
-            if (metadataProvider == null)
-                throw new ArgumentNullException(nameof(metadataProvider));
+            metadataProvider.AssertArgumentNotNull(nameof(metadataProvider));
 
             metadataName ??= typeof(TMetadata).FullName;
             IProperty<TMetadata> metadataProperty = Search.CachedProperty<TMetadata>.ByName(metadataName);

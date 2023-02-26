@@ -47,7 +47,7 @@ namespace MicroElements.Metadata.Parsing
     /// Strong typed parse result.
     /// </summary>
     /// <typeparam name="T">Value type.</typeparam>
-    public interface IParseResult<T> : IParseResult
+    public interface IParseResult<out T> : IParseResult
     {
         /// <summary>
         /// Gets result value.

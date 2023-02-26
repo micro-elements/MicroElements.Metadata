@@ -12,6 +12,27 @@ namespace MicroElements.Metadata
     /// <typeparam name="T">Value type.</typeparam>
     public delegate T? CalculateDelegate<out T>(ref CalculationContext context);
 
+    public delegate T? CalculateDelegate<out T, in TState>(ref CalculationContext context, TState state);
+
+    public sealed class PropertyCalculator<T, TState> : IPropertyCalculator<T>
+    {
+        private readonly CalculateDelegate<T, TState>? _calculate;
+        private readonly TState _state;
+
+        public PropertyCalculator(CalculateDelegate<T, TState>? calculate, TState state)
+        {
+            _calculate = calculate;
+            _state = state;
+        }
+
+        /// <inheritdoc />
+        public T? Calculate(ref CalculationContext context)
+        {
+            var calculationResult = _calculate(ref context, _state);
+            return calculationResult;
+        }
+    }
+
     /// <summary>
     /// Property calculator that accepts evaluate func in simple and full form.
     /// </summary>

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Reflection.TypeExtensions;
@@ -20,12 +19,6 @@ namespace MicroElements.Metadata
 
         /// <inheritdoc />
         public T? Value { get; }
-
-        /// <inheritdoc />
-        public IProperty PropertyUntyped => Property;
-
-        /// <inheritdoc />
-        public object? ValueUntyped => Source == ValueSource.NotDefined ? null : Value;
 
         /// <inheritdoc />
         public ValueSource Source { get; }
@@ -47,8 +40,7 @@ namespace MicroElements.Metadata
         /// Implicitly converts to <typeparamref name="T"/>.
         /// </summary>
         /// <param name="propertyValue">PropertyValue.</param>
-        [return: MaybeNull]
-        public static implicit operator T(PropertyValue<T> propertyValue) => propertyValue.Value;
+        public static implicit operator T?(PropertyValue<T> propertyValue) => propertyValue.Value;
 
         /// <inheritdoc />
         public override string ToString() => $"{Property.Name}: {Value.FormatValue("null")}";
@@ -57,7 +49,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Represents value source.
     /// </summary>
-    public sealed class ValueSource
+    public sealed record ValueSource
     {
         /// <summary>
         /// Value is not set.
@@ -92,18 +84,6 @@ namespace MicroElements.Metadata
         {
             SourceName = sourceName.AssertArgumentNotNull(nameof(sourceName));
         }
-
-        private bool Equals(ValueSource other) => SourceName == other.SourceName;
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj) => ReferenceEquals(this, obj) || (obj is ValueSource other && Equals(other));
-
-        /// <inheritdoc />
-        public override int GetHashCode() => SourceName.GetHashCode();
-
-        public static bool operator ==(ValueSource? left, ValueSource? right) => Equals(left, right);
-
-        public static bool operator !=(ValueSource? left, ValueSource? right) => !Equals(left, right);
 
         /// <inheritdoc />
         public override string ToString() => SourceName;

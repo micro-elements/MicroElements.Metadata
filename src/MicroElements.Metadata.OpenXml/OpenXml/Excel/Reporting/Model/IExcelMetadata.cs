@@ -3,6 +3,7 @@
 
 using System;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MicroElements.Metadata.Experimental;
 using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
@@ -172,7 +173,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static readonly IProperty<int> ColumnWidth = ExcelMetadata.ColumnWidth;
 
         /// <summary>
-        /// Sheet customization function.
+        /// Column customization function.
         /// </summary>
         public static readonly IProperty<Action<ColumnContext>> ConfigureColumn = new Property<Action<ColumnContext>>("ConfigureColumn");
 
@@ -182,10 +183,18 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static readonly IProperty<Action<CellContext>> ConfigureHeaderCell = new Property<Action<CellContext>>("ConfigureHeaderCell");
     }
 
+    public interface IConfigureCell
+    {
+        /// <summary>
+        /// Gets or sets cell customization chain.
+        /// </summary>
+        ImmutableChain<ConfigureAction<CellContext>>? ConfigureCell { get; set; }
+    }
+
     /// <summary>
     /// Excel Cell customizations.
     /// </summary>
-    public class ExcelCellMetadata : MutablePropertyContainer, IExcelMetadata
+    public class ExcelCellMetadata : MutablePropertyContainer, IExcelMetadata, IConfigureCell
     {
         /// <summary>
         /// Excel data type.
@@ -193,8 +202,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         public static readonly IProperty<CellValues> DataType = ExcelMetadata.DataType;
 
         /// <summary>
-        /// Cell customization function.
+        /// Gets or sets cell customization chain.
         /// </summary>
-        public static readonly IProperty<Action<CellContext>> ConfigureCell = new Property<Action<CellContext>>("ConfigureCell");
+        public ImmutableChain<ConfigureAction<CellContext>>? ConfigureCell { get; set; }
     }
 }

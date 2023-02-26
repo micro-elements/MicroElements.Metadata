@@ -38,12 +38,12 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Property comparer by Type and Name ignore case.
         /// </summary>
-        public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseComparer { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: false);
+        public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseComparer { get; } = new ByTypeAndNamePropertyComparer(nameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: false);
 
         /// <summary>
         /// Property comparer by Type and Name ignoring name case and ignoring <see cref="Nullable{T}"/> wrapper.
         /// </summary>
-        public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseIgnoreNullability { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: true);
+        public static IEqualityComparer<IProperty> ByTypeAndNameIgnoreCaseIgnoreNullability { get; } = new ByTypeAndNamePropertyComparer(nameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: true);
 
         /// <summary>
         /// Property comparer by <see cref="ISchema.Name"/> or <see cref="INameAlias.Alias"/> ignore case.

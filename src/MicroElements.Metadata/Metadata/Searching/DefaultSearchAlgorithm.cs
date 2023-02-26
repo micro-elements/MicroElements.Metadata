@@ -17,6 +17,8 @@ namespace MicroElements.Metadata
         /// </summary>
         public static readonly ISearchAlgorithm Instance = new DefaultSearchAlgorithm();
 
+        // TODO: Вынести IPropertyValueFactory в SearchOptions?
+        // TODO: IPropertyValue возвращать из Calculator?
         private readonly IPropertyValueFactory _propertyValueFactory = PropertyValueFactory.Default;
         private IPropertyValueFactoryProvider _factoryProvider = new PropertyValueFactoryProvider(comparer => PropertyValueFactory.Default);
 
@@ -35,27 +37,35 @@ namespace MicroElements.Metadata
 
             // Search property by EqualityComparer
             IPropertyValue? propertyValue = null;
-            var properties = propertyContainer.Properties;
-            if (properties is IList<IPropertyValue> propertyValues)
+
+            if (propertyContainer is IIndexedPropertyContainer indexed)
             {
-                // For is for performance reason here
-                for (int i = 0; i < propertyValues.Count; i++)
-                {
-                    if (search.PropertyComparer.Equals(propertyValues[i].PropertyUntyped, property))
-                    {
-                        propertyValue = propertyValues[i];
-                        break;
-                    }
-                }
+                propertyValue = indexed.GetPropertyValue(property);
             }
             else
             {
-                foreach (IPropertyValue? pv in propertyContainer.Properties)
+                var properties = propertyContainer.Properties;
+                if (properties is IList<IPropertyValue> propertyValues)
                 {
-                    if (search.PropertyComparer.Equals(pv.PropertyUntyped, property))
+                    // For is for performance reason here
+                    for (int i = 0; i < propertyValues.Count; i++)
                     {
-                        propertyValue = pv;
-                        break;
+                        if (search.PropertyComparer.Equals(propertyValues[i].PropertyUntyped, property))
+                        {
+                            propertyValue = propertyValues[i];
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (IPropertyValue? pv in propertyContainer.Properties)
+                    {
+                        if (search.PropertyComparer.Equals(pv.PropertyUntyped, property))
+                        {
+                            propertyValue = pv;
+                            break;
+                        }
                     }
                 }
             }
@@ -107,7 +117,7 @@ namespace MicroElements.Metadata
                 var calculationContext = new CalculationContext(propertyContainer, search);
                 var calculatedValue = calculator.Calculate(ref calculationContext);
                 var calculatedValueSource = calculationContext.ValueSource ?? ValueSource.NotDefined;
-                var calculatedPropertyValue = _propertyValueFactory.Create(property, calculatedValue, calculatedValueSource);
+                IPropertyValue<T>? calculatedPropertyValue = _propertyValueFactory.Create(property, calculatedValue, calculatedValueSource);
 
                 if (calculatedPropertyValue.Source == ValueSource.NotDefined && !search.ReturnNotDefined)
                     calculatedPropertyValue = null;
@@ -130,6 +140,59 @@ namespace MicroElements.Metadata
 
             // Return null or NotDefined
             return search.ReturnNotDefined ? _propertyValueFactory.Create(property, default, ValueSource.NotDefined) : null;
+        }
+
+        /// <inheritdoc />
+        public void GetPropertyValue2<T>(
+            IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            SearchOptions? searchOptions,
+            out PropertyValueData<T> result)
+        {
+            SearchOptions search = searchOptions ?? propertyContainer.SearchOptions;
+
+            // Base search by ByReferenceComparer.
+            IPropertyValue<T>? propertyValue = SearchPropertyValueUntyped(propertyContainer, property, _fastSearchOptions) as IPropertyValue<T>;
+
+            // Good job - return result!
+            if (propertyValue != null)
+            {
+                result = new PropertyValueData<T>(property, propertyValue.Value, propertyValue.Source);
+                return;
+            }
+
+            // Property can be calculated.
+            if (search.CalculateValue && property.GetCalculator() is { } calculator)
+            {
+                var calculationContext = new CalculationContext(propertyContainer, search);
+                var calculatedValue = calculator.Calculate(ref calculationContext);
+                var calculatedValueSource = calculationContext.ValueSource ?? ValueSource.NotDefined;
+
+                result = new PropertyValueData<T>(property, calculatedValue, calculatedValueSource);
+                return;
+            }
+
+            // Search by provided options.
+            propertyValue = SearchPropertyValueUntyped(propertyContainer, property, search
+                .UseDefaultValue(false)
+                .ReturnNull()) as IPropertyValue<T>;
+
+            // Nice. We have result!
+            if (propertyValue != null)
+            {
+                result = new PropertyValueData<T>(property, propertyValue.Value, propertyValue.Source);
+                return;
+            }
+
+            // Maybe default value?
+            if (search.UseDefaultValue && property.DefaultValue is { } defaultValue)
+            {
+                result = new PropertyValueData<T>(property, defaultValue.Value, ValueSource.DefaultValue);
+                return;
+            }
+
+            // Return null or NotDefined
+            result = new PropertyValueData<T>(property, default, ValueSource.NotDefined);
         }
     }
 }

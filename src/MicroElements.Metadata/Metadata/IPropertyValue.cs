@@ -42,6 +42,12 @@ namespace MicroElements.Metadata
         /// Gets property value.
         /// </summary>
         T? Value { get; }
+
+        /// <inheritdoc />
+        IProperty IPropertyValue.PropertyUntyped => Property;
+
+        /// <inheritdoc />
+        object? IPropertyValue.ValueUntyped => Source == ValueSource.NotDefined ? null : Value;
     }
 
     /// <summary>

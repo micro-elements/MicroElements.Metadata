@@ -21,8 +21,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <summary>
         /// Gets OpenXml element.
         /// </summary>
-        [MaybeNull]
-        TOpenXmlElement Data { get; }
+        TOpenXmlElement? Data { get; }
 
         /// <summary>
         /// Returns true if <see cref="Data"/> is not null.
@@ -45,21 +44,14 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <summary>
         /// Gets OpenXml element.
         /// </summary>
-        [MaybeNull]
-        public TOpenXmlElement Data { get; }
-
-        ///// <summary>
-        ///// Gets OpenXml element as <see cref="Option{A}"/>.
-        ///// </summary>
-        ///// <returns>Optional OpenXml element.</returns>
-        //public Option<TOpenXmlElement> AsOption() => Data!;
+        public TOpenXmlElement? Data { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelElement{TOpenXmlElement}"/> class.
         /// </summary>
         /// <param name="doc">OpenXml document that contains this element.</param>
         /// <param name="data">OpenXml element.</param>
-        public ExcelElement(SpreadsheetDocument doc, [MaybeNull] TOpenXmlElement data)
+        public ExcelElement(SpreadsheetDocument doc, TOpenXmlElement? data)
         {
             Doc = doc.AssertArgumentNotNull(nameof(doc));
             Data = data;
@@ -95,15 +87,14 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// <summary>
         /// Gets OpenXml element.
         /// </summary>
-        [MaybeNull]
-        public TOpenXmlElement Data { get; }
+        public TOpenXmlElement? Data { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelElementLight{TOpenXmlElement}"/> struct.
         /// </summary>
         /// <param name="doc">OpenXml document that contains this element.</param>
         /// <param name="data">OpenXml element.</param>
-        public ExcelElementLight(SpreadsheetDocument doc, [MaybeNull] TOpenXmlElement data)
+        public ExcelElementLight(SpreadsheetDocument doc, TOpenXmlElement? data)
         {
             Doc = doc.AssertArgumentNotNull(nameof(doc));
             Data = data;

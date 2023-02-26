@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
+using MicroElements.Collections.Extensions.Iterate;
+using MicroElements.Metadata.Experimental;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
 using NodaTime;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
@@ -357,8 +360,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     CellContext[] cellContexts = new CellContext[columns.Count];
                     for (var i = 0; i < columns.Count; i++)
                     {
-                        var columnContext = columns[i];
-                        cellContexts[i] = ConstructCell(columnContext, dataRow, callCustomize: false);
+                        cellContexts[i] = ConstructCell(columns[i], dataRow, callCustomize: false);
                     }
 
                     // Create row
@@ -370,14 +372,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     // Customize cells
                     for (var i = 0; i < columns.Count; i++)
                     {
-                        CellContext cellContext = cellContexts[i];
-                        var configureCell = ExcelCellMetadata.ConfigureCell.GetFirstDefinedValue(
-                            cellContext.CellMetadata,
-                            cellContext.ColumnContext.ColumnMetadata,
-                            sheetContext.SheetMetadata,
-                            sheetContext.DocumentContext.DocumentMetadata);
-
-                        configureCell?.Invoke(cellContext);
+                        ConfigureCell(ref cellContexts[i]);
                     }
 
                     sheetData.AppendChild(excelRow);
@@ -397,8 +392,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     {
                         var column = columns[index];
                         Row row = excelRows[index];
-                        Cell cell = ConstructCell(column, dataRow).Cell;
-                        row.AppendChild(cell);
+                        CellContext cellContext = ConstructCell(column, dataRow, callCustomize: true);
+                        row.AppendChild(cellContext.Cell);
                     }
                 }
 
@@ -407,6 +402,21 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     sheetData.AppendChild(row);
                 }
             }
+        }
+
+        private static void ConfigureCell(ref CellContext cellContext)
+        {
+            // var configureCell = ExcelCellMetadata.ConfigureCell.GetFirstDefinedValue(
+            //     cellContext.CellMetadata,
+            //     cellContext.ColumnContext.ColumnMetadata,
+            //     sheetContext.SheetMetadata,
+            //     sheetContext.DocumentContext.DocumentMetadata);
+            // configureCell?.Invoke(cellContext);
+
+            // var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
+            // customizeFunc?.Invoke(cellContext);
+
+            cellContext.CellMetadata?.ConfigureCell.ConfigureChain(ref cellContext);
         }
 
         private Columns CreateColumns(IReadOnlyList<ColumnContext> columns)
@@ -470,14 +480,15 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         {
             Cell headerCell = CreateCell(columnContext.PropertyRenderer.TargetName, CellValues.String);
 
-            var propertyRenderer = columnContext.PropertyRenderer;
+            IPropertyRenderer propertyRenderer = columnContext.PropertyRenderer;
             ExcelColumnMetadata? excelColumnMetadata = propertyRenderer.GetMetadata<ExcelColumnMetadata>();
 
             // External customization
             var customizeFunc = excelColumnMetadata?.GetValue(ExcelColumnMetadata.ConfigureHeaderCell);
             if (customizeFunc != null)
             {
-                customizeFunc.Invoke(new CellContext(columnContext, excelColumnMetadata!, headerCell));
+                // var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
+                customizeFunc.Invoke(new CellContext(columnContext, null, headerCell));
             }
 
             return headerCell;
@@ -489,9 +500,12 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 
             // Render value
             string? textValue = propertyRenderer.Render(source);
+
+            // Use StringProvider for potential string reusing
             textValue = textValue != null ? _settings.StringProvider.GetString(textValue) : null;
 
-            var cellMetadata = propertyRenderer.GetMetadata<ExcelCellMetadata>();
+            // Get Cell metadata
+            var cellMetadata = propertyRenderer.GetMetadataCached<ExcelCellMetadata>();
 
             CellValues dataType = ExcelMetadata.DataType.GetFirstDefinedValue(
                 cellMetadata,
@@ -517,8 +531,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             // External customization
             if (callCustomize)
             {
-                var customizeFunc = cellMetadata?.GetValue(ExcelCellMetadata.ConfigureCell);
-                customizeFunc?.Invoke(cellContext);
+                ConfigureCell(ref cellContext);
             }
 
             // TODO: omit empty cells? or omit style if cell is empty

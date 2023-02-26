@@ -11,7 +11,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Provides extension methods for metadata providers.
     /// </summary>
-    public static class MetadataProviderExtensions
+    public static partial class MetadataProviderExtensions
     {
         /// <summary>
         /// Returns a value indicating whether the metadata provider has any metadata.

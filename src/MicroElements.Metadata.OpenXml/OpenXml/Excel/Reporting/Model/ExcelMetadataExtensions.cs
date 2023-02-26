@@ -30,7 +30,15 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         {
             Action<TContext>? existedAction = metadata.GetPropertyValue(property)?.Value;
 
-            return metadata.WithValue(property, context => Combine(context, existedAction, action, combineMode));
+            return metadata.WithValue(property, GetCombinedAction(existedAction, action, combineMode));
+
+            static Action<TContext> GetCombinedAction(Action<TContext>? existedAction, Action<TContext> action, CombineMode combineMode)
+            {
+                if (existedAction is null && combineMode is CombineMode.AppendToStart or CombineMode.AppendToEnd)
+                    return action;
+
+                return context => Combine(context, existedAction, action, combineMode);
+            }
 
             static void Combine(TContext context, Action<TContext>? action1, Action<TContext> action2, CombineMode combineMode)
             {

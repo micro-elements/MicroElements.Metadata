@@ -7,7 +7,9 @@ using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
+using MicroElements.Metadata.Experimental;
 using MicroElements.Metadata.OpenXml.Excel.Styling;
+using MicroElements.Reflection.FriendlyName;
 
 namespace MicroElements.Metadata.OpenXml.Excel.Reporting
 {
@@ -47,12 +49,36 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <returns>The same renderer instance.</returns>
         public static TPropertyRenderer ConfigureCell<TPropertyRenderer>(
             this TPropertyRenderer propertyRenderer,
-            Action<CellContext> configureCell,
+            RefAction<CellContext> configureCell,
             CombineMode combineMode = CombineMode.AppendToEnd)
             where TPropertyRenderer : IPropertyRenderer
         {
-            return propertyRenderer.ConfigureMetadata<TPropertyRenderer, ExcelCellMetadata>(
-                metadata => metadata.WithCombinedConfigure(ExcelCellMetadata.ConfigureCell, configureCell, combineMode));
+            return propertyRenderer
+                .ConfigureMetadata<TPropertyRenderer, ExcelCellMetadata>(metadata =>
+                {
+                    metadata.ConfigureCell = metadata.ConfigureCell.CombineWith(new ConfigureAction<CellContext>(configureCell), combineMode);
+                });
+        }
+
+        /// <summary>
+        /// Configures cell.
+        /// </summary>
+        /// <typeparam name="TPropertyRenderer">Property renderer type.</typeparam>
+        /// <param name="propertyRenderer">Property renderer.</param>
+        /// <param name="configureCell">Cell customization action.</param>
+        /// <param name="combineMode">Combine mode. Default: AppendToEnd.</param>
+        /// <returns>The same renderer instance.</returns>
+        public static TPropertyRenderer ConfigureCell<TPropertyRenderer>(
+            this TPropertyRenderer propertyRenderer,
+            ConfigureAction<CellContext> configureCell,
+            CombineMode combineMode = CombineMode.AppendToEnd)
+            where TPropertyRenderer : IPropertyRenderer
+        {
+            return propertyRenderer
+                .ConfigureMetadata<TPropertyRenderer, ExcelCellMetadata>(metadata =>
+                {
+                    metadata.ConfigureCell = metadata.ConfigureCell.CombineWith(configureCell, combineMode);
+                });
         }
 
         /// <summary>
@@ -115,31 +141,29 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <typeparam name="TPropertyRenderer">Property renderer type.</typeparam>
         /// <param name="propertyRenderer">Property renderer.</param>
         /// <param name="getCellStyle">Function. Input: CellValue, Result: StyleName.</param>
-        /// <param name="mergeMode">StyleApply mode. Default: Merge.</param>
+        /// <param name="configureMode">Configure combine mode. Default: AppendToEnd.</param>
+        /// <param name="styleApplyMode">StyleApply mode. Default: Merge.</param>
         /// <returns>The same renderer instance.</returns>
         public static TPropertyRenderer ConfigureCellStyle<TPropertyRenderer>(
             this TPropertyRenderer propertyRenderer,
             Func<string?, string?> getCellStyle,
-            MergeMode mergeMode = MergeMode.Merge)
+            CombineMode configureMode = CombineMode.AppendToEnd,
+            MergeMode styleApplyMode = MergeMode.Merge)
             where TPropertyRenderer : IPropertyRenderer
         {
             propertyRenderer.AssertArgumentNotNull(nameof(propertyRenderer));
             getCellStyle.AssertArgumentNotNull(nameof(getCellStyle));
 
-            if (mergeMode == MergeMode.Set)
+            propertyRenderer.ConfigureMetadata<ExcelCellMetadata>(metadata =>
             {
-                propertyRenderer.ConfigureMetadata<ExcelCellMetadata>(
-                    metadata => metadata.SetValue(ExcelCellMetadata.ConfigureCell, context => ConfigureCellStyleInternal(context, getCellStyle, mergeMode)));
-            }
-            else
-            {
-                propertyRenderer.ConfigureMetadata<ExcelCellMetadata>(metadata =>
-                    metadata.WithCombinedConfigure(ExcelCellMetadata.ConfigureCell, context => ConfigureCellStyleInternal(context, getCellStyle, mergeMode)));
-            }
+                metadata.ConfigureCell = metadata.ConfigureCell.CombineWith(
+                    new ConfigureAction<CellContext>((ref CellContext context) => ConfigureCellStyleInternal(context, getCellStyle, styleApplyMode), description: "Dynamic style"),
+                    configureMode);
+            });
 
             return propertyRenderer;
 
-            static void ConfigureCellStyleInternal(CellContext context, Func<string?, string?> getCellStyle, MergeMode styleApply)
+            static void ConfigureCellStyleInternal(in CellContext context, Func<string?, string?> getCellStyle, MergeMode styleApply)
             {
                 string? cellValue = context.GetCellValue();
                 string? cellStyle = getCellStyle(cellValue);
@@ -147,6 +171,35 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 if (cellStyle != null)
                     context.ApplyStyleToCell(cellStyle, styleApply);
             }
+        }
+
+        /// <summary>
+        /// Configures cell style.
+        /// </summary>
+        /// <typeparam name="TPropertyRenderer">Property renderer type.</typeparam>
+        /// <param name="propertyRenderer">Property renderer.</param>
+        /// <param name="cellStyle">StyleName.</param>
+        /// <param name="configureMode">Configure combine mode. Default: AppendToEnd.</param>
+        /// <param name="styleApplyMode">StyleApply mode. Default: Merge.</param>
+        /// <returns>The same renderer instance.</returns>
+        public static TPropertyRenderer ConfigureCellStyle<TPropertyRenderer>(
+            this TPropertyRenderer propertyRenderer,
+            string cellStyle,
+            CombineMode configureMode = CombineMode.AppendToEnd,
+            MergeMode styleApplyMode = MergeMode.Merge)
+            where TPropertyRenderer : IPropertyRenderer
+        {
+            propertyRenderer.AssertArgumentNotNull(nameof(propertyRenderer));
+            cellStyle.AssertArgumentNotNull(nameof(cellStyle));
+
+            propertyRenderer.ConfigureMetadata<ExcelCellMetadata>(metadata =>
+            {
+                metadata.ConfigureCell = metadata.ConfigureCell.CombineWith(
+                    new ConfigureAction<CellContext>((ref CellContext context) => context.ApplyStyleToCell(cellStyle, styleApplyMode), description: $"Style: {cellStyle}"),
+                    configureMode);
+            });
+
+            return propertyRenderer;
         }
 
         /// <summary>
@@ -163,7 +216,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             bool autoRegister = true)
             where TPropertyRenderer : IPropertyRenderer
         {
-            return propertyRenderer.ConfigureCell(context =>
+            return propertyRenderer.ConfigureCell(new ConfigureAction<CellContext>(ApplyStyleInternal, $"CellFormatProvider: {formatProvider.GetType().GetFriendlyName()}"));
+
+            void ApplyStyleInternal(ref CellContext context)
             {
                 var formatName = formatProvider.Name;
 
@@ -178,7 +233,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 }
 
                 context.ApplyStyleToCell(formatName);
-            });
+            }
         }
 
         /// <summary>
@@ -195,7 +250,9 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
             bool autoRegister = true)
             where TPropertyRenderer : IPropertyRenderer
         {
-            return propertyRenderer.ConfigureCell(context =>
+            return propertyRenderer.ConfigureCell(new ConfigureAction<CellContext>(ApplyStyleInternal, $"NumberingFormatProvider: {formatProvider.GetType().GetFriendlyName()}"));
+
+            void ApplyStyleInternal(ref CellContext context)
             {
                 var numberingFormatName = formatProvider.Name;
                 var cellFormatName = $"CellFormat.{numberingFormatName}";
@@ -223,7 +280,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                 }
 
                 context.ApplyStyleToCell(cellFormatName);
-            });
+            }
         }
 
         /// <summary>
@@ -243,7 +300,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
                     object? valueUntyped = container.GetValueUntyped(property, container.SearchOptions.UseDefaultValue(false).ReturnNull());
                     return valueUntyped.ToExcelSerialDateAsString();
                 })
-                .ConfigureCell(context => context.ApplyStyleToCell(registeredStyleName));
+                .ConfigureCell(new ConfigureAction<CellContext>((ref CellContext context) => context.ApplyStyleToCell(registeredStyleName), $"Style: {registeredStyleName}"));
 
             return propertyRenderer;
         }
@@ -380,7 +437,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <param name="context">Cell context.</param>
         /// <param name="applyStyleName">Style name to apply.</param>
         /// <param name="mergeMode">Apply style.</param>
-        public static void ApplyStyleToCell(this CellContext context, string applyStyleName, MergeMode mergeMode = MergeMode.Merge)
+        public static void ApplyStyleToCell(this in CellContext context, string applyStyleName, MergeMode mergeMode = MergeMode.Merge)
         {
             var documentContext = context.ColumnContext.SheetContext.DocumentContext;
 

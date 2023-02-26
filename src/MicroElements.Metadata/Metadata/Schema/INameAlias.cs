@@ -79,6 +79,19 @@ namespace MicroElements.Metadata.Schema
         }
 
         /// <summary>
+        /// Creates schema copy with provided name alias.
+        /// </summary>
+        /// <typeparam name="TSchema">Schema type.</typeparam>
+        /// <param name="source">Source schema.</param>
+        /// <param name="nameAlias">Description.</param>
+        /// <returns>New schema instance with provided name alias.</returns>
+        public static TSchema WithNameAlias<TSchema>(this TSchema source, string nameAlias)
+            where TSchema : ISchemaBuilder<INameAlias>, ISchema
+        {
+            return source.WithSchemaComponent(new NameAlias(nameAlias));
+        }
+
+        /// <summary>
         /// Gets Alias from <see cref="INameAlias"/>.
         /// </summary>
         /// <param name="value">Source value.</param>

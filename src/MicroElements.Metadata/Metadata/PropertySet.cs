@@ -10,7 +10,7 @@ namespace MicroElements.Metadata
     /// </summary>
     public sealed class PropertySet : IPropertySet
     {
-        private readonly List<IProperty> _properties = new List<IProperty>();
+        private readonly List<IProperty> _properties = new();
 
         /// <summary>
         /// Gets the property list.
@@ -26,7 +26,7 @@ namespace MicroElements.Metadata
         /// <param name="properties">Property list.</param>
         public PropertySet(params IProperty[]? properties)
         {
-            if (properties != null && properties.Length > 0)
+            if (properties != null)
                 _properties.AddRange(properties);
         }
 

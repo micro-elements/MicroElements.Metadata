@@ -11,7 +11,7 @@ namespace MicroElements.Metadata
     /// <summary>
     /// Property extensions.
     /// </summary>
-    public static class PropertyExtensions
+    public static partial class PropertyExtensions
     {
         /// <summary>
         /// Gets property name and possible aliases.
@@ -100,7 +100,7 @@ namespace MicroElements.Metadata
 
             return new Property<TResult?>(property.Name)
                 .With(description: property.Description, alias: property.Alias)
-                .WithCalculate(ConvertValue);
+                .WithCalculate((container, options) => ConvertValue(container, options));
         }
 
         /// <summary>

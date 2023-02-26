@@ -4,6 +4,7 @@ using System.Xml;
 using FluentAssertions;
 using MicroElements.Diagnostics;
 using MicroElements.Metadata.ComponentModel;
+using MicroElements.Metadata.Experimental;
 using MicroElements.Metadata.Schema;
 using MicroElements.Metadata.Xml;
 using Xunit;
@@ -12,6 +13,27 @@ namespace MicroElements.Metadata.Tests
 {
     public class PropertyTests
     {
+        [Fact]
+        public static void ImmutableChainTest()
+        {
+            ImmutableChain<int>? chain_null = null;
+            ImmutableChain<int> chain_null_1 = chain_null.Append(1);
+            chain_null_1.Values.Should().Equal(1);
+
+            ImmutableChain<int> chain_1 = ImmutableChain.Create(1);
+            chain_1.Values.Should().Equal(1);
+            ImmutableChain<int> chain_1_2 = chain_1.Append(2);
+            ImmutableChain<int> chain_1_2_3 = chain_1_2.Append(3);
+            ImmutableChain<int> chain_1_2_3_4 = chain_1_2_3.Append(4);
+            chain_1_2_3_4.Values.Should().Equal(1, 2, 3, 4);
+
+            ImmutableChain<int> chain_1_2_1_2 = chain_1_2.Append(chain_1_2);
+            chain_1_2_1_2.Values.Should().Equal(1, 2, 1, 2);
+
+            ImmutableChain<int> chain_3_1_2 = chain_1_2.Prepend(3);
+            chain_3_1_2.Values.Should().Equal(3, 1, 2);
+        }
+
         [Fact]
         public void empty_property_should_be_empty()
         {
@@ -49,7 +71,7 @@ namespace MicroElements.Metadata.Tests
             var test4 = CreateFilledProperty().WithNameUntyped("test4");
             ((IProperty<int>)test4).ShouldBeFilled(name: "test4");
 
-            var test5 = CreateFilledProperty().WithAliasUntyped("alias5");
+            var test5 = CreateFilledProperty().WithNameAlias("alias5");// .WithAliasUntyped("alias5");
             ((IProperty<int>)test5).ShouldBeFilled(alias: "alias5");
         }
 
@@ -167,7 +189,7 @@ namespace MicroElements.Metadata.Tests
 
         [Fact]
         public void message_builder1()
-        { 
+        {
             string? parseResultErrorMessage = "ParseError";
             var message =
                 ValueMessageBuilder
@@ -271,7 +293,7 @@ namespace MicroElements.Metadata.Tests
         {
             Property<string> withCalculate = new Property<string>("Currency")
                 .WithCalculate(container => "EUR");
-            
+
         }
 
         [Fact]
@@ -346,7 +368,7 @@ namespace MicroElements.Metadata.Tests
         }
 
         public static void ShouldBeFilled(
-            this IProperty<int> property, 
+            this IProperty<int> property,
             string? name = "test",
             string? alias = "alias")
         {

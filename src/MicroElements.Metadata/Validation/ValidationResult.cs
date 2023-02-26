@@ -37,6 +37,17 @@ namespace MicroElements.Validation
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ValidationResult{T}"/> struct.
+        /// </summary>
+        /// <param name="data">Data that was validated.</param>
+        /// <param name="validationMessages">Validation messages.</param>
+        public ValidationResult(T data, params Message[]? validationMessages)
+        {
+            Data = data.AssertArgumentNotNull(nameof(data));
+            ValidationMessages = validationMessages ?? Array.Empty<Message>();
+        }
+
+        /// <summary>
         /// Validation result can be implicitly cast to its Data type.
         /// </summary>
         /// <param name="validationResult">Source validation result.</param>

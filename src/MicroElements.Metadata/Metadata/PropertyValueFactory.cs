@@ -116,6 +116,21 @@ namespace MicroElements.Metadata
         }
     }
 
+    public class EmptyPropertyValueFactory : IPropertyValueFactory
+    {
+        /// <inheritdoc />
+        public IPropertyValue<T> Create<T>(IProperty<T> property, T? value, ValueSource? valueSource = null)
+        {
+            return null;
+        }
+
+        /// <inheritdoc />
+        public IPropertyValue CreateUntyped(IProperty property, object? value, ValueSource? valueSource = null)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Cached <see cref="IPropertyValue"/> factory.
     /// </summary>

@@ -10,7 +10,9 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
+using MicroElements.Collections.Cache;
 using MicroElements.Collections.Extensions.Iterate;
+using MicroElements.Collections.TwoLayerCache;
 using MicroElements.Diagnostics;
 using MicroElements.Metadata.Parsing;
 using MicroElements.Validation;
@@ -69,17 +71,6 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// </summary>
         /// <param name="sheet">Source sheet.</param>
         /// <returns>Sheet rows.</returns>
-        public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)
-        {
-            return GetOpenXmlRows(sheet)
-                .Zip(Enumerable.Repeat(sheet, int.MaxValue), (row, sh) => new ExcelElement<Row>(sh.Doc, row));
-        }
-
-        /// <summary>
-        /// Gets rows from sheet.
-        /// </summary>
-        /// <param name="sheet">Source sheet.</param>
-        /// <returns>Sheet rows.</returns>
         public static IEnumerable<Row> GetOpenXmlRows(this ExcelElement<Sheet> sheet)
         {
             if (sheet.Data != null)
@@ -96,65 +87,13 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         }
 
         /// <summary>
-        /// Gets cell reference by column row index.
-        /// Example: (0,0)->A1.
+        /// Gets rows from sheet.
         /// </summary>
-        /// <param name="column">Column index.</param>
-        /// <param name="row">Row index.</param>
-        /// <param name="zeroBased">Is column and row zero based.</param>
-        /// <returns>Cell reference.</returns>
-        public static StringValue GetCellReference(int column, int row, bool zeroBased = true)
+        /// <param name="sheet">Source sheet.</param>
+        /// <returns>Sheet rows.</returns>
+        public static IEnumerable<ExcelElement<Row>> GetRows(this ExcelElement<Sheet> sheet)
         {
-            int columnIndex = zeroBased ? column : column - 1;
-            string columnName = GetColumnName(columnIndex);
-            int rowName = zeroBased ? row + 1 : row;
-            return new StringValue(string.Concat(columnName, rowName.ToString()));
-        }
-
-        private static readonly ConcurrentDictionary<int, string> _columnIndexes = new ConcurrentDictionary<int, string>();
-
-        /// <summary>
-        /// Gets column index (cached).
-        /// </summary>
-        public static string GetColumnName(int columnIndex = 0)
-        {
-            return _columnIndexes.GetOrAdd(columnIndex, i => GetColumnName(string.Empty, i));
-        }
-
-        private static string GetColumnName(string prefix, int columnIndex = 0)
-        {
-            return columnIndex < 26
-                ? $"{prefix}{(char)(65 + columnIndex)}"
-                : GetColumnName(GetColumnName(prefix, ((columnIndex - (columnIndex % 26)) / 26) - 1), columnIndex % 26);
-        }
-
-        /// <summary>
-        /// Gets column reference from cell reference.
-        /// For example: A1->A, CD22->CD.
-        /// </summary>
-        /// <param name="cellReference">Cell reference.</param>
-        /// <returns>Column reference.</returns>
-        public static string GetColumnReference(this StringValue cellReference)
-        {
-            cellReference.AssertArgumentNotNull(nameof(cellReference));
-
-            return cellReference.Value.GetColumnReference();
-        }
-
-        /// <summary>
-        /// Gets column reference from cell reference.
-        /// For example: A1->A, CD22->CD.
-        /// </summary>
-        /// <param name="cellReference">Cell reference.</param>
-        /// <returns>Column reference.</returns>
-        public static string GetColumnReference(this string cellReference)
-        {
-            cellReference.AssertArgumentNotNull(nameof(cellReference));
-
-            if (cellReference.Length == 2)
-                return cellReference.Substring(0, 1);
-
-            return new string(cellReference.TakeWhile(char.IsLetter).ToArray());
+            return GetOpenXmlRows(sheet).Select(row => new ExcelElement<Row>(sheet.Doc, row));
         }
 
         /// <summary>
@@ -253,7 +192,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 if (cell != null)
                 {
                     IPropertyParser? propertyParser = header.GetMetadata<IPropertyParser>();
-                    rowValues[i] = cell.GetCellValue(nullValue, propertyParser);
+                    rowValues[i] = cell.GetCellValue(nullValue, propertyParser?.TargetType);
 
                     //StringValue cellReference = cell.Data.CellReference;
                 }
@@ -309,28 +248,37 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
         /// Uses SharedStringTable if needed.
         /// For DateTime, LocalDate and LocalTime tries to convert double excel value to ISO format.
         /// </summary>
-        public static string? GetCellValue(this ExcelElement<Cell> cell, string? nullValue = null, IPropertyParser? propertyParser = null)
+        public static string? GetCellValue<T>(
+            this T cellElement,
+            string? nullValue = null,
+            Type? targetType = null)
+            where T : IExcelElement<Cell>
         {
-            Cell? cellData = cell.Data;
-            string? cellValue = cellData?.CellValue?.InnerText ?? nullValue;
+            Cell? cell = cellElement.Data;
+            SharedStringTable sharedStringTable = cellElement.Doc.WorkbookPart.SharedStringTablePart.SharedStringTable;
+
+            string? cellValue = cell?.CellValue?.InnerText ?? nullValue;
             string? cellTextValue = null;
 
-            if (cellData == null)
+            if (cell == null)
                 return cellValue;
 
-            CellValues? dataTypeValue = cellData.DataType?.Value;
+            CellValues? dataTypeValue = cell.DataType?.Value;
 
             if (cellValue != null && dataTypeValue == CellValues.SharedString)
             {
-                cellTextValue = cell.Doc.WorkbookPart.SharedStringTablePart.SharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText;
+                // cellTextValue = sharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText;
+                cellTextValue = sharedStringTable
+                    .GetWeakCache<string, string>()
+                    .GetOrAdd(cellValue, static (cellValue, sharedStringTable) => sharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText, sharedStringTable);
             }
 
             if (cellTextValue == null && cellValue != null)
             {
-                propertyParser ??= cell.GetMetadata<IPropertyParser>();
-
-                if (propertyParser != null)
-                    cellTextValue = TryParseAsDateType(cellValue, propertyParser.TargetType);
+                if (targetType != null)
+                {
+                    cellTextValue = TryParseAsDateType(cellValue, targetType);
+                }
             }
 
             return cellTextValue ?? cellValue;
@@ -578,11 +526,13 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                     // Use first row as headers
                     headers = row.GetHeaders();
 
+                    var propertyParsers = parserProvider.GetParsers().ToArray();
+
                     // Associate parser for each header
                     foreach (var header in headers)
                     {
                         // TODO: RIGID SEARCH. Use predicate?
-                        var propertyParser = parserProvider.GetParsers().FirstOrDefault(parser => parser.SourceName == header.Data.Name);
+                        var propertyParser = propertyParsers.FirstOrDefault(parser => parser.SourceName == header.Data.Name);
                         if (propertyParser != null)
                         {
                             header.SetMetadata(propertyParser);

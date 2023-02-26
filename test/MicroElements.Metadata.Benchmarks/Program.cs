@@ -8,7 +8,7 @@ namespace MicroElements.Metadata.Benchmarks
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<BuilderBench>();
+            var summary = BenchmarkRunner.Run<MapBench>();
         }
     }
 

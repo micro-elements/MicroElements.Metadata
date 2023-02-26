@@ -12,19 +12,21 @@ namespace MicroElements.Metadata
     /// </summary>
     public sealed partial class ByTypeAndNamePropertyComparer : IEqualityComparer<IProperty>
     {
-        private readonly StringComparison _typeNameComparison;
+        private readonly StringComparison _nameComparison;
+        private readonly StringComparer _nameComparer;
         private readonly bool _ignoreTypeNullability;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ByTypeAndNamePropertyComparer"/> class.
         /// </summary>
-        /// <param name="typeNameComparison">StringComparison for property name comparing.</param>
+        /// <param name="nameComparison">StringComparison for property name comparing.</param>
         /// <param name="ignoreTypeNullability">Compare types ignore Nullable wrapper type.</param>
         public ByTypeAndNamePropertyComparer(
-            StringComparison typeNameComparison = StringComparison.Ordinal,
+            StringComparison nameComparison = StringComparison.Ordinal,
             bool ignoreTypeNullability = false)
         {
-            _typeNameComparison = typeNameComparison;
+            _nameComparison = nameComparison;
+            _nameComparer = StringComparer.FromComparison(nameComparison);
             _ignoreTypeNullability = ignoreTypeNullability;
         }
 
@@ -37,10 +39,18 @@ namespace MicroElements.Metadata
             if (ReferenceEquals(x, y))
                 return true;
 
-            Type typeX = _ignoreTypeNullability && x.Type.GetTypeInfo().IsValueType ? Nullable.GetUnderlyingType(x.Type) ?? x.Type : x.Type;
-            Type typeY = _ignoreTypeNullability && y.Type.GetTypeInfo().IsValueType ? Nullable.GetUnderlyingType(y.Type) ?? y.Type : y.Type;
+            Type typeX = x.Type;
+            Type typeY = y.Type;
 
-            return typeX == typeY && x.Name.Equals(y.Name, _typeNameComparison);
+            if (_ignoreTypeNullability)
+            {
+                if (typeX.GetTypeInfo().IsValueType && Nullable.GetUnderlyingType(typeX) is { } underlyingTypeX)
+                    typeX = underlyingTypeX;
+                if (typeY.GetTypeInfo().IsValueType && Nullable.GetUnderlyingType(typeY) is { } underlyingTypeY)
+                    typeY = underlyingTypeY;
+            }
+
+            return typeX == typeY && x.Name.Equals(y.Name, _nameComparison);
         }
 
         /// <inheritdoc/>
@@ -49,10 +59,8 @@ namespace MicroElements.Metadata
             string propertyName = property.Name;
             Type propertyType = property.Type;
 
-            if (_typeNameComparison == StringComparison.OrdinalIgnoreCase ||
-                _typeNameComparison == StringComparison.InvariantCultureIgnoreCase ||
-                _typeNameComparison == StringComparison.CurrentCultureIgnoreCase)
-                propertyName = propertyName.ToLower();
+            HashCode hashCode = default;
+            hashCode.Add(propertyName, _nameComparer);
 
             if (_ignoreTypeNullability
                 && propertyType.GetTypeInfo().IsValueType
@@ -61,7 +69,9 @@ namespace MicroElements.Metadata
                 propertyType = underlyingType;
             }
 
-            return HashCode.Combine(propertyName, propertyType);
+            hashCode.Add(propertyType);
+
+            return hashCode.ToHashCode();
         }
     }
 
@@ -73,16 +83,16 @@ namespace MicroElements.Metadata
         /// <summary>
         /// Gets property comparer by Type and Name.
         /// </summary>
-        public static IEqualityComparer<IProperty> Strict { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.Ordinal, ignoreTypeNullability: false);
+        public static IEqualityComparer<IProperty> Strict { get; } = new ByTypeAndNamePropertyComparer(nameComparison: StringComparison.Ordinal, ignoreTypeNullability: false);
 
         /// <summary>
         /// Gets property comparer by Type and Name ignore case.
         /// </summary>
-        public static IEqualityComparer<IProperty> IgnoreNameCase { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: false);
+        public static IEqualityComparer<IProperty> IgnoreNameCase { get; } = new ByTypeAndNamePropertyComparer(nameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: false);
 
         /// <summary>
         /// Gets property comparer by Type and Name ignoring name case and ignoring <see cref="Nullable{T}"/> wrapper.
         /// </summary>
-        public static IEqualityComparer<IProperty> IgnoreNameCaseIgnoreNullability { get; } = new ByTypeAndNamePropertyComparer(typeNameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: true);
+        public static IEqualityComparer<IProperty> IgnoreNameCaseIgnoreNullability { get; } = new ByTypeAndNamePropertyComparer(nameComparison: StringComparison.OrdinalIgnoreCase, ignoreTypeNullability: true);
     }
 }

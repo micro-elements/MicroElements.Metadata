@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.OpenXml.Excel.Parsing;
@@ -20,7 +21,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <summary>
         /// Gets cell metadata.
         /// </summary>
-        public IExcelMetadata? CellMetadata { get; }
+        public ExcelCellMetadata? CellMetadata { get; }
 
         /// <summary>
         /// Gets OpenXml cell.
@@ -43,7 +44,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <param name="columnContext">ColumnContext for this cell.</param>
         /// <param name="cellMetadata">Cell metadata.</param>
         /// <param name="cell">OpenXml cell.</param>
-        public CellContext(ColumnContext columnContext, IExcelMetadata? cellMetadata, Cell cell)
+        public CellContext(ColumnContext columnContext, ExcelCellMetadata? cellMetadata, Cell cell)
         {
             columnContext.AssertArgumentNotNull(nameof(columnContext));
 
@@ -58,7 +59,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// <returns>Text value.</returns>
         public string? GetCellValue()
         {
-            ExcelElement<Cell> excelCell = new ExcelElement<Cell>(ColumnContext.SheetContext.DocumentContext.Document, Cell);
+            var excelCell = new ExcelElementLight<Cell>(ColumnContext.SheetContext.DocumentContext.Document, Cell);
             string? cellValue = excelCell.GetCellValue();
             return cellValue;
         }

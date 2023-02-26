@@ -32,5 +32,11 @@ namespace MicroElements.Metadata
             IPropertyContainer propertyContainer,
             IProperty<T> property,
             SearchOptions? searchOptions = null);
+
+        void GetPropertyValue2<T>(
+            IPropertyContainer propertyContainer,
+            IProperty<T> property,
+            SearchOptions? searchOptions,
+            out PropertyValueData<T> result);
     }
 }

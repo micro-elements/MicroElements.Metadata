@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using MicroElements.Metadata.Formatting;
 
@@ -55,22 +54,22 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public IEnumerator<IPropertyValue> GetEnumerator() => Properties.GetEnumerator();
-
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        /// <inheritdoc />
-        public int Count => Properties.Count;
+        public IReadOnlyCollection<IPropertyValue> Properties { get; }
 
         /// <inheritdoc />
         public IPropertyContainer? ParentSource { get; }
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IPropertyValue> Properties { get; }
+        public SearchOptions SearchOptions { get; }
 
         /// <inheritdoc />
-        public SearchOptions SearchOptions { get; }
+        public int Count => Properties.Count;
+
+        /// <inheritdoc />
+        public IEnumerator<IPropertyValue> GetEnumerator() => Properties.GetEnumerator();
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc />
         public override string ToString()

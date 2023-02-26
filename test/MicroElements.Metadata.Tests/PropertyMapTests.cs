@@ -26,6 +26,10 @@ namespace MicroElements.Metadata.Tests
                 .WithValue(Name, "Alex");
 
             container.GetValue(Name.Map(name => $"Calculated {name}")).Should().Be("Calculated Alex");
+            container.GetValue(Name.MapNew(name => $"Calculated {name}")).Should().Be("Calculated Alex");
+
+            DefaultSearchAlgorithm.Instance.GetPropertyValue2(container, Name.MapNew(name => $"Calculated {name}"), null, out var result);
+            result.Value.Should().Be("Calculated Alex");
         }
 
         [Fact]
@@ -136,7 +140,7 @@ namespace MicroElements.Metadata.Tests
             IProperty<double?> nullableDouble = new Property<double?>("nullableDouble");
             IProperty<double> deNullify = nullableDouble.DeNullify();
             var property = deNullify.UseDefaultForUndefined();
-            
+
             var propertyContainer = new PropertyContainer();
 
             var propertyValue = propertyContainer.GetPropertyValue(property);

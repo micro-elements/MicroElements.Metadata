@@ -157,7 +157,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue<T>? GetPropertyValue<T>(this IPropertyContainer propertyContainer, [DisallowNull] SearchOptions search)
+        public static IPropertyValue<T>? GetPropertyValue<T>(this IPropertyContainer propertyContainer, SearchOptions search)
         {
             if (search.SearchProperty == null)
                 throw new InvalidOperationException("SearchProperty must be set in SearchOptions.");
@@ -174,7 +174,7 @@ namespace MicroElements.Metadata
         /// <param name="propertyContainer">Property container.</param>
         /// <param name="search">Search conditions.</param>
         /// <returns><see cref="IPropertyValue"/> or null.</returns>
-        public static IPropertyValue? SearchPropertyValueUntyped(this IPropertyContainer propertyContainer, [DisallowNull] SearchOptions search)
+        public static IPropertyValue? SearchPropertyValueUntyped(this IPropertyContainer propertyContainer, SearchOptions search)
         {
             if (search.SearchProperty == null)
                 throw new InvalidOperationException("SearchProperty must be set in SearchOptions.");

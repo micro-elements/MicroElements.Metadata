@@ -19,6 +19,7 @@ namespace MicroElements.Metadata.OpenXml.Excel
     public static class ExcelDateExtensions
     {
         public static readonly DateTime date_1899_12_31 = new DateTime(1899, 12, 31);
+        public static readonly DateTime date_1900_01_01 = new DateTime(1900, 01, 01);
 
         /// <summary>
         /// Excel date and time has millisecond precision.
@@ -28,8 +29,12 @@ namespace MicroElements.Metadata.OpenXml.Excel
         public static DateTime TrimToMillisecondPrecision(this in DateTime dateTime)
         {
             long overhead = dateTime.Ticks % TimeSpan.TicksPerMillisecond;
+
             if (overhead > 0)
-                return dateTime.AddTicks(-overhead);
+            {
+                DateTime trimmed = dateTime.AddTicks(-overhead);
+                return trimmed;
+            }
 
             return dateTime;
         }
@@ -55,10 +60,20 @@ namespace MicroElements.Metadata.OpenXml.Excel
         /// <returns>DateTime.</returns>
         public static DateTime FromExcelSerialDate(this double excelSerialDate)
         {
+            if (excelSerialDate < 1)
+                return DateTime.FromOADate(excelSerialDate).AddDays(2);
+
+            if (excelSerialDate is >= 1 and <= 59)
+                return DateTime.FromOADate(excelSerialDate).AddDays(1);
+
+            //return date_1900_01_01.AddDays(excelSerialDate - 2);
+
             // NOTE: DateTime.FromOADate parses 1 as 1899-12-31. Correct value is 1900-01-01
+            return DateTime.FromOADate(excelSerialDate).TrimToMillisecondPrecision();
             if (excelSerialDate > 59)
                 excelSerialDate -= 1; // Excel/Lotus 2/29/1900 bug
-            return date_1899_12_31.AddDays(excelSerialDate).TrimToMillisecondPrecision();
+            DateTime dateTime = date_1899_12_31.AddDays(excelSerialDate).TrimToMillisecondPrecision();
+            return dateTime;
         }
 
         /// <summary>

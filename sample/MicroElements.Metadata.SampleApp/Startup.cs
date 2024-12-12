@@ -6,6 +6,7 @@ using MicroElements.Metadata.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +31,14 @@ namespace MicroElements.Metadata.SampleApp
                 .AddControllers()
                 //.AddJsonOptions(options => options.JsonSerializerOptions.ConfigureJsonForPropertyContainers())
                 ;
+
+            IMemoryCache memoryCache = new MemoryCache(new MemoryCacheOptions() { SizeLimit = 16 });
+            memoryCache.GetOrCreate("key", entry =>
+            {
+                entry.Size = 1;
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                return "value";
+            });
 
             // Add swagger
             services.AddSwaggerGen(c =>

@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Diagnostics;
+using FluentAssertions;
 using Xunit;
 
 namespace MicroElements.Metadata.Tests.examples
@@ -13,7 +14,7 @@ namespace MicroElements.Metadata.Tests.examples
         /// </summary>
         public static void SetAttachedName(this object target, string name)
         {
-            target.GetInstanceMetadata().SetMetadata("AttachedName", name);
+            target.AsMetadataProvider().SetMetadata("AttachedName", name);
         }
 
         /// <summary>
@@ -21,7 +22,7 @@ namespace MicroElements.Metadata.Tests.examples
         /// </summary>
         public static T WithAttachedName<T>(this T target, string name) where T : class
         {
-            target.GetInstanceMetadata().SetMetadata("AttachedName", name);
+            target.AsMetadataProvider().SetMetadata("AttachedName", name);
             return target;
         }
 
@@ -30,12 +31,13 @@ namespace MicroElements.Metadata.Tests.examples
         /// </summary>
         public static string GetAttachedName(this object target)
         {
-            return target.GetInstanceMetadata().GetMetadata<string>("AttachedName");
+            return target.AsMetadataProvider().GetMetadata<string>("AttachedName");
         }
     }
 
     public class AttachedNameUsage
     {
+        [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
         public class MyEntity
         {
         }

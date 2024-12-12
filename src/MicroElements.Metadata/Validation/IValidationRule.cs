@@ -129,4 +129,11 @@ namespace MicroElements.Validation
         /// </summary>
         IValidationRule LastRule { get; }
     }
+
+    public enum ApplyTo
+    {
+        FirstRule,
+        Self,
+        LastRule
+    }
 }

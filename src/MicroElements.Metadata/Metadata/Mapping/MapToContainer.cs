@@ -10,6 +10,7 @@ using System.Reflection;
 using MicroElements.CodeContracts;
 using MicroElements.Metadata.Schema;
 using MicroElements.Reflection.TypeExtensions;
+using TypeExtensions = MicroElements.Reflection.TypeExtensions.TypeExtensions;
 
 namespace MicroElements.Metadata.Mapping
 {

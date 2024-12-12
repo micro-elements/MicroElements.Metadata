@@ -47,6 +47,15 @@ namespace MicroElements.Metadata.Tests.Serialization
             return initialContainer;
         }
 
+        class TestJsonSchemaGenerator : IJsonSchemaGenerator
+        {
+            /// <inheritdoc />
+            public object GenerateSchema(ISchema schema)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         [Fact]
         public void MetadataJsonSerializationOptions_should_be_copied_properly()
         {
@@ -55,6 +64,10 @@ namespace MicroElements.Metadata.Tests.Serialization
                 new TypeRelay(
                     typeof(ITypeMapper),
                     typeof(DefaultTypeMapper)));
+            fixture.Customizations.Add(
+                new TypeRelay(
+                    typeof(IJsonSchemaGenerator),
+                    typeof(TestJsonSchemaGenerator)));
             var options = fixture.Create<MetadataJsonSerializationOptions>();
             var optionsCopy = options.Copy();
 

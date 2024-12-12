@@ -1,11 +1,17 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using MicroElements.Diagnostics;
 using MicroElements.Metadata.Formatting;
 using MicroElements.Metadata.Parsing;
 using MicroElements.Reflection.CodeCompiler;
+using MicroElements.Reflection.FriendlyName;
 
 namespace MicroElements.Metadata
 {
@@ -86,8 +92,12 @@ namespace MicroElements.Metadata
         /// <returns>Optional parse result.</returns>
         public static ParseResult<IPropertyValue> ParseUntyped(this IPropertyParser propertyParser, string? textValue)
         {
-            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string?, ParseResult<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<CodeCompiler.GenericType>);
+            var func = CodeCompiler.CachedCompiledFunc<IPropertyParser, string?, ParseResult<IPropertyValue>>(propertyParser.TargetType, "Parse", Parse<object>);
             return func(propertyParser, textValue);
+
+            typeof(PropertyParserExtensions)
+                .GetCompiledCachedMethod<IPropertyParser, string?, ParseResult<IPropertyValue>>("Parse",
+                    propertyParser.TargetType);
 
             static ParseResult<IPropertyValue> Parse<T>(IPropertyParser propertyParserUntyped, string? textValue)
             {
@@ -126,4 +136,151 @@ namespace MicroElements.Metadata
             }
         }
     }
+
+    [Obsolete("Use shared")]
+    internal static class Invoker
+    {
+        private static class FuncCache<TMethodArg1, TResult>
+        {
+            internal static ConcurrentDictionary<(Type MethodOwner, string MethodName, Type? GenericArg1, Type? GenericArg2), Func<TMethodArg1, TResult>> Cache = new();
+        }
+
+        private static class FuncCache<TMethodArg1, TMethodArg2, TResult>
+        {
+            internal static ConcurrentDictionary<(Type MethodOwner, string MethodName, Type? GenericArg1, Type? GenericArg2), Func<TMethodArg1, TMethodArg2, TResult>> Cache = new();
+        }
+
+        private static class FuncCache<TMethodArg1, TMethodArg2, TMethodArg3, TResult>
+        {
+            internal static ConcurrentDictionary<(Type MethodOwner, string MethodName, Type? GenericArg1, Type? GenericArg2), Func<TMethodArg1, TMethodArg2, TMethodArg3, TResult>> Cache = new();
+        }
+
+        public static Func<TInstance, TMethodArg1, TResult> GetCompiledCachedMethod<TInstance, TMethodArg1, TResult>(
+            string methodName, Type? genericArg1 = null, Type? genericArg2 = null)
+        {
+            var cacheKey = (typeof(TInstance), name: methodName, arg1: genericArg1, arg2: genericArg2);
+            return FuncCache<TInstance, TMethodArg1, TResult>.Cache.GetOrAdd(cacheKey,
+                a => CompileMethod<TInstance, TMethodArg1, TResult>(a.MethodOwner, a.MethodName, a.GenericArg1, a.GenericArg2));
+        }
+
+        public static Func<TInstance, TMethodArg1, TMethodArg2, TResult> GetCompiledCachedMethod<TInstance, TMethodArg1, TMethodArg2, TResult>(
+            string methodName, Type? genericArg1 = null, Type? genericArg2 = null)
+        {
+            var cacheKey = (typeof(TInstance), name: methodName, arg1: genericArg1, arg2: genericArg2);
+            return FuncCache<TInstance, TMethodArg1, TMethodArg2, TResult>.Cache.GetOrAdd(cacheKey,
+                a => CompileMethod<TInstance, TMethodArg1, TMethodArg2, TResult>(a.MethodOwner, a.MethodName, a.GenericArg1, a.GenericArg2));
+        }
+
+        public static Func<TMethodArg1, TResult> GetCompiledCachedMethod<TMethodArg1, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1 = null, Type? genericArg2 = null)
+        {
+            var cacheKey = (methodOwnerType: methodOwner, name: methodName, arg1: genericArg1, arg2: genericArg2);
+            return FuncCache<TMethodArg1, TResult>.Cache.GetOrAdd(cacheKey,
+                a => CompileMethod<TMethodArg1, TResult>(a.MethodOwner, a.MethodName, a.GenericArg1, a.GenericArg2));
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TResult> GetCompiledCachedMethod<TMethodArg1, TMethodArg2, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1 = null, Type? genericArg2 = null)
+        {
+            var cacheKey = (methodOwnerType: methodOwner, name: methodName, arg1: genericArg1, arg2: genericArg2);
+            return FuncCache<TMethodArg1, TMethodArg2, TResult>.Cache.GetOrAdd(cacheKey,
+                a => CompileMethod<TMethodArg1, TMethodArg2, TResult>(a.MethodOwner, a.MethodName, a.GenericArg1, a.GenericArg2));
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TMethodArg3, TResult> GetCompiledCachedMethod<TMethodArg1, TMethodArg2, TMethodArg3, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1 = null, Type? genericArg2 = null)
+        {
+            var cacheKey = (methodOwnerType: methodOwner, name: methodName, arg1: genericArg1, arg2: genericArg2);
+            return FuncCache<TMethodArg1, TMethodArg2, TMethodArg3, TResult>.Cache.GetOrAdd(cacheKey,
+                a => CompileMethod<TMethodArg1, TMethodArg2, TMethodArg3, TResult>(a.MethodOwner, a.MethodName, a.GenericArg1, a.GenericArg2));
+        }
+
+        private static MethodInfo GetMethod(Type methodOwner, string methodName, Type? genericArg1, Type? genericArg2)
+        {
+            BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
+            var methodInfo = methodOwner.GetMethod(methodName, bindingFlags);
+            if (methodInfo is null)
+                throw new InvalidOperationException($"Type {methodOwner.GetFriendlyName()} has no method {methodName}");
+
+            if (methodInfo.IsGenericMethodDefinition)
+            {
+                Type[] methodGenericArguments = GetArgs(genericArg1, genericArg2).ToArray();
+                methodInfo = methodInfo.MakeGenericMethod(methodGenericArguments);
+            }
+
+            return methodInfo;
+
+            static IEnumerable<Type> GetArgs(Type? genericArg1, Type? genericArg2)
+            {
+                if (genericArg1 != null) yield return genericArg1;
+                if (genericArg2 != null) yield return genericArg2;
+            }
+        }
+
+        public static Func<TMethodArg1, TResult> CompileMethod<TMethodArg1, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1, Type? genericArg2)
+        {
+            var genericMethod = GetMethod(methodOwner, methodName, genericArg1, genericArg2);
+            return CompileMethod<TMethodArg1, TResult>(genericMethod);
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TResult> CompileMethod<TMethodArg1, TMethodArg2, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1, Type? genericArg2)
+        {
+            var genericMethod = GetMethod(methodOwner, methodName, genericArg1, genericArg2);
+            return CompileMethod<TMethodArg1, TMethodArg2, TResult>(genericMethod);
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TMethodArg3, TResult> CompileMethod<TMethodArg1, TMethodArg2, TMethodArg3, TResult>(
+            this Type methodOwner, string methodName, Type? genericArg1, Type? genericArg2)
+        {
+            var genericMethod = GetMethod(methodOwner, methodName, genericArg1, genericArg2);
+            return CompileMethod<TMethodArg1, TMethodArg2, TMethodArg3, TResult>(genericMethod);
+        }
+
+        public static Func<TMethodArg1, TResult> CompileMethod<TMethodArg1, TResult>(MethodInfo method)
+        {
+            var arg1 = Expression.Parameter(typeof(TMethodArg1), "arg1");
+
+            MethodCallExpression callExpression = method.IsStatic ?
+                Expression.Call(null, method, arg1) :
+                Expression.Call(arg1, method);
+
+            return Expression
+                .Lambda<Func<TMethodArg1, TResult>>(callExpression, arg1)
+                .Compile();
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TResult> CompileMethod<TMethodArg1, TMethodArg2, TResult>(MethodInfo method)
+        {
+            var arg1 = Expression.Parameter(typeof(TMethodArg1), "arg1");
+            var arg2 = Expression.Parameter(typeof(TMethodArg2), "arg2");
+
+            MethodCallExpression callExpression = method.IsStatic ?
+                Expression.Call(null, method, arg1, arg2) :
+                Expression.Call(arg1, method, arg2);
+
+            return Expression
+                .Lambda<Func<TMethodArg1, TMethodArg2, TResult>>(callExpression, arg1, arg2)
+                .Compile();
+        }
+
+        public static Func<TMethodArg1, TMethodArg2, TMethodArg3, TResult> CompileMethod<TMethodArg1, TMethodArg2, TMethodArg3, TResult>(MethodInfo method)
+        {
+            var arg1 = Expression.Parameter(typeof(TMethodArg1), "arg1");
+            var arg2 = Expression.Parameter(typeof(TMethodArg2), "arg2");
+            var arg3 = Expression.Parameter(typeof(TMethodArg3), "arg3");
+
+            MethodCallExpression callExpression = method.IsStatic ?
+                Expression.Call(null, method, arg1, arg2, arg3) :
+                Expression.Call(arg1, method, arg2, arg3);
+
+            return Expression
+                .Lambda<Func<TMethodArg1, TMethodArg2, TMethodArg3, TResult>>(callExpression, arg1, arg2, arg3)
+                .Compile();
+        }
+    }
 }
+
+

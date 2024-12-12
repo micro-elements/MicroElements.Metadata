@@ -11,22 +11,19 @@ namespace MicroElements.Metadata
     /// </summary>
     public class MetadataProviderDebugView
     {
+        private readonly object _value;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataProviderDebugView"/> class.
         /// </summary>
         /// <param name="value">Source value.</param>
-        public MetadataProviderDebugView(object value)
-        {
-            Value = value;
-        }
-
-        private object Value { get; }
+        public MetadataProviderDebugView(object value) => _value = value;
 
         /// <summary>
-        /// Object metadata.
+        /// Gets object metadata.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        public IPropertyContainer Metadata => Value.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
+        public IPropertyContainer Metadata => _value.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
     }
 
     /// <summary>
@@ -34,39 +31,39 @@ namespace MicroElements.Metadata
     /// </summary>
     public class PropertyContainerDebugView
     {
+        private readonly IPropertyContainer _value;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyContainerDebugView"/> class.
         /// </summary>
         /// <param name="value">Source value.</param>
         public PropertyContainerDebugView(object value)
         {
-            Value = (value as IPropertyContainer) ?? PropertyContainer.Empty;
+            _value = (value as IPropertyContainer) ?? PropertyContainer.Empty;
         }
-
-        private IPropertyContainer Value { get; }
 
         /// <summary>
         /// Gets properties with values.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        public IReadOnlyCollection<IPropertyValue> Properties => Value.Properties;
+        public IReadOnlyCollection<IPropertyValue> Properties => _value.Properties;
 
         /// <summary>
         /// Gets default search options for container.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        public SearchOptions SearchOptions => Value.SearchOptions;
+        public SearchOptions SearchOptions => _value.SearchOptions;
 
         /// <summary>
         /// Gets optional parent property source.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        public IPropertyContainer? ParentSource => Value.ParentSource;
+        public IPropertyContainer? ParentSource => _value.ParentSource;
 
         /// <summary>
         /// Object metadata.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        public IPropertyContainer Metadata => Value.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
+        public IPropertyContainer Metadata => _value.AsMetadataProvider().GetMetadataContainer(autoCreate: false);
     }
 }

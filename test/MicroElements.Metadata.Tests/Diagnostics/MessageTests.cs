@@ -67,25 +67,6 @@ namespace MicroElements.Functional.Tests
         }
 
         [Fact]
-        public void message_should_be_serialized()
-        {
-            var message = new Message("User {Name} created.")
-                .WithProperty("Name", "Alex");
-
-            var memoryStream = new MemoryStream();
-            new BinaryFormatter().Serialize(memoryStream, message);
-            memoryStream.Position = 0;
-
-            var messageRestored = (Message)new BinaryFormatter().Deserialize(memoryStream);
-            messageRestored.OriginalMessage.Should().Be(message.OriginalMessage);
-            messageRestored.FormattedMessage.Should().Be(message.FormattedMessage);
-
-            ((object)message).Should().BeBinarySerializable();
-            //((object)message).Should().BeDataContractSerializable();
-            //((object)message).Should().BeXmlSerializable();
-        }
-
-        [Fact]
         public void message_memoization()
         {
             var message = new Message("User {Name} created.")

@@ -36,7 +36,7 @@ namespace MicroElements.Metadata.Tests
             IPropertyContainer container3 = new MutablePropertyContainer()
                 .WithValue("Name", "Container3");
 
-            var hierarchicalContainer = new HierarchicalContainer(container1, container3);
+            var hierarchicalContainer = PropertyContainer.CreateHierarchicalContainer(container1, container3);
             hierarchicalContainer.ToString().Should().Be("[Name: Container1] -> [Name: Container2] -> [Name: Container3]");
         }
 
@@ -55,7 +55,7 @@ namespace MicroElements.Metadata.Tests
 
             container.MatchValue(name, s => s.ToUpper()).Should().Be("ALEX");
             container.MatchValue(name2, s => s.ToUpper(), () => "NONE").Should().Be("NONE");
-            
+
         }
     }
 }

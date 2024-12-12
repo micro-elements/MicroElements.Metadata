@@ -9,15 +9,16 @@ using MicroElements.CodeContracts;
 
 namespace MicroElements.Metadata
 {
-    public class HierarchicalContainer : IPropertyContainer
+    public class HierarchicalContainer2 : IPropertyContainer
     {
         private readonly IPropertyContainer _propertyContainer;
+        private readonly IPropertyContainer? _parent;
 
-        public HierarchicalContainer(IPropertyContainer propertyContainer1, IPropertyContainer? propertyContainer2)
+        public HierarchicalContainer2(IPropertyContainer propertyContainer, IPropertyContainer? parent)
         {
-            propertyContainer1.AssertArgumentNotNull(nameof(propertyContainer1));
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
-            _propertyContainer = PropertyContainer.CreateHierarchicalContainer(propertyContainer1, propertyContainer2);
+            _propertyContainer = PropertyContainer.CreateHierarchicalContainer(propertyContainer, parent);
         }
 
         /// <inheritdoc />
@@ -45,65 +46,68 @@ namespace MicroElements.Metadata
     public partial class PropertyContainer
     {
         public static IPropertyContainer CreateHierarchicalContainer(
-            IPropertyContainer propertyContainer1,
-            IPropertyContainer? propertyContainer2,
+            IPropertyContainer propertyContainer,
+            IPropertyContainer? parent,
             bool mergeHierarchy = true)
         {
-            propertyContainer1.AssertArgumentNotNull(nameof(propertyContainer1));
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
-            static bool HasParent(IPropertyContainer? container) => container?.ParentSource != null && container.ParentSource.Count > 0;
+            static bool HasParent(IPropertyContainer? container) => container?.ParentSource is { Count: > 0 };
 
-            if (mergeHierarchy && (HasParent(propertyContainer1) || HasParent(propertyContainer2)))
+            if (mergeHierarchy && (HasParent(propertyContainer) || HasParent(parent)))
             {
-                var hierarchy1 = propertyContainer1.GetHierarchy().Reverse();
-                var hierarchy2 = propertyContainer2?.GetHierarchy().Reverse();
+                var hierarchy1 = propertyContainer.GetHierarchy().Reverse();
+                var hierarchy2 = parent?.GetHierarchy().Reverse();
                 var hierarchy = hierarchy1.Concat(hierarchy2 ?? Array.Empty<IPropertyContainer>()).ToArray();
 
-                IPropertyContainer last = hierarchy[hierarchy.Length - 1];
+                IPropertyContainer last = hierarchy[^1];
                 for (int i = hierarchy.Length - 2; i >= 0; i--)
                 {
-                    last = new PropertyContainerPair(hierarchy[i], last);
+                    last = new PropertyContainerWithParent(hierarchy[i], last);
                 }
 
-                return new PropertyContainerPair(last, null);
+                return last;
             }
 
-            return new PropertyContainerPair(propertyContainer1, propertyContainer2);
+            return new PropertyContainerWithParent(propertyContainer, parent);
         }
     }
 
-    public class PropertyContainerPair : IPropertyContainer
+    /// <summary>
+    /// PropertyContainer with parent wrapper.
+    /// </summary>
+    public class PropertyContainerWithParent : IPropertyContainer
     {
-        private readonly IPropertyContainer _propertyContainer1;
-        private readonly IPropertyContainer? _propertyContainer2;
+        private readonly IPropertyContainer _propertyContainer;
+        private readonly IPropertyContainer? _parent;
 
-        public PropertyContainerPair(IPropertyContainer propertyContainer1, IPropertyContainer? propertyContainer2 = null)
+        public PropertyContainerWithParent(IPropertyContainer propertyContainer, IPropertyContainer? parent = null)
         {
-            propertyContainer1.AssertArgumentNotNull(nameof(propertyContainer1));
+            propertyContainer.AssertArgumentNotNull(nameof(propertyContainer));
 
-            _propertyContainer1 = propertyContainer1;
-            _propertyContainer2 = propertyContainer2;
+            _propertyContainer = propertyContainer;
+            _parent = parent;
         }
 
         /// <inheritdoc />
-        public override string ToString() => _propertyContainer2 != null ? $"{_propertyContainer1} -> {_propertyContainer2}" : $"{_propertyContainer1}";
+        public override string ToString() => _parent != null ? $"{_propertyContainer} -> {_parent}" : $"{_propertyContainer}";
 
         /// <inheritdoc />
-        public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer1.Properties.GetEnumerator();
+        public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.Properties.GetEnumerator();
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc />
-        public int Count => _propertyContainer1.Count;
+        public int Count => _propertyContainer.Count;
 
         /// <inheritdoc />
-        public IPropertyContainer? ParentSource => _propertyContainer2;
+        public IPropertyContainer? ParentSource => _parent;
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer1.Properties;
+        public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer.Properties;
 
         /// <inheritdoc />
-        public SearchOptions SearchOptions => _propertyContainer1.SearchOptions;
+        public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
     }
 }

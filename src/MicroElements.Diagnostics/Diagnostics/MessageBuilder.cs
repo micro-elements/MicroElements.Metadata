@@ -169,7 +169,7 @@ namespace MicroElements.Diagnostics
             };
         }
 
-        public ValueMessageBuilder(in MessageStateRef state)
+        public ValueMessageBuilder(MessageStateRef state)
         {
             _state = state;
         }
@@ -232,7 +232,7 @@ namespace MicroElements.Diagnostics
 
         public MessageBuilderPredicate If(bool predicate)
         {
-            return new MessageBuilderPredicate(predicate, ref this);
+            return new MessageBuilderPredicate(predicate, _state);
         }
 
         public ValueMessageBuilder If(bool predicate, ConfigureMessageRef configure)

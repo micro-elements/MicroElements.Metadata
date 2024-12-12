@@ -54,7 +54,7 @@ namespace MicroElements.Metadata
             {
                 if (_assumeNullForNotNullableAsNotDefined)
                 {
-                    value = TypeExtensions.GetDefaultValue(propertyType);
+                    value = propertyType.GetDefaultValue();
                     valueSource = ValueSource.NotDefined;
                 }
                 else

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using MicroElements.Metadata.Schema;
 
@@ -35,6 +36,13 @@ namespace MicroElements.Metadata.Serialization
         /// Default: true.
         /// </summary>
         public bool WriteSchemaCompact { get; set; } = true;
+
+        //public Func<string, string>? GetJsonPropertyName { get; set; }
+
+        /// <summary>
+        /// Gets or sets schema generator.
+        /// </summary>
+        public IJsonSchemaGenerator? SchemaGenerator { get; set; }
 
         /// <summary>
         /// WriteSchemaOnceForKnownTypes.
@@ -114,6 +122,7 @@ namespace MicroElements.Metadata.Serialization
                 DoNotFail = source.DoNotFail,
                 WriteArraysInOneRow = source.WriteArraysInOneRow,
                 WriteSchemaCompact = source.WriteSchemaCompact,
+                SchemaGenerator = source.SchemaGenerator,
                 WriteSchemaToPropertyName = source.WriteSchemaToPropertyName,
                 Separator = source.Separator ?? _default.Separator,
                 AltSeparator = source.AltSeparator ?? _default.AltSeparator,

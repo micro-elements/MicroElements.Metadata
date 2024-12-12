@@ -11,6 +11,17 @@ using MessageSeverity = MicroElements.Diagnostics.MessageSeverity;
 
 namespace MicroElements.Validation.Rules
 {
+    public class FlatRule : IValidationRule
+    {
+        private ICompositeValidationRule _validationRule;
+
+        /// <inheritdoc />
+        public IEnumerable<Message> Validate(IPropertyContainer propertyContainer)
+        {
+            return _validationRule.Validate(propertyContainer);
+        }
+    }
+
     /// <summary>
     /// Composite validation rule. Combines two rules.
     /// </summary>
@@ -35,6 +46,7 @@ namespace MicroElements.Validation.Rules
         {
             FirstRule = rule1.AssertArgumentNotNull(nameof(rule1));
             LastRule = rule2.AssertArgumentNotNull(nameof(rule2));
+            this.SetDefaultMessageFormat("{message1} or {message2}");
         }
 
         /// <inheritdoc />
@@ -53,7 +65,12 @@ namespace MicroElements.Validation.Rules
                 string message1 = messages1.Select(message => message.FormattedMessage).FormatAsTuple(startSymbol: "[", endSymbol: "]");
                 string message2 = messages2.Select(message => message.FormattedMessage).FormatAsTuple(startSymbol: "[", endSymbol: "]");
 
-                yield return new Message($"{message1} or {message2}", severity: MessageSeverity.Error);
+                this.ConfigureMessage(builder =>
+                {
+                    builder.SetProperty("message1", message1);
+                    builder.SetProperty("message2", message2);
+                });
+                yield return this.GetConfiguredMessage(null, propertyContainer);
             }
         }
     }

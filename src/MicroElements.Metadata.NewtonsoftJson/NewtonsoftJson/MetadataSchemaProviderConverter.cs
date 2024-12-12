@@ -69,15 +69,26 @@ namespace MicroElements.Metadata.NewtonsoftJson
                     JProperty schemaProperty = new JProperty(schemaId, schemaObject);
                     defsContent.Add(schemaProperty);
 
+                    if (Options.SchemaGenerator is { } schemaGenerator)
+                    {
+                        object schema = schemaGenerator.GenerateSchema(valuePair.Value);
+                        schemaObject.Add(new JProperty("$metadata.schema.compact", JArray.FromObject(schema)));
+                    }
+
+                    // TODO: Custom schema generator!!!!!
                     if (Options.WriteSchemaCompact)
                     {
-                        object schema = new CompactSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
+                        IJsonSchemaGenerator jsonSchemaGenerator = new CompactSchemaGenerator(serializer, Options);
+
+                        object schema = jsonSchemaGenerator.GenerateSchema(valuePair.Value);
                         schemaObject.Add(new JProperty("$metadata.schema.compact", JArray.FromObject(schema)));
                     }
 
                     if (Options.UseJsonSchema)
                     {
-                        JObject jsonSchemaObject = (JObject)new JsonSchemaGenerator(serializer, Options).GenerateSchema(valuePair.Value);
+                        JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(serializer, Options);
+
+                        JObject jsonSchemaObject = (JObject)jsonSchemaGenerator.GenerateSchema(valuePair.Value);
                         schemaObject.Add(jsonSchemaObject.Properties());
                     }
                 }

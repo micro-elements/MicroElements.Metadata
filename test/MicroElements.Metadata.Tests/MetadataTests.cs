@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using FluentAssertions;
 using NodaTime;
 using Xunit;
@@ -117,7 +119,56 @@ namespace MicroElements.Metadata.Tests
             IPropertyContainer propertyContainer = client.FreezeMetadata();
             propertyContainer.Should().BeOfType<PropertyContainer>();
         }
+
+        [Fact]
+        public void GetMetadataFromMetadataContainer()
+        {
+            Client client = new Client("Bill", new LocalDate(2024, 04, 19))
+                .SetMetadata(new EntityMetadata("Database"))
+                .SetMetadata("AttachedProperty", 42);
+            IPropertyContainer metadata = client.GetMetadataContainer();
+
+            var entityMetadata = metadata.GetValueByName<EntityMetadata>(typeof(EntityMetadata).FullName);
+            entityMetadata.Should().NotBeNull();
+            entityMetadata.Source.Should().Be("Database");
+
+            int attachedProperty = metadata.GetValueByName<int>("AttachedProperty");
+            attachedProperty.Should().Be(42);
+        }
+
+        [Fact]
+        public void CopyMetadataTests()
+        {
+            Client client = new Client("Bill", new LocalDate(2024, 04, 19))
+                .SetMetadata("AttachedProperty", 42);
+            client.GetMetadataContainer().Should().BeOfType<ConcurrentMutablePropertyContainer>();
+            client.GetMetadataContainer().IsMutable().Should().BeTrue();
+
+            Client client2 = new Client("Alex", new LocalDate(2024, 04, 19));
+            client.CopyMetadataTo(client2);
+
+            client2.GetMetadataContainer().IsReadOnly().Should().BeTrue();
+            client2.GetMetadata<int>("AttachedProperty").Should().Be(42);
+        }
+
+        //[Fact]
+        public void CopyMetadataTests2()
+        {
+            Client3 client = new Client3("Bill", new LocalDate(2024, 04, 19))
+                .ConfigureMetadataProvider(keepItReadOnly: false)
+                .SetMetadata("AttachedProperty", 42);
+            client.GetMetadataContainer().Should().BeOfType<ConcurrentMutablePropertyContainer>();
+            client.GetMetadataContainer().IsMutable().Should().BeTrue();
+
+            Client3 client2 = new Client3("Alex", new LocalDate(2024, 04, 19));
+            client.CopyMetadataTo(client2);
+
+            client2.GetMetadataContainer().IsReadOnly().Should().BeTrue();
+            client2.GetMetadata<int>("AttachedProperty").Should().Be(42);
+        }
     }
+
+    #region Types
 
     public class EntityMetadata
     {
@@ -135,6 +186,7 @@ namespace MicroElements.Metadata.Tests
         public DateTime Timestamp { get; set; }
     }
 
+    [DebuggerTypeProxy(typeof(MetadataProviderDebugView))]
     public class Client : IMetadataProvider
     {
         public string Name { get; }
@@ -162,4 +214,19 @@ namespace MicroElements.Metadata.Tests
             BirthDate = birthDate;
         }
     }
+
+    public record Client3 : PublicMetadataProvider
+    {
+        public string Name { get; }
+
+        public LocalDate BirthDate { get; }
+
+        public Client3(string name, LocalDate birthDate)
+        {
+            Name = name;
+            BirthDate = birthDate;
+        }
+    }
+
+    #endregion
 }

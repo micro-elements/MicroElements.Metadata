@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using MicroElements.Collections.Caching;
 
 namespace MicroElements.Metadata;
 
@@ -38,6 +40,12 @@ public class PropertyIndex
         PropertyComparer = propertyComparer;
 
         _propertyIndex = new Dictionary<IProperty, int>(PropertyComparer);
+
+        for (int i = 0; i < Properties.Count; i++)
+        {
+            IProperty property = Properties[i];
+            _propertyIndex[property] = i;
+        }
     }
 
     public int GetPropertyIndex(IProperty property)
@@ -53,7 +61,7 @@ public class IndexedPropertyContainer2 : IPropertyContainer, IIndexedPropertyCon
     private readonly object[] _values;
     private readonly ValueSource[] _valueSource;
 
-    public IndexedPropertyContainer2(PropertyIndex propertyIndex)
+    public IndexedPropertyContainer2(IPropertyContainer propertyContainer, PropertyIndex propertyIndex)
     {
         _propertyIndex = propertyIndex;
 
@@ -208,4 +216,80 @@ public static class IndexedExtensions
             return null;
         return new IndexedPropertyContainer(propertyContainer, searchOptions ?? IndexedPropertyContainer.DefaultSearchOptions);
     }
+}
+
+public class Indexed : IPropertyContainer
+{
+    private readonly IPropertyContainer _propertyContainer;
+
+    public Indexed(IPropertyContainer propertyContainer, IPropertySet schema, IEqualityComparer<IProperty> equalityComparer)
+    {
+        _propertyContainer = propertyContainer;
+        IPropertyValue?[] indexed = Index(_propertyContainer, schema, equalityComparer);
+    }
+
+    /// <inheritdoc />
+    public IEnumerator<IPropertyValue> GetEnumerator() => _propertyContainer.GetEnumerator();
+
+    /// <inheritdoc />
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    /// <inheritdoc />
+    public int Count => _propertyContainer.Count;
+
+    /// <inheritdoc />
+    public IPropertyContainer GetMetadataContainer(bool autoCreate = false)
+    {
+        return _propertyContainer.GetMetadataContainer(autoCreate);
+    }
+
+    /// <inheritdoc />
+    public void SetMetadataContainer(IPropertyContainer metadata)
+    {
+        _propertyContainer.SetMetadataContainer(metadata);
+    }
+
+    /// <inheritdoc />
+    public IPropertyContainer? ParentSource => _propertyContainer.ParentSource;
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<IPropertyValue> Properties => _propertyContainer.Properties;
+
+    /// <inheritdoc />
+    public SearchOptions SearchOptions => _propertyContainer.SearchOptions;
+
+    public static IPropertyValue?[] Index(IPropertyContainer propertyContainer, IPropertySet schema, IEqualityComparer<IProperty> propertyComparer)
+    {
+        IProperty[] properties = schema.GetCached(set => set.GetProperties().ToArray(), timeToLive: TimeSpan.FromMinutes(1));
+
+        IPropertyValue?[] indexed = new IPropertyValue[properties.Length];
+        Lazy<List<IPropertyValue>> not_indexed = new(() => new List<IPropertyValue>(properties.Length));
+
+        foreach (var propertyValue in propertyContainer.Properties)
+        {
+            bool isInSchema = false;
+            for (int i = 0; i < properties.Length; i++)
+            {
+                if (indexed[i] != null)
+                    continue;
+
+                IProperty property = properties[i];
+                if (propertyComparer.Equals(propertyValue.PropertyUntyped, property))
+                {
+                    indexed[i] = propertyValue;
+                    isInSchema = true;
+                    break;
+                }
+            }
+
+            if (!isInSchema)
+            {
+                not_indexed.Value.Add(propertyValue);
+            }
+        }
+
+        return indexed;
+    }
+
+
 }

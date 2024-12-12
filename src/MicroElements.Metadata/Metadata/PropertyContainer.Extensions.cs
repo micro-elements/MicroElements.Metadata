@@ -70,6 +70,16 @@ namespace MicroElements.Metadata
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
+        public static bool IsReadOnly(this IPropertyContainer propertyContainer)
+        {
+            return propertyContainer is not IMutablePropertyContainer;
+        }
+
+        public static bool IsMutable(this IPropertyContainer propertyContainer)
+        {
+            return propertyContainer is IMutablePropertyContainer;
+        }
+
         /// <summary>
         /// Clones source <paramref name="propertyContainer"/> as <see cref="MutablePropertyContainer"/>.
         /// </summary>
@@ -114,10 +124,7 @@ namespace MicroElements.Metadata
             if (propertyContainer is IMutablePropertyContainer mutablePropertyContainer)
                 return mutablePropertyContainer;
 
-            return new MutablePropertyContainer(
-                sourceValues: propertyContainer.Properties,
-                parentPropertySource: propertyContainer.ParentSource,
-                searchOptions: propertyContainer.SearchOptions);
+            return propertyContainer.CloneAsMutable();
         }
 
         /// <summary>

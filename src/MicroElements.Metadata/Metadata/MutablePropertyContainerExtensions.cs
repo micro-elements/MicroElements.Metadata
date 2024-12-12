@@ -241,9 +241,11 @@ namespace MicroElements.Metadata
 
                 case PropertyAddMode.SetNotExisting:
                 {
+                    SearchOptions searchOptions = SearchOptions.ExistingOnly.WithPropertyComparer(propertyContainer.SearchOptions.PropertyComparer);
+
                     foreach (IPropertyValue propertyValue in propertyValues)
                     {
-                        IPropertyValue? existing = propertyContainer.GetPropertyValueUntyped(propertyValue.PropertyUntyped, SearchOptions.ExistingOnly);
+                        IPropertyValue? existing = propertyContainer.GetPropertyValueUntyped(propertyValue.PropertyUntyped, searchOptions);
 
                         if (existing == null)
                             propertyContainer.Add(propertyValue);

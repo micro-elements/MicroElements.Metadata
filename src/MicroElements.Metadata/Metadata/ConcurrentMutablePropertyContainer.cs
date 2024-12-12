@@ -1,7 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +10,12 @@ using System.Linq;
 namespace MicroElements.Metadata
 {
     /// <summary>
-    /// Represents object that contains properties and values for these properties.
+    /// ThreadSafe MutablePropertyContainer.
     /// </summary>
     [DebuggerTypeProxy(typeof(PropertyContainerDebugView))]
     public class ConcurrentMutablePropertyContainer : IMutablePropertyContainer
     {
-        private readonly object _syncRoot = new object();
+        private readonly object _syncRoot = new();
         private readonly MutablePropertyContainer _propertyContainer;
 
         /// <summary>
@@ -34,7 +33,13 @@ namespace MicroElements.Metadata
         }
 
         /// <inheritdoc />
-        public override string ToString() => DoOnLock(() => _propertyContainer.ToString());
+        public override string ToString()
+        {
+            lock (_syncRoot)
+            {
+                return _propertyContainer.ToString();
+            }
+        }
 
         #region IPropertyContainer
 
@@ -83,24 +88,49 @@ namespace MicroElements.Metadata
         #region Mutability
 
         /// <inheritdoc />
-        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T? value, ValueSource? valueSource = default) =>
-            DoOnLock(() => _propertyContainer.SetValue(property, value, valueSource));
+        public IPropertyValue<T> SetValue<T>(IProperty<T> property, T? value, ValueSource? valueSource = default)
+        {
+            lock (_syncRoot)
+            {
+                return _propertyContainer.SetValue(property, value, valueSource);
+            }
+        }
 
         /// <inheritdoc />
-        public void SetValue(IPropertyValue propertyValue) =>
-            DoOnLock(() => _propertyContainer.SetValue(propertyValue));
+        public void SetValue(IPropertyValue propertyValue)
+        {
+            lock (_syncRoot)
+            {
+                _propertyContainer.SetValue(propertyValue);
+            }
+        }
 
         /// <inheritdoc />
-        public void Add(IPropertyValue propertyValue) =>
-            DoOnLock(() => _propertyContainer.Add(propertyValue));
+        public void Add(IPropertyValue propertyValue)
+        {
+            lock (_syncRoot)
+            {
+                _propertyContainer.Add(propertyValue);
+            }
+        }
 
         /// <inheritdoc />
-        public IPropertyValue<T>? RemoveValue<T>(IProperty<T> property) =>
-            DoOnLock(() => _propertyContainer.RemoveValue(property));
+        public IPropertyValue<T>? RemoveValue<T>(IProperty<T> property)
+        {
+            lock (_syncRoot)
+            {
+                return _propertyContainer.RemoveValue(property);
+            }
+        }
 
         /// <inheritdoc />
-        public void Clear() =>
-            DoOnLock(() => _propertyContainer.Clear());
+        public void Clear()
+        {
+            lock (_syncRoot)
+            {
+                _propertyContainer.Clear();
+            }
+        }
 
         #endregion
 
@@ -116,22 +146,6 @@ namespace MicroElements.Metadata
         protected T GetValue<T>(IProperty<T> property, SearchOptions? search = null)
         {
             return SearchExtensions.GetValue(this, property, search);
-        }
-
-        private T DoOnLock<T>(Func<T> action)
-        {
-            lock (_syncRoot)
-            {
-                return action();
-            }
-        }
-
-        private void DoOnLock(Action action)
-        {
-            lock (_syncRoot)
-            {
-                action();
-            }
         }
     }
 }

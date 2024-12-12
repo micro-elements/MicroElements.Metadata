@@ -29,7 +29,7 @@ namespace MicroElements.Metadata.Tests
             IEnumerable<IValidationRule> Rules()
             {
                 yield return Name.NotNull();
-                yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}");
+                yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}", ApplyTo.LastRule);
                 yield return Sex.OnlyAllowedValues().And().ShouldMatchNullability();
             }
 
@@ -145,7 +145,7 @@ namespace MicroElements.Metadata.Tests
             // Using And
             IEnumerable<IValidationRule> Rules1()
             {
-                yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}");
+                yield return Age.NotDefault().And().ShouldBe(a => a > 18).WithMessage("Age should be over 18! but was {value}", ApplyTo.LastRule);
             }
 
             // Not using And

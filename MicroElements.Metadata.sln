@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		src\stylecop.props = src\stylecop.props
 		src\stylecop.ruleset = src\stylecop.ruleset
 		version.props = version.props
+		.github\workflows\github_build_and_test.yml = .github\workflows\github_build_and_test.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Metadata.OpenXml", "src\MicroElements.Metadata.OpenXml\MicroElements.Metadata.OpenXml.csproj", "{777D53F1-F5E0-45D4-8FEB-EC5394BD036D}"

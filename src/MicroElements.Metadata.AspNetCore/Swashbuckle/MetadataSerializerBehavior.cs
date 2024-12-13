@@ -6,36 +6,35 @@ using MicroElements.Metadata.Serialization;
 using MicroElements.Reflection.TypeExtensions;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Metadata.Swashbuckle
+namespace MicroElements.Metadata.Swashbuckle;
+
+/// <summary>
+/// Configures serialization for <see cref="IPropertyContainer"/> as for collections.
+/// Also <see cref="IPropertyValue"/> replaces for <see cref="PropertyValueContract"/> because swagger generates schemas for many unnecessary system types.
+/// </summary>
+public class MetadataSerializerBehavior : ISerializerDataContractResolver
 {
+    private readonly ISerializerDataContractResolver _dataContractResolver;
+
     /// <summary>
-    /// Configures serialization for <see cref="IPropertyContainer"/> as for collections.
-    /// Also <see cref="IPropertyValue"/> replaces for <see cref="PropertyValueContract"/> because swagger generates schemas for many unnecessary system types.
+    /// Initializes a new instance of the <see cref="MetadataSerializerBehavior"/> class.
     /// </summary>
-    public class MetadataSerializerBehavior : ISerializerDataContractResolver
+    /// <param name="dataContractResolver">Base service.</param>
+    public MetadataSerializerBehavior(ISerializerDataContractResolver dataContractResolver)
     {
-        private readonly ISerializerDataContractResolver _dataContractResolver;
+        _dataContractResolver = dataContractResolver;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MetadataSerializerBehavior"/> class.
-        /// </summary>
-        /// <param name="dataContractResolver">Base service.</param>
-        public MetadataSerializerBehavior(ISerializerDataContractResolver dataContractResolver)
+    /// <inheritdoc />
+    public DataContract GetDataContractForType(Type type)
+    {
+        if (type.IsAssignableTo<IPropertyContainer>())
         {
-            _dataContractResolver = dataContractResolver;
+            // Array is used for schema inlining.
+            // If IPropertyContainer is not collection then schema will be generated as a reference but we need to make it dependent on PropertySet.
+            return DataContract.ForArray(type, typeof(PropertyValueContract));
         }
 
-        /// <inheritdoc />
-        public DataContract GetDataContractForType(Type type)
-        {
-            if (type.IsAssignableTo<IPropertyContainer>())
-            {
-                // Array is used for schema inlining.
-                // If IPropertyContainer is not collection then schema will be generated as a reference but we need to make it dependent on PropertySet.
-                return DataContract.ForArray(type, typeof(PropertyValueContract));
-            }
-
-            return _dataContractResolver.GetDataContractForType(type);
-        }
+        return _dataContractResolver.GetDataContractForType(type);
     }
 }

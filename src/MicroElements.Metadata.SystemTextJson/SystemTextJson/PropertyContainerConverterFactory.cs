@@ -39,7 +39,7 @@ namespace MicroElements.Metadata.SystemTextJson
         {
             // JsonConverter converter = new PropertyContainerConverter<T>(Options);
             Type genericConverterType = typeof(PropertyContainerConverter<>).MakeGenericType(typeToConvert);
-            JsonConverter converter = (JsonConverter)Activator.CreateInstance(genericConverterType, Options);
+            JsonConverter converter = (JsonConverter)Activator.CreateInstance(genericConverterType, Options)!;
 
             return converter;
         }

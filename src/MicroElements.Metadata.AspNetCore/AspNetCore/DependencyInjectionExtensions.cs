@@ -10,6 +10,7 @@ using MicroElements.Metadata.SystemTextJson;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MicroElements.Metadata.AspNetCore
@@ -40,15 +41,12 @@ namespace MicroElements.Metadata.AspNetCore
             configureMetadataJson ??= options => { };
             services.Configure<MetadataJsonSerializationOptions>(configureMetadataJson);
 
-            // Allows to serialize property containers
-            // NOTE: Not the same as AspNet JsonSerializerOptions. Use AspNetJsonSerializerOptions wrapper
-            services.Configure<JsonSerializerOptions>(options => options.ConfigureJsonForPropertyContainers(configureMetadataJson));
-
-            // Configures serialization for AspNetCore
+            // Configures System.Text.Json serialization for AspNetCore and MinimalApi
             services.ConfigureJsonOptionsForAspNetCore(options => options.ConfigureJsonForPropertyContainers(configureMetadataJson));
+            services.ConfigureJsonOptionsForMinimalApi(options => options.ConfigureJsonForPropertyContainers(configureMetadataJson));
 
             // Register wrapper for AspNetCore json options.
-            services.AddTransient<AspNetJsonSerializerOptions>(provider => new AspNetJsonSerializerOptions(provider.GetJsonSerializerOptionsOrDefault()));
+            services.ConfigureOptions<ConfigureAspNetJsonSerializerOptions>();
 
             // Allows to use property containers in swagger
             services.ConfigureSwaggerForPropertyContainers(configureSwaggerOptions);
@@ -64,6 +62,23 @@ namespace MicroElements.Metadata.AspNetCore
             services.Decorate<ISerializerDataContractResolver>(resolver => new MetadataSerializerBehavior(resolver));
 
             return services;
+        }
+
+        public static void ConfigureJsonOptionsForAspNetCore(this IServiceCollection services, Action<JsonSerializerOptions> configureJson)
+        {
+            services.Configure<JsonOptions>(options => configureJson(options.JsonSerializerOptions));
+        }
+
+        public static void ConfigureJsonOptionsForMinimalApi(this IServiceCollection services, Action<JsonSerializerOptions> configureJson)
+        {
+            services.ConfigureHttpJsonOptions(options => configureJson(options.SerializerOptions));
+        }
+
+        public static JsonSerializerOptions GetJsonSerializerOptionsOrDefault(this IServiceProvider serviceProvider)
+        {
+            return serviceProvider.GetService<IOptions<JsonOptions>>()?.Value.JsonSerializerOptions
+                   ?? serviceProvider.GetService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()?.Value.SerializerOptions
+                   ?? new JsonSerializerOptions();
         }
 
         internal static IServiceCollection Decorate<TService>(
@@ -107,25 +122,5 @@ namespace MicroElements.Metadata.AspNetCore
 
             return services;
         }
-    }
-
-    /// <summary>
-    /// AspNetCore MVC JsonOptions. Value wrapper that can be used in netstandard.
-    /// </summary>
-    public class AspNetJsonSerializerOptions
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AspNetJsonSerializerOptions"/> class.
-        /// </summary>
-        /// <param name="value"><see cref="JsonSerializerOptions"/> from AspNet host.</param>
-        public AspNetJsonSerializerOptions(JsonSerializerOptions value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="JsonSerializerOptions"/> from AspNet host.
-        /// </summary>
-        public JsonSerializerOptions Value { get; }
     }
 }

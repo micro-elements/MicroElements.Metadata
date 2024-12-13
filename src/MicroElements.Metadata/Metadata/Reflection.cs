@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MicroElements.Collections.Extensions.Iterate;
 
 namespace MicroElements.Metadata
 {
@@ -24,7 +25,7 @@ namespace MicroElements.Metadata
                 .GetFields(BindingFlags.Static | BindingFlags.Public)
                 .Where(fieldInfo => typeof(IProperty).IsAssignableFrom(fieldInfo.FieldType))
                 .Where(fieldInfo => fieldInfo.GetValue(null) == null)
-                .Foreach(fieldInfo =>
+                .Iterate(fieldInfo =>
                 {
                     Type propertyType = fieldInfo.FieldType.GetGenericArguments().First();
                     string propertyName = $"{prefix}{fieldInfo.Name}";
@@ -37,7 +38,7 @@ namespace MicroElements.Metadata
                 .Where(propertyInfo => typeof(IProperty).IsAssignableFrom(propertyInfo.PropertyType))
                 .Where(propertyInfo => propertyInfo.CanWrite)
                 .Where(propertyInfo => propertyInfo.GetValue(null) == null)
-                .Foreach(propertyInfo =>
+                .Iterate(propertyInfo =>
                 {
                     Type propertyType = propertyInfo.PropertyType.GetGenericArguments().First();
                     string propertyName = $"{prefix}{propertyInfo.Name}";
@@ -68,21 +69,6 @@ namespace MicroElements.Metadata
             }
 
             return properties;
-        }
-    }
-
-    internal static class EnumerableExtensions
-    {
-        /// <summary>
-        /// Performs the specified action on each element of <see cref="IEnumerable{T}"/>
-        /// </summary>
-        [Obsolete("Use Iterate from shared")]
-        public static void Foreach<T>(this IEnumerable<T> sequence, Action<T> action)
-        {
-            foreach (T item in sequence)
-            {
-                action(item);
-            }
         }
     }
 }

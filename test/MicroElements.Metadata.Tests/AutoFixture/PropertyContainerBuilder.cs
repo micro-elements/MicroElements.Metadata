@@ -19,7 +19,7 @@ namespace MicroElements.Metadata.Tests.AutoFixture
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (request is Type type && type.IsAssignableTo<IPropertyContainer>())
+            if (request is Type type && type.IsAssignableTo(typeof(IPropertyContainer)))
             {
                 IPropertySet knownPropertySet = type.GetSchemaByKnownPropertySet();
 

@@ -5,13 +5,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>MicroElements.Metadata</RootNamespace>
-    <LangVersion>9.0</LangVersion>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MicroElements.Metadata\MicroElements.Metadata.csproj" />

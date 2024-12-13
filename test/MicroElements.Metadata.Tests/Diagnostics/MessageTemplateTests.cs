@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using MicroElements.Diagnostics;
 using Xunit;
 
 namespace MicroElements.Functional.Tests

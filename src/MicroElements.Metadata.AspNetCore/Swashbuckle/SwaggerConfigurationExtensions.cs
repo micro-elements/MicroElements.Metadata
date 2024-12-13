@@ -44,55 +44,37 @@ namespace MicroElements.Metadata.Swashbuckle
             this IServiceCollection services,
             Action<PropertyContainerSchemaFilterOptions>? configure = null)
         {
+            services.ConfigureOptions<ConfigurePropertyContainerSchemaFilterOptions>();
             if (configure != null)
-            {
                 services.Configure(configure);
-
-                services.TryAddTransient(provider =>
-                {
-                    var options = provider.GetService<IOptions<PropertyContainerSchemaFilterOptions>>();
-                    return options?.Value ?? new PropertyContainerSchemaFilterOptions();
-                });
-            }
-            else
-            {
-                services.TryAddTransient(provider =>
-                {
-                    JsonSerializerOptions? jsonSerializerOptions = provider.GetJsonSerializerOptions();
-
-                    // Configure json serializer
-                    jsonSerializerOptions?.ConfigureJsonForPropertyContainers();
-
-                    var schemaFilterOptions = new PropertyContainerSchemaFilterOptions();
-                    schemaFilterOptions.ConfigureFromJsonOptions(jsonSerializerOptions);
-
-                    return schemaFilterOptions;
-                });
-            }
 
             // Configure swagger
             services.ConfigureSwaggerGen(swagger => swagger.ConfigureForPropertyContainers());
         }
+    }
 
-        /// <summary>
-        /// Configures <see cref="PropertyContainerSchemaFilterOptions"/> from <see cref="JsonSerializerOptions"/>.
-        /// </summary>
-        /// <param name="options">Options to configure.</param>
-        /// <param name="jsonOptions">JsonSerializerOptions.</param>
-        /// <returns>The same options.</returns>
-        public static PropertyContainerSchemaFilterOptions ConfigureFromJsonOptions(
-            this PropertyContainerSchemaFilterOptions options,
-            JsonSerializerOptions? jsonOptions)
+    internal sealed class ConfigurePropertyContainerSchemaFilterOptions(IServiceProvider serviceProvider)
+        : IConfigureNamedOptions<PropertyContainerSchemaFilterOptions>
+    {
+        /// <inheritdoc />
+        public void Configure(PropertyContainerSchemaFilterOptions options)
         {
-            options.ResolvePropertyName = jsonOptions.ResolvePropertyNameByJsonSerializerOptions;
-            return options;
+            throw new NotImplementedException();
         }
 
-        private static string ResolvePropertyNameByJsonSerializerOptions(this JsonSerializerOptions? jsonOptions, string propertyName)
+        /// <inheritdoc />
+        public void Configure(string? name, PropertyContainerSchemaFilterOptions options)
         {
-            return jsonOptions is { PropertyNamingPolicy: { } propertyNamingPolicy }
-                ? propertyNamingPolicy.ConvertName(propertyName)
-                : propertyName;
+            JsonSerializerOptions jsonOptions = serviceProvider.GetJsonSerializerOptionsOrDefault();
+            options.ResolvePropertyName = ResolvePropertyName;
+
+            string ResolvePropertyName(string propertyName)
+            {
+                string resolvedPropertyName = jsonOptions is { PropertyNamingPolicy: { } propertyNamingPolicy }
+                    ? propertyNamingPolicy.ConvertName(propertyName)
+                    : propertyName;
+                return resolvedPropertyName;
+            }
         }
     }
 }

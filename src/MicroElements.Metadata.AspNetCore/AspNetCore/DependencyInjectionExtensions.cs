@@ -7,6 +7,7 @@ using System.Text.Json;
 using MicroElements.Metadata.Serialization;
 using MicroElements.Metadata.Swashbuckle;
 using MicroElements.Metadata.SystemTextJson;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -55,7 +56,7 @@ namespace MicroElements.Metadata.AspNetCore
             // Register ISerializerDataContractResolver (if not registered already)
             services.TryAddTransient<ISerializerDataContractResolver>(provider =>
             {
-                var serializerOptions = provider.GetJsonSerializerOptions() ?? new JsonSerializerOptions();
+                var serializerOptions = provider.GetJsonSerializerOptionsOrDefault();
                 return new JsonSerializerDataContractResolver(serializerOptions);
             });
 
@@ -109,7 +110,7 @@ namespace MicroElements.Metadata.AspNetCore
     }
 
     /// <summary>
-    /// AspNetCore MVC JsonOptions.Value wrapper that can be used in netstandard.
+    /// AspNetCore MVC JsonOptions. Value wrapper that can be used in netstandard.
     /// </summary>
     public class AspNetJsonSerializerOptions
     {

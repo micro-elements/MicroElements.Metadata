@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using FluentAssertions;
+using MicroElements.Diagnostics;
 using MicroElements.Metadata;
 using Xunit;
 
@@ -28,8 +29,8 @@ namespace MicroElements.Functional.Tests
                 .WithProperty("Elapsed", 145);
 
             message.FormattedMessage.Should().Be("User Alex created in 145 ms.");
-            message.GetProperty("Name").GetValueOrThrow().Should().Be("Alex");
-            message.GetProperty("Elapsed").GetValueOrThrow().Should().Be(145);
+            message.GetValueOrDefault("Name").Should().Be("Alex");
+            message.GetValueOrDefault("Elapsed").Should().Be(145);
         }
 
         [Fact]

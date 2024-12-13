@@ -1,3 +1,8 @@
+# 8.0.0-beta.2
+- switched all projects to dotnet 8, netstandard removed
+- removed reflection based dDI configuration
+- removed obsolete MicroElements.Functional dependency
+
 # 8.0.0-beta.1
 - MicroElements.Functional dependency removed
 - MicroElements.Diagnostics extracted

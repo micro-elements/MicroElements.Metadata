@@ -131,7 +131,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
 
         public void MapToSerialAndBack<T>(T initial, Func<DateTime, T> fromDateTime)
         {
-            T restored = Prelude
+            T restored = Parser
                 .ParseDouble(initial.ToExcelSerialDateAsString())
                 .Map(d => d.FromExcelSerialDate())
                 .Map(fromDateTime)

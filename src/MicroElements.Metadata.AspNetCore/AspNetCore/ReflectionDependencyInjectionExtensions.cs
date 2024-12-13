@@ -2,105 +2,33 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Text.Json;
-using MicroElements.Reflection;
-using MicroElements.Reflection.TypeCaching;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace MicroElements.Metadata.AspNetCore
 {
     /// <summary>
-    /// DependencyInjection through Reflection.
+    /// DependencyInjection.
     /// </summary>
     public static class ReflectionDependencyInjectionExtensions
     {
-        private static readonly Lazy<ITypeCache> AppDomainTypeCache = new(() => new TypeCache(AssemblySource.AppDomain.LoadTypes(TypeFilters.AllPublicTypes)));
-        private static readonly Func<string, Type?> GetByFullName = typeName => AppDomainTypeCache.Value.GetType(typeName);
-
-        /// <summary>
-        /// Calls through reflection: <c>services.Configure&lt;JsonOptions&gt;(options =&gt; configureJson(options));</c>.
-        /// Can be used from netstandard.
-        /// </summary>
-        /// <param name="services">Services.</param>
-        /// <param name="configureJson">Action to configure <see cref="JsonSerializerOptions"/> in JsonOptions.</param>
         public static void ConfigureJsonOptionsForAspNetCore(this IServiceCollection services, Action<JsonSerializerOptions> configureJson)
         {
-            Action<object> configureJsonOptionsUntyped = options =>
-            {
-                PropertyInfo? propertyInfo = options.GetType().GetProperty("JsonSerializerOptions");
-
-                if (propertyInfo?.GetValue(options) is JsonSerializerOptions jsonSerializerOptions)
-                {
-                    configureJson(jsonSerializerOptions);
-                }
-            };
-
-            Type? jsonOptionsType = GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
-            if (jsonOptionsType != null)
-            {
-                Type? extensionsType = GetByFullName("Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions");
-
-                MethodInfo? configureMethodGeneric = extensionsType
-                    ?.GetTypeInfo()
-                    .DeclaredMethods
-                    .FirstOrDefault(info => info.Name == "Configure" && info.GetParameters().Length == 2);
-
-                MethodInfo? configureMethod = configureMethodGeneric?.MakeGenericMethod(jsonOptionsType);
-
-                if (configureMethod != null)
-                {
-                    // services.Configure<JsonOptions>(options => configureJson(options));
-                    configureMethod.Invoke(services, new object?[] { services, configureJsonOptionsUntyped });
-                }
-            }
+            services.Configure<JsonOptions>(options => configureJson(options.JsonSerializerOptions));
         }
 
-        /// <summary>
-        /// Gets <see cref="JsonSerializerOptions"/> from JsonOptions registered in AspNetCore.
-        /// Uses reflection to call code:
-        /// <code>serviceProvider.GetService&lt;IOptions&lt;JsonOptions&gt;&gt;()?.Value?.JsonSerializerOptions;</code>
-        /// </summary>
-        /// <param name="serviceProvider">Source service provider.</param>
-        /// <returns>Optional <see cref="JsonSerializerOptions"/>.</returns>
-        public static JsonSerializerOptions? GetJsonSerializerOptions(this IServiceProvider serviceProvider)
+        public static void ConfigureJsonOptionsForMinimalApi(this IServiceCollection services, Action<JsonSerializerOptions> configureJson)
         {
-            JsonSerializerOptions? jsonSerializerOptions = null;
-
-            Type? jsonOptionsType = GetByFullName("Microsoft.AspNetCore.Mvc.JsonOptions");
-            if (jsonOptionsType != null)
-            {
-                // IOptions<JsonOptions>
-                Type jsonOptionsInterfaceType = typeof(IOptions<>).MakeGenericType(jsonOptionsType);
-                object? jsonOptionsOption = serviceProvider.GetService(jsonOptionsInterfaceType);
-
-                if (jsonOptionsOption != null)
-                {
-                    PropertyInfo? valueProperty = jsonOptionsInterfaceType.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public);
-                    PropertyInfo? jsonSerializerOptionsProperty = jsonOptionsType.GetProperty("JsonSerializerOptions", BindingFlags.Instance | BindingFlags.Public);
-
-                    if (valueProperty != null && jsonSerializerOptionsProperty != null)
-                    {
-                        // JsonOptions
-                        var jsonOptions = valueProperty.GetValue(jsonOptionsOption);
-
-                        // JsonSerializerOptions
-                        if (jsonOptions != null)
-                        {
-                            jsonSerializerOptions = jsonSerializerOptionsProperty.GetValue(jsonOptions) as JsonSerializerOptions;
-                        }
-                    }
-                }
-            }
-
-            return jsonSerializerOptions;
+            services.ConfigureHttpJsonOptions(options => configureJson(options.SerializerOptions));
         }
 
         public static JsonSerializerOptions GetJsonSerializerOptionsOrDefault(this IServiceProvider serviceProvider)
         {
-            return serviceProvider.GetJsonSerializerOptions() ?? new JsonSerializerOptions();
+            return serviceProvider.GetService<IOptions<JsonOptions>>()?.Value.JsonSerializerOptions
+                   ?? serviceProvider.GetService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()?.Value.SerializerOptions
+                   ?? new JsonSerializerOptions();
         }
     }
 }

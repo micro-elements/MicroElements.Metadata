@@ -7,10 +7,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using MicroElements.Metadata.AspNetCore;
-using MicroElements.Metadata.ComponentModel;
 using MicroElements.Metadata.JsonSchema;
 using MicroElements.Metadata.Schema;
 using MicroElements.Reflection.TypeExtensions;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -23,7 +23,7 @@ namespace MicroElements.Metadata.Swashbuckle
     /// </summary>
     public class PropertyContainerSchemaFilter : ISchemaFilter
     {
-        private readonly PropertyContainerSchemaFilterOptions _options;
+        private readonly IOptions<PropertyContainerSchemaFilterOptions> _options;
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly SchemaGeneratorOptions _schemaGeneratorOptions;
 
@@ -34,19 +34,13 @@ namespace MicroElements.Metadata.Swashbuckle
         /// <param name="serializerOptions">JsonSerializerOptions.</param>
         /// <param name="generatorOptions">Swagger generator options.</param>
         public PropertyContainerSchemaFilter(
-            PropertyContainerSchemaFilterOptions? options,
+            IOptions<PropertyContainerSchemaFilterOptions>? options,
             AspNetJsonSerializerOptions serializerOptions,
             SwaggerGenOptions generatorOptions)
         {
-            _options = options?.Clone() ?? new PropertyContainerSchemaFilterOptions();
+            _options = options ?? new OptionsWrapper<PropertyContainerSchemaFilterOptions>(new PropertyContainerSchemaFilterOptions());
             _serializerOptions = serializerOptions.Value;
             _schemaGeneratorOptions = generatorOptions.SchemaGeneratorOptions;
-
-            Func<string, string>? resolvePropertyName = options?.ResolvePropertyName;
-            resolvePropertyName ??= propertyName => _serializerOptions.PropertyNamingPolicy.ConvertName(propertyName);
-            resolvePropertyName ??= propertyName => propertyName;
-
-            _options.ResolvePropertyName = resolvePropertyName;
         }
 
         /// <inheritdoc />
@@ -72,7 +66,7 @@ namespace MicroElements.Metadata.Swashbuckle
                 }
 
                 // "$ref": "#/components/schemas/KnownSchema"
-                if (_options.GenerateKnownSchemasAsRefs && propertySet != null)
+                if (_options.Value.GenerateKnownSchemasAsRefs && propertySet != null)
                 {
                     knownSchemaType ??= propertySet.GetType();
                     string knownSchemaId = _schemaGeneratorOptions.SchemaIdSelector(knownSchemaType);
@@ -126,7 +120,7 @@ namespace MicroElements.Metadata.Swashbuckle
                 if (property.GetOrEvaluateNullability() is { } allowNull)
                     propertySchema.Nullable = allowNull.IsNullAllowed;
 
-                if (_options.GenerateKnownSchemasAsRefs && property.GetSchema() is { } separateSchema)
+                if (_options.Value.GenerateKnownSchemasAsRefs && property.GetSchema() is { } separateSchema)
                 {
                     string knownSchemaId = separateSchema.Name;
 
@@ -163,7 +157,7 @@ namespace MicroElements.Metadata.Swashbuckle
                     propertySchema = FillDataSchema(propertySchema, property);
                 }
 
-                string? propertyName = _options.ResolvePropertyName!(property.Name);
+                string propertyName = _options.Value.ResolvePropertyName!(property.Name);
                 schema.Properties.Add(propertyName, propertySchema);
             }
 

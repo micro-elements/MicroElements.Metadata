@@ -58,7 +58,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
                 as ExcelSheetMetadata;
 
             ExcelReportBuilder
-                .Create("build_excel.xlsx", documentMetadata)
+                .Create("build_excel1.xlsx", documentMetadata)
                 .AddReportSheet(new Sheet1Report("Sheet1"), rows)
                 .AddReportSheet(new Sheet1Report("Sheet2").SetMetadata(transposed), rows)
                 .SaveAndClose();
@@ -78,7 +78,7 @@ namespace MicroElements.Metadata.Tests.ExcelBuilder
                     .WithValue(ExcelMetadata.ColumnWidth, 14);
 
             ExcelReportBuilder
-                .Create("build_excel.xlsx", documentMetadata)
+                .Create("build_excel2.xlsx", documentMetadata)
                 .AddReportSheet(new Sheet1Report("Sheet1"), rows)
                 .SaveAndClose();
         }

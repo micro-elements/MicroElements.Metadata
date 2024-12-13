@@ -128,8 +128,8 @@ namespace MicroElements.Metadata.OpenXml.Excel.Reporting
         /// </summary>
         public void SaveAndClose()
         {
-            _documentContext.WorkbookPart.Workbook.Save();
-            _documentContext.Document.Close();
+            //_documentContext.WorkbookPart.Workbook.Save();
+            _documentContext.Document.Save();
         }
 
         /// <summary>

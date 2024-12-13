@@ -270,7 +270,7 @@ namespace MicroElements.Metadata.OpenXml.Excel.Parsing
                 // cellTextValue = sharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText;
                 cellTextValue = sharedStringTable
                     .GetWeakCache<string, string>()
-                    .GetOrAdd(cellValue, static (cellValue, sharedStringTable) => sharedStringTable.ChildElements.GetItem(int.Parse(cellValue)).InnerText, sharedStringTable);
+                    .GetOrAdd(cellValue, static (cellValue, sharedStringTable) => sharedStringTable.ChildElements[int.Parse(cellValue)].InnerText, sharedStringTable);
             }
 
             if (cellTextValue == null && cellValue != null)

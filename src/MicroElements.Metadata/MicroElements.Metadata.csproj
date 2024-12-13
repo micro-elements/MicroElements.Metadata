@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MicroElements.CodeContracts.Sources" Version="1.3.0" PrivateAssets="all" />
-    <PackageReference Include="MicroElements.Collections.Sources" Version="1.7.0" PrivateAssets="all" />
-    <PackageReference Include="MicroElements.Formatting.Sources" Version="1.0.0" PrivateAssets="all" />
-    <PackageReference Include="MicroElements.Reflection.Sources" Version="1.8.0" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.CodeContracts.Sources" Version="1.4.0" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.Collections.Sources" Version="1.11.0" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.Formatting.Sources" Version="1.0.1" PrivateAssets="all" />
+    <PackageReference Include="MicroElements.Reflection.Sources" Version="1.9.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

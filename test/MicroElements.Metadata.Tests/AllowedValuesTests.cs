@@ -40,9 +40,9 @@ namespace MicroElements.Metadata.Tests
             Sex1.GetAllowedValues().Values.Should().BeEquivalentTo("Male", "Female");
             Sex1.GetAllowedValuesUntyped().ValuesUntyped.Should().BeEquivalentTo(new [] { "Male", "Female" });
             Sex2.GetAllowedValues().Values.Should().BeEquivalentTo("Male", "Female");
-            Sex3.GetAllowedValues().Values.Should().BeEquivalentTo(SexType.Male, SexType.Female);
-            Sex4.GetAllowedValues().Values.Should().BeEquivalentTo(0, 1);
-            Sex5.GetAllowedValues().Values.Should().BeEquivalentTo(0, 1);
+            Sex3.GetAllowedValues().Values.Should().BeEquivalentTo([SexType.Male, SexType.Female]);
+            Sex4.GetAllowedValues().Values.Should().BeEquivalentTo([0, 1]);
+            Sex5.GetAllowedValues().Values.Should().BeEquivalentTo([0, 1]);
             Sex6.GetAllowedValues().Values.Should().BeEquivalentTo("Male", "Female");
         }
 
